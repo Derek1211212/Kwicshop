@@ -1,3 +1,8 @@
+try:
+    from flask import Markup
+except ImportError:
+    from markupsafe import Markup
+
 import os
 import logging
 from dotenv import load_dotenv
@@ -144,7 +149,7 @@ def home():
                          categories=categories,
                          deal_type_filter=deal_type_filter)  # Add deal_type_filter to template context
 
-    
+
 
 
 # Listing Details Route
