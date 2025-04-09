@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>{{ listing.title }} - SwapSphere</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="apple-touch-icon" href="/static/images/app-icon.png">
+  <meta name="theme-color" content="#2ECC71">
+  <style>
+    :root {
+      --primary-color: #2ECC71;
+      --secondary-color: #34495E;
+      --accent-color: #F1C40F;
+      --text-color: #2C3E50;
+      --light-gray: #F8F9FA;
+      --medium-gray: #EAEDED;
+      --dark-gray: #95A5A6;
+      --border-radius: 12px;
+      --box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      --mobile-breakpoint: 768px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--light-gray);
+      color: var(--text-color);
+      line-height: 1.6;
+      overflow-x: hidden;
+      max-width: 100%;
+    }
+
+    /* Navbar Styles */
+    .navbar {
+      background: white;
+      padding: 1rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .mobile-menu {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--secondary-color);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--secondary-color);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+      font-size: 0.9rem;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary-color);
+    }
+
+    /* Main Content Container */
+    .listing-details-container {
+      max-width: 1200px;
+      margin: 1rem auto;
+      padding: 1rem;
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+    }
+
+    /* Back Button */
+    .back-button {
+      background: var(--secondary-color);
+      color: white;
+      padding: 0.6rem 1rem;
+      border-radius: 30px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: transform 0.3s ease;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+    }
+
+    .back-button:hover {
+      transform: translateX(-5px);
+    }
+
+    /* Image Gallery */
+    .image-gallery {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .main-image-container {
+      position: relative;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      height: 300px;
+    }
+
+    .main-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: opacity 0.3s ease, transform 0.5s ease;
+      cursor: pointer;
+    }
+
+    .image-changing {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+
+    /* Thumbnail Gallery */
+    .thumbnail-container {
+      display: flex;
+      gap: 0.8rem;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding-bottom: 0.8rem;
+      margin-top: 0.8rem;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .thumbnail-container::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .thumbnail-container::-webkit-scrollbar-thumb {
+      background: var(--primary-color);
+      border-radius: 2px;
+    }
+
+    .thumbnail {
+      flex: 0 0 auto;
+      width: 80px;
+      height: 80px;
+      border-radius: 8px;
+      object-fit: cover;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+      scroll-snap-align: start;
+    }
+
+    .thumbnail:hover, .thumbnail:active {
+      transform: scale(0.98);
+    }
+
+    .thumbnail.active {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px var(--primary-color);
+    }
+
+    .image-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 0.8rem;
+      background: linear-gradient(transparent, rgba(0,0,0,0.7));
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    /* Details Grid Layout */
+    .details-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    /* Details Sections */
+    .details-section {
+      padding: 1rem;
+      background: var(--light-gray);
+      border-radius: var(--border-radius);
+      margin-bottom: 1rem;
+      transition: transform 0.3s ease;
+    }
+
+    .detail-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .detail-icon {
+      font-size: 1.2rem;
+      color: var(--primary-color);
+    }
+
+    .listing-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--secondary-color);
+    }
+
+    .detail-content {
+      color: var(--secondary-color);
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .detail-item {
+      margin-bottom: 0.8rem;
+    }
+
+    .detail-label {
+      color: var(--dark-gray);
+      font-weight: 500;
+      font-size: 0.9rem;
+      display: block;
+      margin-bottom: 0.2rem;
+    }
+
+    /* Cash Adjustment Badge */
+    .cash-adjustment {
+      background: var(--primary-color);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    /* Contact Information */
+    .contact-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .contact-method {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* User Card */
+    .user-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      text-align: center;
+    }
+
+    .user-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--primary-color);
+    }
+
+    .user-info {
+      flex: 1;
+    }
+
+    .user-name {
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+
+    .user-meta {
+      color: var(--dark-gray);
+      font-size: 0.9rem;
+    }
+
+    /* Action Buttons */
+    .action-section {
+      position: sticky;
+      bottom: 1rem;
+      background: white;
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .offer-button {
+      background: var(--primary-color);
+      color: white;
+      padding: 1rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      box-shadow: 0 4px 8px rgba(46, 204, 113, 0.3);
+      width: 100%;
+      justify-content: center;
+    }
+
+    .offer-button:hover, .offer-button:active {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(46, 204, 113, 0.4);
+    }
+
+    .message-button {
+      background: white;
+      color: var(--primary-color);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      border: 1px solid var(--primary-color);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .message-button:hover, .message-button:active {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    /* Condition Badges */
+    .condition-badge {
+      display: inline-block;
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .condition-new {
+      background: #E3F9E5;
+      color: #1F9254;
+    }
+
+    .condition-used {
+      background: #FEF2E5;
+      color: #CD6200;
+    }
+
+    .condition-refurbished {
+      background: #EBE8FD;
+      color: #5C33CF;
+    }
+
+    /* Location Section */
+    .location-section {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+      z-index: 1000;
+      overflow-y: auto;
+    }
+
+    .modal-content {
+      background: white;
+      margin: 5% auto;
+      padding: 2rem;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      position: relative;
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--secondary-color);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.8rem;
+      border: 2px solid var(--medium-gray);
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .modal-submit-btn {
+      background: var(--primary-color);
+      color: white;
+      padding: 1rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.3s;
+    }
+
+    .modal-submit-btn:hover {
+      background-color: #27ae60;
+    }
+
+    /* Desktop Styles */
+    @media (min-width: 768px) {
+      .navbar {
+        padding: 1rem 2rem;
+      }
+
+      .brand {
+        font-size: 1.5rem;
+      }
+
+      .listing-details-container {
+        padding: 2rem;
+        margin: 2rem auto;
+      }
+
+      .main-image-container {
+        height: 500px;
+      }
+
+      .thumbnail {
+        width: 100px;
+        height: 100px;
+      }
+
+      .details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+      }
+
+      .user-card {
+        flex-direction: row;
+        text-align: left;
+      }
+
+      .offer-button {
+        width: auto;
+        padding: 1rem 2rem;
+      }
+
+      .modal-content {
+        margin: 10% auto;
+      }
+    }
+
+    /* Tablet Styles */
+    @media (min-width: 480px) and (max-width: 767px) {
+      .main-image-container {
+        height: 400px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .modal-content {
+        margin: 20% auto;
+        padding: 1.5rem;
+      }
+    }
+
+    .flash-messages {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 2000;
+    }
+    .flash-message {
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      border-radius: 5px;
+      color: #fff;
+    }
+    .flash-success {
+      background-color: #2ecc71;
+    }
+    .flash-danger {
+      background-color: #e74c3c;
+    }
+
+    .required-cash {
+      color: var(--primary-color);
+      font-size: 0.7em;
+      font-weight: 500;
+      margin-left: 0.3rem;
+    }
+
+    /* Ratings and Reviews Styles */
+    .rating-summary {
+      margin-bottom: 1.5rem;
+    }
+
+    .average-rating {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .rating-value {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--secondary-color);
+    }
+
+    .stars {
+      color: var(--accent-color);
+      font-size: 1.2rem;
+    }
+
+    .rating-count {
+      color: var(--dark-gray);
+      font-size: 0.9rem;
+    }
+
+    .star-rating {
+      display: flex;
+      flex-direction: row-reverse;
+      justify-content: flex-end;
+      margin: 0.5rem 0;
+    }
+
+    .star-rating input {
+      display: none;
+    }
+
+    .star-rating label {
+      color: var(--medium-gray);
+      font-size: 1.5rem;
+      padding: 0 0.1rem;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .star-rating input:checked ~ label,
+    .star-rating input:hover ~ label,
+    .star-rating label:hover,
+    .star-rating label:hover ~ label {
+      color: var(--accent-color);
+    }
+
+    .submit-rating-btn,
+    .submit-review-btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      font-size: 0.9rem;
+    }
+
+    .submit-rating-btn:hover,
+    .submit-review-btn:hover {
+      background-color: #27ae60;
+    }
+
+    .reviews-container {
+      margin-top: 2rem;
+    }
+
+    .review-item {
+      background: white;
+      border-radius: var(--border-radius);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .reviewer-name {
+      font-weight: 600;
+      color: var(--secondary-color);
+    }
+
+    .review-date {
+      color: var(--dark-gray);
+    }
+
+    .review-content p {
+      margin: 0;
+      color: var(--text-color);
+      line-height: 1.5;
+    }
+
+    .review-form {
+      margin-top: 1.5rem;
+    }
+
+    .review-form textarea {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid var(--medium-gray);
+      border-radius: 8px;
+      font-family: inherit;
+      margin-bottom: 0.5rem;
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .review-form h4 {
+      margin-bottom: 0.5rem;
+    }
+
+    /* Deal Type Banners */
+    .deal-type-banner {
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      margin-bottom: 1.5rem;
+      text-align: center;
+      font-weight: 600;
+    }
+    
+    .swap-banner {
+      background: #E8F5E9;
+      color: #2ECC71;
+      border: 2px solid #2ECC71;
+    }
+
+    .sale-banner {
+      background: #FFEBEE;
+      color: #E74C3C;
+      border: 2px solid #E74C3C;
+    }
+
+    .price-display {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #E74C3C;
+      margin: 1rem 0;
+      text-align: center;
+    }
+
+    .purchase-details {
+      background: #FFF3E0;
+      border-left: 4px solid #FFA726;
+      padding: 1rem;
+      margin: 1rem 0;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="brand">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="var(--primary-color)">
+        <path d="M11 5h2v14h-2V5zm-4 7h2v7H7v-7zm8-7h2v14h-2V5z"/>
+      </svg>
+      SwapSphere
+    </div>
+    <button class="mobile-menu" id="mobileMenuBtn">
+      <i class="fas fa-bars"></i>
+    </button>
+    <div class="nav-links" id="navLinks">
+      {% if 'user_id' in session %}
+        <a href="/logout">Logout</a>
+      {% else %}
+        <a href="/login">Login</a>
+        <a href="/signup" style="background: var(--primary-color); color: white; padding: 0.5rem 1rem; border-radius: 8px;">Sign Up</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <div class="listing-details-container">
+    <a href="{{ url_for('home') }}" class="back-button">
+      <i class="fas fa-arrow-left"></i>
+      Back to Listings
+    </a>
+
+    <!-- Deal Type Banner -->
+    <div class="deal-type-banner {% if listing.deal_type == 'Swap Deal' %}swap-banner{% else %}sale-banner{% endif %}">
+      {% if listing.deal_type == 'Swap Deal' %}
+        <i class="fas fa-exchange-alt"></i> Swap Deal Available
+      {% else %}
+        <i class="fas fa-tag"></i> Now On Sale
+      {% endif %}
+    </div>
+
+    {% if listing.deal_type == 'Outright Sales' %}
+    <div class="price-display">
+      GHS {{ listing.price if listing.price else 'Price not specified' }}
+    </div>
+    {% endif %}
+
+    <div class="details-grid">
+      <div class="image-gallery">
+        <div class="main-image-container">
+          <img 
+            src="{{ url_for('static', filename='images/' + listing.image_url) if listing.image_url else url_for('static', filename='images/placeholder.jpg') }}" 
+            class="main-image"
+            alt="{{ listing.title }}"
+            id="mainImage">
+          <div class="image-overlay">
+            <div class="listing-meta">
+              <i class="fas fa-images"></i>
+              <span id="image-counter">1 of {{ 1 + [listing.image1, listing.image2, listing.image3, listing.image4]|select|list|length }}</span>
+            </div>
+            <div class="image-zoom">
+              <button class="zoom-button" onclick="toggleZoom()" style="background: none; border: none; color: white; cursor: pointer;">
+                <i class="fas fa-search-plus"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="thumbnail-container" id="thumbnailContainer">
+          <!-- Main image thumbnail -->
+          <img 
+            src="{{ url_for('static', filename='images/' + listing.image_url) if listing.image_url else url_for('static', filename='images/placeholder.jpg') }}" 
+            class="thumbnail active"
+            onclick="changeMainImage(this, '{{ url_for('static', filename='images/' + listing.image_url) if listing.image_url else url_for('static', filename='images/placeholder.jpg') }}')"
+            alt="Thumbnail 1">
+
+          <!-- Additional image thumbnails -->
+          {% for i in range(1,5) %}
+            {% set image = listing['image' ~ i] %}
+            {% if image %}
+              <img 
+                src="{{ url_for('static', filename='images/' + image) }}" 
+                class="thumbnail"
+                onclick="changeMainImage(this, '{{ url_for('static', filename='images/' + image) }}')"
+                alt="Thumbnail {{ i+1 }}">
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      
+      <div>
+        <div class="details-section">
+          <div class="detail-header">
+            <i class="fas fa-tag detail-icon"></i>
+            <h1 class="listing-title">
+              {{ listing.title }}
+              {% if listing.deal_type == 'Swap Deal' and listing.required_cash and listing.required_cash > 0 %}
+                <span class="required-cash">+ GHS {{ "%.2f"|format(listing.required_cash|float) }}</span>
+              {% endif %}
+            </h1>
+          </div>
+          <p class="detail-content">{{ listing.description }}</p>
+          
+          <div class="detail-item">
+            <span class="detail-label">Condition</span>
+            <span class="condition-badge condition-{{ listing.condition|lower }}">
+              {{ listing.condition if listing.condition else 'Not specified' }}
+            </span>
+          </div>
+        </div>
+
+        {% if listing.deal_type == 'Swap Deal' %}
+        <div class="details-section">
+          <div class="detail-header">
+            <i class="fas fa-exchange-alt detail-icon"></i>
+            <h3>Swap Details</h3>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Desired Item</span>
+            <p class="detail-content">{{ listing.desired_swap }}</p>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Swap Description</span>
+            <p class="detail-content">{{ listing.desired_swap_description }}</p>
+          </div>
+          {% if listing.additional_cash and listing.additional_cash > 0 %}
+          <div class="detail-item">
+            <span class="detail-label">Cash Adjustment</span>
+            <p class="cash-adjustment">
+              <i class="fas fa-coins"></i>
+              + GHS {{ "%.2f"|format(listing.additional_cash|float) }}
+            </p>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="details-section">
+          <div class="detail-header">
+            <i class="fas fa-info-circle detail-icon"></i>
+            <h3>Additional Information</h3>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Category</span>
+            <p class="detail-content">{{ listing.category }}</p>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Listed On</span>
+            <p class="detail-content">{{ listing.created_at.strftime('%d %b %Y at %H:%M') }}</p>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Location</span>
+            <div class="location-section">
+              <i class="fas fa-map-marker-alt" style="color: var(--primary-color);"></i>
+              <p class="detail-content">{{ listing.location if listing.location else 'Location not specified' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="details-section">
+          <div class="detail-header">
+            <i class="fas fa-user detail-icon"></i>
+            <h3>Contact Information</h3>
+          </div>
+          <div class="contact-info">
+            <div class="contact-method">
+              <i class="fas fa-user" style="color: var(--primary-color);"></i>
+              <span>{{ listing.username }}</span>
+            </div>
+            {% if listing.contact %}
+            <div class="contact-method">
+              <i class="fas fa-phone" style="color: var(--primary-color);"></i>
+              <span>{{ listing.contact }}</span>
+            </div>
+            {% endif %}
+            {% if listing.email %}
+            <div class="contact-method">
+              <i class="fas fa-envelope" style="color: var(--primary-color);"></i>
+              <span>{{ listing.email }}</span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+
+{% if listing.deal_type == 'Swap Deal' %}
+  <div class="action-section">
+    <button class="offer-button" id="offerButton">
+      <i class="fas fa-handshake"></i>
+      Make Swap Offer
+    </button>
+  </div>
+{% endif %}
+
+  
+
+  <!-- Proposal Modal (only shown for swap deals) -->
+  <div id="proposalModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" id="closeModal">&times;</span>
+      <h2>Make Swap Offer</h2>
+      <form id="proposalForm" action="{{ url_for('create_proposal', listing_id=listing.listing_id) }}" method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="proposed_item">Item You're Offering:</label>
+          <input type="text" id="proposed_item" name="proposed_item" required>
+        </div>
+        <div class="form-group">
+          <label for="additional_cash">Additional Cash (GHS):</label>
+          <input type="number" id="additional_cash" name="additional_cash" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label for="condition">Condition:</label>
+          <select id="condition" name="condition" required>
+            <option value="">Select Condition</option>
+            <option value="new">New</option>
+            <option value="like_new">Like New</option>
+            <option value="used">Used</option>
+            <option value="refurbished">Refurbished</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="phone_number">Phone Number:</label>
+          <input type="text" id="phone_number" name="phone_number" required>
+        </div>
+        <div class="form-group">
+          <label for="email_address">Email Address:</label>
+          <input type="email" id="email_address" name="email_address" required>
+        </div>
+        <div class="form-group">
+          <label for="image1">Image 1:</label>
+          <input type="file" id="image1" name="image1" accept="image/*">
+        </div>
+        <div class="form-group">
+          <label for="image2">Image 2:</label>
+          <input type="file" id="image2" name="image2" accept="image/*">
+        </div>
+        <div class="form-group">
+          <label for="image3">Image 3:</label>
+          <input type="file" id="image3" name="image3" accept="image/*">
+        </div>
+        <div class="form-group">
+          <label for="image4">Image 4:</label>
+          <input type="file" id="image4" name="image4" accept="image/*">
+        </div>
+        <div class="form-group">
+          <label for="detailed_description">Detailed Description:</label>
+          <textarea id="detailed_description" name="detailed_description" rows="4" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="message">Message to Owner (Optional):</label>
+          <textarea id="message" name="message" rows="3"></textarea>
+        </div>
+        <button type="submit" class="modal-submit-btn">Submit Offer</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Ratings and Reviews Section -->
+  <div class="details-section">
+    <div class="detail-header">
+      <i class="fas fa-star detail-icon"></i>
+      <h3>Ratings & Reviews</h3>
+    </div>
+    <div class="rating-summary">
+      {% if listing.avg_rating %}
+        <div class="average-rating">
+          <span class="rating-value">{{ "%.1f"|format(listing.avg_rating) }}</span>
+          <div class="stars">
+            {% for i in range(1,6) %}
+              {% if i <= listing.avg_rating|int %}
+                <i class="fas fa-star"></i>
+              {% elif i-0.5 <= listing.avg_rating %}
+                <i class="fas fa-star-half-alt"></i>
+              {% else %}
+                <i class="far fa-star"></i>
+              {% endif %}
+            {% endfor %}
+          </div>
+          <span class="rating-count">({{ listing.rating_count }} rating{% if listing.rating_count != 1 %}s{% endif %})</span>
+        </div>
+      {% else %}
+        <p>No ratings yet</p>
+      {% endif %}
+    </div>
+    {% if 'user_id' in session and session['user_id'] != listing.user_id %}
+      <div class="rating-form">
+        <h4>Rate this listing</h4>
+        <div class="star-rating">
+          {% for i in range(5,0,-1) %}
+            <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}">
+            <label for="star{{ i }}" title="{{ i }} star{% if i != 1 %}s{% endif %}">
+              <i class="fas fa-star"></i>
+            </label>
+          {% endfor %}
+        </div>
+        <button id="submitRating" class="submit-rating-btn">Submit Rating</button>
+      </div>
+    {% elif 'user_id' not in session %}
+      <p><a href="{{ url_for('login', next=url_for('listing_details', listing_id=listing.listing_id)) }}">Log in</a> to rate this listing</p>
+    {% endif %}
+    <div class="reviews-container">
+      <h4>Reviews</h4>
+      {% if listing.reviews %}
+        <div class="reviews-list">
+          {% for review in listing.reviews %}
+            <div class="review-item">
+              <div class="review-header">
+                <span class="reviewer-name">{{ review.username }}</span>
+                <span class="review-date">{{ review.created_at.strftime('%B %d, %Y') }}</span>
+              </div>
+              <div class="review-content">
+                <p>{{ review.review_text }}</p>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>No reviews yet</p>
+      {% endif %}
+      {% if 'user_id' in session and session['user_id'] != listing.user_id %}
+        <div class="review-form">
+          <h4>Write a review</h4>
+          <textarea id="reviewText" placeholder="Share your experience with this listing..." rows="4"></textarea>
+          <button id="submitReview" class="submit-review-btn">Submit Review</button>
+        </div>
+      {% elif 'user_id' not in session %}
+        <p><a href="{{ url_for('login', next=url_for('listing_details', listing_id=listing.listing_id)) }}">Log in</a> to write a review</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="flash-message flash-{{ category }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+</div>
+
+  <script>
+    // Mobile Menu Toggle
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const navLinks = document.getElementById('navLinks');
+
+    mobileMenuBtn.addEventListener('click', () => {
+      navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.navbar') && window.innerWidth < 768) {
+        navLinks.style.display = 'none';
+      }
+    });
+
+    // Image Gallery Functionality
+    function changeMainImage(thumbnail, imageUrl) {
+      const mainImage = document.getElementById('mainImage');
+      const thumbnails = document.querySelectorAll('.thumbnail');
+      
+      // Add changing class for transition
+      mainImage.classList.add('image-changing');
+      
+      // Update active thumbnail
+      thumbnails.forEach(thumb => thumb.classList.remove('active'));
+      thumbnail.classList.add('active');
+      
+      // Update image counter
+      const currentIndex = Array.from(thumbnails).indexOf(thumbnail) + 1;
+      document.getElementById('image-counter').textContent = 
+        `${currentIndex} of ${thumbnails.length}`;
+      
+      // Change image after transition starts
+      setTimeout(() => {
+        mainImage.src = imageUrl;
+        mainImage.classList.remove('image-changing');
+        
+        // Auto-scroll thumbnails to center the active one
+        thumbnail.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center'
+        });
+      }, 150);
+    }
+
+    // Image Zoom Functionality
+    let isZoomed = false;
+    function toggleZoom() {
+      const img = document.getElementById('mainImage');
+      isZoomed = !isZoomed;
+      img.style.transform = isZoomed ? 'scale(2)' : 'scale(1)';
+      img.style.cursor = isZoomed ? 'zoom-out' : 'zoom-in';
+      img.style.transformOrigin = 'center center';
+    }
+
+    // Touch Zoom for Mobile
+    let lastTouch = 0;
+    const mainImage = document.getElementById('mainImage');
+
+    mainImage.addEventListener('touchend', (e) => {
+      const now = Date.now();
+      if (now - lastTouch <= 300) {
+        toggleZoom();
+        e.preventDefault();
+      }
+      lastTouch = now;
+    });
+
+    // Thumbnail Gallery Touch Scrolling
+    const thumbnailContainer = document.getElementById('thumbnailContainer');
+    let isDragging = false;
+    let startX = 0;
+    let scrollLeft = 0;
+
+    thumbnailContainer.addEventListener('touchstart', (e) => {
+      isDragging = true;
+      startX = e.touches[0].pageX - thumbnailContainer.offsetLeft;
+      scrollLeft = thumbnailContainer.scrollLeft;
+    });
+
+    thumbnailContainer.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      e.preventDefault();
+      const x = e.touches[0].pageX - thumbnailContainer.offsetLeft;
+      const walk = (x - startX) * 2;
+      thumbnailContainer.scrollLeft = scrollLeft - walk;
+    });
+
+    thumbnailContainer.addEventListener('touchend', () => {
+      isDragging = false;
+    });
+
+    // Modal Handling
+    const modal = document.getElementById('proposalModal');
+    const offerButton = document.getElementById('offerButton');
+    const closeModalButton = document.getElementById('closeModal');
+    const proposalForm = document.getElementById('proposalForm');
+
+    function openModal() {
+      modal.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      modal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+
+    offerButton.addEventListener('click', function(e) {
+      e.preventDefault();
+      {% if 'user_id' not in session %}
+        window.location.href = "{{ url_for('login', next=url_for('listing_details', listing_id=listing.listing_id)) }}";
+      {% else %}
+        openModal();
+      {% endif %}
+    });
+
+    closeModalButton.addEventListener('click', closeModal);
+
+    window.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && modal.style.display === 'block') {
+        closeModal();
+      }
+    });
+
+    // Form submission handling
+    proposalForm.addEventListener('submit', function(e) {
+      // Add any additional client-side validation here
+      const proposedItem = document.getElementById('proposed_item');
+      const detailedDescription = document.getElementById('detailed_description');
+      
+      if (proposedItem.value.trim() === '') {
+        e.preventDefault();
+        alert('Please enter the item you are offering');
+        return;
+      }
+      
+      if (detailedDescription.value.trim() === '') {
+        e.preventDefault();
+        alert('Please provide a detailed description');
+        return;
+      }
+      
+      // Form will submit if validation passes
+    });
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', function() {
+      // Hide menu on mobile by default
+      if (window.innerWidth < 768) {
+        navLinks.style.display = 'none';
+        mobileMenuBtn.style.display = 'block';
+        
+        // Center first thumbnail on mobile
+        const firstThumbnail = document.querySelector('.thumbnail');
+        if (firstThumbnail) {
+          setTimeout(() => {
+            firstThumbnail.scrollIntoView({
+              block: 'nearest',
+              inline: 'center'
+            });
+          }, 100);
+        }
+      } else {
+        mobileMenuBtn.style.display = 'none';
+      }
+
+      // Preload all images
+      const thumbnails = document.querySelectorAll('.thumbnail');
+      const images = [];
+      thumbnails.forEach(thumb => {
+        const img = new Image();
+        img.src = thumb.src;
+        images.push(img);
+      });
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+      if (window.innerWidth >= 768) {
+        navLinks.style.display = 'flex';
+        mobileMenuBtn.style.display = 'none';
+      } else {
+        mobileMenuBtn.style.display = 'block';
+      }
+    });
+
+    function showMessageModal() {
+      alert('Message functionality coming soon!');
+    }
+
+
+// Rating Submission
+document.getElementById('submitRating')?.addEventListener('click', async function() {
+    const ratingInput = document.querySelector('input[name="rating"]:checked');
+    if (!ratingInput) {
+        alert('Please select a rating');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/submit_rating/{{ listing.listing_id }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `rating=${ratingInput.value}`
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Rating submitted successfully!');
+            location.reload(); // Refresh to show updated rating
+        } else {
+            alert('Error: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error submitting rating:', error);
+        alert('An error occurred while submitting your rating');
+    }
+});
+
+// Review Submission
+document.getElementById('submitReview')?.addEventListener('click', async function() {
+    const reviewText = document.getElementById('reviewText').value.trim();
+    if (!reviewText) {
+        alert('Please write a review before submitting');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/submit_review/{{ listing.listing_id }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `review_text=${encodeURIComponent(reviewText)}`
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Add the new review to the page without reloading
+            const reviewsList = document.querySelector('.reviews-list') || document.createElement('div');
+            if (reviewsList.children.length === 0 && document.querySelector('.reviews-container p')) {
+                document.querySelector('.reviews-container p').remove();
+                reviewsList.classList.add('reviews-list');
+                document.querySelector('.reviews-container').prepend(reviewsList);
+            }
+            
+            const reviewItem = document.createElement('div');
+            reviewItem.className = 'review-item';
+            reviewItem.innerHTML = `
+                <div class="review-header">
+                    <span class="reviewer-name">${data.review.username}</span>
+                    <span class="review-date">${data.review.created_at}</span>
+                </div>
+                <div class="review-content">
+                    <p>${data.review.review_text}</p>
+                </div>
+            `;
+            
+            reviewsList.prepend(reviewItem);
+            document.getElementById('reviewText').value = '';
+            alert('Review submitted successfully!');
+        } else {
+            alert('Error: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error submitting review:', error);
+        alert('An error occurred while submitting your review');
+    }
+});
+
+
+  </script>
+</body>
+</html>

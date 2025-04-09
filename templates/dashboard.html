@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swap Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        /* CSS Styles */
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --light: #f8f9fa;
+            --dark: #212529;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+        }
+        
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+/* Updated Navigation Styles */
+.dashboard-nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 30px;
+    position: relative;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.nav-btn {
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #4a5568;
+    font-size: 14px;
+}
+
+.nav-btn i {
+    font-size: 16px;
+    width: 20px;
+}
+
+.nav-btn:hover {
+    background: #edf2f7;
+    transform: translateY(-1px);
+}
+
+.nav-btn.active {
+    background: linear-gradient(135deg, #4361ee 0%, #3f37c9 100%);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(67, 97, 238, 0.3);
+}
+
+.nav-btn.active:hover {
+    transform: none;
+    box-shadow: 0 6px 8px -1px rgba(67, 97, 238, 0.4);
+}
+
+.logout-btn {
+    background: linear-gradient(135deg, #f72585 0%, #c81b6b 100%);
+    color: white;
+    margin-left: auto;
+}
+
+.logout-btn:hover {
+    background: linear-gradient(135deg, #f72585 0%, #a31759 100%);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .dashboard-nav {
+        flex-direction: column;
+        padding: 12px;
+        gap: 6px;
+    }
+    
+    .nav-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 14px;
+        font-size: 15px;
+    }
+    
+    .nav-btn i {
+        font-size: 18px;
+    }
+    
+    .logout-btn {
+        order: 5; /* Move logout to bottom */
+        margin-top: 10px;
+    }
+}
+
+
+        
+        .dashboard-section {
+            display: none;
+        }
+        
+        .dashboard-section.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .listings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .listing-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .listing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .listing-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .listing-content {
+            padding: 15px;
+        }
+        
+        .listing-actions {
+            display: flex;
+            gap: 10px;
+            padding: 0 15px 15px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+        
+        .proposals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .proposal-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .proposal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .status-pending {
+            background-color: #ffc107;
+            color: #000;
+        }
+        
+        .status-accepted {
+            background-color: #28a745;
+            color: #fff;
+        }
+        
+        .status-declined {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        
+        .proposal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .profile-form {
+            max-width: 500px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .logout-btn {
+            margin-left: auto;
+            background: var(--danger);
+            color: white;
+        }
+
+                .listing-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: contain;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+                /* Enhanced Proposals Section */
+        .proposal-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .proposal-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 10px;
+            }
+
+            .dashboard-nav {
+                flex-direction: column;
+            }
+
+            .nav-btn {
+                width: 100%;
+                text-align: center;
+                padding: 12px;
+            }
+
+            .listings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .proposal-card {
+                padding: 15px;
+            }
+
+            .proposal-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .proposal-images {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .proposal-image {
+                height: 120px;
+            }
+
+            .proposal-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .proposal-images {
+                grid-template-columns: 1fr;
+            }
+            
+            .proposal-image {
+                height: 200px;
+            }
+        }
+
+                .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            overflow: auto;
+        }
+        
+        .modal-content {
+            display: block;
+            margin: auto;
+            max-width: 90%;
+            max-height: 90%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .sender-info {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        
+        /* Mobile responsive improvements */
+        @media (max-width: 768px) {
+            .modal-content {
+                max-width: 95%;
+                max-height: 80%;
+            }
+            
+            .close-modal {
+                font-size: 30px;
+                top: 10px;
+                right: 20px;
+            }
+        }
+
+
+
+        /* Create Listing Form Styles */
+.create-listing-form {
+    max-width: 800px;
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin: 0 auto;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+textarea.form-control {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Desktop Layout */
+@media (min-width: 768px) {
+    .form-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .form-row-full {
+        grid-column: span 2;
+    }
+    
+    .form-group-textarea {
+        grid-column: span 2;
+    }
+}
+
+/* Image Preview Grid */
+.image-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.preview-image {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    position: relative;
+}
+
+.remove-image {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: var(--danger);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* File Upload Styling */
+.file-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    border: 2px dashed #ddd;
+    border-radius: 5px;
+    background: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.file-upload:hover {
+    border-color: var(--primary);
+    background: #f0f7ff;
+}
+
+.file-upload-icon {
+    font-size: 24px;
+    color: var(--primary);
+    margin-bottom: 10px;
+}
+
+.file-upload-text {
+    text-align: center;
+    color: #666;
+}
+
+/* Submit Button */
+.submit-btn {
+    grid-column: span 2;
+    padding: 12px;
+    font-size: 16px;
+    margin-top: 20px;
+}
+
+
+/* Modal Styles for Zoom/Swipe Gallery */
+.image-modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: rgba(0,0,0,0.9);
+}
+
+.image-modal .modal-content {
+    display: block;
+    margin: auto;
+    max-width: 90%;
+    max-height: 80%;
+    transition: transform 0.3s ease;
+}
+
+.image-modal .close-modal {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: #fff;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.modal-nav {
+    position: absolute;
+    top: 50%;
+    color: #fff;
+    font-size: 40px;
+    padding: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.modal-nav.left {
+    left: 20px;
+}
+
+.modal-nav.right {
+    right: 20px;
+}
+
+
+.proposal-images {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); /* Adjust min width as needed */
+    gap: 5px;
+    /* Optionally, set a max-height and overflow if you want to limit height */
+    max-height: 300px; 
+    overflow-y: auto;
+}
+
+.proposal-image {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+/* For very small screens, adjust grid columns if needed */
+@media (max-width: 480px) {
+    .proposal-images {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+
+.proposal-filter {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.proposal-filter label {
+    font-weight: bold;
+}
+
+.proposal-filter select {
+    max-width: 300px;
+}
+
+    /* Base Styles */
+    .dashboard-section {
+        padding: 20px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        margin-bottom: 30px;
+    }
+
+    h2 {
+        color: #2a9d8f;
+        margin-bottom: 25px;
+        font-size: 1.8rem;
+    }
+
+    .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 0 -10px 15px;
+    }
+
+    .form-group {
+        flex: 1 0 calc(50% - 20px);
+        margin: 0 10px 15px;
+        min-width: 150px;
+    }
+
+    .form-row-full .form-group {
+        flex: 1 0 100%;
+    }
+
+    .form-group-textarea {
+        flex: 1 0 100%;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .form-control {
+        width: 80%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 1rem;
+    }
+
+    select.form-control {
+        height: 46px;
+    }
+
+    textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    /* Cash Section Styling */
+    .cash-section-group {
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 15px 0;
+        background: #f8f9fa;
+        width: 100%;
+    }
+
+    .section-subheading {
+        color: #2a9d8f;
+        border-bottom: 2px solid #2a9d8f;
+        padding-bottom: 10px;
+        margin-bottom: 25px;
+        font-size: 1.3rem;
+    }
+
+    .cash-input-group {
+        margin: 20px 0;
+        padding: 15px;
+        border-radius: 8px;
+    }
+
+    .cash-required {
+        border: 2px solid #e63946;
+        background: #fff5f5;
+    }
+
+    .cash-offered {
+        border: 2px solid #2a9d8f;
+        background: #f0f9f7;
+    }
+
+    .cash-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .currency-icon {
+        font-size: 1.5rem;
+        margin-right: 10px;
+    }
+
+    .cash-required .currency-icon {
+        color: #e63946;
+    }
+
+    .cash-offered .currency-icon {
+        color: #2a9d8f;
+    }
+
+    .cash-explanation {
+        color: #666;
+        font-size: 0.95rem;
+        margin-bottom: 15px;
+        line-height: 1.5;
+    }
+
+    .input-with-symbol {
+        position: relative;
+    }
+
+    .currency-symbol {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-weight: bold;
+        color: #666;
+        z-index: 1;
+    }
+
+    .form-control[type="number"] {
+        padding-left: 30px;
+    }
+
+    .form-help-text {
+        display: block;
+        margin-top: 8px;
+        color: #6c757d;
+        font-size: 0.85rem;
+    }
+
+    /* File Upload */
+    .file-upload {
+        display: block;
+        padding: 30px;
+        border: 2px dashed #ddd;
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: #f9f9f9;
+    }
+
+    .file-upload:hover {
+        border-color: #2a9d8f;
+        background: #f0f9f7;
+    }
+
+    .file-upload-icon {
+        font-size: 2.5rem;
+        color: #2a9d8f;
+        margin-bottom: 10px;
+    }
+
+    .file-upload-text {
+        color: #666;
+    }
+
+    .file-upload-text small {
+        color: #999;
+    }
+
+    .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    /* Image Preview */
+    .image-preview-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .image-preview-grid img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #eee;
+    }
+
+    /* Submit Button */
+    .submit-btn {
+        background-color: #2a9d8f;
+        border: none;
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-top: 20px;
+        width: 100%;
+    }
+
+    .submit-btn:hover {
+        background-color: #238175;
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+        .form-group {
+            flex: 1 0 100%;
+        }
+
+        .dashboard-section {
+            padding: 15px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+        }
+
+        .section-subheading {
+            font-size: 1.2rem;
+        }
+
+        .cash-input-group {
+            padding: 12px;
+        }
+
+        .cash-header h4 {
+            font-size: 1.1rem;
+        }
+
+        .file-upload {
+            padding: 20px;
+        }
+
+        .file-upload-icon {
+            font-size: 2rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dashboard-section {
+            padding: 10px;
+        }
+
+        .cash-section-group {
+            padding: 15px;
+        }
+
+        .form-control {
+            padding: 10px;
+        }
+    }
+
+
+    .deal-type-selector {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .deal-option input[type="radio"] {
+        display: none;
+    }
+
+    .deal-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        background: #fff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .deal-card i {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: #666;
+    }
+
+    .deal-card span {
+        font-weight: 600;
+        color: #333;
+    }
+
+    input[type="radio"]:checked + .deal-card {
+        border-color: #2a9d8f;
+        background: #f0f9f7;
+    }
+
+    input[type="radio"]:checked + .deal-card i {
+        color: #2a9d8f;
+    }
+
+    .swap-fields, .sale-fields {
+        transition: opacity 0.3s ease;
+    }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Navigation -->
+<nav class="dashboard-nav">
+    <button class="nav-btn active" data-section="listings">
+        <i class="fas fa-box-open"></i>
+        My Listings
+    </button>
+    <button class="nav-btn" data-section="create-listing">
+        <i class="fas fa-plus-circle"></i>
+        Create Listing
+    </button>
+    <button class="nav-btn" data-section="proposals">
+        <i class="fas fa-handshake"></i>
+        Proposals
+    </button>
+    <button class="nav-btn" data-section="profile">
+        <i class="fas fa-user-cog"></i>
+        Profile
+    </button>
+    <button class="nav-btn logout-btn" id="logout-btn">
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+    </button>
+</nav>
+
+<!-- Listings Section -->
+<section id="listings" class="dashboard-section active">
+    <h2>My Listings</h2>
+    <div class="listings-grid">
+        {% for listing in listings %}
+        <div class="listing-card">
+            {% if listing.image_url %}
+            <img src="{{ url_for('static', filename='images/' + listing.image_url.split('/')[-1]) }}" 
+                 alt="{{ listing.title }}"
+                 onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+            {% else %}
+            <img src="https://via.placeholder.com/300x200?text=No+Image" alt="{{ listing.title }}">
+            {% endif %}
+            <div class="listing-content">
+                <h3>{{ listing.title }}</h3>
+                <p>{{ listing.description[:100] }}{% if listing.description|length > 100 %}...{% endif %}</p>
+                <p><strong>Condition:</strong> {{ listing.condition }}</p>
+                <p><strong>Proposals Received:</strong> {{ listing.proposal_count }}</p>
+            </div>
+            <div class="listing-actions">
+                <button class="btn btn-primary edit-listing" 
+                        onclick="window.location.href='{{ url_for('edit_listing', listing_id=listing.listing_id) }}'">
+                    Edit
+                </button>
+                <button class="btn btn-danger delete-listing" data-id="{{ listing.listing_id }}">Delete</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+
+
+<section id="create-listing" class="dashboard-section">
+  <h2>Create New Listing</h2>
+  <form id="create-listing-form" class="create-listing-form" enctype="multipart/form-data" method="POST" action="/listings">
+    <!-- Deal Type Selection -->
+    <div class="form-row">
+      <div class="form-group form-row-full">
+        <label class="form-label">Listing Type*</label>
+        <div class="deal-type-selector">
+          <div class="deal-option">
+            <input type="radio" id="deal-swap" name="deal_type" value="Swap Deal" checked>
+            <label for="deal-swap" class="deal-card">
+              <i class="fas fa-exchange-alt"></i>
+              <span>Swap Deal</span>
+            </label>
+          </div>
+          <div class="deal-option">
+            <input type="radio" id="deal-sale" name="deal_type" value="Outright Sales">
+            <label for="deal-sale" class="deal-card">
+              <i class="fas fa-shopping-cart"></i>
+              <span>Outright Sale</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Common Fields -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="title">Title*</label>
+        <input type="text" id="title" name="title" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="category">Category*</label>
+        <select id="category" name="category" class="form-control" required>
+          <option value="">Select Category</option>
+          <option value="Electronics">Electronics</option>
+          <option value="Furniture">Furniture</option>
+          <option value="Vehicles">Vehicles</option>
+          <option value="Clothing">Clothing</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Promotion Plan Selection -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="plan">Promotion Plan*</label>
+        <select id="plan" name="plan" class="form-control" required>
+          <option value="Free">Free Plan (GHS 0)</option>
+          <option value="Diamond">Diamond Plan (GHS 100)</option>
+          <option value="Gold">Gold Plan (GHS 70)</option>
+          <option value="Silver">Silver Plan (GHS 40)</option>
+          <option value="Bronze">Bronze Plan (GHS 20)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="form-row">
+      <div class="form-group form-group-textarea">
+        <label for="description">Description*</label>
+        <textarea id="description" name="description" class="form-control" required></textarea>
+      </div>
+    </div>
+
+    <!-- Swap Deal Specific Fields -->
+    <div class="swap-fields">
+      <!-- Condition and Desired Swap -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="desired_swap">Desired Swap*</label>
+          <input type="text" id="desired_swap" name="desired_swap" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="condition">Condition*</label>
+          <select id="condition" name="condition" class="form-control">
+            <option value="New">New</option>
+            <option value="Like New">Like New</option>
+            <option value="Good">Good</option>
+            <option value="Fair">Fair</option>
+            <option value="Poor">Poor</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Cash Exchange Section -->
+      <div class="form-row">
+        <div class="cash-section-group">
+          <h3 class="section-subheading">Cash Exchange Details</h3>
+          <!-- Cash You Require -->
+          <div class="cash-input-group cash-required">
+            <div class="cash-header">
+              <i class="fas fa-hand-holding-usd currency-icon"></i>
+              <h4>Cash You Require from Buyer</h4>
+            </div>
+            <p class="cash-explanation">
+              How much cash should someone add <strong>on top of their swap item</strong> to get your product?
+            </p>
+            <div class="form-group">
+              <label for="required_cash">Additional Cash Requirement (₵)</label>
+              <div class="input-with-symbol">
+                <span class="currency-symbol">₵</span>
+                <input type="number" id="required_cash" name="required_cash" class="form-control" step="0.01" placeholder="0.00" aria-describedby="requiredCashHelp">
+              </div>
+              <small id="requiredCashHelp" class="form-help-text">
+                Example: "I want ₵100 cash with your laptop for my camera"
+              </small>
+            </div>
+          </div>
+          <!-- Cash You'll Add -->
+          <div class="cash-input-group cash-offered">
+            <div class="cash-header">
+              <i class="fas fa-money-bill-wave currency-icon"></i>
+              <h4>Cash You'll Add to Sweeten the Deal</h4>
+            </div>
+            <p class="cash-explanation">
+              How much cash are you willing to add <strong>to your item</strong> to make the swap more attractive?
+            </p>
+            <div class="form-group">
+              <label for="additional_cash">Additional Cash Offer (₵)</label>
+              <div class="input-with-symbol">
+                <span class="currency-symbol">₵</span>
+                <input type="number" id="additional_cash" name="additional_cash" class="form-control" step="0.01" placeholder="0.00" aria-describedby="additionalCashHelp">
+              </div>
+              <small id="additionalCashHelp" class="form-help-text">
+                Example: "I'll add ₵50 cash with my bicycle for your scooter"
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Swap Description -->
+      <div class="form-row">
+        <div class="form-group form-group-textarea">
+          <label for="desired_swap_description">Swap Description</label>
+          <textarea id="desired_swap_description" name="desired_swap_description" class="form-control"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Outright Sale Specific Fields -->
+    <div class="sale-fields" style="display: none;">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="price">Price (GHS)*</label>
+          <input type="number" id="price" name="price" class="form-control" step="0.01">
+        </div>
+        <div class="form-group">
+          <label for="sale_condition">Condition*</label>
+          <select id="sale_condition" name="sale_condition" class="form-control">
+            <option value="New">New</option>
+            <option value="Used">Used</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Common Fields (Location and Contact) -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="location">Location*</label>
+        <input type="text" id="location" name="location" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="contact">Contact Info*</label>
+        <input type="text" id="contact" name="contact" class="form-control" required>
+      </div>
+    </div>
+
+    <!-- Image Upload -->
+    <div class="form-row">
+      <div class="form-group form-row-full">
+        <label>Upload Images (Max 5)</label>
+        <label for="images" class="file-upload">
+          <div class="file-upload-icon">
+            <i class="fas fa-cloud-upload-alt"></i>
+          </div>
+          <div class="file-upload-text">
+            Click to browse or drag & drop images here<br>
+            <small>Supported formats: JPG, PNG (Max 5 images)</small>
+          </div>
+          <input type="file" id="images" name="images" class="visually-hidden" accept="image/jpeg, image/png" multiple onchange="previewImages(event)">
+        </label>
+        <div id="image-preview" class="image-preview-grid"></div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary submit-btn">Create Listing</button>
+  </form>
+</section>
+
+<!-- Proposals Section -->
+<section id="proposals" class="dashboard-section">
+    <h2>Received Proposals</h2>
+    
+    <!-- Filter Dropdown -->
+    <div class="proposal-filter">
+        <label for="proposal-filter-select">Filter by Item:</label>
+        <select id="proposal-filter-select" class="form-control">
+            <option value="all">All</option>
+            {% for title in unique_titles %}
+                <option value="{{ title }}">{{ title }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div class="proposals-list">
+        {% for proposal in proposals %}
+        <div class="proposal-card" data-listing-title="{{ proposal.listing_title }}">
+            <div class="proposal-header">
+                <h3>For: {{ proposal.listing_title }}</h3>
+                <span class="status-badge status-{{ proposal.status }}">
+                    {{ proposal.status }}
+                </span>
+            </div>
+            
+            <!-- Sender Information -->
+            <div class="sender-info">
+                <p><strong>From:</strong> {{ proposal.sender_username }}</p>
+                <p><strong>Contact:</strong> {{ proposal.sender_contact }}</p>
+            </div>
+            
+            <!-- Proposal Images Grid -->
+            <div class="proposal-images" data-proposal-id="{{ proposal.id }}">
+                {% for i in range(1,5) %}
+                    {% set image = proposal['image' ~ i] %}
+                    {% if image %}
+                    <img src="{{ url_for('static', filename='images/' + image.split('/')[-1]) }}" 
+                         class="proposal-image"
+                         alt="Proposal image {{ i }}"
+                         onclick="openModal(this)"
+                         onerror="this.style.display='none'">
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <p><strong>Proposed Item:</strong> {{ proposal.proposed_item }}</p>
+            <p>{{ proposal.message }}</p>
+            {% if proposal.additional_cash > 0 %}
+            <p><strong>Additional Cash:</strong> ₵{{ "%.2f"|format(proposal.additional_cash) }}</p>
+            {% endif %}
+            <div class="proposal-actions">
+                {% if proposal.status == 'pending' or proposal.status == 'declined' %}
+                    <button class="btn btn-success accept-proposal" data-id="{{ proposal.id }}">Accept</button>
+                    <button class="btn btn-warning negotiate-proposal" data-id="{{ proposal.id }}">Negotiate</button>
+                    <button class="btn btn-danger decline-proposal" data-id="{{ proposal.id }}">Decline</button>
+                {% elif proposal.status == 'negotiated' %}
+                    <button class="btn btn-success accept-proposal" data-id="{{ proposal.id }}">Accept</button>
+                    <button class="btn btn-danger decline-proposal" data-id="{{ proposal.id }}">Decline</button>
+                {% elif proposal.status == 'accepted' %}
+                    <span>{{ proposal.status.capitalize() }}</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterSelect = document.getElementById('proposal-filter-select');
+    
+    filterSelect.addEventListener('change', function() {
+        const selectedValue = this.value;
+        const proposalCards = document.querySelectorAll('.proposal-card');
+        
+        proposalCards.forEach(card => {
+            if (selectedValue === 'all' || card.dataset.listingTitle === selectedValue) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+
+<!-- Image Modal -->
+<div id="imageModal" class="image-modal">
+    <span class="close-modal" id="closeModal" onclick="closeModal()">&times;</span>
+    <div class="modal-nav left" id="modalPrev" onclick="changeModalImage(-1)">&larr;</div>
+    <img class="modal-content" id="modalImage">
+    <div class="modal-nav right" id="modalNext" onclick="changeModalImage(1)">&rarr;</div>
+</div>
+
+
+        <!-- Profile Section -->
+        <section id="profile" class="dashboard-section">
+            <h2>Profile Settings</h2>
+            <form id="profile-form" class="profile-form">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" class="form-control" value="{{ user.username }}">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" class="form-control" value="{{ user.email }}">
+                </div>
+                <button type="submit" class="btn btn-primary">Update Profile</button>
+            </form>
+
+            <h3 style="margin-top: 30px;">Change Password</h3>
+            <form id="password-form" class="profile-form">
+                <div class="form-group">
+                    <label for="oldPassword">Current Password:</label>
+                    <input type="password" id="oldPassword" name="oldPassword" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">New Password:</label>
+                    <input type="password" id="newPassword" name="newPassword" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Change Password</button>
+            </form>
+        </section>
+    </div>
+
+    <script>
+        // JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            // Navigation handling
+            document.querySelectorAll('.nav-btn').forEach(button => {
+                if (button.id !== 'logout-btn') {
+                    button.addEventListener('click', function() {
+                        // Update active button
+                        document.querySelectorAll('.nav-btn').forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        this.classList.add('active');
+                        
+                        // Show corresponding section
+                        const sectionId = this.dataset.section;
+                        document.querySelectorAll('.dashboard-section').forEach(section => {
+                            section.classList.remove('active');
+                        });
+                        document.getElementById(sectionId).classList.add('active');
+                    });
+                }
+            });
+
+            // Logout button
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                fetch('/logout', {
+                    method: 'POST'
+                }).then(response => {
+                    if (response.ok) {
+                        window.location.href = '/login';
+                    }
+                });
+            });
+
+            // Delete listing
+            document.querySelectorAll('.delete-listing').forEach(button => {
+                button.addEventListener('click', function() {
+                    if (confirm('Are you sure you want to delete this listing?')) {
+                        const listingId = this.dataset.id;
+                        fetch(`/listings/${listingId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                this.closest('.listing-card').remove();
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                    }
+                });
+            });
+
+// Update proposal status for Accept, Negotiate, or Decline
+document.querySelectorAll('.accept-proposal, .negotiate-proposal, .decline-proposal').forEach(button => {
+    button.addEventListener('click', function() {
+        let status;
+        if (this.classList.contains('accept-proposal')) {
+            status = 'accepted';
+        } else if (this.classList.contains('decline-proposal')) {
+            status = 'declined';
+        } else if (this.classList.contains('negotiate-proposal')) {
+            status = 'negotiated';
+        }
+        const proposalId = this.dataset.id;
+        
+        fetch(`/proposals/${proposalId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ status }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+});
+
+
+            // Profile form submission
+            document.getElementById('profile-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                
+                fetch('/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(Object.fromEntries(formData)),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Profile updated successfully');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+
+            // Password change form
+            document.getElementById('password-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                
+                fetch('/change-password', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(Object.fromEntries(formData)),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Password changed successfully');
+                        this.reset();
+                    } else if (data.error) {
+                        alert(data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+
+
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            fetch('/upload-image', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('image-preview').src = 
+                        `{{ url_for('static', filename='images/') }}${data.filename}`;
+                    document.getElementById('image-name').value = data.filename;
+                }
+            });
+        }
+
+
+        // Image preview functionality
+function previewImage(input, previewId) {
+    const preview = document.getElementById(previewId);
+    const file = input.files[0];
+    const reader = new FileReader();
+    
+    reader.onloadend = function() {
+        preview.src = reader.result;
+    }
+    
+    if (file) {
+        reader.readAsDataURL(file);
+    } else {
+        preview.src = "";
+    }
+}
+
+// Initialize any edit forms on the page
+document.querySelectorAll('.edit-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        fetch(this.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.redirected) {
+                window.location.href = response.url;
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                window.location.href = "{{ url_for('dashboard') }}";
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+});
+
+
+
+        // Add touch support for mobile navigation
+        let touchStartX = 0;
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', e => {
+            const touchEndX = e.changedTouches[0].screenX;
+            const diffX = touchStartX - touchEndX;
+            
+            if (Math.abs(diffX) > 50) { // Minimum swipe distance
+                const sections = ['listings', 'proposals', 'profile'];
+                const currentSection = document.querySelector('.dashboard-section.active').id;
+                const currentIndex = sections.indexOf(currentSection);
+                
+                if (diffX > 0 && currentIndex < sections.length - 1) {
+                    // Swipe left - next section
+                    document.querySelector(`[data-section="${sections[currentIndex + 1]}"]`).click();
+                } else if (diffX < 0 && currentIndex > 0) {
+                    // Swipe right - previous section
+                    document.querySelector(`[data-section="${sections[currentIndex - 1]}"]`).click();
+                }
+            }
+        });
+    </script>
+
+
+        <script>
+        // Image Modal Functions
+        function openModal(img) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.style.display = "block";
+            modalImg.src = img.src;
+        }
+
+        function closeModal() {
+            document.getElementById('imageModal').style.display = "none";
+        }
+
+        // Close modal when clicking outside image
+        window.onclick = function(event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+       
+
+       // Enhanced image preview with removal option
+function previewImages(event) {
+    const preview = document.getElementById('image-preview');
+    preview.innerHTML = '';
+    const files = event.target.files;
+    
+    for (let i = 0; i < Math.min(files.length, 4); i++) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const previewItem = document.createElement('div');
+            previewItem.className = 'preview-item';
+            
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.classList.add('preview-image');
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-image';
+            removeBtn.innerHTML = '×';
+            removeBtn.onclick = function() {
+                removeImage(i, previewItem);
+            };
+            
+            previewItem.appendChild(img);
+            previewItem.appendChild(removeBtn);
+            preview.appendChild(previewItem);
+        }
+        reader.readAsDataURL(files[i]);
+    }
+}
+
+function removeImage(index, element) {
+    const input = document.getElementById('images');
+    const files = Array.from(input.files);
+    files.splice(index, 1);
+    
+    // Create new DataTransfer to update files
+    const dataTransfer = new DataTransfer();
+    files.forEach(file => dataTransfer.items.add(file));
+    input.files = dataTransfer.files;
+    
+    // Remove preview
+    element.remove();
+    
+    // Re-preview remaining images
+    const event = new Event('change');
+    input.dispatchEvent(event);
+}
+
+// Drag and drop functionality
+const fileUpload = document.querySelector('.file-upload');
+fileUpload.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    fileUpload.classList.add('dragover');
+});
+
+fileUpload.addEventListener('dragleave', () => {
+    fileUpload.classList.remove('dragover');
+});
+
+fileUpload.addEventListener('drop', (e) => {
+    e.preventDefault();
+    fileUpload.classList.remove('dragover');
+    
+    const input = document.getElementById('images');
+    input.files = e.dataTransfer.files;
+    
+    // Trigger change event
+    const event = new Event('change');
+    input.dispatchEvent(event);
+});
+
+
+
+
+let currentProposalImages = [];
+let currentImageIndex = 0;
+
+// Open the modal and initialize the gallery array for the clicked proposal
+function openModal(imgElement) {
+    const proposalImagesContainer = imgElement.parentElement;
+    currentProposalImages = Array.from(proposalImagesContainer.querySelectorAll('img')).map(img => img.src);
+    currentImageIndex = currentProposalImages.indexOf(imgElement.src);
+    const modal = document.getElementById('imageModal');
+    const modalImage = document.getElementById('modalImage');
+    modalImage.src = imgElement.src;
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+// Close the modal
+function closeModal() {
+    document.getElementById('imageModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Change modal image: direction = +1 for next, -1 for previous
+function changeModalImage(direction) {
+    if (currentProposalImages.length === 0) return;
+    currentImageIndex = (currentImageIndex + direction + currentProposalImages.length) % currentProposalImages.length;
+    document.getElementById('modalImage').src = currentProposalImages[currentImageIndex];
+}
+
+// Swipe functionality for mobile
+let startX = null;
+
+document.getElementById('imageModal').addEventListener('touchstart', function(e) {
+    startX = e.touches[0].clientX;
+});
+
+document.getElementById('imageModal').addEventListener('touchmove', function(e) {
+    if (!startX) return;
+    let diffX = e.touches[0].clientX - startX;
+    // When swipe distance is greater than threshold, change image
+    if (Math.abs(diffX) > 50) {
+        changeModalImage(diffX > 0 ? -1 : 1);
+        startX = null; // reset startX to avoid multiple triggers
+    }
+});
+
+
+<script>
+    function previewImages(event) {
+        const preview = document.getElementById('image-preview');
+        preview.innerHTML = '';
+        
+        const files = event.target.files;
+        if (files.length > 5) {
+            alert('You can only upload a maximum of 5 images');
+            event.target.value = '';
+            return;
+        }
+        
+        for (let i = 0; i < Math.min(files.length, 5); i++) {
+            const file = files[i];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                preview.appendChild(img);
+            }
+            
+            reader.readAsDataURL(file);
+        }
+    }
+</script>
+  
+
+<script>
+    // Deal type toggle
+    const dealTypeRadios = document.querySelectorAll('input[name="deal_type"]');
+    const swapFields = document.querySelector('.swap-fields');
+    const saleFields = document.querySelector('.sale-fields');
+
+    function handleDealTypeChange() {
+        const isSwap = document.getElementById('deal-swap').checked;
+        
+        swapFields.style.display = isSwap ? 'block' : 'none';
+        saleFields.style.display = isSwap ? 'none' : 'block';
+        
+        // Toggle required attributes
+        document.getElementById('desired_swap').required = isSwap;
+        document.getElementById('condition').required = isSwap;
+        document.getElementById('price').required = !isSwap;
+        document.getElementById('sale_condition').required = !isSwap;
+    }
+
+    dealTypeRadios.forEach(radio => {
+        radio.addEventListener('change', handleDealTypeChange);
+    });
+
+    // Initial check
+    handleDealTypeChange();
+</script>
+  
+</body>
+</html>

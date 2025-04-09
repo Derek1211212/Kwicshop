@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <title>SwapSphere - Modern Item Exchange Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #2ECC71;
+      --secondary-color: #34495E;
+      --accent-color: #F1C40F;
+      --text-color: #2C3E50;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #F8F9FA;
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+
+    .navbar {
+      background: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+
+    .brand {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      z-index: 1001;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+
+    .nav-links a {
+      color: var(--secondary-color);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary-color);
+    }
+
+    .hamburger {
+      display: none;
+      cursor: pointer;
+      z-index: 1001;
+    }
+
+    .hamburger div {
+      width: 25px;
+      height: 3px;
+      background-color: var(--secondary-color);
+      margin: 5px;
+      transition: all 0.3s ease;
+    }
+
+    /* Mobile styles */
+    @media (max-width: 768px) {
+      .hamburger {
+        display: block;
+      }
+
+      .nav-links {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100vh;
+        width: 70%;
+        background: white;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 2rem;
+        transform: translateX(100%);
+        box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+        z-index: 1000;
+      }
+
+      .nav-links.active {
+        transform: translateX(0);
+      }
+
+      .nav-links a {
+        font-size: 1.2rem;
+        padding: 0.5rem 1rem;
+      }
+
+      /* Hamburger animation */
+      .hamburger.active div:nth-child(1) {
+        transform: rotate(-45deg) translate(-5px, 6px);
+      }
+
+      .hamburger.active div:nth-child(2) {
+        opacity: 0;
+      }
+
+      .hamburger.active div:nth-child(3) {
+        transform: rotate(45deg) translate(-5px, -6px);
+      }
+
+      /* Adjust existing mobile styles */
+      .navbar {
+        padding: 0.8rem 1rem;
+      }
+      
+      .brand {
+        font-size: 1.2rem;
+      }
+      
+      .search-filter-container {
+        padding: 1rem;
+        margin: 0.5rem;
+      }
+
+      .search-bar {
+        flex-direction: column;
+      }
+
+      .listings-grid {
+        padding: 0.5rem;
+        gap: 1rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .nav-links {
+        width: 80%;
+      }
+      
+      .card-image {
+        height: 160px;
+      }
+    }
+
+    /* Rest of your existing styles */
+    .search-filter-container {
+      background: white;
+      padding: 2rem;
+      margin: 1rem auto;
+      border-radius: 12px;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+      max-width: 1200px;
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 0.8rem 1.5rem;
+      border: 2px solid #EAEDED;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+
+.filter-tags {
+  display: flex;
+  gap: 1rem;
+  white-space: nowrap; /* Prevents wrapping */
+  overflow-x: auto;    /* Enables horizontal scrolling */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  padding-bottom: 0.5rem; /* Optional: space for scrollbar */
+}
+
+
+    .filter-tag {
+      background: #F4F6F6;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .filter-tag.active {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .listings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 2rem;
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .listing-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+
+    .listing-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    }
+
+    .card-image {
+      position: relative;
+      height: 200px;
+      overflow: hidden;
+    }
+
+    .card-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .card-image:hover img {
+      transform: scale(1.05);
+    }
+
+    .card-content {
+      padding: 1.5rem;
+    }
+
+    .listing-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--secondary-color);
+    }
+
+    .listing-description {
+      font-size: 0.9rem;
+      color: #7F8C8D;
+      margin-bottom: 1rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .swap-details {
+      background: #F9F9F9;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+    }
+
+    .detail-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .detail-label {
+      color: #95A5A6;
+      font-weight: 500;
+    }
+
+    .detail-value {
+      color: var(--secondary-color);
+      font-weight: 500;
+    }
+
+    .cash-adjustment {
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem;
+      max-width: 600px;
+      margin: 2rem auto;
+    }
+
+    .empty-state img {
+      width: 200px;
+      margin-bottom: 1.5rem;
+    }
+
+    .floating-action {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--primary-color);
+      color: white;
+      padding: 1rem;
+      border-radius: 50%;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .listing-card-link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+        /* Footer Styles */
+    .site-footer {
+      background-color: var(--secondary-color);
+      color: white;
+      padding: 2rem 0 0;
+      margin-top: 3rem;
+    }
+
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+    }
+
+    .footer-section {
+      margin-bottom: 2rem;
+    }
+
+    .footer-section h3 {
+      color: var(--primary-color);
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+    }
+
+    .footer-section p, 
+    .footer-section li {
+      color: #ecf0f1;
+      margin-bottom: 0.5rem;
+      line-height: 1.6;
+    }
+
+    .footer-section a {
+      color: #ecf0f1;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .footer-section a:hover {
+      color: var(--primary-color);
+    }
+
+    .footer-section i {
+      margin-right: 0.5rem;
+      width: 20px;
+      text-align: center;
+    }
+
+    .footer-bottom {
+      background-color: rgba(0, 0, 0, 0.2);
+      padding: 1rem 2rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .social-links {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .social-links a {
+      color: white;
+      font-size: 1.2rem;
+      transition: color 0.3s ease;
+    }
+
+    .social-links a:hover {
+      color: var(--primary-color);
+    }
+
+    @media (max-width: 768px) {
+      .footer-container {
+        grid-template-columns: 1fr;
+        padding: 0 1rem;
+      }
+      
+      .footer-bottom {
+        flex-direction: column;
+      }
+    }
+
+        /* Add this new style to your existing CSS */
+    .required-cash {
+      color: var(--primary-color);
+      font-size: 0.7em;  /* Slightly smaller than the title */
+      font-weight: 500;
+      margin-left: 0.3rem;
+    }
+
+        /* Plan Badge Styles */
+    .plan-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        z-index: 2;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .plan-badge i {
+        font-size: 0.9rem;
+    }
+
+    .diamond-plan {
+        color: #00a8ff;
+        border: 1px solid #00a8ff;
+    }
+
+    .gold-plan {
+        color: #ffd700;
+        border: 1px solid #ffd700;
+    }
+
+    .silver-plan {
+        color: #c0c0c0;
+        border: 1px solid #c0c0c0;
+    }
+
+    .bronze-plan {
+        color: #cd7f32;
+        border: 1px solid #cd7f32;
+    }
+
+        /* Deal type indicator */
+    .deal-type-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: white;
+      z-index: 2;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    .swap-badge {
+      background-color: #2ECC71; /* Green for swaps */
+    }
+    
+    .sale-badge {
+      background-color: #E74C3C; /* Red for sales */
+    }
+    
+    /* Different card styling for sales */
+    .sale-card .swap-details {
+      background: #FEF2F2; /* Light red background */
+      border-left: 3px solid #E74C3C;
+    }
+    
+    .sale-card .price-display {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #E74C3C;
+      margin: 0.5rem 0;
+    }
+    
+    /* Swap specific elements */
+    .swap-card .swap-details {
+      background: #F0FDF4; /* Light green background */
+      border-left: 3px solid #2ECC71;
+    }
+    
+    /* Filter tabs styling */
+    .deal-type-tabs {
+      display: flex;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #EAEDED;
+    }
+    
+    .deal-type-tab {
+      padding: 0.5rem 1.5rem;
+      cursor: pointer;
+      font-weight: 500;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+    }
+    
+    .deal-type-tab.active {
+      border-bottom-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="brand">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="var(--primary-color)">
+        <path d="M11 5h2v14h-2V5zm-4 7h2v7H7v-7zm8-7h2v14h-2V5z"/>
+      </svg>
+      SwapSphere
+    </div>
+    <div class="hamburger">
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+    
+<div class="nav-links">
+  <a href="/dashboard">Dashboard</a>
+  <a href="/my-proposals">Sent Offers</a>
+  
+  {% if session.get('user_id') %}
+    <!-- User is logged in: show Logout -->
+    <a href="/logout">Logout</a>
+  {% else %}
+    <!-- User is not logged in: show Login and Sign Up -->
+    <a href="/login">Login</a>
+    <a href="/signup" style="background: var(--primary-color); color: white; padding: 0.5rem 1.5rem; border-radius: 8px;">Sign Up</a>
+  {% endif %}
+</div>
+
+  </nav>
+
+<div class="search-filter-container">
+  <!-- Search Form -->
+  <form id="search-form" action="/" method="GET">
+    <div class="search-bar">
+      <input type="text" name="search" class="search-input" placeholder="Search for items..." value="{{ search }}">
+      <!-- Hidden fields to maintain filters during searches -->
+      <input type="hidden" name="category" id="selected-category" value="{{ selected_category }}">
+      <input type="hidden" name="deal_type" id="selected-deal-type" value="{{ deal_type_filter }}">
+      <button type="submit">Search</button>
+    </div>
+  </form>
+  
+  <!-- Deal Type Tabs -->
+  <div class="deal-type-tabs">
+    <div class="deal-type-tab {% if deal_type_filter == 'All' %}active{% endif %}" data-deal-type="All">All Listings</div>
+    <div class="deal-type-tab {% if deal_type_filter == 'Swap Deal' %}active{% endif %}" data-deal-type="Swap Deal">Swap Deals</div>
+    <div class="deal-type-tab {% if deal_type_filter == 'Outright Sales' %}active{% endif %}" data-deal-type="Outright Sales">For Sale</div>
+  </div>
+  
+  <!-- Filter Tags -->
+  <div class="filter-tags">
+    <div class="filter-tag {% if selected_category == 'All' %}active{% endif %}" data-category="All">All</div>
+    {% for category in categories %}
+      <div class="filter-tag {% if selected_category == category %}active{% endif %}" data-category="{{ category }}">{{ category }}</div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="listings-grid">
+  {% if listings %}
+    {% for listing in listings %}
+      <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}" class="listing-card-link">
+        <div class="listing-card {% if listing.deal_type == 'Outright Sales' %}sale-card{% else %}swap-card{% endif %}">
+          <div class="card-image">
+            <!-- Deal Type Badge -->
+            <div class="deal-type-badge {% if listing.deal_type == 'Outright Sales' %}sale-badge{% else %}swap-badge{% endif %}">
+              {{ listing.deal_type }}
+            </div>
+            
+            <!-- Plan Badge -->
+            {% if listing.plan in ['Diamond', 'Gold', 'Silver', 'Bronze'] %}
+            <div class="plan-badge {{ listing.plan|lower }}-plan">
+                {% if listing.plan == 'Diamond' %}
+                <i class="fas fa-gem"></i>
+                {% elif listing.plan == 'Gold' %}
+                <i class="fas fa-star"></i>
+                {% elif listing.plan == 'Silver' %}
+                <i class="fas fa-certificate"></i>
+                {% elif listing.plan == 'Bronze' %}
+                <i class="fas fa-shield-alt"></i>
+                {% endif %}
+                {{ listing.plan }}
+            </div>
+            {% endif %}
+            
+            <img 
+              src="{{ listing.image_url if listing.image_url else url_for('static', filename='images/placeholder.jpg') }}" 
+              data-src="{{ listing.image_url if listing.image_url else url_for('static', filename='images/placeholder.jpg') }}"
+              alt="{{ listing.title }}"
+              loading="lazy">
+          </div>
+          <div class="card-content">
+            <h3 class="listing-title">
+              {{ listing.title }}
+              {% if listing.required_cash and listing.required_cash > 0 %}
+                <span class="required-cash">+ GHS {{ "%.2f"|format(listing.required_cash) }}</span>
+              {% endif %}
+            </h3>
+            
+            {% if listing.deal_type == 'Outright Sales' %}
+              <!-- Outright Sale Display -->
+              <div class="price-display">GHS {{ "%.2f"|format(listing.price|float) }}</div>
+              <div class="swap-details">
+                <div class="detail-item">
+                  <span class="detail-label">Condition:</span>
+                  <span class="detail-value">{{ listing.condition }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Listed by:</span>
+                  <span class="detail-value">{{ listing.username }}</span>
+                </div>
+              </div>
+            {% else %}
+              <!-- Swap Deal Display -->
+              <div class="swap-details">
+                <div class="detail-item">
+                  <span class="detail-label">Desired Swap:</span>
+                  <span class="detail-value">{{ listing.desired_swap }}</span>
+                </div>
+                {% if listing.additional_cash is not none and listing.additional_cash > 0 %}
+                <div class="detail-item">
+                  <span class="detail-label">Cash Adjustment:</span>
+                  <span class="detail-value cash-adjustment">+ GHS {{ "%.2f"|format(listing.additional_cash) }}</span>
+                </div>
+                {% endif %}
+                <div class="detail-item">
+                  <span class="detail-label">Listed by:</span>
+                  <span class="detail-value">{{ listing.username }}</span>
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </a>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      <img src="{{ url_for('static', filename='images/empty-state.svg') }}" alt="No listings found">
+      <h3>No Listings Available</h3>
+      <p>Be the first to create a listing!</p>
+      <button class="floating-action">+</button>
+    </div>
+  {% endif %}
+</div>
+
+  <div class="floating-action">+</div>
+
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-section">
+        <h3>About SwapSphere</h3>
+        <p>The modern platform for item exchange and bartering. Connect with others to swap items you no longer need for things you want.</p>
+      </div>
+      <div class="footer-section">
+        <h3>Quick Links</h3>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/dashboard">Dashboard</a></li>
+          <li><a href="/my-proposals">My Proposals</a></li>
+          <li><a href="/login">Login</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h3>Contact Us</h3>
+        <ul>
+          <li><i class="fas fa-envelope"></i> support@swapsphere.com</li>
+          <li><i class="fas fa-phone"></i> +1 (234) 567-8900</li>
+          <li><i class="fas fa-map-marker-alt"></i> Accra, Ghana</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2023 SwapSphere. All rights reserved.</p>
+      <div class="social-links">
+        <a href="#"><i class="fab fa-facebook"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-instagram"></i></a>
+      </div>
+    </div>
+  </footer>
+
+
+
+  <script>
+    // Interactive Filtering
+    document.querySelectorAll('.filter-tag').forEach(tag => {
+      tag.addEventListener('click', () => {
+        document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+        tag.classList.add('active');
+        // Add filter logic here
+      });
+    });
+
+    // Image Lazy Loading
+    const lazyLoad = () => {
+      const images = document.querySelectorAll('.card-image img');
+      images.forEach(img => {
+        if (img.getBoundingClientRect().top < window.innerHeight) {
+          img.src = img.dataset.src;
+        }
+      });
+    };
+
+    window.addEventListener('scroll', lazyLoad);
+    window.addEventListener('resize', lazyLoad);
+    lazyLoad();
+
+    // Smooth Transitions
+    document.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', e => {
+        //e.preventDefault();
+        // Add smooth page transition logic
+      });
+    });
+
+
+        // Hamburger menu functionality
+    const hamburger = document.querySelector('.hamburger');
+    const navLinks = document.querySelector('.nav-links');
+    const navLinksItems = document.querySelectorAll('.nav-links a');
+
+    hamburger.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+      hamburger.classList.toggle('active');
+    });
+
+    navLinksItems.forEach(item => {
+      item.addEventListener('click', () => {
+        navLinks.classList.remove('active');
+        hamburger.classList.remove('active');
+      });
+    });
+  </script>
+
+  <script>
+  // Add event listeners to the filter tags
+  document.querySelectorAll('.filter-tag').forEach(tag => {
+    tag.addEventListener('click', function() {
+      // Remove active state from all tags
+      document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+
+      // Set the selected category in the hidden input
+      document.getElementById('selected-category').value = this.dataset.category;
+
+      // Submit the form to apply the filter (keeping the search text)
+      document.getElementById('search-form').submit();
+    });
+  });
+
+
+    // Add event listeners to the deal type tabs
+  document.querySelectorAll('.deal-type-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+      // Remove active state from all tabs
+      document.querySelectorAll('.deal-type-tab').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+
+      // Set the selected deal type in the hidden input
+      document.getElementById('selected-deal-type').value = this.dataset.dealType;
+
+      // Submit the form to apply the filter
+      document.getElementById('search-form').submit();
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Listing</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --required-color: #e63946;
+            --offered-color: #2a9d8f;
+            --border-radius: 8px;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            padding-bottom: 2rem;
+        }
+
+        .edit-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .form-title {
+            color: #264653;
+            border-bottom: 3px solid #2a9d8f;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .cash-section {
+            border-left: 4px solid var(--required-color);
+            padding: 1.5rem;
+            margin: 2rem 0;
+            background: #fff5f5;
+            border-radius: var(--border-radius);
+        }
+
+        .cash-section.offered {
+            border-color: var(--offered-color);
+            background: #f0f9f7;
+        }
+
+        .cash-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .cash-icon {
+            font-size: 1.8rem;
+        }
+
+        .required .cash-icon {
+            color: var(--required-color);
+        }
+
+        .offered .cash-icon {
+            color: var(--offered-color);
+        }
+
+        .cash-explanation {
+            color: #666;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .currency-input {
+            position: relative;
+        }
+
+        .currency-symbol {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: bold;
+            color: #666;
+        }
+
+        .currency-input input {
+            padding-left: 35px;
+        }
+
+        .image-preview {
+            width: 100%;
+            max-width: 200px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: var(--border-radius);
+            border: 2px solid #eee;
+            margin-bottom: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .image-preview:hover {
+            transform: scale(1.03);
+        }
+
+        .image-upload-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-delete {
+            background-color: #e63946;
+            border-color: #e63946;
+        }
+
+        .btn-delete:hover {
+            background-color: #d62839;
+            border-color: #d62839;
+        }
+
+        @media (max-width: 768px) {
+            .edit-container {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+            
+            .cash-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            
+            .image-preview {
+                max-width: 100%;
+                height: 200px;
+            }
+
+            .form-title {
+                font-size: 1.5rem;
+            }
+
+            .btn-group-mobile {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .btn-group-mobile .btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .edit-container {
+                padding: 1rem;
+            }
+
+            .cash-section {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="edit-container">
+            <h2 class="form-title">Edit Listing</h2>
+            
+            <form method="POST" action="{{ url_for('update_listing', listing_id=listing.listing_id) }}" enctype="multipart/form-data">
+                
+                <!-- Main Image Section -->
+                <div class="image-upload-group">
+                    <label class="form-label fw-bold">Current Main Image</label>
+                    <div>
+                        {% if listing.image_url %}
+                        <img src="{{ url_for('static', filename='images/' + listing.image_url) }}" 
+                             class="image-preview"
+                             onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+                        {% else %}
+                        <img src="https://via.placeholder.com/300x200?text=No+Image" class="image-preview">
+                        {% endif %}
+                    </div>
+                    <label for="image" class="form-label mt-2">Change Main Image</label>
+                    <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                    <small class="form-text text-muted">Leave blank to keep current image</small>
+                </div>
+
+                <!-- Additional Images -->
+                <div class="row g-3 mb-4">
+                    {% for i in range(1,5) %}
+                    <div class="col-md-6">
+                        <div class="image-upload-group">
+                            <label class="form-label fw-bold">Image {{ i }}</label>
+                            <div>
+                                {% if listing['image' ~ i] %}
+                                <img src="{{ url_for('static', filename='images/' + listing['image' ~ i]) }}" 
+                                     class="image-preview"
+                                     onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+                                {% else %}
+                                <img src="https://via.placeholder.com/300x200?text=No+Image" class="image-preview">
+                                {% endif %}
+                            </div>
+                            <input type="file" class="form-control mt-2" 
+                                   id="image{{ i }}" name="image{{ i }}" accept="image/*">
+                            <small class="form-text text-muted">Optional</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Basic Information -->
+                <div class="mb-4">
+                    <div class="mb-3">
+                        <label for="title" class="form-label fw-bold">Title*</label>
+                        <input type="text" class="form-control" id="title" name="title" 
+                               value="{{ listing.title }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label fw-bold">Description*</label>
+                        <textarea class="form-control" id="description" name="description" 
+                                  rows="4" required>{{ listing.description }}</textarea>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="condition" class="form-label fw-bold">Condition*</label>
+                            <select class="form-select" id="condition" name="condition" required>
+                                <option value="New" {% if listing['`condition`'] == 'New' %}selected{% endif %}>New</option>
+                                <option value="Like New" {% if listing['`condition`'] == 'Like New' %}selected{% endif %}>Like New</option>
+                                <option value="Good" {% if listing['`condition`'] == 'Good' %}selected{% endif %}>Good</option>
+                                <option value="Fair" {% if listing['`condition`'] == 'Fair' %}selected{% endif %}>Fair</option>
+                                <option value="Poor" {% if listing['`condition`'] == 'Poor' %}selected{% endif %}>Poor</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="location" class="form-label fw-bold">Location*</label>
+                            <input type="text" class="form-control" id="location" name="location"
+                                   value="{{ listing.location }}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Swap Details -->
+                <div class="mb-4">
+                    <div class="mb-3">
+                        <label for="desired_swap" class="form-label fw-bold">Desired Swap*</label>
+                        <input type="text" class="form-control" id="desired_swap" name="desired_swap"
+                               value="{{ listing.desired_swap }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="desired_swap_description" class="form-label fw-bold">Swap Description</label>
+                        <textarea class="form-control" id="desired_swap_description" name="desired_swap_description"
+                                  rows="3">{{ listing.desired_swap_description }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Cash Exchange Section -->
+                <div class="cash-section required">
+                    <div class="cash-header">
+                        <i class="fas fa-hand-holding-usd cash-icon"></i>
+                        <div>
+                            <h4>Cash You Require from Buyer</h4>
+                            <p class="cash-explanation">
+                                This is the cash amount someone needs to add <strong>WITH THEIR ITEM</strong> to get your product
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Additional Cash Required (₵)</label>
+                        <div class="currency-input">
+                            <span class="currency-symbol">₵</span>
+                            <input type="number" class="form-control" 
+                                   id="required_cash" name="required_cash"
+                                   value="{{ listing.required_cash }}" step="0.01">
+                        </div>
+                        <small class="form-text text-muted">
+                            Example: Buyer must add ₵100 with their laptop for your camera
+                        </small>
+                    </div>
+                </div>
+
+                <div class="cash-section offered">
+                    <div class="cash-header">
+                        <i class="fas fa-money-bill-wave cash-icon"></i>
+                        <div>
+                            <h4>Cash You're Offering to Add</h4>
+                            <p class="cash-explanation">
+                                This is the cash amount you're willing to add <strong>WITH YOUR ITEM</strong> to make the swap attractive
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Additional Cash Offer (₵)</label>
+                        <div class="currency-input">
+                            <span class="currency-symbol">₵</span>
+                            <input type="number" class="form-control" 
+                                   id="additional_cash" name="additional_cash"
+                                   value="{{ listing.additional_cash }}" step="0.01">
+                        </div>
+                        <small class="form-text text-muted">
+                            Example: You'll add ₵50 with your bicycle for a scooter
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="mb-4">
+                    <label for="contact" class="form-label fw-bold">Contact Information*</label>
+                    <input type="text" class="form-control" id="contact" name="contact"
+                           value="{{ listing.contact }}" required>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-between align-items-center mt-5">
+                    <button type="button" class="btn btn-delete text-white" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash-alt me-2"></i>Delete Listing
+                    </button>
+                    <div class="d-flex gap-3 btn-group-mobile">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this listing? This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form action="{{ url_for('delete_listing', listing_id=listing.listing_id) }}" method="POST" style="display: inline;">
+                        <button type="submit" class="btn btn-danger">Delete Listing</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Image preview functionality
+        document.querySelectorAll('input[type="file"]').forEach(input => {
+            input.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const previewContainer = this.closest('.image-upload-group');
+                    if (previewContainer) {
+                        const preview = previewContainer.querySelector('.image-preview');
+                        if (preview) {
+                            const reader = new FileReader();
+                            reader.onload = function(event) {
+                                preview.src = event.target.result;
+                            }
+                            reader.readAsDataURL(file);
+                        }
+                    }
+                }
+            });
+        });
+
+        // Auto-resize textareas
+        document.querySelectorAll('textarea').forEach(textarea => {
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+            // Trigger on load
+            textarea.dispatchEvent(new Event('input'));
+        });
+    </script>
+</body>
+</html>
