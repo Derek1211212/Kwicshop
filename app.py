@@ -93,11 +93,13 @@ def home():
         
         # Build the query with optional filters
         query = """
-            SELECT listings.*, users.username 
+            SELECT listings.*, users.username, IFNULL(metrics.impressions, 0) AS impressions
             FROM listings 
             JOIN users ON listings.user_id = users.id 
+            LEFT JOIN listing_metrics AS metrics ON listings.listing_id = metrics.listing_id
             WHERE 1=1
         """
+
         params = []
         
         if search:
@@ -1241,6 +1243,91 @@ def reset_password(token):
         conn.close()
     
     return render_template('reset_password.html', token=token)
+
+
+
+@app.route('/api/track_impression', methods=['POST'])
+def track_impression():
+    listing_id = request.args.get('listing_id')
+    if not listing_id:
+        return jsonify({'success': False, 'error': 'Missing listing_id'}), 400
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM listing_metrics WHERE listing_id = %s", (listing_id,))
+        existing = cursor.fetchone()
+        if existing:
+            cursor.execute("""
+                UPDATE listing_metrics 
+                SET impressions = impressions + 1, updated_at = NOW() 
+                WHERE listing_id = %s
+            """, (listing_id,))
+        else:
+            cursor.execute("""
+                INSERT INTO listing_metrics (listing_id, impressions, clicks, updated_at) 
+                VALUES (%s, 1, 0, NOW())
+            """, (listing_id,))
+        conn.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        logging.error("Error updating impression: %s", e)
+        return jsonify({'success': False}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+
+
+@app.route('/api/track_click', methods=['POST'])
+def track_click():
+    listing_id = request.args.get('listing_id')
+    if listing_id:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                UPDATE listing_metrics 
+                SET clicks = clicks + 1 
+                WHERE listing_id = %s
+            """, (listing_id,))
+            if cursor.rowcount == 0:
+                cursor.execute("""
+                    INSERT INTO listing_metrics (listing_id, clicks) VALUES (%s, 1)
+                """, (listing_id,))
+            conn.commit()
+            return jsonify({'success': True}), 200
+        except Exception as e:
+            conn.rollback()
+            app.logger.error(f"Error tracking click: {e}")
+            return jsonify({'error': str(e)}), 500
+        finally:
+            cursor.close()
+            conn.close()
+    return jsonify({'error': 'Missing listing_id'}), 400
+
+
+
+
+
+
+
+
+# Add this to your Flask app
+@app.template_filter('humanize_number')
+def humanize_number(value):
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        return value
+        
+    if value >= 1_000_000:
+        return f'{value/1_000_000:.1f}M'
+    if value >= 1_000:
+        return f'{value/1_000:.1f}K'
+    return f'{value:,}'
+
 
 
 

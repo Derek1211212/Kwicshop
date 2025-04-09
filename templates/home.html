@@ -526,6 +526,104 @@
       border-bottom-color: var(--primary-color);
       color: var(--primary-color);
     }
+
+/* Network Bars for Impressions */
+.network-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  height: 14px;
+  gap: 2px;
+  margin-right: 4px;
+}
+
+.network-bars .bar {
+  display: inline-block;
+  width: 3px;
+  background-color: #657786;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+.network-bars .bar:nth-child(1) {
+  height: 40%;
+}
+.network-bars .bar:nth-child(2) {
+  height: 70%;
+}
+.network-bars .bar:nth-child(3) {
+  height: 100%;
+}
+
+/* Tooltip Styles */
+.metric-item {
+  position: relative;
+}
+
+.metric-item:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  pointer-events: none;
+  margin-bottom: 5px;
+}
+
+/* Animation for bars on hover */
+.metric-item:hover .network-bars .bar:nth-child(1) {
+  height: 60%;
+}
+.metric-item:hover .network-bars .bar:nth-child(2) {
+  height: 90%;
+}
+.metric-item:hover .network-bars .bar:nth-child(3) {
+  height: 100%;
+}
+
+/* Keep existing metric styles */
+.engagement-metrics {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.metric-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #657786;
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+.metric-count {
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hover effects */
+.metric-item:hover {
+  color: var(--primary-color);
+}
+
+.metric-item:hover .network-bars .bar {
+  background-color: var(--primary-color);
+}
+
+.metric-item:hover .metric-icon {
+  transform: scale(1.1);
+}
+
   </style>
 </head>
 <body>
@@ -589,7 +687,10 @@
 <div class="listings-grid">
   {% if listings %}
     {% for listing in listings %}
-      <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}" class="listing-card-link">
+     <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}" 
+   class="listing-card-link" 
+   data-listing-id="{{ listing.listing_id }}"
+   onclick="trackClick(event, {{ listing.listing_id }})">
         <div class="listing-card {% if listing.deal_type == 'Outright Sales' %}sale-card{% else %}swap-card{% endif %}">
           <div class="card-image">
             <!-- Deal Type Badge -->
@@ -627,38 +728,59 @@
               {% endif %}
             </h3>
             
-            {% if listing.deal_type == 'Outright Sales' %}
-              <!-- Outright Sale Display -->
-              <div class="price-display">GHS {{ "%.2f"|format(listing.price|float) }}</div>
-              <div class="swap-details">
-                <div class="detail-item">
-                  <span class="detail-label">Condition:</span>
-                  <span class="detail-value">{{ listing.condition }}</span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Listed by:</span>
-                  <span class="detail-value">{{ listing.username }}</span>
-                </div>
-              </div>
-            {% else %}
-              <!-- Swap Deal Display -->
-              <div class="swap-details">
-                <div class="detail-item">
-                  <span class="detail-label">Desired Swap:</span>
-                  <span class="detail-value">{{ listing.desired_swap }}</span>
-                </div>
-                {% if listing.additional_cash is not none and listing.additional_cash > 0 %}
-                <div class="detail-item">
-                  <span class="detail-label">Cash Adjustment:</span>
-                  <span class="detail-value cash-adjustment">+ GHS {{ "%.2f"|format(listing.additional_cash) }}</span>
-                </div>
-                {% endif %}
-                <div class="detail-item">
-                  <span class="detail-label">Listed by:</span>
-                  <span class="detail-value">{{ listing.username }}</span>
-                </div>
-              </div>
-            {% endif %}
+{% if listing.deal_type == 'Outright Sales' %}
+  <!-- Outright Sale Display -->
+  <div class="price-display">GHS {{ "%.2f"|format(listing.price|float) }}</div>
+  <div class="swap-details">
+    <div class="detail-item">
+      <span class="detail-label">Condition:</span>
+      <span class="detail-value">{{ listing.condition }}</span>
+    </div>
+    <div class="detail-item">
+      <span class="detail-label">Listed by:</span>
+      <span class="detail-value">{{ listing.username }}</span>
+    </div>
+    <div class="engagement-metrics">
+      <div class="metric-item" data-tooltip="Impressions">
+        <div class="network-bars">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+        <span class="metric-count">{{ listing.impressions|default(0)|humanize_number }}</span>
+      </div>
+    </div>
+  </div>
+{% else %}
+  <!-- Swap Deal Display -->
+  <div class="swap-details">
+    <div class="detail-item">
+      <span class="detail-label">Desired Swap:</span>
+      <span class="detail-value">{{ listing.desired_swap }}</span>
+    </div>
+    {% if listing.additional_cash is not none and listing.additional_cash > 0 %}
+    <div class="detail-item">
+      <span class="detail-label">Cash Adjustment:</span>
+      <span class="detail-value cash-adjustment">+ GHS {{ "%.2f"|format(listing.additional_cash) }}</span>
+    </div>
+    {% endif %}
+    <div class="detail-item">
+      <span class="detail-label">Listed by:</span>
+      <span class="detail-value">{{ listing.username }}</span>
+    </div>
+    <div class="engagement-metrics">
+      <div class="metric-item" data-tooltip="Impressions">
+        <div class="network-bars">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+        <span class="metric-count">{{ listing.impressions|default(0)|humanize_number }}</span>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
           </div>
         </div>
       </a>
@@ -795,6 +917,75 @@
     });
   });
 </script>
+
+<script>
+  // Function to send an AJAX POST request to track an impression
+  function trackImpression(listingId) {
+    fetch('/api/track_impression?listing_id=' + listingId, { 
+      method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Impression tracked for listing ' + listingId, data);
+      // Optionally update the UI with the new impression count if data is returned
+    })
+    .catch(err => console.error('Error tracking impression', err));
+  }
+
+  // Options for the Intersection Observer
+  const observerOptions = {
+    root: null,         // Observe changes relative to the viewport
+    threshold: 0.5      // Trigger when 50% of the card is visible
+  };
+
+  // To avoid sending multiple impression calls for the same listing,
+  // maintain a set of IDs that have already been tracked.
+  const observedListings = new Set();
+
+  // Create the observer instance with our callback
+  const observer = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const listingCard = entry.target;
+        const listingId = listingCard.getAttribute('data-listing-id');
+        console.log('Observed card:', listingCard, 'Listing ID:', listingId);
+        if (listingId && !observedListings.has(listingId)) {
+          observedListings.add(listingId);
+          trackImpression(listingId);
+        }
+      }
+    });
+  }, observerOptions);
+
+  // Attach the observer to each listing card element.
+  // Adjust the selector if your data attribute is on a different element.
+  document.querySelectorAll('.listing-card, .listing-card-link').forEach(card => {
+    // Make sure the element has the attribute; if not, log a warning.
+    if (!card.hasAttribute('data-listing-id')) {
+      console.warn('Element does not have data-listing-id:', card);
+    }
+    observer.observe(card);
+  });
+</script>
+
+
+
+
+
+<script>
+  function trackClick(event, listingId) {
+    // Send a POST request to track click
+    fetch('/api/track_click?listing_id=' + listingId, { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Click tracked for listing ' + listingId, data);
+      })
+      .catch(err => console.error('Error tracking click', err));
+    // Allow normal navigation to occur
+  }
+</script>
+
+
 
 </body>
 </html>
