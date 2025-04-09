@@ -29,9 +29,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # Load environment variables from .env file
 load_dotenv()
 
-app = Flask(__name__, template_folder="templates")
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+app = Flask(__name__, template_folder=os.path.join(BASE_DIR, 'templates'))
 
-app = Flask(__name__, template_folder='Templates')
 app.config['SECRET_KEY'] = 'fa470fe714e44404511cbad16224f52777068d05bb5c29ed'
 
 from logging.handlers import RotatingFileHandler
