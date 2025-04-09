@@ -1,8 +1,8 @@
-try:
-    from flask import Markup
-except ImportError:
-    from markupsafe import Markup
+import markupsafe
+import flask
+flask.Markup = markupsafe.Markup
 
+# Now import the rest of your modules
 import os
 import logging
 from dotenv import load_dotenv
@@ -21,6 +21,7 @@ from itsdangerous import URLSafeTimedSerializer
 import secrets
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
+
 
 
 
