@@ -17,3 +17,4 @@ geopy
 psycopg2-binary
 flask-mail
 python-dotenv
+Flask-WTF==1.1.1
