@@ -32,12 +32,14 @@ load_dotenv()
 app = Flask(__name__, template_folder='Templates')
 app.config['SECRET_KEY'] = 'fa470fe714e44404511cbad16224f52777068d05bb5c29ed'
 
-# Configure logging to write to a file
-logging.basicConfig(
-    filename='app.log',
-    level=logging.ERROR,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+from logging.handlers import RotatingFileHandler
+if not app.debug:
+    handler = RotatingFileHandler('app.log', maxBytes=10240, backupCount=10)
+    handler.setLevel(logging.ERROR)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    app.logger.addHandler(handler)
+
 
 
 # Set up upload folder and allowed extensions

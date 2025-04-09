@@ -4019,3 +4019,5 @@ mysql.connector.errors.ProgrammingError: 1064 (42000): You have an error in your
 2025-04-08 17:51:55,966 - INFO -  * Restarting with stat
 2025-04-08 17:51:56,411 - WARNING -  * Debugger is active!
 2025-04-08 17:51:56,411 - INFO -  * Debugger PIN: 109-151-583
+2025-04-09 06:33:44,438 - INFO -  * Detected change in 'C:\\Users\\Touton SA\\Desktop\\Swap Chief\\app.py', reloading
+2025-04-09 06:33:44,562 - INFO -  * Restarting with stat
