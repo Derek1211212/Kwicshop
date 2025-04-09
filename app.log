@@ -4008,3 +4008,6 @@ mysql.connector.errors.ProgrammingError: 1064 (42000): You have an error in your
 2025-04-08 17:07:52,313 - WARNING -  * Debugger is active!
 2025-04-08 17:07:52,313 - INFO -  * Debugger PIN: 109-151-583
 2025-04-08 17:08:16,047 - INFO -  * Detected change in 'C:\\Users\\Touton SA\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python312\\site-packages\\jedi\\inference\\filters.py', reloading
+2025-04-08 17:08:16,176 - INFO -  * Restarting with stat
+2025-04-08 17:08:16,621 - WARNING -  * Debugger is active!
+2025-04-08 17:08:16,621 - INFO -  * Debugger PIN: 109-151-583
