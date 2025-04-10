@@ -965,6 +965,198 @@
             padding-top: 1rem;
             padding-bottom: 1rem;
         }
+
+
+            /* Add these styles to your existing CSS */
+    /* Add these styles to your existing CSS */
+    .image-container {
+        position: relative;
+    }
+    
+    .plan-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 1;
+    }
+    
+    .badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: capitalize;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .badge-premium {
+        background-color: #10b981;
+        color: white;
+    }
+    
+    .badge-standard {
+        background-color: #10b981;
+        color: white;
+    }
+    
+    .badge-basic {
+        background-color: #10b981;
+        color: white;
+    }
+    
+    .badge-promote {
+        background-color: #10b981;
+        color: white;
+        font-weight: 700;
+        animation: pulse 2s infinite;
+    }
+    
+    .badge-promote i {
+        font-size: 0.8rem;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    /* Ensure the image has proper dimensions */
+    .listing-card img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        background-color: var(--light-gray);
+        border-bottom: 1px solid var(--medium-gray);
+        padding: 0.5rem;
+    }
+
+
+    /* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: var(--white);
+    margin: 15% auto;
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+}
+
+.close-modal {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.plan-options {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.plan-option {
+    padding: 1rem;
+    border: 2px solid var(--medium-gray);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.plan-option:hover {
+    border-color: var(--primary);
+}
+
+.plan-name {
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.plan-price {
+    color: var(--success);
+    font-weight: 500;
+}
+
+
+.badge-promote {
+    background-color: red;
+    color: white;
+    font-weight: 800;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.badge-promote:hover {
+    background-color: #0d9e6e;
+    transform: translateY(-1px);
+}
+
+.badge-promote i {
+    font-size: 0.8rem;
+}
+
+.flash-messages {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2000;
+  text-align: center;
+  width: 90%;
+  max-width: 500px;
+}
+
+.flash-message {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 1.1rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  opacity: 1; /* initial opacity */
+  transition: opacity 1s ease-out;
+}
+
+/* Example flash message type styles */
+.flash-success {
+  background-color: #2ecc71;
+}
+
+.flash-danger {
+  background-color: #e74c3c;
+}
+
+.flash-warning {
+  background-color: #f39c12;
+}
+
+.flash-info {
+  background-color: #3498db;
+}
+
     </style>
 </head>
 <body>
@@ -993,53 +1185,69 @@
             </button>
         </nav>
 
-        <!-- Listings Section -->
-        <section id="listings" class="dashboard-section active">
-            <h2>My Listings</h2>
-            <div class="listings-grid">
-                {% for listing in listings %}
-                <div class="listing-card">
-                    {% if listing.image_url %}
-                    <img src="{{ url_for('static', filename='images/' + listing.image_url.split('/')[-1]) }}" 
-                         alt="{{ listing.title }}"
-                         onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+<!-- Listings Section -->
+<section id="listings" class="dashboard-section active">
+    <h2>My Listings</h2>
+    <div class="listings-grid">
+        {% for listing in listings %}
+        <div class="listing-card" data-listing-id="{{ listing.listing_id }}">
+            <div class="image-container" >
+                {% if listing.image_url %}
+                <img src="{{ url_for('static', filename='images/' + listing.image_url.split('/')[-1]) }}" 
+                     alt="{{ listing.title }}"
+                     onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+                {% else %}
+                <img src="https://via.placeholder.com/300x200?text=No+Image" alt="{{ listing.title }}">
+                {% endif %}
+                <!-- Plan Badge - Positioned top left of image -->
+                <div class="plan-badge">
+                    {% if listing.Plan == 'Free' %}
+                    <span class="badge badge-promote">
+                        Promote <i class="fas fa-arrow-up"></i>
+                    </span>
                     {% else %}
-                    <img src="https://via.placeholder.com/300x200?text=No+Image" alt="{{ listing.title }}">
+                    <span class="badge {% if listing.plan == 'Premium' %}badge-premium{% elif listing.plan == 'Standard' %}badge-standard{% else %}badge-basic{% endif %}">
+                        {{ listing.Plan }}
+                    </span>
                     {% endif %}
-                    <div class="listing-content">
-                        <h3>{{ listing.title }}</h3>
-                        <p>{{ listing.description[:100] }}{% if listing.description|length > 100 %}...{% endif %}</p>
-                        <div class="mobile-stats-container">
-                            <p><strong>Condition:</strong> {{ listing.condition }}</p>
-                            <div class="listing-stats-mobile">
-                                <div class="stat-item-mobile" data-tooltip="Impressions">
-                                    <div class="network-bars-mobile">
-                                        <span class="bar"></span>
-                                        <span class="bar"></span>
-                                        <span class="bar"></span>
-                                    </div>
-                                    <span class="stat-count-mobile">
-                                        {{ listing.impressions|default(0)|humanize_number }}
-                                    </span>
-                                </div>
-                                <div class="stat-item-mobile" data-tooltip="Proposals">
-                                    <i class="fas fa-handshake"></i>
-                                    <span class="stat-count-mobile">{{ listing.proposal_count }}</span>
-                                </div>
+                </div>
+            </div>
+            <div class="listing-content">
+                <h3>{{ listing.title }}</h3>
+                <p>{{ listing.description[:100] }}{% if listing.description|length > 100 %}...{% endif %}</p>
+                <div class="mobile-stats-container">
+                    <p><strong>Condition:</strong> {{ listing.condition }}</p>
+                    <div class="listing-stats-mobile">
+                        <div class="stat-item-mobile" data-tooltip="Impressions">
+                            <div class="network-bars-mobile">
+                                <span class="bar"></span>
+                                <span class="bar"></span>
+                                <span class="bar"></span>
                             </div>
+                            <span class="stat-count-mobile">
+                                {{ listing.impressions|default(0)|humanize_number }}
+                            </span>
+                        </div>
+                        <div class="stat-item-mobile" data-tooltip="Proposals">
+                            <i class="fas fa-handshake"></i>
+                            <span class="stat-count-mobile">{{ listing.proposal_count }}</span>
                         </div>
                     </div>
-                    <div class="listing-actions">
-                        <button class="btn btn-primary edit-listing" 
-                                onclick="window.location.href='{{ url_for('edit_listing', listing_id=listing.listing_id) }}'">
-                            Edit
-                        </button>
-                        <button class="btn btn-outline-danger delete-listing" data-id="{{ listing.listing_id }}">Delete</button>
-                    </div>
                 </div>
-                {% endfor %}
             </div>
-        </section>
+            <div class="listing-actions">
+                <button class="btn btn-primary edit-listing" 
+                        onclick="window.location.href='{{ url_for('edit_listing', listing_id=listing.listing_id) }}'">
+                    Edit
+                </button>
+                <button class="btn btn-outline-danger delete-listing" data-id="{{ listing.listing_id }}">Delete</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+
 
         <!-- Create Listing Section -->
         <section id="create-listing" class="dashboard-section">
@@ -1340,6 +1548,37 @@
     <div class="modal-nav right" id="modalNext" onclick="changeModalImage(1)">&rarr;</div>
 </div>
 </div>
+
+<!-- Promotion Modal -->
+<div id="promotionModal" class="modal">
+  <div class="modal-content">
+    <span class="close-modal">&times;</span>
+    <h3>Select Promotion Plan</h3>
+    <div class="plan-options">
+      {% for plan, price in plan_prices.items() %}
+      <div class="plan-option" data-plan="{{ plan }}" data-price="{{ price }}">
+        <div class="plan-name">{{ plan }}</div>
+        <div class="plan-price">${{ price }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+
+{% with messages = get_flashed_messages(with_categories=True) %}
+  {% if messages %}
+    <div class="flash-messages">
+      {% for category, message in messages %}
+        <div class="flash-message flash-{{ category }}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+
 
 <script>
 // JavaScript
@@ -1679,5 +1918,81 @@ if (fileUpload) {
     });
 }
 </script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const promoteButtons = document.querySelectorAll('.badge-promote');
+    const modal = document.getElementById('promotionModal');
+    const closeModal = document.querySelector('.close-modal');
+    let currentListingId = null;
+
+    promoteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            currentListingId = this.closest('.listing-card').getAttribute('data-listing-id');
+            modal.style.display = 'block';
+        });
+    });
+
+    // ... rest of your modal handling code ...
+
+document.querySelectorAll('.plan-option').forEach(option => {
+    option.addEventListener('click', async function() {
+        const plan = this.dataset.plan;
+        const price = this.dataset.price;
+        
+        console.log('Initiating payment for plan:', plan, 'price:', price); // Debug logging
+
+        try {
+            const response = await fetch('/initiate_payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    plan: plan,
+                    price: price,
+                    listing_id: currentListingId
+                })
+            });
+
+            const data = await response.json();
+            console.log('Payment response:', data); // Debug logging
+            
+            if(!response.ok) {
+                throw new Error(data.error || 'Payment failed');
+            }
+            
+            if(data.authorization_url) {
+                window.location.href = data.authorization_url;
+            } else {
+                throw new Error('No payment URL received');
+            }
+        } catch (error) {
+            console.error('Payment error:', error);
+            alert(`Payment Error: ${error.message}`);
+        }
+    });
+});
+});
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+      const flashMessages = document.querySelectorAll('.flash-messages .flash-message');
+      flashMessages.forEach(function(msg) {
+        // Set opacity to 0 to trigger the CSS transition.
+        msg.style.opacity = '0';
+        // Remove the element after the fade-out transition (1s)
+        setTimeout(function() {
+          msg.remove();
+        }, 1000);
+      });
+    }, 3000); // 4000 ms = 4 seconds delay before fade out
+  });
+</script>
+
 </body>
 </html>

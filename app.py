@@ -29,6 +29,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # Load environment variables from .env file
 load_dotenv()
 
+PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY')
+if not PAYSTACK_SECRET_KEY:
+    raise ValueError("PAYSTACK_SECRET_KEY is not set in the environment")
+
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__, template_folder=os.path.join(BASE_DIR, 'templates'))
 
@@ -481,7 +485,7 @@ def dashboard():
     cursor = conn.cursor(dictionary=True)
     
     try:
-        # Get user listings with proposal count and metrics.
+        # Get user listings with proposal count and metrics
         cursor.execute("""
             SELECT 
                 l.*, 
@@ -511,11 +515,20 @@ def dashboard():
         cursor.execute("SELECT id, username, email FROM users WHERE id = %s", (session['user_id'],))
         user = cursor.fetchone()
         
+        # Define promotion plans and prices
+        plan_prices = {
+            'Diamond': 100,
+            'Gold': 70,
+            'Silver': 40,
+            'Bronze': 20
+        }
+        
         return render_template('dashboard.html', 
-                               user=user,
-                               listings=listings,
-                               proposals=proposals,
-                               unique_titles=unique_titles)
+                            user=user,
+                            listings=listings,
+                            proposals=proposals,
+                            unique_titles=unique_titles,
+                            plan_prices=plan_prices)  # Added plan_prices here
     finally:
         cursor.close()
         conn.close()
@@ -1344,10 +1357,6 @@ def track_click():
 
 
 
-
-
-
-
 # Add this to your Flask app
 @app.template_filter('humanize_number')
 def humanize_number(value):
@@ -1362,6 +1371,154 @@ def humanize_number(value):
         return f'{value/1_000:.1f}K'
     return f'{value:,}'
 
+
+
+
+
+
+@app.route('/initiate_payment', methods=['POST'])
+@login_required
+def initiate_payment():
+    try:
+        if not request.is_json:
+            return jsonify({'error': 'Invalid request format'}), 400
+
+        data = request.get_json()
+        print("Received payment request data:", data)  # Debug logging
+
+        # Validate required fields
+        required_fields = ['plan', 'price', 'listing_id']
+        if not all(key in data for key in required_fields):
+            return jsonify({'error': 'Missing required fields'}), 400
+
+        plan = data['plan']
+        try:
+            price = int(data['price']) * 100  # Convert price to kobo
+        except ValueError as ve:
+            print("Value error during price conversion:", str(ve))
+            return jsonify({'error': 'Invalid price value'}), 400
+        listing_id = data['listing_id']
+
+        print(f"Processing payment for listing {listing_id}, plan {plan}, price {price}")  # Debug logging
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        try:
+            # Verify that the listing exists and belongs to the current user
+            cursor.execute("SELECT user_id FROM listings WHERE listing_id = %s", (listing_id,))
+            listing = cursor.fetchone()
+            if not listing:
+                print(f"Listing {listing_id} not found")
+                return jsonify({'error': 'Listing not found'}), 404
+            if listing['user_id'] != session['user_id']:
+                print(f"Listing {listing_id} doesn't belong to user {session['user_id']}")
+                return jsonify({'error': 'This listing does not belong to you'}), 403
+
+            # Get user email
+            cursor.execute("SELECT email FROM users WHERE id = %s", (session['user_id'],))
+            user = cursor.fetchone()
+            if not user or not user.get('email'):
+                print(f"User {session['user_id']} email not found")
+                return jsonify({'error': 'User email not found'}), 400
+
+            # Prepare Paystack payload
+            payload = {
+                "email": user['email'],
+                "amount": price,
+                "metadata": {
+                    "plan": plan,
+                    "listing_id": listing_id,
+                    "user_id": session['user_id']
+                },
+                "callback_url": url_for('payment_verification', _external=True)
+            }
+
+            print("Sending to Paystack:", payload)  # Debug logging
+
+            headers = {
+                "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}",
+                "Content-Type": "application/json"
+            }
+
+            response = requests.post(
+                "https://api.paystack.co/transaction/initialize",
+                headers=headers,
+                json=payload
+            )
+
+            print("Paystack response:", response.status_code, response.text)  # Debug logging
+
+            response_data = response.json()
+            if response.status_code == 200 and response_data.get("status") is True:
+                # Check for the authorization_url inside the "data" object
+                if "data" in response_data and "authorization_url" in response_data["data"]:
+                    return jsonify(response_data["data"])
+                else:
+                    error_msg = response_data.get("message", "No payment URL received")
+                    print("Error: Authorization URL missing:", response_data)
+                    return jsonify({'error': error_msg}), 400
+            else:
+                error_msg = response_data.get("message", "Payment initialization failed")
+                print("Error initializing payment:", error_msg)
+                return jsonify({'error': error_msg}), 400
+
+        except Exception as db_e:
+            print("Database error:", repr(db_e))
+            return jsonify({'error': 'Database operation failed: ' + str(db_e)}), 500
+        finally:
+            cursor.close()
+            conn.close()
+
+    except Exception as e:
+        print("Unexpected error:", repr(e))
+        return jsonify({'error': 'Internal server error: ' + str(e)}), 500
+
+
+
+
+
+@app.route('/payment/verify')
+def payment_verification():
+    reference = request.args.get('reference')
+    
+    if not reference:
+        flash("Missing payment reference", "error")
+        return redirect(url_for('dashboard'))
+    
+    # Verify payment with Paystack
+    headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
+    response = requests.get(f"https://api.paystack.co/transaction/verify/{reference}", headers=headers)
+    
+    if response.status_code == 200:
+        data = response.json()
+        if data['data']['status'] == 'success':
+            metadata = data['data']['metadata']
+            
+            # Update listing plan in the database
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("""
+                    UPDATE listings 
+                    SET plan = %s 
+                    WHERE listing_id = %s AND user_id = %s
+                """, (metadata['plan'], metadata['listing_id'], metadata['user_id']))
+                conn.commit()
+                
+                flash(f'Ad is now being promoted with the {metadata["plan"]} plan', 'success')
+            except Exception as e:
+                conn.rollback()
+                flash('Error updating listing plan. Please contact support.', 'error')
+            finally:
+                cursor.close()
+                conn.close()
+        else:
+            flash('Payment failed or was not completed', 'error')
+    else:
+        flash('Payment verification failed', 'error')
+    
+    return redirect(url_for('dashboard'))
 
 
 
