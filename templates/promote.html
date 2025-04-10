@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Promote Listing - {{ listing.title }}</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    p {
+      text-align: center;
+      color: #666;
+    }
+    .plan-options {
+      display: grid;
+      grid-gap: 15px;
+      margin: 20px 0;
+    }
+    .plan-option {
+      padding: 15px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.3s ease, background-color 0.3s ease;
+    }
+    .plan-option:hover {
+      border-color: #007bff;
+    }
+    .plan-option.active {
+      border-color: #007bff;
+      background-color: #e7f0ff;
+    }
+    .plan-name {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #333;
+    }
+    .plan-price {
+      font-size: 1rem;
+      color: #28a745;
+      margin-top: 5px;
+    }
+    #proceedPayment {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      background-color: #28a745;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #proceedPayment:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    #proceedPayment:hover:not(:disabled) {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Promote Listing</h2>
+    <p>Select a promotion plan for "<strong>{{ listing.title }}</strong>"</p>
+    <div class="plan-options" id="planOptions">
+      {% for plan, price in plan_prices.items() %}
+      <div class="plan-option" data-plan="{{ plan }}" data-price="{{ price }}">
+        <div class="plan-name">{{ plan }}</div>
+        <div class="plan-price">₵{{ price }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    <button id="proceedPayment" disabled>Proceed to Payment</button>
+  </div>
+
+  <script>
+    // Get all plan option elements and the payment button.
+    const planOptions = document.querySelectorAll('.plan-option');
+    const proceedBtn = document.getElementById('proceedPayment');
+    let selectedPlan = null;
+    let selectedPrice = null;
+
+    // Add click listener to each plan option.
+    planOptions.forEach(option => {
+      option.addEventListener('click', () => {
+        // Remove active class from all options.
+        planOptions.forEach(o => o.classList.remove('active'));
+        // Set active class on clicked option.
+        option.classList.add('active');
+        selectedPlan = option.getAttribute('data-plan');
+        selectedPrice = option.getAttribute('data-price');
+        proceedBtn.disabled = false;
+      });
+    });
+
+    // When user clicks Proceed, initiate payment.
+    proceedBtn.addEventListener('click', async () => {
+      if (!selectedPlan || !selectedPrice) {
+        alert("Please select a promotion plan first.");
+        return;
+      }
+      // Prepare payload.
+      const payload = {
+        plan: selectedPlan,
+        price: selectedPrice,
+        listing_id: {{ listing.listing_id }}
+      };
+
+      try {
+        const response = await fetch('/initiate_payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        console.log('Payment response:', data);
+        if (response.ok && data.authorization_url) {
+          // Redirect to Paystack checkout.
+          window.location.href = data.authorization_url;
+        } else {
+          throw new Error(data.error || 'Payment initialization failed');
+        }
+      } catch (error) {
+        console.error('Payment error:', error);
+        alert(`Payment Error: ${error.message}`);
+      }
+    });
+  </script>
+</body>
+</html>

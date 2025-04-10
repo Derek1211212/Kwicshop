@@ -1523,5 +1523,40 @@ def payment_verification():
 
 
 
+@app.route('/promote/<int:listing_id>')
+@login_required
+def promote_listing(listing_id):
+    conn = None
+    listing = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        # Verify the listing exists and belongs to the current user
+        cursor.execute("SELECT * FROM listings WHERE listing_id = %s AND user_id = %s", 
+                       (listing_id, session['user_id']))
+        listing = cursor.fetchone()
+        cursor.close()
+    except Exception as e:
+        app.logger.error("Error fetching listing for promotion: %s", e)
+    finally:
+        if conn:
+            conn.close()
+
+    if not listing:
+        abort(404)
+
+    # Define available promotion plans and their prices
+    plan_prices = {
+        "Diamond": 100,
+        "Gold": 70,
+        "Silver": 40,
+        "Bronze": 20
+    }
+    return render_template('promote.html', listing=listing, plan_prices=plan_prices)
+
+
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
