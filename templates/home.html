@@ -624,6 +624,23 @@
   transform: scale(1.1);
 }
 
+
+.search-btn {
+  background-color: var(--primary-color); /* Primary color from your palette */
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.search-btn:hover {
+  background-color: #27ae60; /* A slightly darker green for hover */
+}
+
   </style>
 </head>
 <body>
@@ -658,15 +675,16 @@
 
 <div class="search-filter-container">
   <!-- Search Form -->
-  <form id="search-form" action="/" method="GET">
-    <div class="search-bar">
-      <input type="text" name="search" class="search-input" placeholder="Search for items..." value="{{ search }}">
-      <!-- Hidden fields to maintain filters during searches -->
-      <input type="hidden" name="category" id="selected-category" value="{{ selected_category }}">
-      <input type="hidden" name="deal_type" id="selected-deal-type" value="{{ deal_type_filter }}">
-      <button type="submit">Search</button>
-    </div>
-  </form>
+<form id="search-form" action="/" method="GET">
+  <div class="search-bar">
+    <input type="text" name="search" class="search-input" placeholder="Search for items..." value="{{ search }}">
+    <!-- Hidden fields to maintain filters during searches -->
+    <input type="hidden" name="category" id="selected-category" value="{{ selected_category }}">
+    <input type="hidden" name="deal_type" id="selected-deal-type" value="{{ deal_type_filter }}">
+    <button type="submit" class="search-btn">Search</button>
+  </div>
+</form>
+
   
   <!-- Deal Type Tabs -->
   <div class="deal-type-tabs">
