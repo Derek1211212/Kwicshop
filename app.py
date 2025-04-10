@@ -178,6 +178,18 @@ def listing_details(listing_id):
         listing = cursor.fetchone()
         
         if listing:
+            # Get impression and click counts
+            cursor.execute("""
+                SELECT 
+                    SUM(CASE WHEN event_type = 'impression' THEN 1 ELSE 0 END) as impressions,
+                    SUM(CASE WHEN event_type = 'click' THEN 1 ELSE 0 END) as clicks
+                FROM listing_stats 
+                WHERE listing_id = %s
+            """, (listing_id,))
+            stats = cursor.fetchone()
+            listing['impressions'] = stats['impressions'] or 0
+            listing['clicks'] = stats['clicks'] or 0
+            
             # Get average rating and count
             cursor.execute("""
                 SELECT AVG(rating_value) as avg_rating, COUNT(*) as rating_count 
@@ -200,9 +212,27 @@ def listing_details(listing_id):
             listing['rating_count'] = rating_data['rating_count']
             listing['reviews'] = reviews
             
+            # Track this view as an impression
+            if 'user_id' in session:
+                cursor.execute("""
+                    INSERT INTO listing_stats 
+                    (listing_id, user_id, event_type) 
+                    VALUES (%s, %s, 'impression')
+                """, (listing_id, session['user_id']))
+            else:
+                cursor.execute("""
+                    INSERT INTO listing_stats 
+                    (listing_id, event_type) 
+                    VALUES (%s, 'impression')
+                """, (listing_id,))
+            
+            conn.commit()
+            
         cursor.close()
     except Exception as e:
         logging.error("Error fetching listing details: %s", e)
+        if conn:
+            conn.rollback()
     finally:
         if conn:
             conn.close()
@@ -451,12 +481,15 @@ def dashboard():
     cursor = conn.cursor(dictionary=True)
     
     try:
-        # Get user listings with proposal count
+        # Get user listings with proposal count and metrics.
         cursor.execute("""
             SELECT 
                 l.*, 
+                IFNULL(m.impressions, 0) AS impressions,
+                IFNULL(m.clicks, 0) AS clicks,
                 (SELECT COUNT(*) FROM proposals p WHERE p.listing_id = l.listing_id) AS proposal_count
             FROM listings l
+            LEFT JOIN listing_metrics m ON l.listing_id = m.listing_id
             WHERE l.user_id = %s
         """, (session['user_id'],))
         listings = cursor.fetchall()
@@ -479,13 +512,14 @@ def dashboard():
         user = cursor.fetchone()
         
         return render_template('dashboard.html', 
-                            user=user,
-                            listings=listings,
-                            proposals=proposals,
-                            unique_titles=unique_titles)
+                               user=user,
+                               listings=listings,
+                               proposals=proposals,
+                               unique_titles=unique_titles)
     finally:
         cursor.close()
         conn.close()
+
 
 
 @app.route('/listings/<int:listing_id>', methods=['DELETE'])
