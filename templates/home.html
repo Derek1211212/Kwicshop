@@ -705,10 +705,10 @@
 <div class="listings-grid">
   {% if listings %}
     {% for listing in listings %}
-     <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}" 
-   class="listing-card-link" 
-   data-listing-id="{{ listing.listing_id }}"
-   onclick="trackClick(event, {{ listing.listing_id }})">
+      <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}" 
+         class="listing-card-link" 
+         data-listing-id="{{ listing.listing_id }}"
+         onclick="trackClick(event, {{ listing.listing_id }})">
         <div class="listing-card {% if listing.deal_type == 'Outright Sales' %}sale-card{% else %}swap-card{% endif %}">
           <div class="card-image">
             <!-- Deal Type Badge -->
@@ -718,18 +718,18 @@
             
             <!-- Plan Badge -->
             {% if listing.plan in ['Diamond', 'Gold', 'Silver', 'Bronze'] %}
-            <div class="plan-badge {{ listing.plan|lower }}-plan">
+              <div class="plan-badge {{ listing.plan|lower }}-plan">
                 {% if listing.plan == 'Diamond' %}
-                <i class="fas fa-gem"></i>
+                  <i class="fas fa-gem"></i>
                 {% elif listing.plan == 'Gold' %}
-                <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
                 {% elif listing.plan == 'Silver' %}
-                <i class="fas fa-certificate"></i>
+                  <i class="fas fa-certificate"></i>
                 {% elif listing.plan == 'Bronze' %}
-                <i class="fas fa-shield-alt"></i>
+                  <i class="fas fa-shield-alt"></i>
                 {% endif %}
                 {{ listing.plan }}
-            </div>
+              </div>
             {% endif %}
             
             <img 
@@ -742,63 +742,43 @@
             <h3 class="listing-title">
               {{ listing.title }}
               {% if listing.required_cash and listing.required_cash > 0 %}
-                <span class="required-cash">+ GHS {{ "%.2f"|format(listing.required_cash) }}</span>
+                <span class="required-cash">+ ₵ {{ "{:,.2f}".format(listing.required_cash) }}</span>
               {% endif %}
             </h3>
             
-{% if listing.deal_type == 'Outright Sales' %}
-  <!-- Outright Sale Display -->
-  <div class="price-display">GHS {{ "%.2f"|format(listing.price|float) }}</div>
-  <div class="swap-details">
-    <div class="detail-item">
-      <span class="detail-label">Condition:</span>
-      <span class="detail-value">{{ listing.condition }}</span>
-    </div>
-    <div class="detail-item">
-      <span class="detail-label">Listed by:</span>
-      <span class="detail-value">{{ listing.username }}</span>
-    </div>
-    <div class="engagement-metrics">
-      <div class="metric-item" data-tooltip="Impressions">
-        <div class="network-bars">
-          <span class="bar"></span>
-          <span class="bar"></span>
-          <span class="bar"></span>
-        </div>
-        <span class="metric-count">{{ listing.impressions|default(0)|humanize_number }}</span>
-      </div>
-    </div>
-  </div>
-{% else %}
-  <!-- Swap Deal Display -->
-  <div class="swap-details">
-    <div class="detail-item">
-      <span class="detail-label">Desired Swap:</span>
-      <span class="detail-value">{{ listing.desired_swap }}</span>
-    </div>
-    {% if listing.additional_cash is not none and listing.additional_cash > 0 %}
-    <div class="detail-item">
-      <span class="detail-label">Cash Adjustment:</span>
-      <span class="detail-value cash-adjustment">+ GHS {{ "%.2f"|format(listing.additional_cash) }}</span>
-    </div>
-    {% endif %}
-    <div class="detail-item">
-      <span class="detail-label">Listed by:</span>
-      <span class="detail-value">{{ listing.username }}</span>
-    </div>
-    <div class="engagement-metrics">
-      <div class="metric-item" data-tooltip="Impressions">
-        <div class="network-bars">
-          <span class="bar"></span>
-          <span class="bar"></span>
-          <span class="bar"></span>
-        </div>
-        <span class="metric-count">{{ listing.impressions|default(0)|humanize_number }}</span>
-      </div>
-    </div>
-  </div>
-{% endif %}
-
+            {% if listing.deal_type == 'Outright Sales' %}
+              <!-- Outright Sale Display -->
+              <div class="price-display">₵ {{ "{:,.2f}".format(listing.price|float) }}</div>
+              <div class="swap-details">
+                <div class="detail-item">
+                  <span class="detail-label">Condition:</span>
+                  <span class="detail-value">{{ listing.condition }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Listed by:</span>
+                  <span class="detail-value">{{ listing.username }}</span>
+                </div>
+              </div>
+            {% else %}
+              <!-- Swap Deal Display -->
+              <div class="swap-details">
+                <div class="detail-item">
+                  <span class="detail-label">Desired Swap:</span>
+                  <span class="detail-value">{{ listing.desired_swap }}</span>
+                </div>
+                {% if listing.additional_cash is not none and listing.additional_cash > 0 %}
+                  <div class="detail-item">
+                    <span class="detail-label">Cash Adjustment:</span>
+                    <span class="detail-value cash-adjustment">+ ₵ {{ "{:,.2f}".format(listing.additional_cash) }}</span>
+                  </div>
+                {% endif %}
+                <div class="detail-item">
+                  <span class="detail-label">Listed by:</span>
+                  <span class="detail-value">{{ listing.username }}</span>
+                </div>
+              </div>
+            {% endif %}
+  
           </div>
         </div>
       </a>
@@ -812,6 +792,7 @@
     </div>
   {% endif %}
 </div>
+
 
  
 
