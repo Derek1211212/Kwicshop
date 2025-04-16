@@ -757,9 +757,10 @@
     </div>
 
     {% if listing.deal_type == 'Outright Sales' %}
-    <div class="price-display">
-      GHS {{ listing.price if listing.price else 'Price not specified' }}
-    </div>
+<div class="price-display">
+  GHS {{ "{:,.2f}".format(listing.price|float) if listing.price else 'Price not specified' }}
+</div>
+
     {% endif %}
 
     <div class="details-grid">
@@ -812,7 +813,7 @@
             <h1 class="listing-title">
               {{ listing.title }}
               {% if listing.deal_type == 'Swap Deal' and listing.required_cash and listing.required_cash > 0 %}
-                <span class="required-cash">+ GHS {{ "%.2f"|format(listing.required_cash|float) }}</span>
+                <span class="required-cash">+ GHS {{ "{:,.2f}".format(listing.required_cash|float) }}</span>
               {% endif %}
             </h1>
           </div>
@@ -843,10 +844,11 @@
           {% if listing.additional_cash and listing.additional_cash > 0 %}
           <div class="detail-item">
             <span class="detail-label">Cash Adjustment</span>
-            <p class="cash-adjustment">
-              <i class="fas fa-coins"></i>
-              + GHS {{ "%.2f"|format(listing.additional_cash|float) }}
-            </p>
+<p class="cash-adjustment">
+  <i class="fas fa-coins"></i>
+  + GHS {{ "{:,.2f}".format(listing.additional_cash|float) }}
+</p>
+
           </div>
           {% endif %}
         </div>
