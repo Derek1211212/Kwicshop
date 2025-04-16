@@ -19,3 +19,5 @@ flask-mail
 python-dotenv
 Flask-WTF==1.1.1
 flask-bcrypt
+twilio
+
