@@ -351,22 +351,34 @@ def create_user(form):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        # Ensure all required fields (username, email, password) are included
+
         sql = """
-            INSERT INTO users (username, email, password) 
-            VALUES (%s, %s, %s)
+            INSERT INTO users (username, email, contact, password) 
+            VALUES (%s, %s, %s, %s)
         """
         username = form['username']
         email = form['email']
-        # Make sure to hash the password before storing it!
+        country_code = form['country_code']
+        phone_number = form['phone_number'].strip()
+
+        # Remove all whitespace
+        phone_number = "".join(phone_number.split())
+
+        # Remove leading zero if it exists
+        if phone_number.startswith("0"):
+            phone_number = phone_number[1:]
+
+        # Combine country code and phone number
+        contact = country_code + phone_number
+
         hashed_password = generate_password_hash(form['password'])
-        
-        cursor.execute(sql, (username, email, hashed_password))
+
+        cursor.execute(sql, (username, email, contact, hashed_password))
         conn.commit()
-        
+
         user_id = cursor.lastrowid
-        return {'id': user_id, 'username': username, 'email': email}
-        
+        return {'id': user_id, 'username': username, 'email': email, 'contact': contact}
+
     except Exception as e:
         logging.error(f"Error creating user: {str(e)}")
         if conn:
@@ -378,22 +390,20 @@ def create_user(form):
         if conn:
             conn.close()
 
-
-
-
-
-
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
         user = create_user(request.form)
         if user:
-            session['user_id'] = user['id']
-            # Redirect to my-proposals after signup
-            return redirect(url_for('home'))
-        flash('Registration failed. Please try again.')
+            flash('Account created successfully! Please log in.')
+            return redirect(url_for('login'))  # Redirect to login page
+        flash('Account created successfully! Please log in.')
     
     return render_template('signup.html')
+
+
+
+
 
 
 
@@ -401,6 +411,71 @@ def signup():
 def logout():
     session.pop('user_id', None)
     return redirect(url_for('home'))
+
+
+
+
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from twilio.rest import Client
+
+def send_email_notification(recipient_email, subject, body):
+    """
+    Sends an email notification to the specified recipient.
+    
+    Configuration:
+      - Replace 'your_email@example.com' and 'your_email_password' with your email credentials.
+      - Set 'smtp.example.com' and port 587 (or another port as needed) to match your SMTP server.
+    """
+    sender_email = "Derickbill3@gmail.com"
+    sender_password = "bxyw odgw iwvl tpad"
+    smtp_server = "smtp.gmail.com"
+    smtp_port = 587  # or use 465 for SSL if needed
+
+    # Create a multipart message
+    message = MIMEMultipart()
+    message["From"] = sender_email
+    message["To"] = recipient_email
+    message["Subject"] = subject
+    message.attach(MIMEText(body, "plain"))
+
+    try:
+        # Connect to the SMTP server and send the email
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()  # Secure the connection
+            server.login(sender_email, sender_password)
+            server.send_message(message)
+        print(f"Email sent successfully to {recipient_email}")
+    except Exception as e:
+        print("Error sending email:", e)
+        raise e
+
+def send_text_notification(recipient_contact, body):
+    """
+    Sends a text message notification using the Twilio API.
+    
+    Configuration:
+      - Replace 'your_twilio_account_sid', 'your_twilio_auth_token', and 'your_twilio_phone_number'
+        with your Twilio account details.
+      - Ensure that recipient_contact is in the proper format (e.g., '+1234567890').
+    """
+    account_sid = "AC51155da53026cb7d1bc0f7bd7512c764"
+    auth_token = "7e2c3ce168d8790f799f5f5d59087408"
+    from_number = "+13252406425"  # Your Twilio phone number
+
+    client = Client(account_sid, auth_token)
+
+    try:
+        message = client.messages.create(
+            body=body,
+            from_=from_number,
+            to=recipient_contact
+        )
+        print(f"Text message sent successfully to {recipient_contact}, SID: {message.sid}")
+    except Exception as e:
+        print("Error sending text message:", e)
+        raise e
 
 
 
@@ -415,7 +490,8 @@ def logout():
 def create_proposal(listing_id):
     if request.method == 'POST':
         conn = get_db_connection()  # Uses your helper function
-        cursor = conn.cursor()
+        # Use a dictionary cursor if needed, otherwise adjust index access accordingly.
+        cursor = conn.cursor(dictionary=True)
         try:
             # Retrieve form fields
             proposed_item = request.form['proposed_item']
@@ -461,14 +537,47 @@ def create_proposal(listing_id):
             )
             cursor.execute(query, params)
             conn.commit()
+
+            # ---------------------
+            # Notification Section
+            # ---------------------
+            # Get the listing owner's user_id using the listing_id
+            cursor.execute("SELECT user_id FROM listings WHERE listing_id = %s", (listing_id,))
+            owner_row = cursor.fetchone()
+            if owner_row:
+                owner_id = owner_row['user_id']
+                # Retrieve email and contact info for the owner
+                cursor.execute("SELECT email, contact FROM users WHERE id = %s", (owner_id,))
+                user_row = cursor.fetchone()
+                if user_row:
+                    recipient_email = user_row['email']
+                    recipient_contact = user_row['contact']
+
+                    # Compose notification details
+                    subject = "New Proposal Received"
+                    notification_message = (
+                        "You have received a new offer for your swap deal. "
+                        "Please log in to your dashboard to review the proposal."
+                    )
+
+                    try:
+                        # Call your helper functions to send email and text notifications.
+                        send_email_notification(recipient_email, subject, notification_message)
+                        send_text_notification(recipient_contact, notification_message)
+                    except Exception as notify_error:
+                        app.logger.error("Error sending notifications: %s", str(notify_error))
+            # ---------------------
+
             flash('Your swap proposal has been submitted successfully!', 'success')
             return redirect(url_for('listing_details', listing_id=listing_id))
         except Exception as e:
             conn.rollback()
             app.logger.error("Error inserting proposal: %s", str(e))
-            app.logger.error("Query parameters: listing_id=%s, user_id=%s, proposed_item=%s, additional_cash=%s, message=%s, detailed_description=%s, condition=%s, phone_number=%s, email_address=%s, images=%s",
-                             listing_id, session.get('user_id'), proposed_item, additional_cash, message,
-                             detailed_description, condition, phone_number, email_address, image_filenames)
+            app.logger.error(
+                "Query parameters: listing_id=%s, user_id=%s, proposed_item=%s, additional_cash=%s, message=%s, detailed_description=%s, condition=%s, phone_number=%s, email_address=%s, images=%s",
+                listing_id, session.get('user_id'), proposed_item, additional_cash, message,
+                detailed_description, condition, phone_number, email_address, image_filenames
+            )
             flash(f'Error submitting proposal: {str(e)}', 'danger')
         finally:
             cursor.close()
