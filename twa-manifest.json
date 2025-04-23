@@ -1,7 +1,8 @@
 {
   "packageId": "com.swapsphere.swapchief",
-  "host": "swap-chief-rs2t.onrender.com",
+  "host": "swap-chief-rs2t.onrender.com/",
   "name": "SwapSphere",
+  "short_name": "SwapChief",
   "launcherName": "SwapSphere",
   "display": "standalone",
   "themeColor": "#81C784",
@@ -23,7 +24,7 @@
   "appVersionCode": 1,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://swap-chief-rs2t.onrender.com/static/manifest.json",
+  "webManifestUrl": "https://swap-chief-rs2t.onrender.com/static/twa-manifest.json",
   "fallbackType": "customtabs",
   "features": {
     "locationDelegation": {
@@ -36,7 +37,7 @@
   "enableSiteSettingsShortcut": true,
   "isChromeOSOnly": false,
   "isMetaQuest": false,
-  "fullScopeUrl": "https://swap-chief-rs2t.onrender.com",
+  "fullScopeUrl": "https://swap-chief-rs2t.onrender.com/static/",
   "minSdkVersion": 21,
   "orientation": "portrait",
   "fingerprints": [],
