@@ -1,0 +1,47 @@
+{
+  "packageId": "com.swapsphere.swapchief",
+  "host": "--sdkVersion=latest",
+  "name": "SwapSphere",
+  "launcherName": "Swap",
+  "display": "standalone",
+  "themeColor": "#8BC34A",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#8BC34A",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://swap-chief-rs2t.onrender.com/static/icons/ss.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "\"C:\\Users\\Touton SA\\Desktop\\Swap Chief\\swapsphere-key.jks\"",
+    "alias": "swap"
+  },
+  "appVersionName": "1",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://swap-chief-rs2t.onrender.com/static/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": {
+      "enabled": true
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://swap-chief-rs2t.onrender.com/static/",
+  "minSdkVersion": 21,
+  "orientation": "portrait",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "appVersion": "1"
+}
