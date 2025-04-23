@@ -1666,6 +1666,14 @@ def promote_listing(listing_id):
 
 
 
+from flask import send_from_directory
+
+@app.route('/service-worker.js')
+def service_worker():
+    return send_from_directory('static', 'service-worker.js')
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
