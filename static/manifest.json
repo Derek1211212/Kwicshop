@@ -7,12 +7,12 @@
   "theme_color": "#2ECC71",
   "icons": [
     {
-      "src": "/static/icons/ss.png",
+      "src": "https://swap-chief-rs2t.onrender.com/static/icons/ss.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/static/icons/ss.png",
+      "src": "https://swap-chief-rs2t.onrender.com/static/icons/ss.png",
       "sizes": "512x512",
       "type": "image/png"
     }
