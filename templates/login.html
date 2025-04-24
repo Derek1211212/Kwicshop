@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Login - SwapSphere</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
@@ -13,11 +14,13 @@
       --input-border: #EAEDED;
       --error-color: #E74C3C;
     }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
+
     body {
       font-family: 'Poppins', sans-serif;
       background-color: var(--background-color);
@@ -26,58 +29,75 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      padding: 1rem;
     }
+
     .container {
-      max-width: 500px;
-      margin: 2rem auto;
-      padding: 1.5rem;
-      width: 90%;
+      width: 100%;
+      max-width: 480px;
+      margin: auto;
+      padding: 1rem;
     }
+
     .header {
       text-align: center;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
+
     .logo {
       color: var(--primary-color);
-      font-size: 2rem;
+      font-size: 1.75rem;
       margin-bottom: 0.5rem;
     }
+
     .form-container {
       background: white;
-      padding: 2rem;
+      padding: 1.5rem;
       border-radius: 12px;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      width: 100%;
     }
+
     .form-group {
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.25rem;
       position: relative;
     }
+
     label {
       display: block;
       margin-bottom: 0.5rem;
       color: var(--secondary-color);
       font-weight: 500;
+      font-size: 0.95rem;
     }
+
     input {
       width: 100%;
-      padding: 0.8rem;
+      padding: 0.9rem;
       border: 2px solid var(--input-border);
       border-radius: 8px;
       font-size: 1rem;
       transition: border-color 0.3s ease;
+      -webkit-appearance: none;
     }
+
     input:focus {
       outline: none;
       border-color: var(--primary-color);
     }
+
     .password-toggle {
       position: absolute;
-      right: 10px;
-      top: 50%;
+      right: 12px;
+      top: 58%;
       transform: translateY(-50%);
       cursor: pointer;
       color: var(--secondary-color);
+      font-size: 1.1rem;
+      background: white;
+      padding: 0 5px;
     }
+
     .submit-btn {
       background: var(--primary-color);
       color: white;
@@ -85,17 +105,86 @@
       padding: 1rem;
       border: none;
       border-radius: 8px;
-      font-size: 1rem;
+      font-size: 1.05rem;
       font-weight: 500;
       cursor: pointer;
       transition: opacity 0.3s ease;
     }
-    .submit-btn:hover {
-      opacity: 0.9;
-    }
+
     .switch-form {
       text-align: center;
       margin-top: 1.5rem;
+      font-size: 0.95rem;
+    }
+
+    .switch-form a {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .error-message {
+      color: var(--error-color);
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    .forgot-password {
+      text-align: right;
+      margin: -0.25rem 0 1.25rem 0;
+    }
+
+    .forgot-password a {
+      color: var(--secondary-color);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 0.5rem;
+        justify-content: flex-start;
+      }
+
+      .container {
+        padding: 0.5rem;
+      }
+
+      .form-container {
+        padding: 1.25rem;
+      }
+
+      .logo {
+        font-size: 1.5rem;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      input {
+        padding: 0.8rem;
+        font-size: 0.95rem;
+      }
+
+      .password-toggle {
+        top: 55%;
+        right: 10px;
+      }
+
+      .submit-btn {
+        padding: 0.9rem;
+        font-size: 1rem;
+      }
+
+      .switch-form {
+        margin-top: 1.25rem;
+      }
     }
     .switch-form a {
       color: var(--primary-color);
@@ -185,21 +274,18 @@
           <div class="error-message" id="emailError"></div>
         </div>
         <input type="hidden" name="next" value="{{ next_url }}">
-<div class="form-group">
-  <label for="password">Password</label>
-  <input type="password" id="password" name="password" required>
-  <i class="fas fa-eye password-toggle" id="togglePassword"></i>
-  <div class="error-message" id="passwordError"></div>
-</div>
-
-<!-- Add this forgot password link -->
-<div class="forgot-password" style="text-align: right; margin-bottom: 1.5rem;">
-  <a href="{{ url_for('forgot_password') }}" style="color: var(--secondary-color); text-decoration: none; font-size: 0.9rem;">
-    <i class="fas fa-question-circle"></i> Forgot Password?
-  </a>
-</div>
-
-<button type="submit" class="submit-btn">Login</button>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required>
+          <i class="fas fa-eye password-toggle" id="togglePassword"></i>
+          <div class="error-message" id="passwordError"></div>
+        </div>
+        <div class="forgot-password">
+          <a href="{{ url_for('forgot_password') }}">
+            <i class="fas fa-question-circle"></i> Forgot Password?
+          </a>
+        </div>
+        <button type="submit" class="submit-btn">Login</button>
       </form>
       <div class="switch-form">
         Don't have an account? <a href="{{ url_for('signup') }}">Sign up</a>
@@ -208,51 +294,67 @@
   </div>
 
   <script>
-    // Password toggle logic
+    // Enhanced password toggle with mobile optimization
     const togglePassword = document.querySelector('#togglePassword');
     const passwordInput = document.querySelector('#password');
     
-    togglePassword.addEventListener('click', function() {
+    function handlePasswordToggle() {
       const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
       passwordInput.setAttribute('type', type);
-      this.classList.toggle('fa-eye-slash');
-    });
-
-    // Auto-hide flash message after 3 seconds
-    setTimeout(() => {
-      const flashMessage = document.querySelector('.flash-message');
-      if (flashMessage) {
-        flashMessage.style.display = 'none';
+      togglePassword.classList.toggle('fa-eye-slash');
+      
+      // Prevent keyboard focus on mobile
+      if (window.innerWidth <= 480) {
+        passwordInput.blur();
       }
-    }, 3000);
+    }
 
-    // Simple client-side form validation
+    togglePassword.addEventListener('click', handlePasswordToggle);
+    togglePassword.addEventListener('touchstart', handlePasswordToggle);
+
+    // Auto-hide flash message
+    const flashMessage = document.querySelector('.flash-message');
+    if (flashMessage) {
+      setTimeout(() => {
+        flashMessage.style.display = 'none';
+      }, 3000);
+    }
+
+    // Mobile-friendly form validation
     document.getElementById('loginForm').addEventListener('submit', function(e) {
       let isValid = true;
       
-      // Clear previous errors
-      document.getElementById('emailError').style.display = 'none';
-      document.getElementById('passwordError').style.display = 'none';
-      
-      // Validate email
       const email = document.getElementById('email').value;
-      if (!email || !email.includes('@')) {
+      const password = document.getElementById('password').value;
+      
+      document.querySelectorAll('.error-message').forEach(el => {
+        el.style.display = 'none';
+      });
+
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         document.getElementById('emailError').textContent = 'Please enter a valid email address';
         document.getElementById('emailError').style.display = 'block';
         isValid = false;
       }
-      
-      // Validate password
-      const password = document.getElementById('password').value;
+
       if (!password || password.length < 6) {
         document.getElementById('passwordError').textContent = 'Password must be at least 6 characters';
         document.getElementById('passwordError').style.display = 'block';
         isValid = false;
       }
-      
+
       if (!isValid) {
         e.preventDefault();
+        if (window.innerWidth <= 480) {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       }
+    });
+
+    // Prevent zoom on input focus for mobile
+    document.addEventListener('DOMContentLoaded', function() {
+      let viewport = document.querySelector("meta[name=viewport]");
+      viewport.setAttribute("content", "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no");
     });
   </script>
 </body>
