@@ -1,4 +1,4 @@
-const CACHE_NAME = 'swap-chief-cache-v1';
+const CACHE_NAME = 'swap-chief-cache-v2';
 const urlsToCache = [
   '/',
   '/static/manifest.json',

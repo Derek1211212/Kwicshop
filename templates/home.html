@@ -2,69 +2,138 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-  <title>SwapSphere - Modern Item Exchange Platform</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <link rel="apple-touch-icon" href="/static/icons/ss.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SwapSphere | Modern Trading Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="apple-touch-icon" href="/static/icons/ss.png">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
   <style>
     :root {
-      --primary-color: #2ECC71;
-      --secondary-color: #34495E;
-      --accent-color: #F1C40F;
-      --text-color: #2C3E50;
+      --primary: #81C784;
+      --primary-light: #A5D6A7;
+      --primary-dark: #66BB6A;
+      --secondary: #374151;
+      --accent: #f59e0b;
+      --text: #4b5563;
+      --text-light: #6b7280;
+      --surface: #ffffff;
+      --background: #f9fafb;
+      --border: #e5e7eb;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --radius: 12px;
+      --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+      --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
     }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background-color: var(--background); color: var(--text); line-height: 1.6; }
+    a { text-decoration: none; color: inherit; }
+    .listing-card-link { text-decoration: none; }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+
+        /* Listing Grid */
+    .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+
 
     body {
-      font-family: 'Poppins', sans-serif;
-      background-color: #F8F9FA;
-      color: var(--text-color);
+      font-family: 'Inter', sans-serif;
+      background-color: var(--background);
+      color: var(--text);
       line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
     }
 
+    /* Enhanced Navigation */
     .navbar {
-      background: white;
+      background: var(--surface);
       padding: 1rem 2rem;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      position: relative;
     }
 
     .brand {
       font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--primary-color);
+      font-weight: 700;
+      color: var(--primary);
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      z-index: 1001;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
     }
 
     .nav-links {
       display: flex;
-      gap: 2rem;
+      gap: 1.5rem;
       align-items: center;
-      transition: all 0.3s ease;
     }
 
     .nav-links a {
-      color: var(--secondary-color);
+      color: var(--secondary);
       text-decoration: none;
       font-weight: 500;
-      transition: color 0.3s ease;
+      font-size: 0.95rem;
+      transition: color 0.2s ease;
+      position: relative;
     }
 
     .nav-links a:hover {
-      color: var(--primary-color);
+      color: var(--primary);
+    }
+
+    .nav-links a.active::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--primary);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      font-size: 0.95rem;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+
+    .btn-outline:hover {
+      background: rgba(37, 99, 235, 0.05);
     }
 
     .hamburger {
@@ -76,15 +145,460 @@
     .hamburger div {
       width: 25px;
       height: 3px;
-      background-color: var(--secondary-color);
+      background-color: var(--secondary);
       margin: 5px;
       transition: all 0.3s ease;
     }
 
-    /* Mobile styles */
+    /* Modern Search Section */
+    .search-section {
+      padding: 3rem 2rem;
+      background: linear-gradient(135deg, #f0f7ff 0%, #e6f0ff 100%);
+      margin-bottom: 2rem;
+    }
+
+    .search-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .search-header {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .search-header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--secondary);
+      margin-bottom: 1rem;
+    }
+
+    .search-header p {
+      color: var(--text-light);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .search-bar {
+      display: flex;
+      max-width: 800px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 1rem 1.5rem 1rem 3.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 1.25rem;
+      top: 26%;
+      transform: translateY(-50%);
+      color: var(--text-light);
+    }
+
+    .search-btn {
+      position: absolute;
+      right: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .search-btn:hover {
+      background: var(--primary-dark);
+    }
+
+/* Redesigned Filter Section */
+.filter-section {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 1rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.filter-tabs,
+.filter-tags {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.filter-tabs::-webkit-scrollbar,
+.filter-tags::-webkit-scrollbar {
+  height: 6px;
+}
+
+.filter-tabs::-webkit-scrollbar-thumb,
+.filter-tags::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 3px;
+}
+
+.filter-tab,
+.filter-tag {
+  flex: none;
+  white-space: nowrap;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  background: var(--background);
+  color: var(--text-light);
+}
+
+.filter-tab.active,
+.filter-tag.active {
+  background: var(--primary);
+  color: var(--surface);
+}
+
+@media (max-width: 768px) {
+  .filter-tabs,
+  .filter-tags {
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .filter-tab,
+  .filter-tag {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
+}
+
+
+    /* Professional Listings Grid */
+    .listings-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem 3rem;
+    }
+
+    .listings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .listings-header h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--secondary);
+    }
+
+    .sort-options {
+      position: relative;
+    }
+
+    .sort-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--surface);
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-weight: 500;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .listings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    /* Enhanced Listing Card */
+  .listing-card { background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); transition: transform 0.3s ease, box-shadow 0.3s ease; }
+  .listing-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
+
+    .card-badge {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      background: var(--primary);
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      z-index: 2;
+    }
+
+    .card-badge.sale {
+      background: var(--error);
+    }
+
+    .card-badge.swap {
+      background: var(--success);
+    }
+
+    .card-image { position: relative; height: 200px; overflow: hidden; }
+    .card-image img { width: 100%; height: 100%; object-fit: cover; }
+
+    .listing-card:hover .card-image img {
+      transform: scale(1.05);
+    }
+
+    .card-content {
+      padding: 1.25rem;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+
+    .listing-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--secondary);
+      margin-bottom: 0.25rem;
+    }
+
+    .listing-category {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      margin-bottom: 0.5rem;
+    }
+
+    .listing-description {
+      text-decoration: none;
+      font-size: 0.9rem;
+      color: var(--text-light);
+      margin-bottom: 1rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+
+        /* Hide sort feature */
+    .sort-options { display: none !important; }
+
+    /* Hide username info */
+    .user-info { display: none !important; }
+
+    /* Adjust card footer layout */
+    .card-footer { justify-content: flex-end; }
+
+
+    /* Empty State */
+    .empty-state { text-align: center; padding: 2rem; }
+    .empty-state img { max-width: 150px; margin-bottom: 1rem; }
+    .empty-state h3 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .empty-state p { color: var(--text-light); margin-bottom: 1rem; }
+    .empty-state .floating-action { background: var(--primary); color: #fff; border: none; border-radius: 50%; width: 48px; height: 48px; font-size: 1.5rem; cursor: pointer; }
+
+    .price {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 0.5rem 0;
+    }
+
+    .price-adjustment {
+      font-size: 0.9rem;
+      color: var(--success);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .username {
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .listing-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.8rem;
+      color: var(--text-light);
+    }
+
+    /* Professional Footer */
+    .site-footer {
+      background: var(--secondary);
+      color: white;
+      padding: 4rem 0 2rem;
+    }
+
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 3rem;
+    }
+
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .footer-logo img {
+      width: 36px;
+      height: 36px;
+    }
+
+    .footer-logo span {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: white;
+    }
+
+    .footer-about p {
+      color: #d1d5db;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    .footer-social {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .footer-social a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      transition: all 0.2s ease;
+    }
+
+    .footer-social a:hover {
+      background: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .footer-section h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: white;
+    }
+
+    .footer-links {
+      list-style: none;
+    }
+
+    .footer-links li {
+      margin-bottom: 0.75rem;
+    }
+
+    .footer-links a {
+      color: #d1d5db;
+      text-decoration: none;
+      transition: color 0.2s ease;
+      font-size: 0.95rem;
+    }
+
+    .footer-links a:hover {
+      color: white;
+    }
+
+    .footer-contact p {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: #d1d5db;
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+    }
+
+    .footer-bottom {
+      text-align: center;
+      padding-top: 3rem;
+      margin-top: 2rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .footer-bottom p {
+      color: #9ca3af;
+      font-size: 0.9rem;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 1024px) {
+      .listings-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      }
+    }
+
     @media (max-width: 768px) {
-      .hamburger {
-        display: block;
+      .navbar {
+        padding: 1rem;
       }
 
       .nav-links {
@@ -93,12 +607,12 @@
         right: 0;
         height: 100vh;
         width: 70%;
-        background: white;
+        background: var(--surface);
         flex-direction: column;
         justify-content: center;
-        align-items: center;
         gap: 2rem;
         transform: translateX(100%);
+        transition: transform 0.3s ease;
         box-shadow: -5px 0 15px rgba(0,0,0,0.1);
         z-index: 1000;
       }
@@ -107,12 +621,10 @@
         transform: translateX(0);
       }
 
-      .nav-links a {
-        font-size: 1.2rem;
-        padding: 0.5rem 1rem;
+      .hamburger {
+        display: block;
       }
 
-      /* Hamburger animation */
       .hamburger.active div:nth-child(1) {
         transform: rotate(-45deg) translate(-5px, 6px);
       }
@@ -125,882 +637,405 @@
         transform: rotate(45deg) translate(-5px, -6px);
       }
 
-      /* Adjust existing mobile styles */
-      .navbar {
-        padding: 0.8rem 1rem;
-      }
-      
-      .brand {
-        font-size: 1.2rem;
-      }
-      
-      .search-filter-container {
-        padding: 1rem;
-        margin: 0.5rem;
+      .search-section {
+        padding: 2rem 1rem;
       }
 
-      .search-bar {
-        flex-direction: column;
+      .search-header h1 {
+        font-size: 2rem;
       }
 
-      .listings-grid {
-        padding: 0.5rem;
-        gap: 1rem;
+      .filter-section,
+      .listings-container {
+        padding: 0 1rem;
+      }
+
+      .footer-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
       }
     }
 
     @media (max-width: 480px) {
-      .nav-links {
-        width: 80%;
-      }
-      
-      .card-image {
-        height: 160px;
-      }
-    }
-
-    /* Rest of your existing styles */
-    .search-filter-container {
-      background: white;
-      padding: 2rem;
-      margin: 1rem auto;
-      border-radius: 12px;
-      box-shadow: 0 2px 15px rgba(0,0,0,0.05);
-      max-width: 1200px;
-    }
-
-    .search-bar {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .search-input {
-      flex: 1;
-      padding: 0.8rem 1.5rem;
-      border: 2px solid #EAEDED;
-      border-radius: 8px;
-      font-size: 1rem;
-      transition: border-color 0.3s ease;
-    }
-
-    .search-input:focus {
-      outline: none;
-      border-color: var(--primary-color);
-    }
-
-.filter-tags {
-  display: flex;
-  gap: 1rem;
-  white-space: nowrap; /* Prevents wrapping */
-  overflow-x: auto;    /* Enables horizontal scrolling */
-  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-  padding-bottom: 0.5rem; /* Optional: space for scrollbar */
-}
-
-
-    .filter-tag {
-      background: #F4F6F6;
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .filter-tag.active {
-      background: var(--primary-color);
-      color: white;
-    }
-
-    .listings-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 2rem;
-      padding: 2rem;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .listing-card {
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      cursor: pointer;
-    }
-
-    .listing-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-    }
-
-    .card-image {
-      position: relative;
-      height: 200px;
-      overflow: hidden;
-    }
-
-    .card-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.3s ease;
-    }
-
-    .card-image:hover img {
-      transform: scale(1.05);
-    }
-
-    .card-content {
-      padding: 1.5rem;
-    }
-
-    .listing-title {
-      font-size: 1.2rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      color: var(--secondary-color);
-    }
-
-    .listing-description {
-      font-size: 0.9rem;
-      color: #7F8C8D;
-      margin-bottom: 1rem;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .swap-details {
-      background: #F9F9F9;
-      padding: 1rem;
-      border-radius: 8px;
-      margin-top: 1rem;
-    }
-
-    .detail-item {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.5rem;
-      font-size: 0.9rem;
-    }
-
-    .detail-label {
-      color: #95A5A6;
-      font-weight: 500;
-    }
-
-    .detail-value {
-      color: var(--secondary-color);
-      font-weight: 500;
-    }
-
-    .cash-adjustment {
-      color: var(--primary-color);
-      font-weight: 600;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 4rem;
-      max-width: 600px;
-      margin: 2rem auto;
-    }
-
-    .empty-state img {
-      width: 200px;
-      margin-bottom: 1.5rem;
-    }
-
-    .floating-action {
-      position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      background: var(--primary-color);
-      color: white;
-      padding: 1rem;
-      border-radius: 50%;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      cursor: pointer;
-      transition: transform 0.3s ease;
-    }
-
-    .listing-card-link {
-      text-decoration: none;
-      color: inherit;
-      display: block;
-    }
-
-        /* Footer Styles */
-    .site-footer {
-      background-color: var(--secondary-color);
-      color: white;
-      padding: 2rem 0 0;
-      margin-top: 3rem;
-    }
-
-    .footer-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 2rem;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 2rem;
-    }
-
-    .footer-section {
-      margin-bottom: 2rem;
-    }
-
-    .footer-section h3 {
-      color: var(--primary-color);
-      margin-bottom: 1rem;
-      font-size: 1.2rem;
-    }
-
-    .footer-section p, 
-    .footer-section li {
-      color: #ecf0f1;
-      margin-bottom: 0.5rem;
-      line-height: 1.6;
-    }
-
-    .footer-section a {
-      color: #ecf0f1;
-      text-decoration: none;
-      transition: color 0.3s ease;
-    }
-
-    .footer-section a:hover {
-      color: var(--primary-color);
-    }
-
-    .footer-section i {
-      margin-right: 0.5rem;
-      width: 20px;
-      text-align: center;
-    }
-
-    .footer-bottom {
-      background-color: rgba(0, 0, 0, 0.2);
-      padding: 1rem 2rem;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .social-links {
-      display: flex;
-      gap: 1rem;
-    }
-
-    .social-links a {
-      color: white;
-      font-size: 1.2rem;
-      transition: color 0.3s ease;
-    }
-
-    .social-links a:hover {
-      color: var(--primary-color);
-    }
-
-    @media (max-width: 768px) {
-      .footer-container {
-        grid-template-columns: 1fr;
-        padding: 0 1rem;
-      }
-      
-      .footer-bottom {
+      .search-bar {
         flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .search-input {
+        padding: 1rem 1rem 1rem 3rem;
+      }
+
+      .search-btn {
+        position: static;
+        transform: none;
+        width: 100%;
+        padding: 0.75rem;
+      }
+
+      .filter-tabs {
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+      }
+
+      .listings-grid {
+        grid-template-columns: 1fr;
       }
     }
 
-        /* Add this new style to your existing CSS */
-    .required-cash {
-      color: var(--primary-color);
-      font-size: 0.7em;  /* Slightly smaller than the title */
-      font-weight: 500;
-      margin-left: 0.3rem;
+    /* Utility Classes */
+    .hidden {
+      display: none !important;
     }
 
-        /* Plan Badge Styles */
-    .plan-badge {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 5px 10px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        z-index: 2;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    .text-primary {
+      color: var(--primary);
     }
 
-    .plan-badge i {
-        font-size: 0.9rem;
+    .text-success {
+      color: var(--success);
     }
 
-    .diamond-plan {
-        color: #00a8ff;
-        border: 1px solid #00a8ff;
+    .text-error {
+      color: var(--error);
     }
 
-    .gold-plan {
-        color: #ffd700;
-        border: 1px solid #ffd700;
+    .text-light {
+      color: var(--text-light);
     }
 
-    .silver-plan {
-        color: #c0c0c0;
-        border: 1px solid #c0c0c0;
-    }
+    .mt-1 { margin-top: 0.25rem; }
+    .mt-2 { margin-top: 0.5rem; }
+    .mt-3 { margin-top: 1rem; }
+    .mt-4 { margin-top: 1.5rem; }
+    .mt-5 { margin-top: 2rem; }
 
-    .bronze-plan {
-        color: #cd7f32;
-        border: 1px solid #cd7f32;
-    }
-
-        /* Deal type indicator */
-    .deal-type-badge {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      padding: 5px 10px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: white;
-      z-index: 2;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
-    
-    .swap-badge {
-      background-color: #2ECC71; /* Green for swaps */
-    }
-    
-    .sale-badge {
-      background-color: #E74C3C; /* Red for sales */
-    }
-    
-    /* Different card styling for sales */
-    .sale-card .swap-details {
-      background: #FEF2F2; /* Light red background */
-      border-left: 3px solid #E74C3C;
-    }
-    
-    .sale-card .price-display {
-      font-size: 1.3rem;
-      font-weight: 700;
-      color: #E74C3C;
-      margin: 0.5rem 0;
-    }
-    
-    /* Swap specific elements */
-    .swap-card .swap-details {
-      background: #F0FDF4; /* Light green background */
-      border-left: 3px solid #2ECC71;
-    }
-    
-    /* Filter tabs styling */
-    .deal-type-tabs {
-      display: flex;
-      margin-bottom: 1rem;
-      border-bottom: 2px solid #EAEDED;
-    }
-    
-    .deal-type-tab {
-      padding: 0.5rem 1.5rem;
-      cursor: pointer;
-      font-weight: 500;
-      border-bottom: 3px solid transparent;
-      margin-bottom: -2px;
-    }
-    
-    .deal-type-tab.active {
-      border-bottom-color: var(--primary-color);
-      color: var(--primary-color);
-    }
-
-/* Network Bars for Impressions */
-.network-bars {
-  display: inline-flex;
-  align-items: flex-end;
-  height: 14px;
-  gap: 2px;
-  margin-right: 4px;
-}
-
-.network-bars .bar {
-  display: inline-block;
-  width: 3px;
-  background-color: #657786;
-  border-radius: 2px;
-  transition: all 0.2s ease;
-}
-
-.network-bars .bar:nth-child(1) {
-  height: 40%;
-}
-.network-bars .bar:nth-child(2) {
-  height: 70%;
-}
-.network-bars .bar:nth-child(3) {
-  height: 100%;
-}
-
-/* Tooltip Styles */
-.metric-item {
-  position: relative;
-}
-
-.metric-item:hover::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  white-space: nowrap;
-  pointer-events: none;
-  margin-bottom: 5px;
-}
-
-/* Animation for bars on hover */
-.metric-item:hover .network-bars .bar:nth-child(1) {
-  height: 60%;
-}
-.metric-item:hover .network-bars .bar:nth-child(2) {
-  height: 90%;
-}
-.metric-item:hover .network-bars .bar:nth-child(3) {
-  height: 100%;
-}
-
-/* Keep existing metric styles */
-.engagement-metrics {
-  display: flex;
-  gap: 1.5rem;
-  margin-top: 1rem;
-  padding-top: 0.8rem;
-  border-top: 1px solid #f0f0f0;
-}
-
-.metric-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #657786;
-  transition: all 0.2s ease;
-  cursor: default;
-}
-
-.metric-count {
-  font-size: 0.85rem;
-  font-weight: 500;
-  font-feature-settings: "tnum";
-  font-variant-numeric: tabular-nums;
-}
-
-/* Hover effects */
-.metric-item:hover {
-  color: var(--primary-color);
-}
-
-.metric-item:hover .network-bars .bar {
-  background-color: var(--primary-color);
-}
-
-.metric-item:hover .metric-icon {
-  transform: scale(1.1);
-}
+    .mb-1 { margin-bottom: 0.25rem; }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .mb-3 { margin-bottom: 1rem; }
+    .mb-4 { margin-bottom: 1.5rem; }
+    .mb-5 { margin-bottom: 2rem; }
 
 
-.search-btn {
-  background-color: var(--primary-color); /* Primary color from your palette */
-  color: white;
-  border: none;
-  padding: 0.8rem 1.5rem;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
+        .deal-type-badge { position: absolute; top: 1rem; left: 1rem; padding: 0.25rem 0.75rem; border-radius: var(--radius); font-size: 0.75rem; font-weight: 600; color: #fff; }
+    .sale-badge { background: var(--error); }
+    .swap-badge { background: var(--success); }
 
-.search-btn:hover {
-  background-color: #27ae60; /* A slightly darker green for hover */
-}
+    .plan-badge { position: absolute; top: 1rem; right: 1rem; padding: 0.25rem 0.75rem; border-radius: var(--radius); color: #fff; font-size: 0.75rem; display: flex; align-items: center; gap: 0.25rem; }
+    .diamond-plan { background: #b9f2ff; color: #000; }
+    .gold-plan { background: #ffd700; }
+    .silver-plan { background: #c0c0c0; }
+    .bronze-plan { background: #cd7f32; }
 
+    .card-content { padding: 1rem; }
+    .listing-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .required-cash { font-size: 0.9rem; color: var(--warning); margin-left: 0.5rem; }
+
+    .price-display { font-size: 1.25rem; font-weight: 700; color: var(--primary); margin-bottom: 0.75rem; }
+
+    .swap-details { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+    .detail-item { display: flex; justify-content: space-between; font-size: 0.9rem; }
+    .detail-label { font-weight: 500; }
+    .cash-adjustment { color: var(--warning); }
   </style>
 </head>
 <body>
+  <!-- Modern Navigation -->
   <nav class="navbar">
     <div class="brand">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="var(--primary-color)">
+      <svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--primary)">
         <path d="M11 5h2v14h-2V5zm-4 7h2v7H7v-7zm8-7h2v14h-2V5z"/>
       </svg>
-      SwapSphere
+      <span>SwapSphere</span>
     </div>
+    
+    <div class="nav-links">
+      <a href="/dashboard" class="active">Dashboard</a>
+      <a href="/my-proposals">My Offers</a>
+      <a href="/messages">Messages</a>
+      
+      {% if session.get('user_id') %}
+        <a href="/account">Account</a>
+        <a href="/logout" class="btn btn-outline">Logout</a>
+      {% else %}
+        <a href="/login">Login</a>
+        <a href="/signup" class="btn btn-primary">Sign Up</a>
+      {% endif %}
+    </div>
+    
     <div class="hamburger">
       <div></div>
       <div></div>
       <div></div>
     </div>
-    
-<div class="nav-links">
-  <a href="/dashboard">Dashboard</a>
-  <a href="/my-proposals">Sent Offers</a>
-  
-  {% if session.get('user_id') %}
-    <!-- User is logged in: show Logout -->
-    <a href="/logout">Logout</a>
-  {% else %}
-    <!-- User is not logged in: show Login and Sign Up -->
-    <a href="/login">Login</a>
-    <a href="/signup" style="background: var(--primary-color); color: white; padding: 0.5rem 1.5rem; border-radius: 8px;">Sign Up</a>
-  {% endif %}
-</div>
-
   </nav>
 
-<div class="search-filter-container">
-  <!-- Search Form -->
-<form id="search-form" action="/" method="GET">
-  <div class="search-bar">
-    <input type="text" name="search" class="search-input" placeholder="Search for items..." value="{{ search }}">
-    <!-- Hidden fields to maintain filters during searches -->
-    <input type="hidden" name="category" id="selected-category" value="{{ selected_category }}">
-    <input type="hidden" name="deal_type" id="selected-deal-type" value="{{ deal_type_filter }}">
-    <button type="submit" class="search-btn">Search</button>
-  </div>
-</form>
+  <!-- Hero Search Section -->
+  <section class="search-section">
+    <div class="search-container">
+      <div class="search-header">
+        <h1>Find Your Perfect Swap</h1>
+        <p>Trade items you no longer need for things you want. No cash needed, or add cash to sweeten the deal.</p>
+      </div>
+      
+      <form id="search-form" action="/" method="GET">
+        <div class="search-bar">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" name="search" class="search-input" placeholder="Search for items, categories, or locations..." value="{{ search }}">
+          <button type="submit" class="search-btn">Search</button>
+          <!-- Hidden fields to maintain filters during searches -->
+          <input type="hidden" name="category" id="selected-category" value="{{ selected_category }}">
+          <input type="hidden" name="deal_type" id="selected-deal-type" value="{{ deal_type_filter }}">
+        </div>
+      </form>
+    </div>
+  </section>
 
-  
-  <!-- Deal Type Tabs -->
-  <div class="deal-type-tabs">
-    <div class="deal-type-tab {% if deal_type_filter == 'All' %}active{% endif %}" data-deal-type="All">All Listings</div>
-    <div class="deal-type-tab {% if deal_type_filter == 'Swap Deal' %}active{% endif %}" data-deal-type="Swap Deal">Swap Deals</div>
-    <div class="deal-type-tab {% if deal_type_filter == 'Outright Sales' %}active{% endif %}" data-deal-type="Outright Sales">For Sale</div>
-  </div>
-  
-  <!-- Filter Tags -->
-  <div class="filter-tags">
-    <div class="filter-tag {% if selected_category == 'All' %}active{% endif %}" data-category="All">All</div>
-    {% for category in categories %}
-      <div class="filter-tag {% if selected_category == category %}active{% endif %}" data-category="{{ category }}">{{ category }}</div>
-    {% endfor %}
-  </div>
-</div>
+  <!-- Filter Section -->
+  <section class="filter-section">
+    <!-- Deal Type Tabs -->
+    <div class="filter-tabs">
+      <button class="filter-tab {% if deal_type_filter == 'All' %}active{% endif %}" data-deal-type="All">All Listings</button>
+      <button class="filter-tab {% if deal_type_filter == 'Swap Deal' %}active{% endif %}" data-deal-type="Swap Deal">Swap Deals</button>
+      <button class="filter-tab {% if deal_type_filter == 'Outright Sales' %}active{% endif %}" data-deal-type="Outright Sales">For Sale</button>
+    </div>
+    
+    <!-- Category Filters -->
+    <div class="filter-tags">
+      <button class="filter-tag {% if selected_category == 'All' %}active{% endif %}" data-category="All">All Categories</button>
+      {% for category in categories %}
+        <button class="filter-tag {% if selected_category == category %}active{% endif %}" data-category="{{ category }}">{{ category }}</button>
+      {% endfor %}
+    </div>
+  </section>
 
-<div class="listings-grid">
-  {% if listings %}
-    {% for listing in listings %}
-      <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}" 
-         class="listing-card-link" 
-         data-listing-id="{{ listing.listing_id }}"
-         onclick="trackClick(event, {{ listing.listing_id }})">
-        <div class="listing-card {% if listing.deal_type == 'Outright Sales' %}sale-card{% else %}swap-card{% endif %}">
-          <div class="card-image">
-            <!-- Deal Type Badge -->
-            <div class="deal-type-badge {% if listing.deal_type == 'Outright Sales' %}sale-badge{% else %}swap-badge{% endif %}">
-              {{ listing.deal_type }}
-            </div>
-            
-            <!-- Plan Badge -->
-            {% if listing.plan in ['Diamond', 'Gold', 'Silver', 'Bronze'] %}
-              <div class="plan-badge {{ listing.plan|lower }}-plan">
-                {% if listing.plan == 'Diamond' %}
-                  <i class="fas fa-gem"></i>
-                {% elif listing.plan == 'Gold' %}
-                  <i class="fas fa-star"></i>
-                {% elif listing.plan == 'Silver' %}
-                  <i class="fas fa-certificate"></i>
-                {% elif listing.plan == 'Bronze' %}
-                  <i class="fas fa-shield-alt"></i>
-                {% endif %}
-                {{ listing.plan }}
-              </div>
-            {% endif %}
-            
-            <img 
-              src="{{ listing.image_url if listing.image_url else url_for('static', filename='images/placeholder.jpg') }}" 
-              data-src="{{ listing.image_url if listing.image_url else url_for('static', filename='images/placeholder.jpg') }}"
-              alt="{{ listing.title }}"
-              loading="lazy">
-          </div>
-          <div class="card-content">
-            <h3 class="listing-title">
-              {{ listing.title }}
-              {% if listing.required_cash and listing.required_cash > 0 %}
-                <span class="required-cash">+ ₵ {{ "{:,.2f}".format(listing.required_cash) }}</span>
-              {% endif %}
-            </h3>
-            
-            {% if listing.deal_type == 'Outright Sales' %}
-              <!-- Outright Sale Display -->
-              <div class="price-display">₵ {{ "{:,.2f}".format(listing.price|float) }}</div>
-              <div class="swap-details">
-                <div class="detail-item">
-                  <span class="detail-label">Condition:</span>
-                  <span class="detail-value">{{ listing.condition }}</span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Listed by:</span>
-                  <span class="detail-value">{{ listing.username }}</span>
-                </div>
-              </div>
-            {% else %}
-              <!-- Swap Deal Display -->
-              <div class="swap-details">
-                <div class="detail-item">
-                  <span class="detail-label">Desired Swap:</span>
-                  <span class="detail-value">{{ listing.desired_swap }}</span>
-                </div>
-                {% if listing.additional_cash is not none and listing.additional_cash > 0 %}
-                  <div class="detail-item">
-                    <span class="detail-label">Cash Adjustment:</span>
-                    <span class="detail-value cash-adjustment">+ ₵ {{ "{:,.2f}".format(listing.additional_cash) }}</span>
+  <!-- Listings Grid -->
+  <section class="listings-container">
+    <div class="listings-header">
+      <h2>Recent Listings</h2>
+      <!-- Removed sort -->
+    </div>
+    <div class="listings-grid">
+      {% if listings %}
+        {% for listing in listings %}
+          <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}" class="listing-card-link" data-listing-id="{{ listing.listing_id }}" onclick="trackClick(event, {{ listing.listing_id }})">
+            <div class="listing-card {% if listing.deal_type == 'Outright Sales' %}sale-card{% else %}swap-card{% endif %}">
+              <div class="card-image">
+                <div class="deal-type-badge {% if listing.deal_type == 'Outright Sales' %}sale-badge{% else %}swap-badge{% endif %}">{{ listing.deal_type }}</div>
+                {% if listing.plan in ['Diamond', 'Gold', 'Silver', 'Bronze'] %}
+                  <div class="plan-badge {{ listing.plan|lower }}-plan">
+                    {% if listing.plan == 'Diamond' %}<i class="fas fa-gem"></i>
+                    {% elif listing.plan == 'Gold' %}<i class="fas fa-star"></i>
+                    {% elif listing.plan == 'Silver' %}<i class="fas fa-certificate"></i>
+                    {% elif listing.plan == 'Bronze' %}<i class="fas fa-shield-alt"></i>
+                    {% endif %}
+                    {{ listing.plan }}
                   </div>
                 {% endif %}
-
+                <img src="{{ listing.image_url if listing.image_url else url_for('static', filename='images/placeholder.jpg') }}" data-src="{{ listing.image_url if listing.image_url else url_for('static', filename='images/placeholder.jpg') }}" alt="{{ listing.title }}" loading="lazy">
               </div>
-            {% endif %}
-  
-          </div>
+              <div class="card-content">
+                <h3 class="listing-title">
+                  {{ listing.title }}
+                  {% if listing.required_cash and listing.required_cash > 0 %}
+                    <span class="required-cash">+ ₵ {{ "{:,.2f}".format(listing.required_cash) }}</span>
+                  {% endif %}
+                </h3>
+                {% if listing.deal_type == 'Outright Sales' %}
+                  <div class="price-display">₵ {{ "{:,.2f}".format(listing.price|float) }}</div>
+                  <div class="swap-details">
+                    
+                  </div>
+                {% else %}
+                  <div class="swap-details">
+                    <div class="detail-item"><span class="detail-label">Desired Swap:</span><span class="detail-value">{{ listing.desired_swap }}</span></div>
+                    {% if listing.additional_cash is not none and listing.additional_cash > 0 %}
+                      <div class="detail-item"><span class="detail-label">Cash Adjustment:</span><span class="detail-value cash-adjustment">+ ₵ {{ "{:,.2f}".format(listing.additional_cash) }}</span></div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </a>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <img src="{{ url_for('static', filename='images/empty-state.svg') }}" alt="No listings found">
+          <h3>No Listings Available</h3>
+          <p>Be the first to create a listing!</p>
+          <button class="floating-action">+</button>
         </div>
-      </a>
-    {% endfor %}
-  {% else %}
-    <div class="empty-state">
-      <img src="{{ url_for('static', filename='images/empty-state.svg') }}" alt="No listings found">
-      <h3>No Listings Available</h3>
-      <p>Be the first to create a listing!</p>
-      <button class="floating-action">+</button>
+      {% endif %}
     </div>
-  {% endif %}
-</div>
+  </section>
 
-
- 
-
-
+  <!-- Professional Footer -->
   <footer class="site-footer">
     <div class="footer-container">
-      <div class="footer-section">
-        <h3>About SwapSphere</h3>
+      <div class="footer-section footer-about">
+        <div class="footer-logo">
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="var(--primary)">
+            <path d="M11 5h2v14h-2V5zm-4 7h2v7H7v-7zm8-7h2v14h-2V5z"/>
+          </svg>
+          <span>SwapSphere</span>
+        </div>
         <p>The modern platform for item exchange and bartering. Connect with others to swap items you no longer need for things you want.</p>
+        <div class="footer-social">
+          <a href="#"><i class="fab fa-facebook-f"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-linkedin-in"></i></a>
+        </div>
       </div>
+      
       <div class="footer-section">
         <h3>Quick Links</h3>
-        <ul>
+        <ul class="footer-links">
           <li><a href="/">Home</a></li>
-          <li><a href="/dashboard">Dashboard</a></li>
-          <li><a href="/my-proposals">My Proposals</a></li>
-          <li><a href="/login">Login</a></li>
+          <li><a href="/how-it-works">How It Works</a></li>
+          <li><a href="/blog">Blog</a></li>
+          <li><a href="/success-stories">Success Stories</a></li>
+          <li><a href="/faq">FAQ</a></li>
         </ul>
       </div>
+      
+      <div class="footer-section">
+        <h3>My Account</h3>
+        <ul class="footer-links">
+          <li><a href="/dashboard">Dashboard</a></li>
+          <li><a href="/my-listings">My Listings</a></li>
+          <li><a href="/my-proposals">My Offers</a></li>
+          <li><a href="/messages">Messages</a></li>
+          <li><a href="/account">Account Settings</a></li>
+        </ul>
+      </div>
+      
       <div class="footer-section">
         <h3>Contact Us</h3>
-        <ul>
-          <li><i class="fas fa-envelope"></i> support@swapsphere.com</li>
-          <li><i class="fas fa-phone"></i>(+233) 54-6476-036</li>
-          <li><i class="fas fa-map-marker-alt"></i> Accra, Ghana</li>
-        </ul>
+        <div class="footer-contact">
+          <p><i class="fas fa-envelope"></i> support@swapsphere.com</p>
+          <p><i class="fas fa-phone"></i> (+233) 54-6476-036</p>
+          <p><i class="fas fa-map-marker-alt"></i> 123 Trade Street, Accra, Ghana</p>
+        </div>
       </div>
     </div>
+    
     <div class="footer-bottom">
-      <p>&copy; 2023 SwapSphere. All rights reserved.</p>
-      <div class="social-links">
-        <a href="#"><i class="fab fa-facebook"></i></a>
-        <a href="#"><i class="fab fa-twitter"></i></a>
-        <a href="#"><i class="fab fa-instagram"></i></a>
-      </div>
+      <p>&copy; 2025 SwapSphere. All rights reserved. | <a href="/privacy">Privacy Policy</a> | <a href="/terms">Terms of Service</a></p>
     </div>
   </footer>
 
-
-
   <script>
-    // Interactive Filtering
-    document.querySelectorAll('.filter-tag').forEach(tag => {
-      tag.addEventListener('click', () => {
-        document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
-        tag.classList.add('active');
-        // Add filter logic here
-      });
-    });
-
-    // Image Lazy Loading
-    const lazyLoad = () => {
-      const images = document.querySelectorAll('.card-image img');
-      images.forEach(img => {
-        if (img.getBoundingClientRect().top < window.innerHeight) {
-          img.src = img.dataset.src;
-        }
-      });
-    };
-
-    window.addEventListener('scroll', lazyLoad);
-    window.addEventListener('resize', lazyLoad);
-    lazyLoad();
-
-    // Smooth Transitions
-    document.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', e => {
-        //e.preventDefault();
-        // Add smooth page transition logic
-      });
-    });
-
-
-        // Hamburger menu functionality
+    // Mobile Navigation Toggle
     const hamburger = document.querySelector('.hamburger');
     const navLinks = document.querySelector('.nav-links');
-    const navLinksItems = document.querySelectorAll('.nav-links a');
-
+    
     hamburger.addEventListener('click', () => {
       navLinks.classList.toggle('active');
       hamburger.classList.toggle('active');
     });
 
-    navLinksItems.forEach(item => {
-      item.addEventListener('click', () => {
-        navLinks.classList.remove('active');
-        hamburger.classList.remove('active');
+    // Filter Functionality
+    document.querySelectorAll('.filter-tag').forEach(tag => {
+      tag.addEventListener('click', function() {
+        document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById('selected-category').value = this.dataset.category;
+        document.getElementById('search-form').submit();
       });
     });
-  </script>
 
-  <script>
-  // Add event listeners to the filter tags
-  document.querySelectorAll('.filter-tag').forEach(tag => {
-    tag.addEventListener('click', function() {
-      // Remove active state from all tags
-      document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
-      this.classList.add('active');
-
-      // Set the selected category in the hidden input
-      document.getElementById('selected-category').value = this.dataset.category;
-
-      // Submit the form to apply the filter (keeping the search text)
-      document.getElementById('search-form').submit();
+    // Deal Type Tabs
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById('selected-deal-type').value = this.dataset.dealType;
+        document.getElementById('search-form').submit();
+      });
     });
-  });
 
-
-    // Add event listeners to the deal type tabs
-  document.querySelectorAll('.deal-type-tab').forEach(tab => {
-    tab.addEventListener('click', function() {
-      // Remove active state from all tabs
-      document.querySelectorAll('.deal-type-tab').forEach(t => t.classList.remove('active'));
-      this.classList.add('active');
-
-      // Set the selected deal type in the hidden input
-      document.getElementById('selected-deal-type').value = this.dataset.dealType;
-
-      // Submit the form to apply the filter
-      document.getElementById('search-form').submit();
-    });
-  });
-</script>
-
-<script>
-  // Function to send an AJAX POST request to track an impression
-  function trackImpression(listingId) {
-    fetch('/api/track_impression?listing_id=' + listingId, { 
-      method: 'POST'
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Impression tracked for listing ' + listingId, data);
-      // Optionally update the UI with the new impression count if data is returned
-    })
-    .catch(err => console.error('Error tracking impression', err));
-  }
-
-  // Options for the Intersection Observer
-  const observerOptions = {
-    root: null,         // Observe changes relative to the viewport
-    threshold: 0.5      // Trigger when 50% of the card is visible
-  };
-
-  // To avoid sending multiple impression calls for the same listing,
-  // maintain a set of IDs that have already been tracked.
-  const observedListings = new Set();
-
-  // Create the observer instance with our callback
-  const observer = new IntersectionObserver((entries, observer) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const listingCard = entry.target;
-        const listingId = listingCard.getAttribute('data-listing-id');
-        console.log('Observed card:', listingCard, 'Listing ID:', listingId);
-        if (listingId && !observedListings.has(listingId)) {
-          observedListings.add(listingId);
-          trackImpression(listingId);
-        }
-      }
-    });
-  }, observerOptions);
-
-  // Attach the observer to each listing card element.
-  // Adjust the selector if your data attribute is on a different element.
-  document.querySelectorAll('.listing-card, .listing-card-link').forEach(card => {
-    // Make sure the element has the attribute; if not, log a warning.
-    if (!card.hasAttribute('data-listing-id')) {
-      console.warn('Element does not have data-listing-id:', card);
-    }
-    observer.observe(card);
-  });
-</script>
-
-
-
-
-
-<script>
-  function trackClick(event, listingId) {
-    // Send a POST request to track click
-    fetch('/api/track_click?listing_id=' + listingId, { method: 'POST' })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Click tracked for listing ' + listingId, data);
-      })
-      .catch(err => console.error('Error tracking click', err));
-    // Allow normal navigation to occur
-  }
-</script>
-
-
-
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(function (registration) {
-          console.log('ServiceWorker registered with scope:', registration.scope);
-        }, function (err) {
-          console.log('ServiceWorker registration failed:', err);
+    // Lazy Loading Images
+    const lazyLoadImages = () => {
+      const images = document.querySelectorAll('.card-image img[data-src]');
+      
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            img.src = img.dataset.src;
+            img.removeAttribute('data-src');
+            observer.unobserve(img);
+          }
         });
+      }, {
+        rootMargin: '200px'
+      });
+      
+      images.forEach(img => observer.observe(img));
+    };
+    
+    // Track Impressions
+    const trackImpression = (listingId) => {
+      fetch('/api/track_impression', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ listing_id: listingId })
+      })
+      .catch(err => console.error('Error tracking impression:', err));
+    };
+    
+    // Set up impression tracking
+    const setupImpressionTracking = () => {
+      const listingCards = document.querySelectorAll('.listing-card-link');
+      
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const listingId = entry.target.dataset.listingId;
+            trackImpression(listingId);
+            observer.unobserve(entry.target);
+          }
+        });
+      }, {
+        threshold: 0.5
+      });
+      
+      listingCards.forEach(card => observer.observe(card));
+    };
+    
+    // Initialize functions when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      lazyLoadImages();
+      setupImpressionTracking();
     });
-  }
-</script>
-
-
-
-
-
+    
+    // Track click function
+    function trackClick(event, listingId) {
+      fetch('/api/track_click', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ listing_id: listingId })
+      })
+      .catch(err => console.error('Error tracking click:', err));
+    }
+    
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(registration => {
+            console.log('ServiceWorker registration successful:', registration.scope);
+          })
+          .catch(err => {
+            console.log('ServiceWorker registration failed:', err);
+          });
+      });
+    }
+  </script>
 </body>
 </html>
