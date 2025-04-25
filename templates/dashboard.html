@@ -1525,6 +1525,53 @@
     </div>
 </section>
 
+<script>
+  // Utility to update a proposal’s status
+  async function updateProposalStatus(proposalId, newStatus) {
+    try {
+      const res = await fetch(`/proposals/${proposalId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        return alert('Error: ' + (err.error || res.statusText));
+      }
+
+      // Success — you can reload or update the card UI here
+      alert(`Proposal ${newStatus} successfully.`);
+      // Optionally reload to reflect the new status:
+      // window.location.reload();
+
+    } catch (e) {
+      console.error(e);
+      alert('Network error: could not update proposal.');
+    }
+  }
+
+  // Attach click handlers to each action button
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.accept-proposal').forEach(btn => {
+      btn.addEventListener('click', () => {
+        updateProposalStatus(btn.dataset.id, 'Accepted');
+      });
+    });
+    document.querySelectorAll('.decline-proposal').forEach(btn => {
+      btn.addEventListener('click', () => {
+        updateProposalStatus(btn.dataset.id, 'Declined');
+      });
+    });
+    document.querySelectorAll('.negotiate-proposal').forEach(btn => {
+      btn.addEventListener('click', () => {
+        updateProposalStatus(btn.dataset.id, 'Negotiated');
+      });
+    });
+  });
+</script>
+
+
 <!-- Profile Section -->
 <section id="profile" class="dashboard-section">
     <h2>Profile Settings</h2>

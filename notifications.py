@@ -12,26 +12,34 @@ def send_push(user_id, title, body, url="/"):
     from app import get_db_connection
     
     conn = get_db_connection()
-    subs = conn.execute(
-      "SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE user_id=%s",
-      (user_id,)
-    ).fetchall()
-    conn.close()
+    cursor = conn.cursor(dictionary=True)   # ← use a cursor
+    try:
+        # Fetch the subscriptions
+        cursor.execute(
+            "SELECT endpoint, p256dh, auth "
+            "FROM push_subscriptions WHERE user_id = %s",
+            (user_id,)
+        )
+        subs = cursor.fetchall()            # ← fetch from the cursor
+
+    finally:
+        cursor.close()
+        conn.close()
 
     payload = json.dumps({"title": title, "body": body, "url": url})
 
     for s in subs:
         try:
             webpush(
-              subscription_info={
-                "endpoint": s['endpoint'],
-                "keys": {"p256dh": s['p256dh'], "auth": s['auth']}
-              },
-              data=payload,
-              vapid_private_key=VAPID_PRIVATE,
-              vapid_public_key=VAPID_PUBLIC,
-              vapid_claims=VAPID_CLAIMS
+                subscription_info={
+                    "endpoint": s['endpoint'],
+                    "keys": {"p256dh": s['p256dh'], "auth": s['auth']}
+                },
+                data=payload,
+                vapid_private_key=VAPID_PRIVATE,
+                vapid_public_key=VAPID_PUBLIC,
+                vapid_claims=VAPID_CLAIMS
             )
         except WebPushException as ex:
-            # You might log this or delete invalid subscriptions here.
-            print("Push failed: {}", repr(ex))
+            # Log and continue
+            print("Push failed:", repr(ex))
