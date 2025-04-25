@@ -676,75 +676,91 @@ def delete_listing(listing_id):
 @login_required
 def update_proposal(proposal_id):
     # 1) Read & validate the new status
-    status = request.json.get('status')
-    if status not in ('Accepted', 'Declined', 'Negotiated'):
+    status = request.json.get('status', '').lower()
+    if status not in ('accepted', 'declined', 'negotiated'):
         return jsonify({'error': 'Invalid status'}), 400
+
+    user_id = session['user_id']
+    app.logger.debug("User %s requests status '%s' on proposal %s",
+                     user_id, status, proposal_id)
 
     conn   = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
-        # 2) Perform the update + authorization in one shot
+        # 2) Fetch proposal + listing + owner + proposer in one go
+        cursor.execute("""
+            SELECT
+              p.user_id  AS proposer_id,
+              p.listing_id,
+              l.user_id  AS owner_id,
+              l.title    AS listing_title
+            FROM proposals p
+            JOIN listings  l ON p.listing_id = l.listing_id
+            WHERE p.id = %s
+        """, (proposal_id,))
+        row = cursor.fetchone()
+
+        if not row:
+            app.logger.warning("Proposal %s not found", proposal_id)
+            return jsonify({'error': 'Proposal not found'}), 404
+
+        proposer_id    = row['proposer_id']
+        listing_id     = row['listing_id']
+        owner_id       = row['owner_id']
+        listing_title  = row['listing_title']
+
+        app.logger.debug(
+            "Proposal %s belongs to listing %s owned by %s; proposer is %s",
+            proposal_id, listing_id, owner_id, proposer_id
+        )
+
+        # 3) Authorization: only listing owner may update
+        if owner_id != user_id:
+            app.logger.warning("User %s not authorized to update proposal %s",
+                               user_id, proposal_id)
+            return jsonify({'error': 'Not authorized'}), 403
+
+        # 4) Perform the update
         cursor.execute("""
             UPDATE proposals
             SET status = %s
             WHERE id = %s
-              AND listing_id IN (
-                  SELECT listing_id 
-                  FROM listings 
-                  WHERE user_id = %s
-              )
-        """, (status, proposal_id, session['user_id']))
-        
-        # If no rows were updated, either it didn't exist or user wasn't the owner
-        if cursor.rowcount == 0:
-            conn.rollback()
-            return jsonify({'error': 'Not authorized or proposal not found'}), 403
-
+        """, (status, proposal_id))
         conn.commit()
+        app.logger.info("Proposal %s status updated to '%s'", proposal_id, status)
 
-        # 3) Fetch the data you need for the notification
-        cursor.execute("""
-            SELECT p.id, p.listing_id, l.title
-            FROM proposals p
-            JOIN listings l ON p.listing_id = l.listing_id
-            WHERE p.id = %s
-        """, (proposal_id,))
-        prop = cursor.fetchone()
-        if prop:
-            proposer_id   = prop['id']
-            listing_id    = prop['listing_id']
-            listing_title = prop['title']
+        # 5) Prepare notification text
+        if status == 'accepted':
+            notif_title = "Proposal Accepted"
+            notif_body  = f"Your proposal for '{listing_title}' was accepted!"
+        elif status == 'declined':
+            notif_title = "Proposal Declined"
+            notif_body  = f"Your proposal for '{listing_title}' was declined."
+        else:  # 'negotiated'
+            notif_title = "Proposal Negotiated"
+            notif_body  = f"Your proposal for '{listing_title}' is up for negotiation."
 
-            # 4) Pick title/body based on status
-            if status == 'Accepted':
-                notif_title = "Proposal Accepted"
-                notif_body  = f"Your proposal for {listing_title} was accepted!"
-            elif status == 'Declined':
-                notif_title = "Proposal Declined"
-                notif_body  = f"Your proposal for {listing_title} was declined."
-            else:  # Negotiated
-                notif_title = "Proposal Negotiated"
-                notif_body  = f"Your proposal for {listing_title} is up for negotiation."
+        # 6) Send push notification
+        try:
+            send_push(
+                proposer_id,
+                notif_title,
+                notif_body,
+                url_for('listing_details', listing_id=listing_id)
+            )
+            app.logger.info(
+                "Push notification sent to user %s for proposal %s: %s",
+                proposer_id, proposal_id, notif_title
+            )
+        except Exception as push_err:
+            app.logger.error("Push notification error: %s", push_err)
 
-            # 5) Send the push (and catch errors so we still return success)
-            try:
-                send_push(
-                    proposer_id,
-                    notif_title,
-                    notif_body,
-                    url_for('listing_details', listing_id=listing_id)
-                )
-            except Exception as push_err:
-                app.logger.error("Push notification error: %s", push_err)
-
-        # 6) Return success
+        # 7) Return success
         return jsonify({'success': True})
 
     finally:
         cursor.close()
         conn.close()
-
-
 
 
 @app.route('/profile', methods=['PUT'])
