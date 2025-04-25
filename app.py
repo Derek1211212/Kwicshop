@@ -490,43 +490,43 @@ def send_text_notification(recipient_contact, body):
 @login_required
 def create_proposal(listing_id):
     if request.method == 'POST':
-        conn = get_db_connection()  # Uses your helper function
-        # Use a dictionary cursor if needed, otherwise adjust index access accordingly.
+        conn   = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         try:
-            # Retrieve form fields
-            proposed_item = request.form['proposed_item']
-            additional_cash = request.form.get('additional_cash', 0.00)
-            message = request.form.get('message', '')
+            # 1) Gather form data
+            proposer_id          = session['user_id']
+            proposed_item        = request.form['proposed_item']
+            additional_cash      = request.form.get('additional_cash', 0.00)
+            message              = request.form.get('message', '').strip()
             detailed_description = request.form['detailed_description']
-            condition = request.form['condition']
-            phone_number = request.form['phone_number']
-            email_address = request.form['email_address']
+            condition            = request.form['condition']
+            phone_number         = request.form['phone_number']
+            email_address        = request.form['email_address']
 
-            # Handle file uploads for image1 to image4
+            # 2) Handle up to 4 image uploads
             image_filenames = []
             for i in range(1, 5):
                 file = request.files.get(f'image{i}')
                 if file and allowed_file(file.filename):
                     filename = secure_filename(file.filename)
-                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                    file.save(filepath)
+                    path     = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    file.save(path)
                     image_filenames.append(filename)
                 else:
-                    image_filenames.append(None)  # No file uploaded for this slot
+                    image_filenames.append(None)
 
-            # Prepare and execute the INSERT query.
-            # Notice that we enclose `condition` in backticks since it's a reserved keyword in MySQL.
-            query = """
+            # 3) Insert the proposal
+            cursor.execute("""
                 INSERT INTO proposals (
-                    listing_id, user_id, proposed_item, additional_cash, message, 
-                    status, detailed_description, `condition`, phone_number, email_address, 
+                    listing_id, user_id, proposed_item,
+                    additional_cash, message, status,
+                    detailed_description, `condition`,
+                    phone_number, Email_address,
                     image1, image2, image3, image4
                 ) VALUES (%s, %s, %s, %s, %s, 'pending', %s, %s, %s, %s, %s, %s, %s, %s)
-            """
-            params = (
+            """, (
                 listing_id,
-                session['user_id'],
+                proposer_id,
                 proposed_item,
                 additional_cash,
                 message,
@@ -534,55 +534,64 @@ def create_proposal(listing_id):
                 condition,
                 phone_number,
                 email_address,
-                *image_filenames  # Unpacks image1, image2, image3, image4
-            )
-            cursor.execute(query, params)
+                *image_filenames
+            ))
             conn.commit()
 
-            # ---------------------
-            # Notification Section
-            # ---------------------
-            # Get the listing owner's user_id using the listing_id
-            cursor.execute("SELECT user_id FROM listings WHERE listing_id = %s", (listing_id,))
-            owner_row = cursor.fetchone()
-            if owner_row:
-                owner_id = owner_row['user_id']
-                # Retrieve email and contact info for the owner
+            # 4) Lookup listing owner
+            cursor.execute(
+                "SELECT user_id, title FROM listings WHERE listing_id = %s",
+                (listing_id,)
+            )
+            listing = cursor.fetchone()
+            if listing:
+                owner_id      = listing['user_id']
+                listing_title = listing['title']
+
+                # 5a) Send email + SMS
                 cursor.execute("SELECT email, contact FROM users WHERE id = %s", (owner_id,))
-                user_row = cursor.fetchone()
-                if user_row:
-                    recipient_email = user_row['email']
-                    recipient_contact = user_row['contact']
-
-                    # Compose notification details
-                    subject = "New Proposal Received"
-                    notification_message = (
-                        "You have received a new offer for your swap deal. "
-                        "Please log in to your dashboard to review the proposal."
-                    )
-
+                user = cursor.fetchone()
+                if user:
                     try:
-                        # Call your helper functions to send email and text notifications.
-                        send_email_notification(recipient_email, subject, notification_message)
-                        send_text_notification(recipient_contact, notification_message)
-                    except Exception as notify_error:
-                        app.logger.error("Error sending notifications: %s", str(notify_error))
-            # ---------------------
+                        send_email_notification(
+                            user['email'],
+                            "New Proposal Received",
+                            f"Someone just sent you a swap proposal for your listing: {listing_title}."
+                        )
+                        send_text_notification(
+                            user['contact'],
+                            f"New proposal for {listing_title}. Check your dashboard."
+                        )
+                    except Exception as notify_err:
+                        app.logger.error("Email/SMS error: %s", notify_err)
+
+                # 5b) Send web-push notification
+                try:
+                    send_push(
+                        owner_id,
+                        "New proposal received",
+                        f"Someone just sent you a swap proposal for your listing: {listing_title}.",
+                        url_for('listing_details', listing_id=listing_id)
+                    )
+                    app.logger.info(
+                        "Push notification sent to user %s for listing %s", 
+                        owner_id, listing_id
+                    )
+                except Exception as push_err:
+                    app.logger.error("Push notification error: %s", push_err)
 
             flash('Your swap proposal has been submitted successfully!', 'success')
             return redirect(url_for('listing_details', listing_id=listing_id))
+
         except Exception as e:
             conn.rollback()
-            app.logger.error("Error inserting proposal: %s", str(e))
-            app.logger.error(
-                "Query parameters: listing_id=%s, user_id=%s, proposed_item=%s, additional_cash=%s, message=%s, detailed_description=%s, condition=%s, phone_number=%s, email_address=%s, images=%s",
-                listing_id, session.get('user_id'), proposed_item, additional_cash, message,
-                detailed_description, condition, phone_number, email_address, image_filenames
-            )
-            flash(f'Error submitting proposal: {str(e)}', 'danger')
+            app.logger.error("Error creating proposal: %s", e)
+            flash('Error submitting proposal. Please try again.', 'danger')
         finally:
             cursor.close()
             conn.close()
+
+    # For GET or any other method, just redirect back
     return redirect(url_for('listing_details', listing_id=listing_id))
 
 
@@ -660,26 +669,101 @@ def delete_listing(listing_id):
         cursor.close()
         conn.close()
 
+
+        
+
 @app.route('/proposals/<int:proposal_id>', methods=['PUT'])
 @login_required
 def update_proposal(proposal_id):
-    status = request.json.get('status')
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
+    # 1) Read & validate the new status
+    status = request.json.get('status', '').lower()
+    if status not in ('accepted', 'declined', 'negotiated'):
+        return jsonify({'error': 'Invalid status'}), 400
+
+    user_id = session['user_id']
+    app.logger.debug("User %s requests status '%s' on proposal %s",
+                     user_id, status, proposal_id)
+
+    conn   = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
     try:
+        # 2) Fetch proposal + listing + owner + proposer
         cursor.execute("""
-            UPDATE proposals 
-            SET status=%s 
-            WHERE id=%s AND listing_id IN (
-                SELECT listing_id FROM listings WHERE user_id=%s
-            )
-        """, (status, proposal_id, session['user_id']))
+            SELECT
+              p.user_id   AS proposer_id,
+              p.listing_id,
+              l.user_id   AS owner_id,
+              l.title     AS listing_title
+            FROM proposals AS p
+            JOIN listings  AS l ON p.listing_id = l.listing_id
+            WHERE p.id = %s
+        """, (proposal_id,))
+        row = cursor.fetchone()
+
+        if not row:
+            app.logger.warning("Proposal %s not found", proposal_id)
+            return jsonify({'error': 'Proposal not found'}), 404
+
+        proposer_id    = row['proposer_id']
+        listing_id     = row['listing_id']
+        owner_id       = row['owner_id']
+        listing_title  = row['listing_title']
+
+        app.logger.debug(
+            "Proposal %s → listing %s owned by %s; proposer is %s",
+            proposal_id, listing_id, owner_id, proposer_id
+        )
+
+        # 3) Authorization: only listing owner may update
+        if owner_id != user_id:
+            app.logger.warning("User %s not authorized to update proposal %s",
+                               user_id, proposal_id)
+            return jsonify({'error': 'Not authorized'}), 403
+
+        # 4) Perform the update
+        cursor.execute("""
+            UPDATE proposals
+            SET status = %s
+            WHERE id = %s
+        """, (status, proposal_id))
         conn.commit()
+        app.logger.info("Proposal %s status updated to '%s'", proposal_id, status)
+
+        # 5) Choose notification content based on status
+        if status == 'accepted':
+            notif_title = "Proposal Accepted"
+            notif_body  = f"Your proposal for '{listing_title}' was accepted!"
+        elif status == 'declined':
+            notif_title = "Proposal Declined"
+            notif_body  = f"Your proposal for '{listing_title}' was declined."
+        else:  # status == 'negotiated'
+            notif_title = "Proposal Negotiated"
+            notif_body  = f"Your proposal for '{listing_title}' is up for negotiation."
+
+        # 6) Send the push notification
+        try:
+            send_push(
+                proposer_id,
+                notif_title,
+                notif_body,
+                url_for('listing_details', listing_id=listing_id)
+            )
+            app.logger.info(
+                "Push sent to proposer %s for proposal %s: %s",
+                proposer_id, proposal_id, notif_title
+            )
+        except Exception as push_err:
+            app.logger.error("Push notification error: %s", push_err)
+
+        # 7) Return success
         return jsonify({'success': True})
+
     finally:
         cursor.close()
         conn.close()
+
+
+
 
 @app.route('/profile', methods=['PUT'])
 @login_required
