@@ -925,6 +925,40 @@
     </div>
   </footer>
 
+<script>
+  
+
+    <!-- existing scripts… -->
+
+  <script>
+    // urlBase64ToUint8Array helper here…
+
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(reg => Notification.requestPermission()
+          .then(permission => {
+            if (permission === 'granted') {
+              return reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array('{{ VAPID_PUBLIC_KEY }}')
+              });
+            }
+          })
+        )
+        .then(sub => fetch('/subscribe', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(sub)
+        }))
+        .catch(console.error);
+    }
+  </script>
+</body>
+
+</script>
+
+
+
   <script>
     // Mobile Navigation Toggle
     const hamburger = document.querySelector('.hamburger');

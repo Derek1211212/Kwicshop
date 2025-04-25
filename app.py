@@ -21,7 +21,8 @@ from itsdangerous import URLSafeTimedSerializer
 import secrets
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
-
+import json
+from notifications import send_push
 
 
 
@@ -484,48 +485,48 @@ def send_text_notification(recipient_contact, body):
 
 
 
-# Proposal Creation Route
-@app.route('/create_proposal/<int:listing_id>', methods=['GET', 'POST'])
+# Proposal Creation Route@app.route('/create_proposal/<int:listing_id>', methods=['GET', 'POST'])
 @login_required
 def create_proposal(listing_id):
     if request.method == 'POST':
-        conn = get_db_connection()  # Uses your helper function
-        # Use a dictionary cursor if needed, otherwise adjust index access accordingly.
-        cursor = conn.cursor(dictionary=True)
+        conn     = get_db_connection()
+        cursor   = conn.cursor(dictionary=True)
         try:
-            # Retrieve form fields
-            proposed_item = request.form['proposed_item']
-            additional_cash = request.form.get('additional_cash', 0.00)
-            message = request.form.get('message', '')
-            detailed_description = request.form['detailed_description']
-            condition = request.form['condition']
-            phone_number = request.form['phone_number']
-            email_address = request.form['email_address']
+            # 1) Gather form data
+            proposer_id         = session['user_id']
+            proposed_item       = request.form['proposed_item']
+            additional_cash     = request.form.get('additional_cash', 0.00)
+            message             = request.form.get('message', '').strip()
+            detailed_description= request.form['detailed_description']
+            condition           = request.form['condition']
+            phone_number        = request.form['phone_number']
+            email_address       = request.form['email_address']
 
-            # Handle file uploads for image1 to image4
+            # 2) Handle up to 4 image uploads
             image_filenames = []
             for i in range(1, 5):
                 file = request.files.get(f'image{i}')
                 if file and allowed_file(file.filename):
                     filename = secure_filename(file.filename)
-                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                    file.save(filepath)
+                    path     = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    file.save(path)
                     image_filenames.append(filename)
                 else:
-                    image_filenames.append(None)  # No file uploaded for this slot
+                    image_filenames.append(None)
 
-            # Prepare and execute the INSERT query.
-            # Notice that we enclose `condition` in backticks since it's a reserved keyword in MySQL.
-            query = """
+            # 3) Insert the proposal record
+            insert_sql = """
                 INSERT INTO proposals (
-                    listing_id, user_id, proposed_item, additional_cash, message, 
-                    status, detailed_description, `condition`, phone_number, email_address, 
+                    listing_id, user_id, proposed_item,
+                    additional_cash, message, status,
+                    detailed_description, `condition`,
+                    phone_number, email_address,
                     image1, image2, image3, image4
                 ) VALUES (%s, %s, %s, %s, %s, 'pending', %s, %s, %s, %s, %s, %s, %s, %s)
             """
             params = (
                 listing_id,
-                session['user_id'],
+                proposer_id,
                 proposed_item,
                 additional_cash,
                 message,
@@ -533,55 +534,65 @@ def create_proposal(listing_id):
                 condition,
                 phone_number,
                 email_address,
-                *image_filenames  # Unpacks image1, image2, image3, image4
+                *image_filenames
             )
-            cursor.execute(query, params)
+            cursor.execute(insert_sql, params)
             conn.commit()
 
-            # ---------------------
-            # Notification Section
-            # ---------------------
-            # Get the listing owner's user_id using the listing_id
-            cursor.execute("SELECT user_id FROM listings WHERE listing_id = %s", (listing_id,))
-            owner_row = cursor.fetchone()
-            if owner_row:
-                owner_id = owner_row['user_id']
-                # Retrieve email and contact info for the owner
-                cursor.execute("SELECT email, contact FROM users WHERE id = %s", (owner_id,))
+            # 4) Look up the listing owner and title
+            cursor.execute("""
+                SELECT user_id, title
+                FROM listings
+                WHERE listing_id = %s
+            """, (listing_id,))
+            row = cursor.fetchone()
+
+            if row:
+                listing_owner_id = row['user_id']
+                listing_title    = row['title']
+
+                # 5a) Send Email & SMS (your existing logic)
+                cursor.execute("SELECT email, contact FROM users WHERE id = %s",
+                               (listing_owner_id,))
                 user_row = cursor.fetchone()
                 if user_row:
-                    recipient_email = user_row['email']
-                    recipient_contact = user_row['contact']
-
-                    # Compose notification details
-                    subject = "New Proposal Received"
-                    notification_message = (
-                        "You have received a new offer for your swap deal. "
-                        "Please log in to your dashboard to review the proposal."
-                    )
-
                     try:
-                        # Call your helper functions to send email and text notifications.
-                        send_email_notification(recipient_email, subject, notification_message)
-                        send_text_notification(recipient_contact, notification_message)
-                    except Exception as notify_error:
-                        app.logger.error("Error sending notifications: %s", str(notify_error))
-            # ---------------------
+                        send_email_notification(
+                            user_row['email'],
+                            "New Proposal Received",
+                            f"Someone just sent you a swap proposal for your listing: {listing_title}."
+                        )
+                        send_text_notification(
+                            user_row['contact'],
+                            f"New proposal for {listing_title}. Check your dashboard."
+                        )
+                    except Exception as notify_err:
+                        app.logger.error("Email/SMS error: %s", notify_err)
 
-            flash('Your swap proposal has been submitted successfully!', 'success')
+                # 5b) Send Web-Push Notification
+                try:
+                    send_push(
+                        listing_owner_id,
+                        "New proposal received",
+                        f"Someone just sent you a swap proposal for your listing: {listing_title}.",
+                        url_for('listing_details', listing_id=listing_id)
+                    )
+                except Exception as push_err:
+                    app.logger.error("Push notification error: %s", push_err)
+
+            # 6) Feedback and redirect
+            flash('Your swap proposal has been submitted!', 'success')
             return redirect(url_for('listing_details', listing_id=listing_id))
+
         except Exception as e:
             conn.rollback()
-            app.logger.error("Error inserting proposal: %s", str(e))
-            app.logger.error(
-                "Query parameters: listing_id=%s, user_id=%s, proposed_item=%s, additional_cash=%s, message=%s, detailed_description=%s, condition=%s, phone_number=%s, email_address=%s, images=%s",
-                listing_id, session.get('user_id'), proposed_item, additional_cash, message,
-                detailed_description, condition, phone_number, email_address, image_filenames
-            )
-            flash(f'Error submitting proposal: {str(e)}', 'danger')
+            app.logger.error("Error in create_proposal: %s", e)
+            flash('Error submitting proposal. Please try again.', 'danger')
         finally:
             cursor.close()
             conn.close()
+
+    # For GET requests, just show the listing detail page (or a form)
     return redirect(url_for('listing_details', listing_id=listing_id))
 
 
@@ -659,26 +670,90 @@ def delete_listing(listing_id):
         cursor.close()
         conn.close()
 
+
+
+
+
 @app.route('/proposals/<int:proposal_id>', methods=['PUT'])
 @login_required
 def update_proposal(proposal_id):
-    status = request.json.get('status')
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
+    # 1) Read the new status from the request
+    status = request.json.get('status')  # e.g. "Accepted", "Declined", "Negotiated"
+    if status not in ('Accepted', 'Declined', 'Negotiated'):
+        return jsonify({'error': 'Invalid status'}), 400
+
+    conn   = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
     try:
+        # 2) Look up the proposal + listing info
         cursor.execute("""
-            UPDATE proposals 
-            SET status=%s 
-            WHERE id=%s AND listing_id IN (
-                SELECT listing_id FROM listings WHERE user_id=%s
-            )
-        """, (status, proposal_id, session['user_id']))
+            SELECT
+              p.proposer_id,
+              p.listing_id,
+              l.title
+            FROM proposals AS p
+            JOIN listings AS l
+              ON p.listing_id = l.listing_id
+            WHERE p.id = %s
+        """, (proposal_id,))
+        prop = cursor.fetchone()
+        if not prop:
+            return jsonify({'error': 'Proposal not found'}), 404
+
+        # 3) Ensure the current user owns that listing
+        if prop['listing_id'] not in (
+            r['listing_id'] for r in
+            cursor.execute(
+              "SELECT listing_id FROM listings WHERE user_id = %s",
+              (session['user_id'],)
+            ) or []
+        ):
+            return jsonify({'error': 'Not authorized'}), 403
+
+        # 4) Update the status
+        cursor.execute("""
+            UPDATE proposals
+            SET status = %s
+            WHERE id = %s
+        """, (status, proposal_id))
         conn.commit()
+
+        # 5) Prepare push parameters
+        proposer_id   = prop['proposer_id']
+        listing_title = prop['title']
+
+        if status == 'Accepted':
+            notif_title = "Proposal Accepted"
+            notif_body  = f"Your proposal for {listing_title} was accepted!"
+        elif status == 'Declined':
+            notif_title = "Proposal Declined"
+            notif_body  = f"Your proposal for {listing_title} was declined."
+        else:  # Negotiated
+            notif_title = "Proposal Negotiated"
+            notif_body  = f"Your proposal for {listing_title} is up for negotiation."
+
+        # 6) Send the push notification
+        try:
+            send_push(
+                proposer_id,
+                notif_title,
+                notif_body,
+                url_for('listing_details', listing_id=prop['listing_id'])
+            )
+        except Exception as push_err:
+            app.logger.error("Error sending push: %s", push_err)
+
         return jsonify({'success': True})
+
     finally:
         cursor.close()
         conn.close()
+
+
+
+
+
+
 
 @app.route('/profile', methods=['PUT'])
 @login_required
@@ -1671,6 +1746,31 @@ from flask import send_from_directory
 @app.route('/service-worker.js')
 def service_worker():
     return send_from_directory('static', 'service-worker.js')
+
+
+
+
+@app.route('/subscribe', methods=['POST'])
+def subscribe():
+    sub = request.get_json()
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not logged in'}), 403
+
+    conn = get_db_connection()
+    conn.execute(
+      "INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth) VALUES (%s,%s,%s,%s)",
+      (user_id, sub['endpoint'], sub['keys']['p256dh'], sub['keys']['auth'])
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'subscribed'}), 201
+
+
+
+
+
+
 
 
 
