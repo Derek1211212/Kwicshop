@@ -791,6 +791,86 @@
     </div>
   </section>
 
+
+<!-- 1) Prompt Banner (hidden by default via inline style) -->
+<div id="notify-prompt" style="
+     display: none;
+     position: fixed; top: 0; left: 0; right: 0;
+     background: #2563eb; color: white;
+     padding: 1rem; text-align: center;
+     z-index: 1000; font-family: sans-serif;
+">
+  🔔 Enable notifications to get alerts on new listings, proposal updates, and ad performance.
+  <button id="notify-yes" style="
+    margin-left: 1rem; padding: 0.5rem 1rem;
+    background: white; color: #2563eb;
+    border: none; border-radius: 4px; cursor: pointer;
+  ">Yes</button>
+  <button id="notify-no" style="
+    margin-left: .5rem; padding: 0.5rem 1rem;
+    background: transparent; color: white;
+    border: 1px solid white; border-radius: 4px; cursor: pointer;
+  ">No, thanks</button>
+</div>
+
+<script>
+  // Helper to decode the VAPID key
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64  = (base64String + padding)
+      .replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = atob(base64);
+    return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
+  }
+
+  async function subscribeUser() {
+    try {
+      const reg  = await navigator.serviceWorker.register('/service-worker.js');
+      await Notification.requestPermission();
+      const key  = "{{ vapid_public_key }}";
+      const sub  = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(key)
+      });
+      await fetch('/subscribe', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(sub)
+      });
+      console.log('✅ Subscribed for push:', sub);
+    } catch (err) {
+      console.error('❌ Subscription error:', err);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const PROMPT_KEY = 'swapsphere_notif_prompted';
+    const banner     = document.getElementById('notify-prompt');
+
+    // 1) Only show banner if user has NOT already responded
+    if (!localStorage.getItem(PROMPT_KEY)) {
+      banner.style.display = 'block';
+    }
+
+    // 2) On "Yes", subscribe and remember they responded
+    document.getElementById('notify-yes').onclick = () => {
+      subscribeUser();
+      localStorage.setItem(PROMPT_KEY, 'yes');
+      banner.remove();
+    };
+
+    // 3) On "No, thanks", just remember and hide
+    document.getElementById('notify-no').onclick = () => {
+      localStorage.setItem(PROMPT_KEY, 'no');
+      banner.remove();
+    };
+  });
+</script>
+
+
+
+
+
   <!-- Filter Section -->
   <section class="filter-section">
     <!-- Deal Type Tabs -->
