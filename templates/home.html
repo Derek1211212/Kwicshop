@@ -926,41 +926,90 @@
   </footer>
 
 
-  <button id="enable-notifications">🔔 Enable Notifications</button>
+<button id="enable-notifications">Enable Notifications</button>
 <script>
-  function urlBase64ToUint8Array(s) {
-    const pad = '='.repeat((4 - s.length % 4) % 4);
-    const b64 = (s + pad).replace(/-/g,'+').replace(/_/g,'/');
-    const raw = atob(b64);
-    return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
+  document.getElementById('enable-notifications').addEventListener('click', async () => {
+    console.log('[Client] Clicked Enable Notifications');
+    try {
+      const reg = await navigator.serviceWorker.register('/service-worker.js');
+      console.log('[Client] SW registered', reg);
+
+      const perm = await Notification.requestPermission();
+      console.log('[Client] Notification permission:', perm);
+      if (perm !== 'granted') throw new Error('Permission not granted');
+
+      const vapidPublicKey = "BMtSvERTURwR1YKBRM7fPZZEDDTkx8Gxyunu1s0X6xdGy5b2i2d9fn042-E4VIx_0gIiv7QFq2l8I0uXO_bagR8";
+      const convertedKey = urlBase64ToUint8Array(vapidPublicKey);
+      console.log('[Client] Converted VAPID key:', convertedKey);
+
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: convertedKey
+      });
+      console.log('[Client] Got subscription:', sub);
+
+      const resp = await fetch('/subscribe', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(sub)
+      });
+      console.log('[Client] /subscribe response:', resp.status, await resp.text());
+    } catch (err) {
+      console.error('[Client] Subscription error:', err);
+    }
+  });
+</script>
+
+<script>
+  // 0) Make sure this helper is defined first
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
   }
 
-  document.getElementById('enable-notifications')
-    .addEventListener('click', async () => {
-      if (!('serviceWorker' in navigator && 'PushManager' in window)) {
-        return alert('Push not supported');
-      }
-      try {
-        const reg = await navigator.serviceWorker.register('/static/service-worker.js');
-        const perm = await Notification.requestPermission();
-        if (perm !== 'granted') throw new Error('No permission');
-        const key = "{{ vapid_public_key }}";
-        const sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(key)
-        });
-        await fetch('/subscribe', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify(sub)
-        });
-        alert('Subscribed!');
-      } catch (err) {
-        console.error('Subscription failed:', err);
-        alert('Subscription error: ' + err.message);
-      }
-    });
+  // 1) Wire up your button
+  document.getElementById('enable-notifications').addEventListener('click', async () => {
+    console.log('[Client] Clicked Enable Notifications');
+    try {
+      // 2) Register SW
+      const reg = await navigator.serviceWorker.register('/service-worker.js');
+      console.log('[Client] SW registered', reg);
+
+      // 3) Ask permission
+      const perm = await Notification.requestPermission();
+      console.log('[Client] Notification permission:', perm);
+      if (perm !== 'granted') throw new Error('Permission not granted');
+
+      // 4) Prepare VAPID key
+      const vapidPublicKey = "{{ vapid_public_key }}";  // or hard-coded for testing
+      const convertedKey   = urlBase64ToUint8Array(vapidPublicKey);
+      console.log('[Client] Converted VAPID key:', convertedKey);
+
+      // 5) Subscribe
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: convertedKey
+      });
+      console.log('[Client] Got subscription:', sub);
+
+      // 6) Send to server
+      const resp = await fetch('/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sub)
+      });
+      console.log('[Client] /subscribe response:', resp.status, await resp.text());
+    } catch (err) {
+      console.error('[Client] Subscription error:', err);
+    }
+  });
 </script>
+
+
 
 
 

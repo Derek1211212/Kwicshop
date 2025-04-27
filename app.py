@@ -1795,15 +1795,17 @@ def subscribe():
 
 
 @app.route('/test-push')
-@login_required
 def test_push():
+    # Hardcoded user_id (your current test user)
+    user_id = 1
     send_push(
-      session['user_id'],
-      "🔥 Test Notification",
-      "If you see this, push is working!",
-      url_for('home')
+        user_id,
+        "Test Notification",
+        "This is a test push from your Flask app.",
+        url_for('home')  # or any other URL
     )
-    return "OK", 200
+    return 'OK'
+
 
 
 
