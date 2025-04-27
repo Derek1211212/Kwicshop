@@ -2,24 +2,28 @@ const CACHE_NAME = 'swap-chief-cache-v2';
 const urlsToCache = [
   '/',
   '/static/manifest.json',
-  '/static/ss.png',
   '/static/icons/ss.png',
-  // more...
+  // only include URLs here you’ve verified
 ];
 
-// Install -> cache assets
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(urlsToCache))
+      .catch(err => {
+        console.warn('Some resources failed to cache:', err);
+      })
   );
 });
 
-// Fetch -> serve from cache, fallback to network
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
+    caches.match(event.request)
+      .then(resp => resp || fetch(event.request))
   );
 });
+
+
 
 // —————— PUSH & NOTIFICATION HANDLERS ——————
 

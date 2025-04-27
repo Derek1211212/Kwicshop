@@ -925,37 +925,44 @@
     </div>
   </footer>
 
+
+  <button id="enable-notifications">🔔 Enable Notifications</button>
 <script>
-  
+  function urlBase64ToUint8Array(s) {
+    const pad = '='.repeat((4 - s.length % 4) % 4);
+    const b64 = (s + pad).replace(/-/g,'+').replace(/_/g,'/');
+    const raw = atob(b64);
+    return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
+  }
 
-    <!-- existing scripts… -->
-
-  <script>
-    // urlBase64ToUint8Array helper here…
-
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(reg => Notification.requestPermission()
-          .then(permission => {
-            if (permission === 'granted') {
-              return reg.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array('{{ VAPID_PUBLIC_KEY }}')
-              });
-            }
-          })
-        )
-        .then(sub => fetch('/subscribe', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
+  document.getElementById('enable-notifications')
+    .addEventListener('click', async () => {
+      if (!('serviceWorker' in navigator && 'PushManager' in window)) {
+        return alert('Push not supported');
+      }
+      try {
+        const reg = await navigator.serviceWorker.register('/static/service-worker.js');
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') throw new Error('No permission');
+        const key = "{{ vapid_public_key }}";
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(key)
+        });
+        await fetch('/subscribe', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
           body: JSON.stringify(sub)
-        }))
-        .catch(console.error);
-    }
-  </script>
-</body>
-
+        });
+        alert('Subscribed!');
+      } catch (err) {
+        console.error('Subscription failed:', err);
+        alert('Subscription error: ' + err.message);
+      }
+    });
 </script>
+
+
 
 
 

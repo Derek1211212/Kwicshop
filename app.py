@@ -23,6 +23,7 @@ from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 from notifications import send_push
+from config import VAPID_PUBLIC_KEY
 
 
 
@@ -159,7 +160,8 @@ def home():
                          search=search,
                          selected_category=selected_category,
                          categories=categories,
-                         deal_type_filter=deal_type_filter)  # Add deal_type_filter to template context
+                         deal_type_filter=deal_type_filter,
+                         vapid_public_key=VAPID_PUBLIC_KEY)  # Add deal_type_filter to template context
 
 
 
@@ -670,7 +672,7 @@ def delete_listing(listing_id):
         conn.close()
 
 
-        
+
 
 @app.route('/proposals/<int:proposal_id>', methods=['PUT'])
 @login_required
@@ -1761,22 +1763,47 @@ def service_worker():
 
 
 @app.route('/subscribe', methods=['POST'])
+@login_required
 def subscribe():
     sub = request.get_json()
-    user_id = session.get('user_id')
-    if not user_id:
-        return jsonify({'error': 'Not logged in'}), 403
+    endpoint = sub.get('endpoint')
+    keys     = sub.get('keys', {})
+    p256dh   = keys.get('p256dh')
+    auth_key = keys.get('auth')
+    user_id  = session['user_id']
 
-    conn = get_db_connection()
-    conn.execute(
-      "INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth) VALUES (%s,%s,%s,%s)",
-      (user_id, sub['endpoint'], sub['keys']['p256dh'], sub['keys']['auth'])
-    )
-    conn.commit()
+    if not (endpoint and p256dh and auth_key):
+        return jsonify({'error': 'Invalid subscription'}), 400
+
+    conn   = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+      SELECT 1 FROM push_subscriptions
+      WHERE user_id=%s AND endpoint=%s
+    """, (user_id, endpoint))
+    if not cursor.fetchone():
+        cursor.execute("""
+          INSERT INTO push_subscriptions
+            (user_id, endpoint, p256dh, auth)
+          VALUES (%s,%s,%s,%s)
+        """, (user_id, endpoint, p256dh, auth_key))
+        conn.commit()
+    cursor.close()
     conn.close()
     return jsonify({'status': 'subscribed'}), 201
 
 
+
+@app.route('/test-push')
+@login_required
+def test_push():
+    send_push(
+      session['user_id'],
+      "🔥 Test Notification",
+      "If you see this, push is working!",
+      url_for('home')
+    )
+    return "OK", 200
 
 
 
