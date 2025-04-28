@@ -1124,7 +1124,7 @@ def create_listing():
 
             flash("Your product has been listed successfully!", "success")
             # Redirect the user back to the home page
-            return redirect(url_for('home'))
+            return redirect(url_for('dashboard'))
 
         # 6) Otherwise, paid plan → store in session and go pay
         session['pending_listing'] = {
