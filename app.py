@@ -1810,23 +1810,21 @@ def test_push():
 
 
 
+# app.py (after app = Flask(__name__) and all routes)
 from apscheduler.schedulers.background import BackgroundScheduler
 from jobs import check_ad_performance_alerts
 
+scheduler = BackgroundScheduler()
+scheduler.add_job(
+    check_ad_performance_alerts,
+    'interval',
+    minutes=1,
+    id='ad_metrics_alerts',
+    replace_existing=True
+)
+scheduler.start()  # start as soon as the module loads
+
+
+
 if __name__ == '__main__':
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(
-        check_ad_performance_alerts,
-        'interval',
-        minutes=1,
-        id='ad_metrics_alerts',
-        replace_existing=True
-    )
-    scheduler.start()
-    try:
-        app.run(debug=True)
-    finally:
-        scheduler.shutdown()
-
-
-
+    app.run(debug=True)
