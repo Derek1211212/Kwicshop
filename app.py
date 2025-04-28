@@ -1810,9 +1810,23 @@ def test_push():
 
 
 
-
-
-
+from apscheduler.schedulers.background import BackgroundScheduler
+from jobs import check_ad_performance_alerts
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(
+        check_ad_performance_alerts,
+        'interval',
+        minutes=1,
+        id='ad_metrics_alerts',
+        replace_existing=True
+    )
+    scheduler.start()
+    try:
+        app.run(debug=True)
+    finally:
+        scheduler.shutdown()
+
+
+
