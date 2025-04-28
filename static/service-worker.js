@@ -1,68 +1,83 @@
-const CACHE_NAME = 'swap-chief-cache-v3';  // bumped from v2 to v3
-const urlsToCache = [
-  '/',
+// service-worker.js
+
+const CACHE_NAME = 'swap-chief-cache-v4';  // bump this on each deploy
+const STATIC_ASSETS = [
   '/static/manifest.json',
   '/static/icons/ss.png',
-  // add any other verified assets here
+  // add any other long-lived assets here
 ];
 
-// Install → cache assets, then activate immediately
+// 1) Install → cache static assets, then take over immediately
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
-      .then(() => self.skipWaiting())        // activate new SW immediately
-      .catch(err => {
-        console.warn('Some resources failed to cache:', err);
-      })
+      .then(cache => cache.addAll(STATIC_ASSETS))
+      .then(() => self.skipWaiting())
   );
 });
 
-// Activate → delete any old caches
+// 2) Activate → remove old caches, and claim clients
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
-      )
-    )
-    .then(() => self.clients.claim())        // take control of all pages ASAP
+    caches.keys()
+      .then(keys => Promise.all(
+        keys.filter(k => k !== CACHE_NAME)
+            .map(k => caches.delete(k))
+      ))
+      .then(() => self.clients.claim())
   );
 });
 
-// Fetch → serve from cache, fallback to network
+// 3) Fetch → network-first for navigations, cache-first for static assets
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(resp => resp || fetch(event.request))
-  );
+  const req = event.request;
+
+  // A) Navigation requests (HTML pages)
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req)                                  // try network
+        .then(res => {
+          // optionally update cache so offline still has a fallback
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put(req, copy));
+          return res;
+        })
+        .catch(() => caches.match(req))           // fallback to cache if offline
+    );
+    return;
+  }
+
+  // B) Static asset requests
+  if (STATIC_ASSETS.some(path => req.url.endsWith(path))) {
+    event.respondWith(
+      caches.match(req).then(cached => {
+        return cached || fetch(req).then(networkRes => {
+          // update cache for next time
+          caches.open(CACHE_NAME).then(c => c.put(req, networkRes.clone()));
+          return networkRes;
+        });
+      })
+    );
+    return;
+  }
+
+  // C) Everything else: just go to network
+  event.respondWith(fetch(req));
 });
 
-//
+
 // —————— PUSH & NOTIFICATION HANDLERS ——————
-//
 
-// When a push arrives, show it as a system notification.
-// Expects a JSON payload: { title, body, url (optional) }
 self.addEventListener('push', event => {
-  console.log('[SW] Push event received', event);
-
   let data = { title: 'New Notification', body: '', url: '/' };
-  try {
-    data = event.data.json();
-  } catch (e) {
-    console.warn('[SW] Push event had no JSON payload');
-  }
+  try { data = event.data.json() } catch (e) {}
 
   const options = {
     body: data.body,
     icon: '/static/icons/ss.png',
     badge: '/static/icons/ss.png',
-    data: data.url,            // URL to open when clicked
-    vibrate: [100, 50, 100],   // optional vibration pattern
-    // you can also add image, actions, etc.
+    data: data.url,
+    vibrate: [100, 50, 100]
   };
 
   event.waitUntil(
@@ -70,23 +85,18 @@ self.addEventListener('push', event => {
   );
 });
 
-// When the user clicks the notification, focus or open the URL.
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   const urlToOpen = event.notification.data || '/';
-
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
-      // Focus an open window/tab if it matches
-      for (let client of windowClients) {
-        if (client.url === urlToOpen && 'focus' in client) {
-          return client.focus();
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then(windows => {
+        for (let win of windows) {
+          if (win.url === urlToOpen && 'focus' in win) {
+            return win.focus();
+          }
         }
-      }
-      // Otherwise open a new window/tab
-      if (clients.openWindow) {
         return clients.openWindow(urlToOpen);
-      }
-    })
+      })
   );
 });
