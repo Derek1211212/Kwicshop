@@ -1154,7 +1154,7 @@ def create_listing():
         if conn:
             conn.rollback()
         flash("An error occurred while creating your listing.", "error")
-        return redirect(url_for('home'))
+        return redirect(url_for('dashboard'))
 
     finally:
         if cursor:
@@ -1251,51 +1251,36 @@ def paystack_verify():
     
     try:
         response = requests.get(verify_url, headers=headers)
-        response_data = response.json()
-        app.logger.info(f"Paystack verify response: {response_data}")
+        data = response.json()
+        app.logger.info(f"Paystack verify response: {data}")
         
-        if response_data.get("status") and response_data['data']['status'] == 'success':
+        if data.get("status") and data['data']['status'] == 'success':
             pending = session.get('pending_listing')
             if not pending:
                 flash("No pending listing found.", "error")
                 return redirect(url_for('home'))
             
-            # Safely extract additional_cash and required_cash, allowing empty → NULL
-            add_cash = pending.get('additional_cash')
-            if add_cash in (None, '', 'None'):
-                add_cash = None
-            req_cash = pending.get('required_cash')
-            if req_cash in (None, '', 'None'):
-                req_cash = None
+            # Normalize cash fields to None if empty
+            add_cash = pending.get('additional_cash') or None
+            req_cash = pending.get('required_cash')   or None
 
-            conn = get_db_connection()
+            conn   = get_db_connection()
             cursor = conn.cursor()
             try:
-# … inside your paystack_verify view, after you’ve processed add_cash and req_cash …
-
                 cursor.execute("""
                     INSERT INTO listings (
-                        user_id,
-                        title,
-                        description,
-                        category,
-                        desired_swap,
-                        desired_swap_description,
-                        additional_cash,
-                        required_cash,
-                        `condition`,
-                        location,
-                        contact,
-                        image_url,
-                        image1,
-                        image2,
-                        image3,
-                        image4,
-                        deal_type,                -- new column
-                        plan
+                        user_id, title, description, category,
+                        desired_swap, desired_swap_description,
+                        additional_cash, required_cash,
+                        `condition`, location, contact,
+                        image_url, image1, image2, image3, image4,
+                        deal_type, plan
                     ) VALUES (
-                        %s,  %s,  %s, %s, %s,  %s,  %s,  %s,  %s,
-                        %s,  %s,  %s, %s, %s,  %s,  %s,  %s,      %s
+                        %s, %s, %s, %s,
+                        %s, %s, %s, %s,
+                        %s, %s, %s,
+                        %s, %s, %s, %s, %s,
+                        %s, %s
                     )
                 """, (
                     pending['user_id'],
@@ -1313,12 +1298,10 @@ def paystack_verify():
                     pending['image_paths'][1] if len(pending.get('image_paths', [])) > 1 else None,
                     pending['image_paths'][2] if len(pending.get('image_paths', [])) > 2 else None,
                     pending['image_paths'][3] if len(pending.get('image_paths', [])) > 3 else None,
-                    None,  # or pending['image_paths'][4] if you allow 5 images
-                    pending.get('deal_type'),  # ← this will be either "Swap Deal" or "Outright Sales"
+                    None,  # or image_paths[4] if you allow 5 images
+                    pending.get('deal_type'),
                     pending['plan']
                 ))
-                
-
                 conn.commit()
                 app.logger.info("Listing inserted successfully after payment.")
                 flash("Your product has been listed successfully!", "success")
@@ -1329,12 +1312,15 @@ def paystack_verify():
             finally:
                 cursor.close()
                 conn.close()
-            
+
+            # Clean up session and send user to their dashboard
             session.pop('pending_listing', None)
-            return redirect(url_for('home'))
+            return redirect(url_for('dashboard'))
+
         else:
             flash("Payment verification failed. Please try again.", "error")
             return redirect(url_for('home'))
+
     except Exception as e:
         app.logger.error(f"Error verifying payment: {e}")
         flash("Error verifying payment. Please try again.", "error")
