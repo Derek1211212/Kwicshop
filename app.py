@@ -1305,6 +1305,7 @@ def paystack_verify():
                     pending.get('deal_type'),  # ← this will be either "Swap Deal" or "Outright Sales"
                     pending['plan']
                 ))
+                
 
                 conn.commit()
                 app.logger.info("Listing inserted successfully after payment.")
