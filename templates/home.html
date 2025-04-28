@@ -752,10 +752,10 @@
     <div class="nav-links">
       <a href="/dashboard" class="active">Dashboard</a>
       <a href="/my-proposals">My Offers</a>
-      <a href="/messages">Messages</a>
+      
       
       {% if session.get('user_id') %}
-        <a href="/account">Account</a>
+        <a href="/profile">Account</a>
         <a href="/logout" class="btn btn-outline">Logout</a>
       {% else %}
         <a href="/login">Login</a>
@@ -971,22 +971,10 @@
       <div class="footer-section">
         <h3>Quick Links</h3>
         <ul class="footer-links">
-          <li><a href="/">Home</a></li>
-          <li><a href="/how-it-works">How It Works</a></li>
-          <li><a href="/blog">Blog</a></li>
-          <li><a href="/success-stories">Success Stories</a></li>
-          <li><a href="/faq">FAQ</a></li>
-        </ul>
-      </div>
-      
-      <div class="footer-section">
-        <h3>My Account</h3>
-        <ul class="footer-links">
           <li><a href="/dashboard">Dashboard</a></li>
           <li><a href="/my-listings">My Listings</a></li>
           <li><a href="/my-proposals">My Offers</a></li>
-          <li><a href="/messages">Messages</a></li>
-          <li><a href="/account">Account Settings</a></li>
+          
         </ul>
       </div>
       
@@ -1006,7 +994,6 @@
   </footer>
 
 
-<button id="enable-notifications">Enable Notifications</button>
 <script>
   document.getElementById('enable-notifications').addEventListener('click', async () => {
     console.log('[Client] Clicked Enable Notifications');

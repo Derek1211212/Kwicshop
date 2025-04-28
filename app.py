@@ -97,48 +97,59 @@ def home():
         selected_category = request.args.get('category', 'All')
         deal_type_filter = request.args.get('deal_type', 'All')  # New filter for deal type
         
-        # Build the query with optional filters
+        # Build the base query
         query = """
-            SELECT listings.*, users.username, IFNULL(metrics.impressions, 0) AS impressions
+            SELECT 
+              listings.*, 
+              users.username, 
+              IFNULL(metrics.impressions, 0) AS impressions
             FROM listings 
             JOIN users ON listings.user_id = users.id 
-            LEFT JOIN listing_metrics AS metrics ON listings.listing_id = metrics.listing_id
+            LEFT JOIN listing_metrics AS metrics 
+              ON listings.listing_id = metrics.listing_id
             WHERE 1=1
         """
-
         params = []
         
+        # If there’s a search term, match title, description, or category
         if search:
-            query += " AND (listings.title LIKE %s OR listings.description LIKE %s)"
-            like_str = '%' + search + '%'
-            params.extend([like_str, like_str])
+            query += """
+              AND (
+                listings.title       LIKE %s
+             OR listings.description LIKE %s
+             OR listings.category   LIKE %s
+              )
+            """
+            like_str = f'%{search}%'
+            params.extend([like_str, like_str, like_str])
         
+        # Filter by a specific category
         if selected_category != 'All':
             query += " AND listings.category = %s"
             params.append(selected_category)
-            
-        # Add deal type filter
+        
+        # Filter by deal type (swap vs sale)
         if deal_type_filter != 'All':
             query += " AND listings.deal_type = %s"
             params.append(deal_type_filter)
         
-        # Order listings by plan paid value first (Diamond > Gold > Silver > Bronze > Free)
-        # Then order by created_at in descending order
+        # Order by plan priority then newest first
         query += """
-            ORDER BY 
-              (CASE listings.plan 
+            ORDER BY
+              CASE listings.plan 
                 WHEN 'Diamond' THEN 5 
-                WHEN 'Gold' THEN 4 
-                WHEN 'Silver' THEN 3 
-                WHEN 'Bronze' THEN 2 
+                WHEN 'Gold'    THEN 4 
+                WHEN 'Silver'  THEN 3 
+                WHEN 'Bronze'  THEN 2 
                 ELSE 1 
-              END) DESC, 
+              END DESC,
               listings.created_at DESC
         """
+        
         cursor.execute(query, params)
         listings = cursor.fetchall()
         
-        # Retrieve unique categories for the filter tags
+        # Retrieve all categories for your filter UI
         cursor.execute("SELECT DISTINCT category FROM listings")
         categories = [row['category'] for row in cursor.fetchall()]
         
@@ -150,18 +161,23 @@ def home():
         if conn:
             conn.close()
     
-    # Process each listing to generate a full image URL from the image_url column
+    # Build full image URLs
     for listing in listings:
         if listing.get('image_url'):
-            listing['image_url'] = url_for('static', filename='images/' + listing['image_url'])
+            listing['image_url'] = url_for(
+                'static', filename='images/' + listing['image_url']
+            )
     
-    return render_template('home.html', 
-                         listings=listings, 
-                         search=search,
-                         selected_category=selected_category,
-                         categories=categories,
-                         deal_type_filter=deal_type_filter,
-                         vapid_public_key=VAPID_PUBLIC_KEY)  # Add deal_type_filter to template context
+    return render_template(
+        'home.html',
+        listings=listings,
+        search=search,
+        selected_category=selected_category,
+        categories=categories,
+        deal_type_filter=deal_type_filter,
+        vapid_public_key=VAPID_PUBLIC_KEY
+    )
+
 
 
 
@@ -788,6 +804,7 @@ def update_profile():
         cursor.close()
         conn.close()
 
+
 @app.route('/change-password', methods=['PUT'])
 @login_required
 def change_password():
@@ -1216,7 +1233,7 @@ def paystack_verify():
         return redirect(url_for('home'))
     
     headers = {
-        "Authorization": "Bearer sk_test_38d38a400d7c1a34c826930691e8c23fce8dde98",  # Use the same test key here
+        "Authorization": "Bearer sk_test_38d38a400d7c1a34c826930691e8c23fce8dde98",
     }
     verify_url = f"https://api.paystack.co/transaction/verify/{reference}"
     
@@ -1225,41 +1242,68 @@ def paystack_verify():
         response_data = response.json()
         app.logger.info(f"Paystack verify response: {response_data}")
         
-        # Check if verification was successful
         if response_data.get("status") and response_data['data']['status'] == 'success':
-            pending_listing = session.get('pending_listing')
-            if not pending_listing:
+            pending = session.get('pending_listing')
+            if not pending:
                 flash("No pending listing found.", "error")
                 return redirect(url_for('home'))
             
+            # Safely extract additional_cash and required_cash, allowing empty → NULL
+            add_cash = pending.get('additional_cash')
+            if add_cash in (None, '', 'None'):
+                add_cash = None
+            req_cash = pending.get('required_cash')
+            if req_cash in (None, '', 'None'):
+                req_cash = None
+
             conn = get_db_connection()
             cursor = conn.cursor()
             try:
+# … inside your paystack_verify view, after you’ve processed add_cash and req_cash …
+
                 cursor.execute("""
                     INSERT INTO listings (
-                        user_id, title, description, category, 
-                        desired_swap, desired_swap_description, additional_cash,
-                        required_cash, `condition`, location, contact, image_url,
-                        image1, image2, image3, image4, plan
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        user_id,
+                        title,
+                        description,
+                        category,
+                        desired_swap,
+                        desired_swap_description,
+                        additional_cash,
+                        required_cash,
+                        `condition`,
+                        location,
+                        contact,
+                        image_url,
+                        image1,
+                        image2,
+                        image3,
+                        image4,
+                        deal_type,                -- new column
+                        plan
+                    ) VALUES (
+                        %s,  %s,  %s, %s, %s,  %s,  %s,  %s,  %s,
+                        %s,  %s,  %s, %s, %s,  %s,  %s,  %s,      %s
+                    )
                 """, (
-                    pending_listing['user_id'],
-                    pending_listing['title'],
-                    pending_listing['description'],
-                    pending_listing['category'],
-                    pending_listing['desired_swap'],
-                    pending_listing['desired_swap_description'],
-                    pending_listing['additional_cash'],
-                    pending_listing['required_cash'],
-                    pending_listing['condition'],
-                    pending_listing['location'],
-                    pending_listing['contact'],
-                    pending_listing['image_paths'][0] if len(pending_listing['image_paths']) > 0 else None,
-                    pending_listing['image_paths'][1] if len(pending_listing['image_paths']) > 1 else None,
-                    pending_listing['image_paths'][2] if len(pending_listing['image_paths']) > 2 else None,
-                    pending_listing['image_paths'][3] if len(pending_listing['image_paths']) > 3 else None,
-                    pending_listing['image_paths'][4] if len(pending_listing['image_paths']) > 4 else None,
-                    pending_listing['plan']
+                    pending['user_id'],
+                    pending['title'],
+                    pending['description'],
+                    pending['category'],
+                    pending['desired_swap'],
+                    pending['desired_swap_description'],
+                    add_cash,
+                    req_cash,
+                    pending['condition'],
+                    pending['location'],
+                    pending['contact'],
+                    pending['image_paths'][0] if pending.get('image_paths') else None,
+                    pending['image_paths'][1] if len(pending.get('image_paths', [])) > 1 else None,
+                    pending['image_paths'][2] if len(pending.get('image_paths', [])) > 2 else None,
+                    pending['image_paths'][3] if len(pending.get('image_paths', [])) > 3 else None,
+                    None,  # or pending['image_paths'][4] if you allow 5 images
+                    pending.get('deal_type'),  # ← this will be either "Swap Deal" or "Outright Sales"
+                    pending['plan']
                 ))
 
                 conn.commit()
@@ -1267,22 +1311,22 @@ def paystack_verify():
                 flash("Your product has been listed successfully!", "success")
             except Exception as e:
                 conn.rollback()
-                app.logger.error(f"Error inserting listing after payment: {str(e)}")
-                flash("Payment successful, but an error occurred while listing your product.", "error")
+                app.logger.error(f"Error inserting listing after payment: {e}")
+                flash("Payment succeeded, but we couldn't list your product.", "error")
             finally:
                 cursor.close()
                 conn.close()
             
-            # Clear pending listing data from session
             session.pop('pending_listing', None)
             return redirect(url_for('home'))
         else:
             flash("Payment verification failed. Please try again.", "error")
             return redirect(url_for('home'))
     except Exception as e:
-        app.logger.error(f"Error verifying payment: {str(e)}")
+        app.logger.error(f"Error verifying payment: {e}")
         flash("Error verifying payment. Please try again.", "error")
         return redirect(url_for('home'))
+
 
 
 
