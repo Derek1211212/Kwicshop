@@ -182,88 +182,64 @@ def home():
 
 
 
-# Listing Details Route
 @app.route('/listing/<int:listing_id>')
 def listing_details(listing_id):
-    conn = None
+    conn    = None
+    cursor  = None
     listing = None
     try:
-        conn = get_db_connection()
+        conn   = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
-        # Get listing details
+        # 1) Fetch the main listing + owner info
         cursor.execute("""
-            SELECT listings.*, users.username, users.email 
-            FROM listings 
-            JOIN users ON listings.user_id = users.id 
-            WHERE listings.listing_id = %s
+            SELECT l.*, u.username, u.email
+            FROM listings AS l
+            JOIN users    AS u ON l.user_id = u.id
+            WHERE l.listing_id = %s
         """, (listing_id,))
         listing = cursor.fetchone()
+        if not listing:
+            abort(404)
         
-        if listing:
-            # Get impression and click counts
-            cursor.execute("""
-                SELECT 
-                    SUM(CASE WHEN event_type = 'impression' THEN 1 ELSE 0 END) as impressions,
-                    SUM(CASE WHEN event_type = 'click' THEN 1 ELSE 0 END) as clicks
-                FROM listing_stats 
-                WHERE listing_id = %s
-            """, (listing_id,))
-            stats = cursor.fetchone()
-            listing['impressions'] = stats['impressions'] or 0
-            listing['clicks'] = stats['clicks'] or 0
-            
-            # Get average rating and count
-            cursor.execute("""
-                SELECT AVG(rating_value) as avg_rating, COUNT(*) as rating_count 
-                FROM ratings 
-                WHERE listing_id = %s
-            """, (listing_id,))
-            rating_data = cursor.fetchone()
-            
-            # Get reviews with usernames
-            cursor.execute("""
-                SELECT reviews.*, users.username 
-                FROM reviews 
-                JOIN users ON reviews.user_id = users.id 
-                WHERE reviews.listing_id = %s 
-                ORDER BY reviews.created_at DESC
-            """, (listing_id,))
-            reviews = cursor.fetchall()
-            
-            listing['avg_rating'] = float(rating_data['avg_rating']) if rating_data['avg_rating'] else None
-            listing['rating_count'] = rating_data['rating_count']
-            listing['reviews'] = reviews
-            
-            # Track this view as an impression
-            if 'user_id' in session:
-                cursor.execute("""
-                    INSERT INTO listing_stats 
-                    (listing_id, user_id, event_type) 
-                    VALUES (%s, %s, 'impression')
-                """, (listing_id, session['user_id']))
-            else:
-                cursor.execute("""
-                    INSERT INTO listing_stats 
-                    (listing_id, event_type) 
-                    VALUES (%s, 'impression')
-                """, (listing_id,))
-            
-            conn.commit()
-            
-        cursor.close()
+        # 2) Fetch average rating & total count
+        cursor.execute("""
+            SELECT 
+              AVG(rating_value) AS avg_rating, 
+              COUNT(*)          AS rating_count
+            FROM ratings
+            WHERE listing_id = %s
+        """, (listing_id,))
+        rd = cursor.fetchone() or {}
+        listing['avg_rating']   = float(rd.get('avg_rating')   or 0)
+        listing['rating_count'] =     rd.get('rating_count') or 0
+        
+        # 3) Fetch all reviews for this listing (with reviewer username)
+        cursor.execute("""
+            SELECT r.review_id,
+                   r.review_text,
+                   r.created_at,
+                   u.username AS reviewer
+            FROM reviews AS r
+            JOIN users   AS u ON r.user_id = u.id
+            WHERE r.listing_id = %s
+            ORDER BY r.created_at DESC
+        """, (listing_id,))
+        listing['reviews'] = cursor.fetchall() or []
+        
     except Exception as e:
         logging.error("Error fetching listing details: %s", e)
         if conn:
             conn.rollback()
+        abort(500)
     finally:
+        if cursor:
+            cursor.close()
         if conn:
             conn.close()
     
-    if not listing:
-        abort(404)
-        
     return render_template('listing_details.html', listing=listing)
+
 
 
 
