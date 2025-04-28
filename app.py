@@ -1029,68 +1029,76 @@ def delete_proposal(proposal_id):
 
 
 
+from flask import (
+    request, session, redirect, url_for,
+    flash, jsonify
+)
+import os, uuid
+from werkzeug.utils import secure_filename
+
 @app.route('/listings', methods=['POST'])
 @login_required
 def create_listing():
+    conn = None
+    cursor = None
     try:
-        # Get the deal type; default to "Swap Deal" if not provided.
+        # 1) Determine deal_type (Swap Deal or Outright Sales)
         deal_type = request.form.get('deal_type', 'Swap Deal')
-        # Force deal_type to "Outright Sales" if it's not "Swap Deal"
         if deal_type != 'Swap Deal':
             deal_type = 'Outright Sales'
-        
-        # Common fields
-        title = request.form.get('title')
-        description = request.form.get('description')
-        category = request.form.get('category')
-        location = request.form.get('location')
-        contact = request.form.get('contact')
-        plan = request.form.get('plan')
-        
-        # Deal-specific fields
-        if deal_type == 'Swap Deal':
-            # Swap-specific fields
-            desired_swap = request.form.get('desired_swap')
-            desired_swap_description = request.form.get('desired_swap_description')
-            additional_cash = request.form.get('additional_cash', 0)
-            required_cash = request.form.get('required_cash', 0)
-            condition = request.form.get('condition')
-            price = None  # Not applicable for swap deals.
-        else:
-            # Outright Sales fields
-            price = request.form.get('price')
-            condition = request.form.get('sale_condition')
-            # For outright sales, these swap fields are not used.
-            desired_swap = None
-            desired_swap_description = None
-            additional_cash = None
-            required_cash = None
 
-        # File uploads handling (assuming allowed_file, secure_filename are defined)
+        # 2) Common fields
+        title       = request.form.get('title')
+        description = request.form.get('description')
+        category    = request.form.get('category')
+        location    = request.form.get('location')
+        contact     = request.form.get('contact')
+        plan        = request.form.get('plan')
+
+        # 3) Deal‐specific fields
+        if deal_type == 'Swap Deal':
+            desired_swap              = request.form.get('desired_swap')
+            desired_swap_description  = request.form.get('desired_swap_description')
+            additional_cash           = request.form.get('additional_cash') or None
+            required_cash             = request.form.get('required_cash')   or None
+            condition                 = request.form.get('condition')
+            price                     = None
+        else:  # Outright Sales
+            price                     = request.form.get('price')
+            condition                 = request.form.get('sale_condition')
+            desired_swap              = None
+            desired_swap_description  = None
+            additional_cash           = None
+            required_cash             = None
+
+        # 4) Handle image uploads (up to 5)
         image_paths = []
-        files = request.files.getlist('images')
-        for file in files:
+        for file in request.files.getlist('images'):
             if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                unique_name = f"{uuid.uuid4().hex}_{filename}"
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
+                filename     = secure_filename(file.filename)
+                unique_name  = f"{uuid.uuid4().hex}_{filename}"
+                filepath     = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
                 file.save(filepath)
                 image_paths.append(unique_name)
                 if len(image_paths) >= 5:
                     break
 
-        conn = get_db_connection()
+        conn   = get_db_connection()
         cursor = conn.cursor()
 
-        # For free plans, insert the listing immediately.
+        # 5) Insert direct for Free plan
         if plan == 'Free':
             cursor.execute("""
                 INSERT INTO listings (
                     user_id, title, description, category,
-                    desired_swap, desired_swap_description, additional_cash,
-                    required_cash, `condition`, location, contact, image_url,
-                    image1, image2, image3, image4, plan, deal_type, price
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    desired_swap, desired_swap_description,
+                    additional_cash, required_cash,
+                    `condition`, location, contact,
+                    image_url, image1, image2, image3, image4,
+                    plan, deal_type, price
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                        %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 session['user_id'],
                 title,
@@ -1113,42 +1121,46 @@ def create_listing():
                 price
             ))
             conn.commit()
+
             flash("Your product has been listed successfully!", "success")
-            return jsonify({'success': True})
-        else:
-            # Paid plan: Store pending listing data in session and redirect to payment.
-            session['pending_listing'] = {
-                'user_id': session['user_id'],
-                'title': title,
-                'description': description,
-                'category': category,
-                'desired_swap': desired_swap,
-                'desired_swap_description': desired_swap_description,
-                'additional_cash': additional_cash,
-                'required_cash': required_cash,
-                'condition': condition,
-                'location': location,
-                'contact': contact,
-                'image_paths': image_paths,
-                'plan': plan,
-                'deal_type': deal_type,
-                'price': price
-            }
-            plan_prices = {
-                'Diamond': 100,
-                'Gold': 70,
-                'Silver': 40,
-                'Bronze': 20
-            }
-            amount = plan_prices.get(plan, 0)
-            return redirect(url_for('paystack_payment', amount=amount, plan=plan))
+            # Redirect the user back to the home page
+            return redirect(url_for('home'))
+
+        # 6) Otherwise, paid plan → store in session and go pay
+        session['pending_listing'] = {
+            'user_id':                   session['user_id'],
+            'title':                     title,
+            'description':               description,
+            'category':                  category,
+            'desired_swap':              desired_swap,
+            'desired_swap_description':  desired_swap_description,
+            'additional_cash':           additional_cash,
+            'required_cash':             required_cash,
+            'condition':                 condition,
+            'location':                  location,
+            'contact':                   contact,
+            'image_paths':               image_paths,
+            'plan':                      plan,
+            'deal_type':                 deal_type,
+            'price':                     price
+        }
+        # Determine payment amount
+        plan_prices = {'Diamond': 100, 'Gold': 70, 'Silver': 40, 'Bronze': 20}
+        amount = plan_prices.get(plan, 0)
+        return redirect(url_for('paystack_payment', amount=amount, plan=plan))
+
     except Exception as e:
-        conn.rollback()
-        app.logger.error(f"Error creating listing: {str(e)}")
-        return jsonify({'error': 'Server error'}), 500
+        app.logger.error(f"Error creating listing: {e}")
+        if conn:
+            conn.rollback()
+        flash("An error occurred while creating your listing.", "error")
+        return redirect(url_for('home'))
+
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 
