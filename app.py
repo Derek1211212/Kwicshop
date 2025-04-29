@@ -88,93 +88,119 @@ def get_db_connection():
 def home():
     conn = None
     listings = []
+    categories = []
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        
-        # Get search and category filter from query parameters
-        search = request.args.get('search', '').strip()
+
+        # --- pull in all four inputs ---
+        search            = request.args.get('search', '').strip()
         selected_category = request.args.get('category', 'All')
-        deal_type_filter = request.args.get('deal_type', 'All')  # New filter for deal type
-        
-        # Build the base query
+        deal_type_filter  = request.args.get('deal_type', 'All')
+        location_q        = request.args.get('location', '').strip()
+
+        # --- base query ---
         query = """
-            SELECT 
-              listings.*, 
-              users.username, 
-              IFNULL(metrics.impressions, 0) AS impressions
-            FROM listings 
-            JOIN users ON listings.user_id = users.id 
-            LEFT JOIN listing_metrics AS metrics 
-              ON listings.listing_id = metrics.listing_id
-            WHERE 1=1
+          SELECT
+            listings.*,
+            users.username,
+            IFNULL(metrics.impressions, 0) AS impressions
+          FROM listings
+          JOIN users ON listings.user_id = users.id
+          LEFT JOIN listing_metrics AS metrics
+            ON listings.listing_id = metrics.listing_id
+          WHERE 1=1
         """
         params = []
-        
-        # If there’s a search term, match title, description, or category
+
+        # --- keyword search ---
         if search:
+            like = f'%{search}%'
             query += """
               AND (
-                listings.title       LIKE %s
-             OR listings.description LIKE %s
-             OR listings.category   LIKE %s
+                listings.title       LIKE %s OR
+                listings.description LIKE %s OR
+                listings.category    LIKE %s
               )
             """
-            like_str = f'%{search}%'
-            params.extend([like_str, like_str, like_str])
-        
-        # Filter by a specific category
+            params += [like, like, like]
+
+        # --- category filter ---
         if selected_category != 'All':
             query += " AND listings.category = %s"
             params.append(selected_category)
-        
-        # Filter by deal type (swap vs sale)
+
+        # --- deal‐type filter ---
         if deal_type_filter != 'All':
             query += " AND listings.deal_type = %s"
             params.append(deal_type_filter)
-        
-        # Order by plan priority then newest first
-        query += """
-            ORDER BY
-              CASE listings.plan 
-                WHEN 'Diamond' THEN 5 
-                WHEN 'Gold'    THEN 4 
-                WHEN 'Silver'  THEN 3 
-                WHEN 'Bronze'  THEN 2 
-                ELSE 1 
-              END DESC,
-              listings.created_at DESC
-        """
-        
+
+        # --- ordering: plan priority always first ---
+        if location_q:
+            # location fuzzy clauses only when user typed location
+            query += """
+              ORDER BY
+                CASE listings.plan
+                  WHEN 'Diamond' THEN 5
+                  WHEN 'Gold'    THEN 4
+                  WHEN 'Silver'  THEN 3
+                  WHEN 'Bronze'  THEN 2
+                  ELSE 1
+                END DESC,
+                (listings.location = %s) DESC,
+                (SOUNDEX(listings.location) = SOUNDEX(%s)) DESC,
+                (listings.location LIKE %s) DESC,
+                listings.created_at DESC
+            """
+            params += [
+                location_q,
+                location_q,
+                f'%{location_q}%'
+            ]
+        else:
+            # no location entered → skip fuzzy clauses
+            query += """
+              ORDER BY
+                CASE listings.plan
+                  WHEN 'Diamond' THEN 5
+                  WHEN 'Gold'    THEN 4
+                  WHEN 'Silver'  THEN 3
+                  WHEN 'Bronze'  THEN 2
+                  ELSE 1
+                END DESC,
+                listings.created_at DESC
+            """
+
+        # --- execute & fetch ---
         cursor.execute(query, params)
         listings = cursor.fetchall()
-        
-        # Retrieve all categories for your filter UI
+
+        # --- get categories for your dropdown/UI ---
         cursor.execute("SELECT DISTINCT category FROM listings")
-        categories = [row['category'] for row in cursor.fetchall()]
-        
+        categories = [r['category'] for r in cursor.fetchall()]
+
         cursor.close()
+
     except Exception as e:
         logging.error("Error fetching listings: %s", e)
-        categories = []
+
     finally:
         if conn:
             conn.close()
-    
-    # Build full image URLs
-    for listing in listings:
-        if listing.get('image_url'):
-            listing['image_url'] = url_for(
-                'static', filename='images/' + listing['image_url']
-            )
-    
+
+    # --- full image URLs ---
+    for l in listings:
+        if l.get('image_url'):
+            l['image_url'] = url_for('static', filename='images/' + l['image_url'])
+
     return render_template(
         'home.html',
         listings=listings,
         search=search,
         selected_category=selected_category,
-        categories=categories,
         deal_type_filter=deal_type_filter,
+        location=location_q,
+        categories=categories,
         vapid_public_key=VAPID_PUBLIC_KEY
     )
 

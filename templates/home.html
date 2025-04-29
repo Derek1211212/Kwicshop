@@ -737,6 +737,53 @@
     .detail-item { display: flex; justify-content: space-between; font-size: 0.9rem; }
     .detail-label { font-weight: 500; }
     .cash-adjustment { color: var(--warning); }
+
+
+.search-bar {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.input-group {
+  position: relative;
+  flex: 1;
+  min-width: 180px;
+}
+
+.input-group i {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  pointer-events: none;
+  font-size: 1rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem; /* left padding makes room for icon */
+  border: 1px solid #ccc;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+}
+
+.search-btn {
+  padding: 0.75rem 1.5rem;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.search-btn:hover {
+  background-color: #45A049;
+}
+
+
   </style>
 </head>
 <body>
@@ -755,7 +802,7 @@
       
       
       {% if session.get('user_id') %}
-        <a href="/dashboard">Account</a>
+        <a href="/Dash">Account</a>
         <a href="/logout" class="btn btn-outline">Logout</a>
       {% else %}
         <a href="/login">Login</a>
@@ -770,26 +817,56 @@
     </div>
   </nav>
 
-  <!-- Hero Search Section -->
-  <section class="search-section">
-    <div class="search-container">
-      <div class="search-header">
-        <h1>Find Your Perfect Swap</h1>
-        <p>Trade items you no longer need for things you want. No cash needed, or add cash to sweeten the deal.</p>
-      </div>
-      
-      <form id="search-form" action="/" method="GET">
-        <div class="search-bar">
-          <i class="fas fa-search search-icon"></i>
-          <input type="text" name="search" class="search-input" placeholder="Search for items, categories, or locations..." value="{{ search }}">
-          <button type="submit" class="search-btn">Search</button>
-          <!-- Hidden fields to maintain filters during searches -->
-          <input type="hidden" name="category" id="selected-category" value="{{ selected_category }}">
-          <input type="hidden" name="deal_type" id="selected-deal-type" value="{{ deal_type_filter }}">
-        </div>
-      </form>
+<!-- Hero Search Section -->
+<section class="search-section">
+  <div class="search-container">
+    <div class="search-header">
+      <h1>Find Your Perfect Swap</h1>
+      <p>Trade items you no longer need for things you want. No cash needed, or add cash to sweeten the deal.</p>
     </div>
-  </section>
+    
+    <form id="search-form" action="/" method="GET">
+      <div class="search-bar">
+        <!-- Item search -->
+        <div class="input-group">
+          <i class="fas fa-search"></i>
+          <input
+            type="text"
+            name="search"
+            class="search-input"
+            placeholder="What are you looking for?"
+            value="{{ search }}">
+        </div>
+
+        <!-- Location search -->
+        <div class="input-group">
+          <i class="fas fa-map-marker-alt"></i>
+          <input
+            type="text"
+            name="location"
+            class="search-input"
+            placeholder="Location (e.g. Madina…)"
+            value="{{ location }}">
+        </div>
+
+        <button type="submit" class="search-btn">Search</button>
+
+        <!-- Hidden fields to maintain filters during searches -->
+        <input
+          type="hidden"
+          name="category"
+          id="selected-category"
+          value="{{ selected_category }}">
+        <input
+          type="hidden"
+          name="deal_type"
+          id="selected-deal-type"
+          value="{{ deal_type_filter }}">
+      </div>
+    </form>
+  </div>
+</section>
+
 
 
 <!-- 1) Prompt Banner (hidden by default via inline style) -->
