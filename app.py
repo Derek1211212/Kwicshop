@@ -1510,24 +1510,30 @@ def reset_password(token):
 
 @app.route('/api/track_impression', methods=['POST'])
 def track_impression():
-    listing_id = request.args.get('listing_id')
+    data = request.get_json() or {}
+    listing_id = data.get('listing_id')
     if not listing_id:
         return jsonify({'success': False, 'error': 'Missing listing_id'}), 400
-    
-    conn = get_db_connection()
+
+    conn   = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT * FROM listing_metrics WHERE listing_id = %s", (listing_id,))
+        cursor.execute(
+            "SELECT * FROM listing_metrics WHERE listing_id = %s",
+            (listing_id,)
+        )
         existing = cursor.fetchone()
         if existing:
             cursor.execute("""
                 UPDATE listing_metrics 
-                SET impressions = impressions + 1, updated_at = NOW() 
-                WHERE listing_id = %s
+                   SET impressions = impressions + 1,
+                       updated_at   = NOW()
+                 WHERE listing_id = %s
             """, (listing_id,))
         else:
             cursor.execute("""
-                INSERT INTO listing_metrics (listing_id, impressions, clicks, updated_at) 
+                INSERT INTO listing_metrics
+                    (listing_id, impressions, clicks, updated_at) 
                 VALUES (%s, 1, 0, NOW())
             """, (listing_id,))
         conn.commit()
@@ -1540,36 +1546,35 @@ def track_impression():
         conn.close()
 
 
-
-
 @app.route('/api/track_click', methods=['POST'])
 def track_click():
-    listing_id = request.args.get('listing_id')
-    if listing_id:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        try:
+    data = request.get_json() or {}
+    listing_id = data.get('listing_id')
+    if not listing_id:
+        return jsonify({'success': False, 'error': 'Missing listing_id'}), 400
+
+    conn   = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            UPDATE listing_metrics
+               SET clicks = clicks + 1
+             WHERE listing_id = %s
+        """, (listing_id,))
+        if cursor.rowcount == 0:
             cursor.execute("""
-                UPDATE listing_metrics 
-                SET clicks = clicks + 1 
-                WHERE listing_id = %s
+                INSERT INTO listing_metrics (listing_id, clicks, impressions, updated_at)
+                VALUES (%s, 1, 0, NOW())
             """, (listing_id,))
-            if cursor.rowcount == 0:
-                cursor.execute("""
-                    INSERT INTO listing_metrics (listing_id, clicks) VALUES (%s, 1)
-                """, (listing_id,))
-            conn.commit()
-            return jsonify({'success': True}), 200
-        except Exception as e:
-            conn.rollback()
-            app.logger.error(f"Error tracking click: {e}")
-            return jsonify({'error': str(e)}), 500
-        finally:
-            cursor.close()
-            conn.close()
-    return jsonify({'error': 'Missing listing_id'}), 400
-
-
+        conn.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        conn.rollback()
+        logging.error("Error tracking click: %s", e)
+        return jsonify({'success': False}), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 
 # Add this to your Flask app
