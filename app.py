@@ -875,87 +875,96 @@ def edit_listing(listing_id):
 @app.route('/listings/<int:listing_id>/update', methods=['POST'])
 @login_required
 def update_listing(listing_id):
+    conn    = None
+    cursor  = None
     try:
-        # Get form data
-        title = request.form.get('title')
-        description = request.form.get('description')
-        condition = request.form.get('condition')
-        desired_swap = request.form.get('desired_swap')
-        desired_swap_description = request.form.get('desired_swap_description')
-        additional_cash = float(request.form.get('additional_cash', 0))
-        location = request.form.get('location')
-        contact = request.form.get('contact')
-        
-        # Handle image upload
-        image_url = None
-        if 'image' in request.files:
-            file = request.files['image']
-            if file.filename != '' and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                unique_filename = f"{uuid.uuid4().hex}_{filename}"
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
-                image_url = unique_filename
-
-        conn = get_db_connection()
+        # 1) First verify ownership
+        conn   = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        
-        try:
-            # Verify listing ownership
-            cursor.execute("""
-                SELECT user_id FROM listings 
-                WHERE listing_id = %s
-            """, (listing_id,))
-            listing = cursor.fetchone()
-            
-            if not listing or listing['user_id'] != session['user_id']:
-                flash('You do not have permission to edit this listing', 'danger')
-                return redirect(url_for('dashboard'))
-            
-            # Build update query with escaped condition
-            if image_url:
-                query = """
-                    UPDATE listings 
-                    SET title=%s, description=%s, `condition`=%s, 
-                        desired_swap=%s, desired_swap_description=%s,
-                        additional_cash=%s, location=%s, contact=%s,
-                        image_url=%s
-                    WHERE listing_id=%s
-                """
-                params = (title, description, condition, desired_swap,
-                         desired_swap_description, additional_cash, location,
-                         contact, image_url, listing_id)
-            else:
-                query = """
-                    UPDATE listings 
-                    SET title=%s, description=%s, `condition`=%s, 
-                        desired_swap=%s, desired_swap_description=%s,
-                        additional_cash=%s, location=%s, contact=%s
-                    WHERE listing_id=%s
-                """
-                params = (title, description, condition, desired_swap,
-                         desired_swap_description, additional_cash, location,
-                         contact, listing_id)
-            
-            cursor.execute(query, params)
-            conn.commit()
-            
-            flash('Listing updated successfully!', 'success')
+        cursor.execute("SELECT user_id FROM listings WHERE listing_id = %s", (listing_id,))
+        row = cursor.fetchone()
+        if not row or row['user_id'] != session['user_id']:
+            flash('You do not have permission to edit this listing', 'danger')
             return redirect(url_for('dashboard'))
-            
-        except Exception as e:
-            conn.rollback()
-            app.logger.error(f"Database error: {str(e)}")
-            flash('Error updating listing', 'danger')
-            return redirect(url_for('edit_listing', listing_id=listing_id))
-            
-        finally:
-            cursor.close()
-            conn.close()
-            
+
+        # 2) Collect all scalar form fields
+        title                     = request.form.get('title')
+        description               = request.form.get('description')
+        condition                 = request.form.get('condition')
+        desired_swap              = request.form.get('desired_swap')
+        desired_swap_description  = request.form.get('desired_swap_description')
+        additional_cash           = request.form.get('additional_cash') or None
+        required_cash             = request.form.get('required_cash')   or None
+        location                  = request.form.get('location')
+        contact                   = request.form.get('contact')
+
+        # 3) Handle file uploads for image_url + image1–image4
+        #    Save each into static/images/ and prepare an update map.
+        upload_dir = os.path.join(app.root_path, 'static', 'images')
+        os.makedirs(upload_dir, exist_ok=True)
+
+        img_fields = {
+            'image_url':   request.files.get('image'),
+            'image1':      request.files.get('image1'),
+            'image2':      request.files.get('image2'),
+            'image3':      request.files.get('image3'),
+            'image4':      request.files.get('image4')
+        }
+
+        # Build dynamic SET clauses
+        set_clauses = [
+            "title=%s",
+            "description=%s",
+            "`condition`=%s",
+            "desired_swap=%s",
+            "desired_swap_description=%s",
+            "additional_cash=%s",
+            "required_cash=%s",
+            "location=%s",
+            "contact=%s"
+        ]
+        params = [
+            title, description, condition,
+            desired_swap, desired_swap_description,
+            additional_cash, required_cash,
+            location, contact
+        ]
+
+        for field, file in img_fields.items():
+            if file and file.filename and allowed_file(file.filename):
+                # save to disk
+                filename = secure_filename(file.filename)
+                unique_name = f"{uuid.uuid4().hex}_{filename}"
+                dest = os.path.join(upload_dir, unique_name)
+                file.save(dest)
+
+                # schedule this field for update
+                set_clauses.append(f"{field}=%s")
+                params.append(unique_name)
+
+        # 4) Finalize and execute UPDATE
+        params.append(listing_id)
+        query = f"""
+            UPDATE listings
+               SET {', '.join(set_clauses)}
+             WHERE listing_id=%s
+        """
+        cursor.execute(query, params)
+        conn.commit()
+
+        flash('Listing updated successfully!', 'success')
+        return redirect(url_for('listing_details', listing_id=listing_id))
+
     except Exception as e:
-        app.logger.error(f"Error in update_listing: {str(e)}")
-        flash('An error occurred', 'danger')
-        return redirect(url_for('dashboard'))
+        if conn:
+            conn.rollback()
+        app.logger.error(f"Error in update_listing: {e}")
+        flash('An error occurred while updating your listing', 'danger')
+        return redirect(url_for('edit_listing', listing_id=listing_id))
+
+    finally:
+        if cursor: cursor.close()
+        if conn:    conn.close()
 
 
 
