@@ -953,7 +953,7 @@ def update_listing(listing_id):
         conn.commit()
 
         flash('Listing updated successfully!', 'success')
-        return redirect(url_for('listing_details', listing_id=listing_id))
+        return redirect(url_for('dashboard'))
 
     except Exception as e:
         if conn:
