@@ -974,14 +974,14 @@
     </div>
   </div>
 
- <!-- Ratings and Reviews Section -->
+<!-- Ratings & Reviews Section -->
 <div class="details-section">
   <div class="detail-header">
     <i class="fas fa-star detail-icon"></i>
     <h3>Ratings & Reviews</h3>
   </div>
 
-  <!-- 1) Rating summary: show only when you have at least one rating -->
+  <!-- 1) Rating summary -->
   <div class="rating-summary">
     {% if listing.rating_count > 0 %}
       <div class="average-rating">
@@ -1006,7 +1006,36 @@
     {% endif %}
   </div>
 
-  <!-- 2) Reviews list: use `reviewer` key, not `username` -->
+  <!-- 2) Rating form for logged-in non-owners -->
+  {% if session.get('user_id') and session['user_id'] != listing.user_id %}
+    <form id="ratingForm" class="rating-form">
+      <h4>Rate this listing</h4>
+      <div class="star-rating">
+        {% for i in range(5,0,-1) %}
+          <input
+            type="radio"
+            id="star{{ i }}"
+            name="rating"
+            value="{{ i }}"
+          />
+          <label for="star{{ i }}" title="{{ i }} star{% if i != 1 %}s{% endif %}">
+            <i class="fas fa-star"></i>
+          </label>
+        {% endfor %}
+      </div>
+      <button type="button" id="submitRating" class="submit-rating-btn">
+        Submit Rating
+      </button>
+    </form>
+  {% elif not session.get('user_id') %}
+    <p>
+      <a href="{{ url_for('login', next=url_for('listing_details', listing_id=listing.listing_id)) }}">
+        Log in
+      </a> to rate this listing
+    </p>
+  {% endif %}
+
+  <!-- 3) Reviews list -->
   <div class="reviews-container">
     <h4>Reviews</h4>
     {% if listing.reviews %}
@@ -1014,10 +1043,8 @@
         {% for review in listing.reviews %}
           <div class="review-item">
             <div class="review-header">
-              <span class="reviewer-name">{{ review.reviewer }}</span>
-              <span class="review-date">
-                {{ review.created_at.strftime('%B %d, %Y') }}
-              </span>
+              <span class="reviewer-name">{{ review.username }}</span>
+              <span class="review-date">{{ review.created_at }}</span>
             </div>
             <div class="review-content">
               <p>{{ review.review_text }}</p>
@@ -1030,13 +1057,20 @@
     {% endif %}
   </div>
 
-  <!-- 3) Optional: review form for logged-in non-owners -->
+  <!-- 4) Review form for logged-in non-owners -->
   {% if session.get('user_id') and session['user_id'] != listing.user_id %}
-    <div class="review-form">
+    <form id="reviewForm" class="review-form">
       <h4>Write a review</h4>
-      <textarea id="reviewText" placeholder="Share your experience..." rows="4"></textarea>
-      <button id="submitReview" class="submit-review-btn">Submit Review</button>
-    </div>
+      <textarea
+        id="reviewText"
+        name="review_text"
+        placeholder="Share your experience..."
+        rows="4"
+      ></textarea>
+      <button type="button" id="submitReview" class="submit-review-btn">
+        Submit Review
+      </button>
+    </form>
   {% elif not session.get('user_id') %}
     <p>
       <a href="{{ url_for('login', next=url_for('listing_details', listing_id=listing.listing_id)) }}">
@@ -1045,6 +1079,7 @@
     </p>
   {% endif %}
 </div>
+
 
 
   {% with messages = get_flashed_messages(with_categories=True) %}
