@@ -784,26 +784,23 @@
           </div>
         </div>
 
-        <div class="thumbnail-container" id="thumbnailContainer">
-          <!-- Main image thumbnail -->
-          <img 
-            src="{{ url_for('static', filename='images/' + listing.image_url) if listing.image_url else url_for('static', filename='images/placeholder.jpg') }}" 
-            class="thumbnail active"
-            onclick="changeMainImage(this, '{{ url_for('static', filename='images/' + listing.image_url) if listing.image_url else url_for('static', filename='images/placeholder.jpg') }}')"
-            alt="Thumbnail 1">
+{# Build a list of up to 5 image filenames #}
+{% set imgs = [listing.image_url, listing.image1, listing.image2, listing.image3, listing.image4] %}
 
-          <!-- Additional image thumbnails -->
-          {% for i in range(1,5) %}
-            {% set image = listing['image' ~ i] %}
-            {% if image %}
-              <img 
-                src="{{ url_for('static', filename='images/' + image) }}" 
-                class="thumbnail"
-                onclick="changeMainImage(this, '{{ url_for('static', filename='images/' + image) }}')"
-                alt="Thumbnail {{ i+1 }}">
-            {% endif %}
-          {% endfor %}
-        </div>
+<div class="thumbnail-container" id="thumbnailContainer">
+  {% for img in imgs %}
+    {% if img %}
+      {# Compute the full URL once #}
+      {% set url = url_for('static', filename='images/' ~ img) %}
+      <img
+        src="{{ url }}"
+        class="thumbnail {% if loop.first %}active{% endif %}"
+        onclick="changeMainImage(this, '{{ url }}')"
+        alt="Thumbnail {{ loop.index }}"
+      />
+    {% endif %}
+  {% endfor %}
+</div>
       </div>
       
       <div>
