@@ -1167,6 +1167,236 @@
     }
 }
 
+
+
+/* ===== Theme Variables ===== */
+:root {
+  --primary-color: #4caf50;      /* Light green */
+  --primary-hover: #43a047;
+  --secondary-bg: #ffffff;       /* White */
+  --muted-text: #6b6b6b;
+  --border-radius: 4px;
+  --transition: 0.2s ease-in-out;
+}
+
+/* ===== Global Reset ===== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: Arial, sans-serif;
+  color: #333;
+  background: #f5f5f5;
+  line-height: 1.5;
+}
+
+/* ===== Form Container ===== */
+#create-listing-form {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: var(--secondary-bg);
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== Form Groups & Rows ===== */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+.form-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.form-row .form-group {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* ===== Labels & Inputs ===== */
+label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: bold;
+}
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: var(--border-radius);
+  transition: border-color var(--transition);
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+/* ===== Textarea ===== */
+textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* ===== Deal Type Radios ===== */
+.deal-type-options {
+  display: flex;
+  gap: 1.5rem;
+}
+.deal-type-options label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: normal;
+}
+.deal-type-options input[type="radio"] {
+  margin-right: 0.5rem;
+}
+
+/* ===== Headings within Form ===== */
+#create-listing-form h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.8rem;
+  color: var(--primary-color);
+  font-size: 1.1rem;
+  border-bottom: 2px solid var(--primary-color);
+  display: inline-block;
+  padding-bottom: 0.2rem;
+}
+
+/* ===== Buttons ===== */
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  transition: background-color var(--transition);
+}
+.btn-primary {
+  background: var(--primary-color);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+.btn-secondary {
+  background: #e0e0e0;
+  color: #333;
+}
+.btn-secondary:hover {
+  background: #d5d5d5;
+}
+
+/* ===== Input with Icon ===== */
+.input-with-icon {
+  position: relative;
+}
+.input-with-icon span {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted-text);
+  pointer-events: none;
+}
+.input-with-icon input {
+  padding-left: 2rem;
+}
+
+/* ===== Offered Items Styling ===== */
+.offered-item {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  background: #fafafa;
+}
+
+/* ===== File Input ===== */
+input[type="file"] {
+  padding: 0.3rem;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+  }
+}
+
+
+/* Enhanced CSS */
+.swap-guide {
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 4px;
+}
+
+.section-header {
+    margin-bottom: 1.5rem;
+}
+.section-header small {
+    display: block;
+    color: #666;
+    font-size: 0.9em;
+    margin-top: 0.25rem;
+}
+
+.cash-adjustment-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.cash-box {
+    padding: 1.5rem;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.cash-box.required-cash {
+    border: 1px solid #ffcdd2;
+    background: #ffebee;
+}
+.cash-box.offered-cash {
+    border: 1px solid #c8e6c9;
+    background: #e8f5e9;
+}
+
+.help-text {
+    display: block;
+    margin-top: 0.5rem;
+    color: #666;
+    font-size: 0.85em;
+}
+
+.upload-guide {
+    color: #666;
+    margin: 0.5rem 0;
+    font-size: 0.9em;
+}
+
+.btn-primary i {
+    margin-right: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .cash-adjustment-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
     </style>
 </head>
 <body>
@@ -1190,7 +1420,7 @@
 </button>
             <button class="nav-btn" data-section="profile">
                 <i class="fas fa-user-cog"></i>
-                Profile Settings
+                Profile
             </button>
             <button class="nav-btn logout-btn" id="logout-btn">
                 <i class="fas fa-sign-out-alt"></i>
@@ -1263,200 +1493,268 @@
 
 
 
-        <!-- Create Listing Section -->
-        <section id="create-listing" class="dashboard-section">
-            <h2>Create New Listing</h2>
-            <form id="create-listing-form" class="create-listing-form" enctype="multipart/form-data" method="POST" action="/listings">
-                <!-- Deal Type Selection -->
-                <div class="form-row">
-                    <div class="form-group form-row-full">
-                        <label class="form-label">Listing Type*</label>
-                        <div class="deal-type-selector">
-                            <div class="deal-option">
-                                <input type="radio" id="deal-swap" name="deal_type" value="Swap Deal" checked>
-                                <label for="deal-swap" class="deal-card">
-                                    <i class="fas fa-exchange-alt"></i>
-                                    <span>Swap Deal</span>
-                                </label>
-                            </div>
-                            <div class="deal-option">
-                                <input type="radio" id="deal-sale" name="deal_type" value="Outright Sales">
-                                <label for="deal-sale" class="deal-card">
-                                    <i class="fas fa-shopping-cart"></i>
-                                    <span>Outright Sale</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<section id="create-listing" class="dashboard-section">
+  <h2>Create New Listing</h2>
+  <form action="{{ url_for('create_listing') }}" method="POST" enctype="multipart/form-data">
 
-                <!-- Common Fields -->
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="title">Title*</label>
-                        <input type="text" id="title" name="title" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="category">Category*</label>
-                        <select id="category" name="category" class="form-control" required>
-                            <option value="">Select Category</option>
-                            <option value="Electronics">Electronics</option>
-                            <option value="Furniture">Furniture</option>
-                            <option value="Vehicles">Vehicles</option>
-                            <option value="Clothing">Clothing</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Promotion Plan Selection -->
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="plan">Promotion Plan*</label>
-                        <select id="plan" name="plan" class="form-control" required>
-                            <option value="Free">Free Plan (GHS 0)</option>
-                            <option value="Diamond">Diamond Plan (GHS 100)</option>
-                            <option value="Gold">Gold Plan (GHS 70)</option>
-                            <option value="Silver">Silver Plan (GHS 40)</option>
-                            <option value="Bronze">Bronze Plan (GHS 20)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Description -->
-                <div class="form-row">
-                    <div class="form-group form-group-textarea">
-                        <label for="description">Description*</label>
-                        <textarea id="description" name="description" class="form-control" required></textarea>
-                    </div>
-                </div>
-
-                <!-- Swap Deal Specific Fields -->
-                <div class="swap-fields">
-                    <!-- Condition and Desired Swap -->
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="desired_swap">Desired Swap*</label>
-                            <input type="text" id="desired_swap" name="desired_swap" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label for="condition">Condition*</label>
-                            <select id="condition" name="condition" class="form-control">
-                                <option value="New">New</option>
-                                <option value="Like New">Like New</option>
-                                <option value="Good">Good</option>
-                                <option value="Fair">Fair</option>
-                                <option value="Poor">Poor</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Cash Exchange Section -->
-                    <div class="form-row">
-                        <div class="cash-section-group">
-                            <h3 class="section-subheading">Cash Exchange Details</h3>
-                            <!-- Cash You Require -->
-                            <div class="cash-input-group cash-required">
-                                <div class="cash-header">
-                                    <i class="fas fa-hand-holding-usd currency-icon"></i>
-                                    <h4>Cash You Require from Buyer</h4>
-                                </div>
-                                <p class="cash-explanation">
-                                    How much cash should someone add <strong>on top of their swap item</strong> to get your product?
-                                </p>
-                                <div class="form-group">
-                                    <label for="required_cash">Additional Cash Requirement (₵)</label>
-                                    <div class="input-with-symbol">
-                                        <span class="currency-symbol">₵</span>
-                                        <input type="number" id="required_cash" name="required_cash" class="form-control" step="0.01" placeholder="0.00" aria-describedby="requiredCashHelp">
-                                    </div>
-                                    <small id="requiredCashHelp" class="form-help-text">
-                                        Example: "I want ₵100 cash with your laptop for my camera"
-                                    </small>
-                                </div>
-                            </div>
-                            <!-- Cash You'll Add -->
-                            <div class="cash-input-group cash-offered">
-                                <div class="cash-header">
-                                    <i class="fas fa-money-bill-wave currency-icon"></i>
-                                    <h4>Cash You'll Add to Sweeten the Deal</h4>
-                                </div>
-                                <p class="cash-explanation">
-                                    How much cash are you willing to add <strong>to your item</strong> to make the swap more attractive?
-                                </p>
-                                <div class="form-group">
-                                    <label for="additional_cash">Additional Cash Offer (₵)</label>
-                                    <div class="input-with-symbol">
-                                        <span class="currency-symbol">₵</span>
-                                        <input type="number" id="additional_cash" name="additional_cash" class="form-control" step="0.01" placeholder="0.00" aria-describedby="additionalCashHelp">
-                                    </div>
-                                    <small id="additionalCashHelp" class="form-help-text">
-                                        Example: "I'll add ₵50 cash with my bicycle for your scooter"
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Swap Description -->
-                    <div class="form-row">
-                        <div class="form-group form-group-textarea">
-                            <label for="desired_swap_description">Swap Description</label>
-                            <textarea id="desired_swap_description" name="desired_swap_description" class="form-control"></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Outright Sale Specific Fields -->
-                <div class="sale-fields" style="display: none;">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="price">Price (GHS)*</label>
-                            <input type="number" id="price" name="price" class="form-control" step="0.01">
-                        </div>
-                        <div class="form-group">
-                            <label for="sale_condition">Condition*</label>
-                            <select id="sale_condition" name="sale_condition" class="form-control">
-                                <option value="New">New</option>
-                                <option value="Used">Used</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-<!-- Common Fields (Location and Contact) -->
-<div class="form-row">
-    <div class="form-group">
-        <label for="location">Location*</label>
-        <input type="text" id="location" name="location" class="form-control" required>
+    <!-- Deal Type -->
+    <div class="mb-3">
+      <label class="form-label">Listing Type*</label>
+      <div class="btn-group" role="group">
+        <input type="radio" class="btn-check" name="deal_type" id="deal-swap" value="Swap Deal" checked>
+        <label class="btn btn-outline-primary" for="deal-swap">Swap Deal</label>
+        <input type="radio" class="btn-check" name="deal_type" id="deal-sale" value="Outright Sales">
+        <label class="btn btn-outline-primary" for="deal-sale">Outright Sales</label>
+      </div>
     </div>
-    <div class="form-group">
-        <label for="contact">Contact Info*</label>
-        <input type="text" id="contact" name="contact" class="form-control" required>
-    </div>
-</div>
 
-<!-- Image Upload -->
-<div class="form-row">
-    <div class="form-group form-row-full">
-        <label>Upload Images (Max 5)</label>
-        <label for="images" class="file-upload">
-            <div class="file-upload-icon">
-                <i class="fas fa-cloud-upload-alt"></i>
+    <!-- Title / Category / Plan -->
+    <div class="row mb-3">
+      <div class="col">
+        <label class="form-label">Title*</label>
+        <input type="text" name="title" class="form-control" placeholder="For swap: name of your first item; for sale: item name" required>
+        <small class="form-text text-muted">For a swap with one item, this is your item's name.</small>
+      </div>
+      <div class="col">
+        <label class="form-label">Category*</label>
+        <select name="category" class="form-select" required>
+          <option value="">Select</option>
+          <option>Vehicles</option>
+          <option>Electronics</option>
+          <option>Furniture</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="col">
+        <label class="form-label">Plan*</label>
+        <select name="plan" class="form-select" required>
+          <option value="Free">Free (₵0)</option>
+          <option value="Standard">Standard (₵20)</option>
+          <option value="Premium">Premium (₵50)</option>
+          <option value="Diamond">Diamond (₵100)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Swap Section -->
+    <div id="swap-section">
+      <h5>Your Offer Items (1–3)</h5>
+      <div id="offered-items-container">
+        <!-- Template block for the first item -->
+        <div class="offered-item mb-4" data-clone="false">
+          <!-- Name field hidden for the first item, as Title is used -->
+          <div class="row mb-2 name-field" style="display:none;">
+            <div class="col">
+              <label class="form-label">Item Name*</label>
+              <input type="text" name="offer_title[]" class="form-control" placeholder="e.g., Smartphone" required>
             </div>
-            <div class="file-upload-text">
-                Click to browse or drag & drop images here<br>
-                <small>Supported formats: JPG, PNG (Max 5 images)</small>
+          </div>
+          <div class="row mb-2">
+            <div class="col-md-6">
+              <label class="form-label">Condition*</label>
+              <select name="offer_condition[]" class="form-select" required>
+                <option value="">Select</option>
+                <option>New</option>
+                <option>Used - Like New</option>
+                <option>Used - Good</option>
+                <option>Used - Needs Repair</option>
+              </select>
             </div>
-            <input type="file" id="images" name="images" class="visually-hidden" accept="image/jpeg, image/png" multiple onchange="previewImages(event)">
-        </label>
-        <div id="image-preview" class="image-preview-grid"></div>
-    </div>
-</div>
+            <div class="col-md-6">
+              <label class="form-label">Description*</label>
+              <textarea name="offer_description[]" class="form-control" rows="2" required placeholder="e.g., Barely used, excellent condition"></textarea>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-3">
+              <label class="form-label">Image 1*</label>
+              <input type="file" name="offer_image1[]" class="form-control" accept="image/*" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Image 2*</label>
+              <input type="file" name="offer_image2[]" class="form-control" accept="image/*" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Image 3</label>
+              <input type="file" name="offer_image3[]" class="form-control" accept="image/*">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Image 4</label>
+              <input type="file" name="offer_image4[]" class="form-control" accept="image/*">
+            </div>
+          </div>
+          <small class="form-text text-muted">Upload at least two images for each offered item.</small>
+        </div>
+      </div>
+      <button type="button" id="add-item-btn" class="btn btn-secondary mb-3">
+        <i class="fas fa-plus"></i> Add Another Offered Item
+      </button>
 
-<button type="submit" class="btn btn-primary submit-btn">Create Listing</button>
-</form>
+      <!-- Desired Swap -->
+      <h5>Desired Swap</h5>
+      <div class="row mb-3">
+        <div class="col">
+          <label class="form-label">Desired Item*</label>
+          <input type="text" name="desired_swap" class="form-control" placeholder="e.g., Laptop" required>
+        </div>
+        <div class="col">
+          <label class="form-label">Desired Condition*</label>
+          <select name="desired_condition" class="form-select" required>
+            <option value="">Select</option>
+            <option>New</option>
+            <option>Used - Any Condition</option>
+            <option>Used - Good or Better</option>
+          </select>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Swap Notes</label>
+        <textarea name="swap_notes" class="form-control" rows="2" placeholder="e.g., Prefer local pickup"></textarea>
+      </div>
+      <div class="row mb-3">
+        <div class="col">
+          <label class="form-label">Cash You Need</label>
+          <input type="number" step="0.01" name="required_cash" class="form-control" placeholder="e.g., 50 if you want extra cash">
+          <small class="form-text text-muted">Amount you’d like to receive in addition to the swap.</small>
+        </div>
+        <div class="col">
+          <label class="form-label">Cash You’ll Add</label>
+          <input type="number" step="0.01" name="additional_cash" class="form-control" placeholder="e.g., 20 if you’ll pay extra">
+          <small class="form-text text-muted">Amount you’re willing to pay in addition to your item.</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sale Section -->
+    <div id="sale-section" style="display:none;">
+      <div class="mb-3">
+        <label class="form-label">Sale Price*</label>
+        <input type="number" step="0.01" name="price" class="form-control" placeholder="e.g., 150" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Condition*</label>
+        <select name="condition" class="form-select" required>
+          <option value="">Select</option>
+          <option>New</option>
+          <option>Used</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Description*</label>
+        <textarea name="description" class="form-control" rows="3" placeholder="e.g., Brand new, still in box" required></textarea>
+      </div>
+    </div>
+
+    <!-- Main Images -->
+    <div class="mb-3">
+      <label class="form-label">Main Images (up to 5)</label>
+      <input type="file" name="images[]" multiple accept="image/*" class="form-control">
+      <small class="form-text text-muted">Optional images to represent your listing.</small>
+    </div>
+
+    <!-- Location & Contact -->
+    <div class="row mb-3">
+      <div class="col">
+        <label class="form-label">Location*</label>
+        <input type="text" name="location" class="form-control" placeholder="e.g., Accra" required>
+      </div>
+      <div class="col">
+        <label class="form-label">Contact*</label>
+        <input type="text" name="contact" class="form-control" placeholder="e.g., +233 123 456 789" required>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Publish Listing</button>
+  </form>
 </section>
+
+<script>
+  // Toggle Swap/Sale
+  const swapRadio = document.getElementById('deal-swap'),
+        saleRadio = document.getElementById('deal-sale'),
+        swapSec   = document.getElementById('swap-section'),
+        saleSec   = document.getElementById('sale-section');
+
+  function toggleSections() {
+    const isSwap = swapRadio.checked;
+
+    swapSec.style.display = isSwap ? '' : 'none';
+    saleSec.style.display = isSwap ? 'none' : '';
+
+    swapSec.querySelectorAll('input, select, textarea').forEach(el => {
+      el.disabled = !isSwap;
+    });
+    saleSec.querySelectorAll('input, select, textarea').forEach(el => {
+      el.disabled = isSwap;
+    });
+  }
+
+  swapRadio.addEventListener('change', toggleSections);
+  saleRadio.addEventListener('change', toggleSections);
+
+
+  // Clone offered-item (max 3)
+  const container = document.getElementById('offered-items-container'),
+        addBtn    = document.getElementById('add-item-btn');
+
+  addBtn.addEventListener('click', () => {
+    const items = container.querySelectorAll('.offered-item'),
+          count = items.length;
+
+    if (count < 3) {
+      const template = container.querySelector('[data-clone="false"]'),
+            clone    = template.cloneNode(true);
+
+      clone.dataset.clone = 'true';
+
+      // Show & require the name field
+      const nameFld = clone.querySelector('.name-field');
+      const nameInput = nameFld.querySelector('input');
+      nameFld.style.display = '';
+      nameInput.disabled = false;
+      nameInput.required = true;
+
+      // Clear values
+      clone.querySelectorAll('input, textarea, select').forEach(el => {
+        if (el.tagName === 'SELECT') el.selectedIndex = 0;
+        else if (el.type === 'file') el.value = null;
+        else el.value = '';
+      });
+
+      // Ensure all new inputs are enabled
+      clone.querySelectorAll('input, select, textarea').forEach(el => {
+        el.disabled = false;
+      });
+
+      container.appendChild(clone);
+      if (count + 1 >= 3) addBtn.disabled = true;
+    }
+  });
+
+  // Re-enable Add button if an item is removed
+  container.addEventListener('click', e => {
+    if (e.target.classList.contains('remove-item')) {
+      e.target.closest('.offered-item').remove();
+      addBtn.disabled = false;
+    }
+  });
+
+
+  // On load, disable the template’s hidden name input so it never blocks validation
+  document.addEventListener('DOMContentLoaded', () => {
+    const origNameInput = document.querySelector(
+      '#offered-items-container .offered-item[data-clone="false"] .name-field input'
+    );
+    if (origNameInput) {
+      origNameInput.required = false;
+      origNameInput.disabled = true;
+    }
+    toggleSections();
+  });
+</script>
+
+
+
 
 <!-- Proposals Section -->
 <section id="proposals" class="dashboard-section">
@@ -1773,31 +2071,26 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => console.error('Error:', error));
     });
 
-    // Deal type toggle
-    const dealTypeRadios = document.querySelectorAll('input[name="deal_type"]');
-    const swapFields = document.querySelector('.swap-fields');
-    const saleFields = document.querySelector('.sale-fields');
+// Update the IDs to match the HTML
+const swapRadio = document.getElementById('deal-swap');
+const saleRadio = document.getElementById('deal-sale');
+const swapFields = document.getElementById('swap-section');  // Changed from 'swap-fields'
+const saleFields = document.getElementById('sale-section');  // Changed from 'sale-fields'
 
-    function handleDealTypeChange() {
-        const isSwap = document.getElementById('deal-swap').checked;
-        
-        swapFields.style.display = isSwap ? 'block' : 'none';
-        saleFields.style.display = isSwap ? 'none' : 'block';
-        
-        // Toggle required attributes
-        document.getElementById('desired_swap').required = isSwap;
-        document.getElementById('condition').required = isSwap;
-        document.getElementById('price').required = !isSwap;
-        document.getElementById('sale_condition').required = !isSwap;
-    }
+function toggleDealFields() {
+  if (saleRadio.checked) {
+    swapFields.style.display = 'none';
+    saleFields.style.display = 'block';
+  } else {
+    swapFields.style.display = 'block';
+    saleFields.style.display = 'none';
+  }
+}
 
-    if (dealTypeRadios) {
-        dealTypeRadios.forEach(radio => {
-            radio.addEventListener('change', handleDealTypeChange);
-        });
-        // Initial check
-        handleDealTypeChange();
-    }
+swapRadio.addEventListener('change', toggleDealFields);
+saleRadio.addEventListener('change', toggleDealFields);
+document.addEventListener('DOMContentLoaded', toggleDealFields);
+
 
     // Add touch support for mobile navigation
     let touchStartX = 0;

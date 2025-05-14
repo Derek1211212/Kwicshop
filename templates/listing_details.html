@@ -89,8 +89,8 @@
     /* Main Content Container */
     .listing-details-container {
       max-width: 1200px;
-      margin: 1rem auto;
-      padding: 1rem;
+      margin: 2rem auto;
+      padding: 2rem;
       background: white;
       border-radius: var(--border-radius);
       box-shadow: var(--box-shadow);
@@ -119,7 +119,7 @@
     .image-gallery {
       display: flex;
       flex-direction: column;
-      gap: 0.8rem;
+      gap: 1rem;
     }
 
     .main-image-container {
@@ -127,7 +127,7 @@
       border-radius: var(--border-radius);
       overflow: hidden;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      height: 300px;
+      height: 400px;
     }
 
     .main-image {
@@ -146,11 +146,11 @@
     /* Thumbnail Gallery */
     .thumbnail-container {
       display: flex;
-      gap: 0.8rem;
+      gap: 1rem;
       overflow-x: auto;
       scroll-snap-type: x mandatory;
-      padding-bottom: 0.8rem;
-      margin-top: 0.8rem;
+      padding-bottom: 1rem;
+      margin-top: 1rem;
       -webkit-overflow-scrolling: touch;
     }
 
@@ -165,8 +165,8 @@
 
     .thumbnail {
       flex: 0 0 auto;
-      width: 80px;
-      height: 80px;
+      width: 100px;
+      height: 100px;
       border-radius: 8px;
       object-fit: cover;
       cursor: pointer;
@@ -175,8 +175,9 @@
       scroll-snap-align: start;
     }
 
-    .thumbnail:hover, .thumbnail:active {
-      transform: scale(0.98);
+    .thumbnail:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
 
     .thumbnail.active {
@@ -202,16 +203,16 @@
     .details-grid {
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
-      margin-top: 1.5rem;
+      gap: 2rem;
+      margin-top: 2rem;
     }
 
     /* Details Sections */
     .details-section {
-      padding: 1rem;
+      padding: 1.5rem;
       background: var(--light-gray);
       border-radius: var(--border-radius);
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
       transition: transform 0.3s ease;
     }
 
@@ -219,28 +220,28 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
     }
 
     .detail-icon {
-      font-size: 1.2rem;
+      font-size: 1.5rem;
       color: var(--primary-color);
     }
 
     .listing-title {
-      font-size: 1.5rem;
+      font-size: 2rem;
       font-weight: 600;
       color: var(--secondary-color);
     }
 
     .detail-content {
-      color: var(--secondary-color);
       font-size: 1rem;
-      line-height: 1.6;
+      color: var(--secondary-color);
+      line-height: 1.8;
     }
 
     .detail-item {
-      margin-bottom: 0.8rem;
+      margin-bottom: 1rem;
     }
 
     .detail-label {
@@ -248,7 +249,7 @@
       font-weight: 500;
       font-size: 0.9rem;
       display: block;
-      margin-bottom: 0.2rem;
+      margin-bottom: 0.3rem;
     }
 
     /* Cash Adjustment Badge */
@@ -411,17 +412,29 @@
       background-color: rgba(0,0,0,0.7);
       z-index: 1000;
       overflow-y: auto;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal.show {
+      opacity: 1;
     }
 
     .modal-content {
       background: white;
-      margin: 5% auto;
+      margin: 10% auto;
       padding: 2rem;
       border-radius: 12px;
       width: 90%;
       max-width: 500px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.2);
       position: relative;
+      transform: translateY(-50px);
+      transition: transform 0.3s ease;
+    }
+
+    .modal.show .modal-content {
+      transform: translateY(0);
     }
 
     .close-modal {
@@ -485,8 +498,8 @@
       }
 
       .listing-details-container {
-        padding: 2rem;
-        margin: 2rem auto;
+        padding: 3rem;
+        margin: 3rem auto;
       }
 
       .main-image-container {
@@ -515,7 +528,7 @@
       }
 
       .modal-content {
-        margin: 10% auto;
+        margin: 15% auto;
       }
     }
 
@@ -718,6 +731,114 @@
       padding: 1rem;
       margin: 1rem 0;
     }
+
+    /* Offered Item Card */
+    .offered-item-card {
+      background: white;
+      border-radius: var(--border-radius);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .offered-item-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+
+    .item-title {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      color: var(--secondary-color);
+    }
+
+    .item-meta {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .item-description {
+      font-size: 0.9rem;
+      color: var(--dark-gray);
+      line-height: 1.5;
+    }
+
+    @media (max-width: 768px) {
+      .details-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .main-image-container {
+        height: 300px;
+      }
+    }
+
+    .offered-gallery-block {
+  margin-bottom: 2rem;            /* space between each gallery */
+}
+
+.offered-item-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.gallery-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--secondary-color);
+  margin-bottom: 0.25rem;
+}
+
+.offered-item-header .condition-badge {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.gallery-description {
+  font-size: 0.95rem;
+  color: var(--dark-gray);
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+}
+
+
+
+.offered-gallery-block {
+  margin-bottom: 2rem;            /* space between each gallery */
+}
+
+.offered-item-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.gallery-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--secondary-color);
+  margin-bottom: 0.25rem;
+}
+
+.offered-item-header .condition-badge {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.gallery-description {
+  font-size: 0.95rem;
+  color: var(--dark-gray);
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+}
+
   </style>
 </head>
 <body>
@@ -757,340 +878,351 @@
     </div>
 
     {% if listing.deal_type == 'Outright Sales' %}
-<div class="price-display">
-  GHS {{ "{:,.2f}".format(listing.price|float) if listing.price else 'Price not specified' }}
-</div>
-
+      <div class="price-display">
+        GHS {{ "{:,.2f}".format(listing.price|float) if listing.price is not none else 'Price not specified' }}
+      </div>
     {% endif %}
 
-    <div class="details-grid">
-      <div class="image-gallery">
-        <div class="main-image-container">
-          <img 
-            src="{{ url_for('static', filename='images/' + listing.image_url) if listing.image_url else url_for('static', filename='images/placeholder.jpg') }}" 
-            class="main-image"
-            alt="{{ listing.title }}"
-            id="mainImage">
-          <div class="image-overlay">
-            <div class="listing-meta">
-              <i class="fas fa-images"></i>
-              <span id="image-counter">1 of {{ 1 + [listing.image1, listing.image2, listing.image3, listing.image4]|select|list|length }}</span>
-            </div>
-            <div class="image-zoom">
-              <button class="zoom-button" onclick="toggleZoom()" style="background: none; border: none; color: white; cursor: pointer;">
+<div class="details-grid">
+  <!-- LEFT COLUMN: one gallery per offered_item -->
+  <div class="gallery-column">
+    {% for item in listing.offered_items %}
+      {% set idx = loop.index0 %}
+      <div class="offered-gallery-block">
+        <!-- Item metadata above its gallery -->
+        <div class="offered-item-header">
+          <h4 class="gallery-title">{{ item.title }}</h4>
+          <span class="condition-badge condition-{{ item.condition|lower }}">
+            {{ item.condition }}
+          </span>
+          <p class="gallery-description">{{ item.description }}</p>
+        </div>
+
+        <div class="image-gallery">
+          <div class="main-image-container">
+            <img
+              id="mainImage-{{ idx }}"
+              class="main-image"
+              src="{{ url_for('static', filename='images/' ~ (item.image1 or 'placeholder.jpg')) }}"
+              alt="{{ item.title }}"
+            />
+            <div class="image-overlay">
+              <div class="listing-meta">
+                <i class="fas fa-images"></i>
+                <span id="image-counter-{{ idx }}">
+                  1 of {{ [item.image1, item.image2, item.image3, item.image4]|select|list|length }}
+                </span>
+              </div>
+              <button
+                class="zoom-button"
+                onclick="toggleZoom('mainImage-{{ idx }}')"
+                style="background:none;border:none;color:white;cursor:pointer;"
+              >
                 <i class="fas fa-search-plus"></i>
               </button>
             </div>
           </div>
-        </div>
-
-{# Build a list of up to 5 image filenames #}
-{% set imgs = [listing.image_url, listing.image1, listing.image2, listing.image3, listing.image4] %}
-
-<div class="thumbnail-container" id="thumbnailContainer">
-  {% for img in imgs %}
-    {% if img %}
-      {# Compute the full URL once #}
-      {% set url = url_for('static', filename='images/' ~ img) %}
-      <img
-        src="{{ url }}"
-        class="thumbnail {% if loop.first %}active{% endif %}"
-        onclick="changeMainImage(this, '{{ url }}')"
-        alt="Thumbnail {{ loop.index }}"
-      />
-    {% endif %}
-  {% endfor %}
-</div>
-      </div>
-      
-      <div>
-        <div class="details-section">
-          <div class="detail-header">
-            <i class="fas fa-tag detail-icon"></i>
-            <h1 class="listing-title">
-              {{ listing.title }}
-              {% if listing.deal_type == 'Swap Deal' and listing.required_cash and listing.required_cash > 0 %}
-                <span class="required-cash">+ GHS {{ "{:,.2f}".format(listing.required_cash|float) }}</span>
+          <div class="thumbnail-container" id="thumbnailContainer-{{ idx }}">
+            {% set imgs = [item.image1, item.image2, item.image3, item.image4] %}
+            {% for img in imgs %}
+              {% if img %}
+                {% set thumb = url_for('static', filename='images/' ~ img) %}
+                <img
+                  src="{{ thumb }}"
+                  class="thumbnail {% if loop.first %}active{% endif %}"
+                  alt="Thumbnail {{ loop.index }} of {{ item.title }}"
+                  onclick="changeMainImage(this, '{{ thumb }}', 'mainImage-{{ idx }}', 'thumbnailContainer-{{ idx }}')"
+                />
               {% endif %}
-            </h1>
-          </div>
-          <p class="detail-content">{{ listing.description }}</p>
-          
-          <div class="detail-item">
-            <span class="detail-label">Condition</span>
-            <span class="condition-badge condition-{{ listing.condition|lower }}">
-              {{ listing.condition if listing.condition else 'Not specified' }}
-            </span>
+            {% endfor %}
           </div>
         </div>
-
-        {% if listing.deal_type == 'Swap Deal' %}
-        <div class="details-section">
-          <div class="detail-header">
-            <i class="fas fa-exchange-alt detail-icon"></i>
-            <h3>Swap Details</h3>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Desired Item</span>
-            <p class="detail-content">{{ listing.desired_swap }}</p>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Swap Description</span>
-            <p class="detail-content">{{ listing.desired_swap_description }}</p>
-          </div>
-          {% if listing.additional_cash and listing.additional_cash > 0 %}
-          <div class="detail-item">
-            <span class="detail-label">Cash Adjustment</span>
-<p class="cash-adjustment">
-  <i class="fas fa-coins"></i>
-  + GHS {{ "{:,.2f}".format(listing.additional_cash|float) }}
-</p>
-
-          </div>
-          {% endif %}
-        </div>
-        {% endif %}
-
-        <div class="details-section">
-          <div class="detail-header">
-            <i class="fas fa-info-circle detail-icon"></i>
-            <h3>Additional Information</h3>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Category</span>
-            <p class="detail-content">{{ listing.category }}</p>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Listed On</span>
-            <p class="detail-content">{{ listing.created_at.strftime('%d %b %Y at %H:%M') }}</p>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Location</span>
-            <div class="location-section">
-              <i class="fas fa-map-marker-alt" style="color: var(--primary-color);"></i>
-              <p class="detail-content">{{ listing.location if listing.location else 'Location not specified' }}</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="details-section">
-          <div class="detail-header">
-            <i class="fas fa-user detail-icon"></i>
-            <h3>Contact Information</h3>
-          </div>
-          <div class="contact-info">
-            <div class="contact-method">
-              <i class="fas fa-user" style="color: var(--primary-color);"></i>
-              <span>{{ listing.username }}</span>
-            </div>
-            {% if listing.contact %}
-            <div class="contact-method">
-              <i class="fas fa-phone" style="color: var(--primary-color);"></i>
-              <span>{{ listing.contact }}</span>
-            </div>
-            {% endif %}
-            {% if listing.email %}
-            <div class="contact-method">
-              <i class="fas fa-envelope" style="color: var(--primary-color);"></i>
-              <span>{{ listing.email }}</span>
-            </div>
-            {% endif %}
-          </div>
-        </div>
-
+      </div>
+    {% endfor %}
+  </div>
 
 {% if listing.deal_type == 'Swap Deal' %}
-  <div class="action-section">
-    <button class="offer-button" id="offerButton">
-      <i class="fas fa-handshake"></i>
-      Make Swap Offer
-    </button>
-  </div>
-{% endif %}
-
-  
-
-  <!-- Proposal Modal (only shown for swap deals) -->
-  <div id="proposalModal" class="modal">
-    <div class="modal-content">
-      <span class="close-modal" id="closeModal">&times;</span>
-      <h2>Make Swap Offer</h2>
-      <form id="proposalForm" action="{{ url_for('create_proposal', listing_id=listing.listing_id) }}" method="POST" enctype="multipart/form-data">
-        <div class="form-group">
-          <label for="proposed_item">Item You're Offering:</label>
-          <input type="text" id="proposed_item" name="proposed_item" required>
-        </div>
-        <div class="form-group">
-          <label for="additional_cash">Additional Cash (GHS):</label>
-          <input type="number" id="additional_cash" name="additional_cash" step="0.01" min="0">
-        </div>
-        <div class="form-group">
-          <label for="condition">Condition:</label>
-          <select id="condition" name="condition" required>
-            <option value="">Select Condition</option>
-            <option value="new">New</option>
-            <option value="like_new">Like New</option>
-            <option value="used">Used</option>
-            <option value="refurbished">Refurbished</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="phone_number">Phone Number:</label>
-          <input type="text" id="phone_number" name="phone_number" required>
-        </div>
-        <div class="form-group">
-          <label for="email_address">Email Address:</label>
-          <input type="email" id="email_address" name="email_address" required>
-        </div>
-        <div class="form-group">
-          <label for="image1">Image 1:</label>
-          <input type="file" id="image1" name="image1" accept="image/*">
-        </div>
-        <div class="form-group">
-          <label for="image2">Image 2:</label>
-          <input type="file" id="image2" name="image2" accept="image/*">
-        </div>
-        <div class="form-group">
-          <label for="image3">Image 3:</label>
-          <input type="file" id="image3" name="image3" accept="image/*">
-        </div>
-        <div class="form-group">
-          <label for="image4">Image 4:</label>
-          <input type="file" id="image4" name="image4" accept="image/*">
-        </div>
-        <div class="form-group">
-          <label for="detailed_description">Detailed Description:</label>
-          <textarea id="detailed_description" name="detailed_description" rows="4" required></textarea>
-        </div>
-        <div class="form-group">
-          <label for="message">Message to Owner (Optional):</label>
-          <textarea id="message" name="message" rows="3"></textarea>
-        </div>
-        <button type="submit" class="modal-submit-btn">Submit Offer</button>
-      </form>
-    </div>
-  </div>
-
-<!-- Ratings & Reviews Section -->
 <div class="details-section">
   <div class="detail-header">
-    <i class="fas fa-star detail-icon"></i>
-    <h3>Ratings & Reviews</h3>
+    <i class="fas fa-exchange-alt detail-icon"></i>
+    <h3>Swap Requirements</h3>
+  </div>
+  
+  <!-- Desired Item Name -->
+  <div class="detail-item">
+    <span class="detail-label">Desired Item</span>
+    <p class="detail-content">{{ listing.desired_swap }}</p>
+  </div>
+  
+  <!-- Desired Item Description -->
+  <div class="detail-item">
+    <span class="detail-label">Desired Description</span>
+    <p class="detail-content">{{ listing.desired_swap_description or 'No description provided' }}</p>
+  </div>
+  
+  <!-- Desired Condition -->
+  <div class="detail-item">
+    <span class="detail-label">Desired Condition</span>
+    <span class="condition-badge condition-{{ listing.desired_condition|lower }}">
+      {{ listing.condition or 'Any' }}
+    </span>
   </div>
 
-  <!-- 1) Rating summary -->
-  <div class="rating-summary">
-    {% if listing.rating_count > 0 %}
-      <div class="average-rating">
-        <span class="rating-value">{{ "%.1f"|format(listing.avg_rating) }}</span>
-        <div class="stars">
-          {% for i in range(1,6) %}
-            {% if i <= listing.avg_rating|int %}
-              <i class="fas fa-star"></i>
-            {% elif i - 0.5 <= listing.avg_rating %}
-              <i class="fas fa-star-half-alt"></i>
-            {% else %}
-              <i class="far fa-star"></i>
-            {% endif %}
+  <!-- Cash Adjustment -->
+  {% if listing.additional_cash|float > 0 %}
+  <div class="detail-item">
+    <span class="detail-label">Cash Adjustment</span>
+    <p class="cash-adjustment">
+      <i class="fas fa-coins"></i> + GHS {{ "{:,.2f}".format(listing.additional_cash|float) }}
+    </p>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+
+    <!-- Additional Information -->
+    <div class="details-section">
+      <div class="detail-header">
+        <i class="fas fa-info-circle detail-icon"></i>
+        <h3>Additional Information</h3>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Category</span>
+        <p class="detail-content">{{ listing.category }}</p>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Listed On</span>
+        <p class="detail-content">
+          {{ listing.created_at.strftime('%d %b %Y at %H:%M') if listing.created_at else 'Not specified' }}
+        </p>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Location</span>
+        <p class="detail-content">{{ listing.location or 'Not specified' }}</p>
+      </div>
+    </div>
+
+    <!-- Contact Information -->
+    <div class="details-section">
+      <div class="detail-header">
+        <i class="fas fa-user detail-icon"></i>
+        <h3>Contact Information</h3>
+      </div>
+      <div class="contact-info">
+        <div class="contact-method">
+          <i class="fas fa-user" style="color:var(--primary-color)"></i>
+          <span>{{ listing.username }}</span>
+        </div>
+        {% if listing.contact %}
+        <div class="contact-method">
+          <i class="fas fa-phone" style="color:var(--primary-color)"></i>
+          <span>{{ listing.contact }}</span>
+        </div>
+        {% endif %}
+        {% if listing.email %}
+        <div class="contact-method">
+          <i class="fas fa-envelope" style="color:var(--primary-color)"></i>
+          <span>{{ listing.email }}</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Action Button -->
+    {% if listing.deal_type == 'Swap Deal' %}
+    <div class="action-section">
+      <button class="offer-button" id="offerButton">
+        <i class="fas fa-handshake"></i> Make Swap Offer
+      </button>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+
+
+
+
+    <!-- Ratings & Reviews Section -->
+    <div class="details-section">
+      <div class="detail-header">
+        <i class="fas fa-star detail-icon"></i>
+        <h3>Ratings & Reviews</h3>
+      </div>
+
+      <!-- 1) Rating summary -->
+      <div class="rating-summary">
+        {% if listing.rating_count > 0 %}
+          <div class="average-rating">
+            <span class="rating-value">{{ "%.1f"|format(listing.avg_rating) }}</span>
+            <div class="stars">
+              {% for i in range(1,6) %}
+                {% if i <= listing.avg_rating|int %}
+                  <i class="fas fa-star"></i>
+                {% elif i - 0.5 <= listing.avg_rating %}
+                  <i class="fas fa-star-half-alt"></i>
+                {% else %}
+                  <i class="far fa-star"></i>
+                {% endif %}
+              {% endfor %}
+            </div>
+            <span class="rating-count">
+              ({{ listing.rating_count }} review{% if listing.rating_count != 1 %}s{% endif %})
+            </span>
+          </div>
+        {% else %}
+          <p>No ratings yet</p>
+        {% endif %}
+      </div>
+
+      <!-- 2) Rating form for logged-in non-owners -->
+      {% if session.get('user_id') and session['user_id'] != listing.user_id %}
+        <form id="ratingForm" class="rating-form">
+          <h4>Rate this listing</h4>
+          <div class="star-rating">
+            {% for i in range(5,0,-1) %}
+              <input
+                type="radio"
+                id="star{{ i }}"
+                name="rating"
+                value="{{ i }}"
+              />
+              <label for="star{{ i }}" title="{{ i }} star{% if i != 1 %}s{% endif %}">
+                <i class="fas fa-star"></i>
+              </label>
+            {% endfor %}
+          </div>
+          <button type="button" id="submitRating" class="submit-rating-btn">
+            Submit Rating
+          </button>
+        </form>
+      {% elif not session.get('user_id') %}
+        <p>
+          <a href="{{ url_for('login', next=url_for('listing_details', listing_id=listing.listing_id)) }}">
+            Log in
+          </a> to rate this listing
+        </p>
+      {% endif %}
+
+      <!-- 3) Reviews list -->
+      <div class="reviews-container">
+        <h4>Reviews</h4>
+        {% if listing.reviews %}
+          <div class="reviews-list">
+            {% for review in listing.reviews %}
+              <div class="review-item">
+                <div class="review-header">
+                  <span class="reviewer-name">{{ review.reviewer }}</span>
+                  <span class="review-date">{{ review.created_at }}</span>
+                </div>
+                <div class="review-content">
+                  <p>{{ review.review_text }}</p>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p>No reviews yet</p>
+        {% endif %}
+      </div>
+
+      <!-- 4) Review form for logged-in non-owners -->
+      {% if session.get('user_id') and session['user_id'] != listing.user_id %}
+        <form id="reviewForm" class="review-form">
+          <h4>Write a review</h4>
+          <textarea
+            id="reviewText"
+            name="review_text"
+            placeholder="Share your experience..."
+            rows="4"
+          ></textarea>
+          <button type="button" id="submitReview" class="submit-review-btn">
+            Submit Review
+          </button>
+        </form>
+      {% elif not session.get('user_id') %}
+        <p>
+          <a href="{{ url_for('login', next=url_for('listing_details', listing_id=listing.listing_id)) }}">
+            Log in
+          </a> to write a review
+        </p>
+      {% endif %}
+    </div>
+
+    <!-- Proposal Modal (only shown for swap deals) -->
+    <div id="proposalModal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal" id="closeModal">×</span>
+        <h2>Make Swap Offer</h2>
+        <form id="proposalForm" action="{{ url_for('create_proposal', listing_id=listing.listing_id) }}" method="POST" enctype="multipart/form-data">
+          <div class="form-group">
+            <label for="proposed_item">Item You're Offering:</label>
+            <input type="text" id="proposed_item" name="proposed_item" required>
+          </div>
+          <div class="form-group">
+            <label for="additional_cash">Additional Cash (GHS):</label>
+            <input type="number" id="additional_cash" name="additional_cash" step="0.01" min="0">
+          </div>
+          <div class="form-group">
+            <label for="condition">Condition:</label>
+            <select id="condition" name="condition" required>
+              <option value="">Select Condition</option>
+              <option value="new">New</option>
+              <option value="like_new">Like New</option>
+              <option value="used">Used</option>
+              <option value="refurbished">Refurbished</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="phone_number">Phone Number:</label>
+            <input type="text" id="phone_number" name="phone_number" required>
+          </div>
+          <div class="form-group">
+            <label for="email_address">Email Address:</label>
+            <input type="email" id="email_address" name="email_address" required>
+          </div>
+          <div class="form-group">
+            <label for="image1">Image 1:</label>
+            <input type="file" id="image1" name="image1" accept="image/*">
+          </div>
+          <div class="form-group">
+            <label for="image2">Image 2:</label>
+            <input type="file" id="image2" name="image2" accept="image/*">
+          </div>
+          <div class="form-group">
+            <label for="image3">Image 3:</label>
+            <input type="file" id="image3" name="image3" accept="image/*">
+          </div>
+          <div class="form-group">
+            <label for="image4">Image 4:</label>
+            <input type="file" id="image4" name="image4" accept="image/*">
+          </div>
+          <div class="form-group">
+            <label for="detailed_description">Detailed Description:</label>
+            <textarea id="detailed_description" name="detailed_description" rows="4" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="message">Message to Owner (Optional):</label>
+            <textarea id="message" name="message" rows="3"></textarea>
+          </div>
+          <button type="submit" class="modal-submit-btn">Submit Offer</button>
+        </form>
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=True) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">
+              {{ message }}
+            </div>
           {% endfor %}
         </div>
-        <span class="rating-count">
-          ({{ listing.rating_count }} review{% if listing.rating_count != 1 %}s{% endif %})
-        </span>
-      </div>
-    {% else %}
-      <p>No ratings yet</p>
-    {% endif %}
+      {% endif %}
+    {% endwith %}
   </div>
-
-  <!-- 2) Rating form for logged-in non-owners -->
-  {% if session.get('user_id') and session['user_id'] != listing.user_id %}
-    <form id="ratingForm" class="rating-form">
-      <h4>Rate this listing</h4>
-      <div class="star-rating">
-        {% for i in range(5,0,-1) %}
-          <input
-            type="radio"
-            id="star{{ i }}"
-            name="rating"
-            value="{{ i }}"
-          />
-          <label for="star{{ i }}" title="{{ i }} star{% if i != 1 %}s{% endif %}">
-            <i class="fas fa-star"></i>
-          </label>
-        {% endfor %}
-      </div>
-      <button type="button" id="submitRating" class="submit-rating-btn">
-        Submit Rating
-      </button>
-    </form>
-  {% elif not session.get('user_id') %}
-    <p>
-      <a href="{{ url_for('login', next=url_for('listing_details', listing_id=listing.listing_id)) }}">
-        Log in
-      </a> to rate this listing
-    </p>
-  {% endif %}
-
-  <!-- 3) Reviews list -->
-  <div class="reviews-container">
-    <h4>Reviews</h4>
-    {% if listing.reviews %}
-      <div class="reviews-list">
-        {% for review in listing.reviews %}
-          <div class="review-item">
-            <div class="review-header">
-              <span class="reviewer-name">{{ review.username }}</span>
-              <span class="review-date">{{ review.created_at }}</span>
-            </div>
-            <div class="review-content">
-              <p>{{ review.review_text }}</p>
-            </div>
-          </div>
-        {% endfor %}
-      </div>
-    {% else %}
-      <p>No reviews yet</p>
-    {% endif %}
-  </div>
-
-  <!-- 4) Review form for logged-in non-owners -->
-  {% if session.get('user_id') and session['user_id'] != listing.user_id %}
-    <form id="reviewForm" class="review-form">
-      <h4>Write a review</h4>
-      <textarea
-        id="reviewText"
-        name="review_text"
-        placeholder="Share your experience..."
-        rows="4"
-      ></textarea>
-      <button type="button" id="submitReview" class="submit-review-btn">
-        Submit Review
-      </button>
-    </form>
-  {% elif not session.get('user_id') %}
-    <p>
-      <a href="{{ url_for('login', next=url_for('listing_details', listing_id=listing.listing_id)) }}">
-        Log in
-      </a> to write a review
-    </p>
-  {% endif %}
-</div>
-
-
-
-  {% with messages = get_flashed_messages(with_categories=True) %}
-    {% if messages %}
-      <div class="flash-messages">
-        {% for category, message in messages %}
-          <div class="flash-message flash-{{ category }}">
-            {{ message }}
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
-</div>
 
   <script>
     // Mobile Menu Toggle
@@ -1109,28 +1241,22 @@
     });
 
     // Image Gallery Functionality
-    function changeMainImage(thumbnail, imageUrl) {
-      const mainImage = document.getElementById('mainImage');
-      const thumbnails = document.querySelectorAll('.thumbnail');
+    function changeMainImage(thumbnail, imageUrl, mainImageId, thumbnailContainerId) {
+      const mainImage = document.getElementById(mainImageId);
+      const thumbnailContainer = document.getElementById(thumbnailContainerId);
+      const thumbnails = thumbnailContainer.querySelectorAll('.thumbnail');
       
-      // Add changing class for transition
       mainImage.classList.add('image-changing');
-      
-      // Update active thumbnail
       thumbnails.forEach(thumb => thumb.classList.remove('active'));
       thumbnail.classList.add('active');
       
-      // Update image counter
       const currentIndex = Array.from(thumbnails).indexOf(thumbnail) + 1;
-      document.getElementById('image-counter').textContent = 
-        `${currentIndex} of ${thumbnails.length}`;
+      const imageCounter = document.getElementById(`image-counter${mainImageId.includes('-') ? '-' + mainImageId.split('-')[1] : ''}`);
+      imageCounter.textContent = `${currentIndex} of ${thumbnails.length}`;
       
-      // Change image after transition starts
       setTimeout(() => {
         mainImage.src = imageUrl;
         mainImage.classList.remove('image-changing');
-        
-        // Auto-scroll thumbnails to center the active one
         thumbnail.scrollIntoView({
           behavior: 'smooth',
           block: 'nearest',
@@ -1140,50 +1266,52 @@
     }
 
     // Image Zoom Functionality
-    let isZoomed = false;
-    function toggleZoom() {
-      const img = document.getElementById('mainImage');
-      isZoomed = !isZoomed;
-      img.style.transform = isZoomed ? 'scale(2)' : 'scale(1)';
-      img.style.cursor = isZoomed ? 'zoom-out' : 'zoom-in';
+    function toggleZoom(mainImageId) {
+      const img = document.getElementById(mainImageId);
+      const isZoomed = img.style.transform === 'scale(2)';
+      img.style.transform = isZoomed ? 'scale(1)' : 'scale(2)';
+      img.style.cursor = isZoomed ? 'zoom-in' : 'zoom-out';
       img.style.transformOrigin = 'center center';
     }
 
     // Touch Zoom for Mobile
-    let lastTouch = 0;
-    const mainImage = document.getElementById('mainImage');
-
-    mainImage.addEventListener('touchend', (e) => {
-      const now = Date.now();
-      if (now - lastTouch <= 300) {
-        toggleZoom();
-        e.preventDefault();
-      }
-      lastTouch = now;
+    const mainImages = document.querySelectorAll('.main-image');
+    mainImages.forEach(img => {
+      let lastTouch = 0;
+      img.addEventListener('touchend', (e) => {
+        const now = Date.now();
+        if (now - lastTouch <= 300) {
+          toggleZoom(img.id);
+          e.preventDefault();
+        }
+        lastTouch = now;
+      });
     });
 
     // Thumbnail Gallery Touch Scrolling
-    const thumbnailContainer = document.getElementById('thumbnailContainer');
-    let isDragging = false;
-    let startX = 0;
-    let scrollLeft = 0;
+    const thumbnailContainers = document.querySelectorAll('.thumbnail-container');
+    thumbnailContainers.forEach(container => {
+      let isDragging = false;
+      let startX = 0;
+      let scrollLeft = 0;
 
-    thumbnailContainer.addEventListener('touchstart', (e) => {
-      isDragging = true;
-      startX = e.touches[0].pageX - thumbnailContainer.offsetLeft;
-      scrollLeft = thumbnailContainer.scrollLeft;
-    });
+      container.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        startX = e.touches[0].pageX - container.offsetLeft;
+        scrollLeft = container.scrollLeft;
+      });
 
-    thumbnailContainer.addEventListener('touchmove', (e) => {
-      if (!isDragging) return;
-      e.preventDefault();
-      const x = e.touches[0].pageX - thumbnailContainer.offsetLeft;
-      const walk = (x - startX) * 2;
-      thumbnailContainer.scrollLeft = scrollLeft - walk;
-    });
+      container.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const x = e.touches[0].pageX - container.offsetLeft;
+        const walk = (x - startX) * 2;
+        container.scrollLeft = scrollLeft - walk;
+      });
 
-    thumbnailContainer.addEventListener('touchend', () => {
-      isDragging = false;
+      container.addEventListener('touchend', () => {
+        isDragging = false;
+      });
     });
 
     // Modal Handling
@@ -1194,12 +1322,16 @@
 
     function openModal() {
       modal.style.display = 'block';
+      setTimeout(() => modal.classList.add('show'), 10);
       document.body.style.overflow = 'hidden';
     }
 
     function closeModal() {
-      modal.style.display = 'none';
-      document.body.style.overflow = 'auto';
+      modal.classList.remove('show');
+      setTimeout(() => {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+      }, 300);
     }
 
     offerButton.addEventListener('click', function(e) {
@@ -1227,7 +1359,6 @@
 
     // Form submission handling
     proposalForm.addEventListener('submit', function(e) {
-      // Add any additional client-side validation here
       const proposedItem = document.getElementById('proposed_item');
       const detailedDescription = document.getElementById('detailed_description');
       
@@ -1242,19 +1373,15 @@
         alert('Please provide a detailed description');
         return;
       }
-      
-      // Form will submit if validation passes
     });
 
     // Initialize on load
     document.addEventListener('DOMContentLoaded', function() {
-      // Hide menu on mobile by default
       if (window.innerWidth < 768) {
         navLinks.style.display = 'none';
         mobileMenuBtn.style.display = 'block';
         
-        // Center first thumbnail on mobile
-        const firstThumbnail = document.querySelector('.thumbnail');
+        const firstThumbnail = document.querySelector('#thumbnailContainer .thumbnail');
         if (firstThumbnail) {
           setTimeout(() => {
             firstThumbnail.scrollIntoView({
@@ -1267,7 +1394,6 @@
         mobileMenuBtn.style.display = 'none';
       }
 
-      // Preload all images
       const thumbnails = document.querySelectorAll('.thumbnail');
       const images = [];
       thumbnails.forEach(thumb => {
@@ -1291,91 +1417,87 @@
       alert('Message functionality coming soon!');
     }
 
-
-// Rating Submission
-document.getElementById('submitRating')?.addEventListener('click', async function() {
-    const ratingInput = document.querySelector('input[name="rating"]:checked');
-    if (!ratingInput) {
+    // Rating Submission
+    document.getElementById('submitRating')?.addEventListener('click', async function() {
+      const ratingInput = document.querySelector('input[name="rating"]:checked');
+      if (!ratingInput) {
         alert('Please select a rating');
         return;
-    }
-    
-    try {
+      }
+      
+      try {
         const response = await fetch(`/submit_rating/{{ listing.listing_id }}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `rating=${ratingInput.value}`
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `rating=${ratingInput.value}`
         });
         
         const data = await response.json();
         
         if (data.success) {
-            alert('Rating submitted successfully!');
-            location.reload(); // Refresh to show updated rating
+          alert('Rating submitted successfully!');
+          location.reload();
         } else {
-            alert('Error: ' + data.message);
+          alert('Error: ' + data.message);
         }
-    } catch (error) {
+      } catch (error) {
         console.error('Error submitting rating:', error);
         alert('An error occurred while submitting your rating');
-    }
-});
+      }
+    });
 
-// Review Submission
-document.getElementById('submitReview')?.addEventListener('click', async function() {
-    const reviewText = document.getElementById('reviewText').value.trim();
-    if (!reviewText) {
+    // Review Submission
+    document.getElementById('submitReview')?.addEventListener('click', async function() {
+      const reviewText = document.getElementById('reviewText').value.trim();
+      if (!reviewText) {
         alert('Please write a review before submitting');
         return;
-    }
-    
-    try {
+      }
+      
+      try {
         const response = await fetch(`/submit_review/{{ listing.listing_id }}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: `review_text=${encodeURIComponent(reviewText)}`
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `review_text=${encodeURIComponent(reviewText)}`
         });
         
         const data = await response.json();
         
         if (data.success) {
-            // Add the new review to the page without reloading
-            const reviewsList = document.querySelector('.reviews-list') || document.createElement('div');
-            if (reviewsList.children.length === 0 && document.querySelector('.reviews-container p')) {
-                document.querySelector('.reviews-container p').remove();
-                reviewsList.classList.add('reviews-list');
-                document.querySelector('.reviews-container').prepend(reviewsList);
-            }
-            
-            const reviewItem = document.createElement('div');
-            reviewItem.className = 'review-item';
-            reviewItem.innerHTML = `
-                <div class="review-header">
-                    <span class="reviewer-name">${data.review.username}</span>
-                    <span class="review-date">${data.review.created_at}</span>
-                </div>
-                <div class="review-content">
-                    <p>${data.review.review_text}</p>
-                </div>
-            `;
-            
-            reviewsList.prepend(reviewItem);
-            document.getElementById('reviewText').value = '';
-            alert('Review submitted successfully!');
+          const reviewsList = document.querySelector('.reviews-list') || document.createElement('div');
+          if (reviewsList.children.length === 0 && document.querySelector('.reviews-container p')) {
+            document.querySelector('.reviews-container p').remove();
+            reviewsList.classList.add('reviews-list');
+            document.querySelector('.reviews-container').prepend(reviewsList);
+          }
+          
+          const reviewItem = document.createElement('div');
+          reviewItem.className = 'review-item';
+          reviewItem.innerHTML = `
+            <div class="review-header">
+              <span class="reviewer-name">${data.review.reviewer}</span>
+              <span class="review-date">${data.review.created_at}</span>
+            </div>
+            <div class="review-content">
+              <p>${data.review.review_text}</p>
+            </div>
+          `;
+          
+          reviewsList.prepend(reviewItem);
+          document.getElementById('reviewText').value = '';
+          alert('Review submitted successfully!');
         } else {
-            alert('Error: ' + data.message);
+          alert('Error: ' + data.message);
         }
-    } catch (error) {
+      } catch (error) {
         console.error('Error submitting review:', error);
         alert('An error occurred while submitting your review');
-    }
-});
-
-
+      }
+    });
   </script>
 </body>
 </html>

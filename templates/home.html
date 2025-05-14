@@ -717,7 +717,7 @@
     .mb-5 { margin-bottom: 2rem; }
 
 
-        .deal-type-badge { position: absolute; top: 1rem; left: 1rem; padding: 0.25rem 0.75rem; border-radius: var(--radius); font-size: 0.75rem; font-weight: 600; color: #fff; }
+
     .sale-badge { background: var(--error); }
     .swap-badge { background: var(--success); }
 
@@ -784,7 +784,110 @@
 }
 
 
+.listings-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px,1fr));
+}
+
+.listing-card {
+  position: relative;    /* <-- add this */
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  transition: transform .2s;
+}
+
+.listing-card:hover {
+  transform: translateY(-4px);
+}
+
+.deal-type-badge {
+  position: absolute;
+  top: .75rem;
+  left: .75rem;
+  background: #2ECC71;
+  color: white;
+  padding: .3rem .6rem;
+  border-radius: 20px;
+  font-size: .75rem;
+  z-index: 3;
+}
+
+/* Swap photo row */
+.swap-photo-row {
+  display: flex;
+  gap: 2px;
+  height: 140px; /* adjust as needed */
+  overflow: hidden;
+}
+.swap-photo {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+.swap-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .3s;
+}
+.swap-photo:hover img {
+  transform: scale(1.1);
+}
+
+/* Joined titles under photos */
+.swap-offer-titles {
+  padding: .5rem 1rem 0;
+  font-size: .9rem;
+  font-weight: 500;
+  color: var(--secondary-color);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+/* Card content */
+.card-content {
+  padding: 1rem;
+}
+.listing-title {
+  font-size: 1.1rem;
+  margin-bottom: .5rem;
+}
+.price-display {
+  font-size: 1.5rem;
+  color: #E74C3C;
+  font-weight: 700;
+}
+.swap-details {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+.detail-item {
+  font-size: .9rem;
+}
+.detail-label {
+  font-weight: 500;
+  margin-right: .3rem;
+}
+.detail-value {
+  font-weight: 600;
+}
+.cash-adjustment {
+  color: #2ECC71;
+}
+
+
+
   </style>
+
+    <script>
+    const USER_LOGGED_IN  = {{ 'true' if user_logged_in else 'false' }};
+    const USER_SUBSCRIBED = {{ 'true' if user_subscribed else 'false' }};
+  </script>
 </head>
 <body>
   <!-- Modern Navigation -->
@@ -869,80 +972,85 @@
 
 
 
-<!-- 1) Prompt Banner (hidden by default via inline style) -->
-<div id="notify-prompt" style="
-     display: none;
-     position: fixed; top: 0; left: 0; right: 0;
-     background: #2563eb; color: white;
-     padding: 1rem; text-align: center;
-     z-index: 1000; font-family: sans-serif;
-">
-  🔔 Enable notifications to get alerts on new listings, proposal updates, and ad performance.
-  <button id="notify-yes" style="
-    margin-left: 1rem; padding: 0.5rem 1rem;
-    background: white; color: #2563eb;
-    border: none; border-radius: 4px; cursor: pointer;
-  ">Yes</button>
-  <button id="notify-no" style="
-    margin-left: .5rem; padding: 0.5rem 1rem;
-    background: transparent; color: white;
-    border: 1px solid white; border-radius: 4px; cursor: pointer;
-  ">No, thanks</button>
-</div>
+  <!-- Notification Banner (initially hidden) -->
+  <div id="notify-prompt" style="display:none; position:fixed; top:0; left:0; right:0; background:#2563eb; color:white; padding:1rem; text-align:center; z-index:1000;">
+    🔔 Enable notifications to get alerts on new listings, proposal updates, and ad performance.
+    <button id="notify-yes" style="margin-left:1rem; padding:.5rem 1rem; background:white; color:#2563eb; border:none; border-radius:4px; cursor:pointer;">
+      Yes
+    </button>
+    <button id="notify-no" style="margin-left:.5rem; padding:.5rem 1rem; background:transparent; color:white; border:1px solid white; border-radius:4px; cursor:pointer;">
+      No, thanks
+    </button>
+  </div>
 
-<script>
-  // Helper to decode the VAPID key
-  function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64  = (base64String + padding)
-      .replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = atob(base64);
-    return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
-  }
+  <!-- … your other scripts … -->
 
-  async function subscribeUser() {
-    try {
-      const reg  = await navigator.serviceWorker.register('/service-worker.js');
-      await Notification.requestPermission();
-      const key  = "{{ vapid_public_key }}";
-      const sub  = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(key)
+  <script>
+    // Service Worker registration (unchanged)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(reg => console.log('SW registered:', reg.scope))
+          .catch(err => console.error('SW registration failed:', err));
       });
-      await fetch('/subscribe', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(sub)
-      });
-      console.log('✅ Subscribed for push:', sub);
-    } catch (err) {
-      console.error('❌ Subscription error:', err);
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    const PROMPT_KEY = 'swapsphere_notif_prompted';
-    const banner     = document.getElementById('notify-prompt');
-
-    // 1) Only show banner if user has NOT already responded
-    if (!localStorage.getItem(PROMPT_KEY)) {
-      banner.style.display = 'block';
     }
 
-    // 2) On "Yes", subscribe and remember they responded
-    document.getElementById('notify-yes').onclick = () => {
-      subscribeUser();
-      localStorage.setItem(PROMPT_KEY, 'yes');
-      banner.remove();
-    };
+    // Decode VAPID
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64  = (base64String + padding).replace(/-/g,'+').replace(/_/g,'/');
+      const rawData = atob(base64);
+      return new Uint8Array([...rawData].map(c=>c.charCodeAt(0)));
+    }
 
-    // 3) On "No, thanks", just remember and hide
-    document.getElementById('notify-no').onclick = () => {
-      localStorage.setItem(PROMPT_KEY, 'no');
-      banner.remove();
-    };
-  });
-</script>
+    // Subscribe logic (unchanged except credentials)
+    async function subscribeUser() {
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') throw new Error('Permission not granted');
+        const key = '{{ vapid_public_key }}';
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(key)
+        });
+        const resp = await fetch('/subscribe', {
+          method:      'POST',
+          credentials: 'include',  // ensure cookies go out
+          headers:     { 'Content-Type':'application/json' },
+          body:        JSON.stringify(sub)
+        });
+        if (!resp.ok) throw new Error(`Subscribe API: ${resp.status}`);
+        console.log('✅ Subscribed for push:', sub);
+      } catch (err) {
+        console.error('❌ Subscription error:', err);
+      }
+    }
+
+    // Banner logic
+    document.addEventListener('DOMContentLoaded', () => {
+      const PROMPT_KEY = 'swapsphere_notif_prompted';
+      const banner     = document.getElementById('notify-prompt');
+
+      if (
+        USER_LOGGED_IN  === true &&
+        USER_SUBSCRIBED === false &&
+        !localStorage.getItem(PROMPT_KEY)
+      ) {
+        banner.style.display = 'block';
+      }
+
+      document.getElementById('notify-yes').onclick = () => {
+        subscribeUser();
+        localStorage.setItem(PROMPT_KEY, 'yes');
+        banner.remove();
+      };
+      document.getElementById('notify-no').onclick = () => {
+        localStorage.setItem(PROMPT_KEY, 'no');
+        banner.remove();
+      };
+    });
+  </script>
 
 
 
@@ -966,65 +1074,73 @@
     </div>
   </section>
 
-  <!-- Listings Grid -->
-  <section class="listings-container">
-    <div class="listings-header">
-      <h2>Recent Listings</h2>
-      <!-- Removed sort -->
-    </div>
-    <div class="listings-grid">
-      {% if listings %}
-        {% for listing in listings %}
-          <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}" class="listing-card-link" data-listing-id="{{ listing.listing_id }}" onclick="trackClick(event, {{ listing.listing_id }})">
-            <div class="listing-card {% if listing.deal_type == 'Outright Sales' %}sale-card{% else %}swap-card{% endif %}">
-              <div class="card-image">
-                <div class="deal-type-badge {% if listing.deal_type == 'Outright Sales' %}sale-badge{% else %}swap-badge{% endif %}">{{ listing.deal_type }}</div>
-                {% if listing.plan in ['Diamond', 'Gold', 'Silver', 'Bronze'] %}
-                  <div class="plan-badge {{ listing.plan|lower }}-plan">
-                    {% if listing.plan == 'Diamond' %}<i class="fas fa-gem"></i>
-                    {% elif listing.plan == 'Gold' %}<i class="fas fa-star"></i>
-                    {% elif listing.plan == 'Silver' %}<i class="fas fa-certificate"></i>
-                    {% elif listing.plan == 'Bronze' %}<i class="fas fa-shield-alt"></i>
-                    {% endif %}
-                    {{ listing.plan }}
-                  </div>
-                {% endif %}
-                <img src="{{ listing.image_url if listing.image_url else url_for('static', filename='images/placeholder.jpg') }}" data-src="{{ listing.image_url if listing.image_url else url_for('static', filename='images/placeholder.jpg') }}" alt="{{ listing.title }}" loading="lazy">
-              </div>
-              <div class="card-content">
-                <h3 class="listing-title">
-                  {{ listing.title }}
-                  {% if listing.required_cash and listing.required_cash > 0 %}
-                    <span class="required-cash">+ ₵ {{ "{:,.2f}".format(listing.required_cash) }}</span>
-                  {% endif %}
-                </h3>
-                {% if listing.deal_type == 'Outright Sales' %}
-                  <div class="price-display">₵ {{ "{:,.2f}".format(listing.price|float) }}</div>
-                  <div class="swap-details">
-                    
-                  </div>
-                {% else %}
-                  <div class="swap-details">
-                    <div class="detail-item"><span class="detail-label">Desired Swap:</span><span class="detail-value">{{ listing.desired_swap }}</span></div>
-                    {% if listing.additional_cash is not none and listing.additional_cash > 0 %}
-                      <div class="detail-item"><span class="detail-label">Cash Adjustment:</span><span class="detail-value cash-adjustment">+ ₵ {{ "{:,.2f}".format(listing.additional_cash) }}</span></div>
-                    {% endif %}
-                  </div>
-                {% endif %}
-              </div>
+<section class="listings-container">
+  <div class="listings-grid">
+    {% for listing in listings %}
+      <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}" class="listing-card-link">
+        <div class="listing-card {% if listing.deal_type=='Swap Deal' %}swap-card{% else %}sale-card{% endif %}">
+
+          <!-- Badge -->
+          <div class="deal-type-badge">{{ listing.deal_type }}</div>
+
+          <!-- Photos for Swap Deals -->
+          {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 1 %}
+            <div class="swap-photo-row">
+              {% for o in listing.offers[:3] %}
+                <div class="swap-photo">
+                  <img src="{{ o.image1 }}" alt="{{ o.title }}" loading="lazy">
+                </div>
+              {% endfor %}
             </div>
-          </a>
-        {% endfor %}
-      {% else %}
-        <div class="empty-state">
-          <img src="{{ url_for('static', filename='images/empty-state.svg') }}" alt="No listings found">
-          <h3>No Listings Available</h3>
-          <p>Be the first to create a listing!</p>
-          <button class="floating-action">+</button>
+            <div class="swap-offer-titles">
+              {{ listing.offers[:3] | map(attribute='title') | join(' + ') }}
+            </div>
+          {% else %}
+            <div class="card-image">
+              <img src="{{ listing.image_url }}" alt="{{ listing.title }}" loading="lazy">
+            </div>
+          {% endif %}
+
+          <!-- Content -->
+          <div class="card-content">
+            {# Only show the big listing.title if 0 or 1 offers #}
+            {% if listing.deal_type=='Outright Sales' or listing.offers|length <= 1 %}
+            <h3 class="listing-title">
+              {{ listing.title }}
+              {% if listing.required_cash|float > 0 %}
+                <span class="required-cash">+ ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span>
+              {% endif %}
+            </h3>
+            {% endif %}
+
+            {% if listing.deal_type=='Outright Sales' %}
+              <div class="price-display">₵{{ "{:,.2f}".format(listing.price|float) }}</div>
+            {% else %}
+              <div class="swap-details">
+                <div class="detail-item">
+                  <span class="detail-label">Wanted:</span>
+                  <span class="detail-value">{{ listing.desired_swap }}</span>
+                </div>
+                {% if listing.additional_cash|float > 0 %}
+                <div class="detail-item">
+                  <span class="detail-label">Plus Cash:</span>
+                  <span class="detail-value cash-adjustment">+ ₵{{ "{:,.2f}".format(listing.additional_cash|float) }}</span>
+                </div>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+
         </div>
-      {% endif %}
-    </div>
-  </section>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+
+
+
+
+
 
   <!-- Professional Footer -->
   <footer class="site-footer">
@@ -1070,37 +1186,47 @@
     </div>
   </footer>
 
+  <button id="enable-notifications">Enable Notifications</button>
+
 
 <script>
-  document.getElementById('enable-notifications').addEventListener('click', async () => {
-    console.log('[Client] Clicked Enable Notifications');
-    try {
-      const reg = await navigator.serviceWorker.register('/service-worker.js');
-      console.log('[Client] SW registered', reg);
-
-      const perm = await Notification.requestPermission();
-      console.log('[Client] Notification permission:', perm);
-      if (perm !== 'granted') throw new Error('Permission not granted');
-
-      const vapidPublicKey = "BMtSvERTURwR1YKBRM7fPZZEDDTkx8Gxyunu1s0X6xdGy5b2i2d9fn042-E4VIx_0gIiv7QFq2l8I0uXO_bagR8";
-      const convertedKey = urlBase64ToUint8Array(vapidPublicKey);
-      console.log('[Client] Converted VAPID key:', convertedKey);
-
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: convertedKey
-      });
-      console.log('[Client] Got subscription:', sub);
-
-      const resp = await fetch('/subscribe', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(sub)
-      });
-      console.log('[Client] /subscribe response:', resp.status, await resp.text());
-    } catch (err) {
-      console.error('[Client] Subscription error:', err);
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('enable-notifications');
+    if (!btn) {
+      console.warn('[Client] No "enable-notifications" button found');
+      return;
     }
+
+    btn.addEventListener('click', async () => {
+      console.log('[Client] Clicked Enable Notifications');
+      try {
+        const reg = await navigator.serviceWorker.register('/service-worker.js');
+        console.log('[Client] SW registered', reg);
+
+        const perm = await Notification.requestPermission();
+        console.log('[Client] Notification permission:', perm);
+        if (perm !== 'granted') throw new Error('Permission not granted');
+
+        const vapidPublicKey = "BMtSvERTURwR1YKBRM7fPZZEDDTkx8Gxyunu1s0X6xdGy5b2i2d9fn042-E4VIx_0gIiv7QFq2l8I0uXO_bagR8";
+        const convertedKey = urlBase64ToUint8Array(vapidPublicKey);
+        console.log('[Client] Converted VAPID key:', convertedKey);
+
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: convertedKey
+        });
+        console.log('[Client] Got subscription:', sub);
+
+        const resp = await fetch('/subscribe', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(sub)
+        });
+        console.log('[Client] /subscribe response:', resp.status, await resp.text());
+      } catch (err) {
+        console.error('[Client] Subscription error:', err);
+      }
+    });
   });
 </script>
 
@@ -1271,5 +1397,6 @@
       });
     }
   </script>
+
 </body>
 </html>

@@ -1,88 +1,155 @@
 // service-worker.js
 
-const CACHE_NAME = 'swap-chief-cache-v4';  // bump this on each deploy
+const CACHE_NAME    = 'swap-chief-cache-v6';
+const PLACEHOLDER   = '/static/icons/ss.png';
 const STATIC_ASSETS = [
   '/static/manifest.json',
   '/static/icons/ss.png',
-  // add any other long-lived assets here
+  PLACEHOLDER,
+  // add any other truly static assets you want pre-cached
 ];
 
-// 1) Install → cache static assets, then take over immediately
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(STATIC_ASSETS))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(async cache => {
+      // Attempt to cache each asset individually, ignoring failures
+      await Promise.all(
+        STATIC_ASSETS.map(async path => {
+          try {
+            const res = await fetch(path);
+            if (!res.ok) throw new Error(`Status ${res.status}`);
+            await cache.put(path, res.clone());
+            console.log('[SW] Cached:', path);
+          } catch (err) {
+            console.warn('[SW] Failed to cache:', path, err);
+          }
+        })
+      );
+      // Activate immediately
+      return self.skipWaiting();
+    })
   );
 });
 
-// 2) Activate → remove old caches, and claim clients
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(
-        keys.filter(k => k !== CACHE_NAME)
-            .map(k => caches.delete(k))
-      ))
-      .then(() => self.clients.claim())
+    caches.keys().then(keys =>
+      Promise.all(
+        keys
+          .filter(key => key !== CACHE_NAME)
+          .map(oldKey => caches.delete(oldKey))
+      )
+    ).then(() => self.clients.claim())
   );
 });
 
-// 3) Fetch → network-first for navigations, cache-first for static assets
 self.addEventListener('fetch', event => {
   const req = event.request;
+  const url = new URL(req.url);
 
-  // A) Navigation requests (HTML pages)
-  if (req.mode === 'navigate') {
-    event.respondWith(
-      fetch(req)                                  // try network
-        .then(res => {
-          // optionally update cache so offline still has a fallback
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then(c => c.put(req, copy));
-          return res;
-        })
-        .catch(() => caches.match(req))           // fallback to cache if offline
-    );
+  // 1) HTML navigations: network-first, cache fallback
+  if (req.mode === 'navigate' && req.method === 'GET') {
+    event.respondWith(handleNavigation(req));
     return;
   }
 
-  // B) Static asset requests
-  if (STATIC_ASSETS.some(path => req.url.endsWith(path))) {
-    event.respondWith(
-      caches.match(req).then(cached => {
-        return cached || fetch(req).then(networkRes => {
-          // update cache for next time
-          caches.open(CACHE_NAME).then(c => c.put(req, networkRes.clone()));
-          return networkRes;
-        });
-      })
-    );
+  // 2) Static assets: cache-first, then network
+  if (req.method === 'GET' && STATIC_ASSETS.includes(url.pathname)) {
+    event.respondWith(handleStatic(req));
     return;
   }
 
-  // C) Everything else: just go to network
-  event.respondWith(fetch(req));
+  // 3) Images: network-first, placeholder fallback
+  if (isImageRequest(req)) {
+    event.respondWith(handleImage(req));
+    return;
+  }
+
+  // 4) Other GET requests: network-first, simple offline fallback
+  if (req.method === 'GET' && url.protocol.startsWith('http')) {
+    event.respondWith(handleOther(req));
+  }
 });
 
+// Network-first for navigations
+async function handleNavigation(req) {
+  try {
+    const networkRes = await fetch(req);
+    if (req.method === 'GET') {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(req, networkRes.clone());
+    }
+    return networkRes;
+  } catch (err) {
+    console.warn('[SW] Navigation failed, serve from cache:', req.url);
+    return (await caches.match(req)) || new Response('Offline', { status: 503 });
+  }
+}
 
-// —————— PUSH & NOTIFICATION HANDLERS ——————
+// Cache-first for static assets
+async function handleStatic(req) {
+  const cached = await caches.match(req);
+  if (cached) return cached;
+  try {
+    const networkRes = await fetch(req);
+    const cache = await caches.open(CACHE_NAME);
+    cache.put(req, networkRes.clone());
+    return networkRes;
+  } catch (err) {
+    console.warn('[SW] Static asset failed:', req.url);
+    return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+  }
+}
+
+// Network-first for images, placeholder on failure
+async function handleImage(req) {
+  try {
+    return await fetch(req);
+  } catch (err) {
+    console.warn('[SW] Image fetch failed:', req.url);
+    const placeholder = await caches.match(PLACEHOLDER);
+    return placeholder || new Response(null, { status: 404 });
+  }
+}
+
+// Network-first for other requests
+async function handleOther(req) {
+  try {
+    return await fetch(req);
+  } catch (err) {
+    console.warn('[SW] Request failed, offline fallback for:', req.url);
+    return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+  }
+}
+
+// Helper: detect image requests
+function isImageRequest(req) {
+  const accept = req.headers.get('Accept') || '';
+  const ext = req.url.split('.').pop().split(/\#|\?/)[0];
+  return (
+    req.destination === 'image' ||
+    accept.includes('image') ||
+    ['png','jpg','jpeg','gif','webp','svg'].includes(ext.toLowerCase())
+  );
+}
+
+// — PUSH & NOTIFICATION HANDLERS — //
 
 self.addEventListener('push', event => {
   let data = { title: 'New Notification', body: '', url: '/' };
-  try { data = event.data.json() } catch (e) {}
-
+  try {
+    data = event.data.json();
+  } catch (e) {
+    // No payload or malformed JSON
+  }
   const options = {
-    body: data.body,
-    icon: '/static/icons/ss.png',
-    badge: '/static/icons/ss.png',
-    data: data.url,
-    vibrate: [100, 50, 100]
+    body:   data.body,
+    icon:   '/static/icons/ss.png',
+    badge:  '/static/icons/ss.png',
+    data:   data.url,
+    vibrate:[100,50,100],
   };
-
-  event.waitUntil(
-    self.registration.showNotification(data.title, options)
-  );
+  event.waitUntil(self.registration.showNotification(data.title, options));
 });
 
 self.addEventListener('notificationclick', event => {
@@ -90,10 +157,10 @@ self.addEventListener('notificationclick', event => {
   const urlToOpen = event.notification.data || '/';
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then(windows => {
-        for (let win of windows) {
-          if (win.url === urlToOpen && 'focus' in win) {
-            return win.focus();
+      .then(windowClients => {
+        for (const client of windowClients) {
+          if (client.url === urlToOpen && 'focus' in client) {
+            return client.focus();
           }
         }
         return clients.openWindow(urlToOpen);

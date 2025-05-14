@@ -4021,3 +4021,116 @@ mysql.connector.errors.ProgrammingError: 1064 (42000): You have an error in your
 2025-04-08 17:51:56,411 - INFO -  * Debugger PIN: 109-151-583
 2025-04-09 06:33:44,438 - INFO -  * Detected change in 'C:\\Users\\Touton SA\\Desktop\\Swap Chief\\app.py', reloading
 2025-04-09 06:33:44,562 - INFO -  * Restarting with stat
+2025-05-13 07:51:54,537 DEBUG: Looking up time zone info from registry
+2025-05-13 07:51:54,545 INFO: Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-05-13 07:51:54,545 INFO: Added job "check_ad_performance_alerts" to job store "default"
+2025-05-13 07:51:54,545 INFO: Scheduler started
+2025-05-13 07:51:54,545 DEBUG: Looking for jobs to run
+2025-05-13 07:51:54,545 DEBUG: Next wakeup is due at 2025-05-13 07:52:54.545845-07:00 (in 60.000000 seconds)
+2025-05-13 07:51:54,545 WARNING: Python-dotenv could not parse statement starting at line 7
+2025-05-13 07:51:54,545 WARNING: Python-dotenv could not parse statement starting at line 8
+2025-05-13 07:51:54,571 WARNING:  * Debugger is active!
+2025-05-13 07:51:54,577 INFO:  * Debugger PIN: 109-151-583
+2025-05-13 07:51:54,609 DEBUG: Looking up time zone info from registry
+2025-05-13 07:51:54,609 INFO: Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-05-13 07:51:54,609 INFO: Added job "check_ad_performance_alerts" to job store "default"
+2025-05-13 07:51:54,609 INFO: Scheduler started
+2025-05-13 07:51:54,609 DEBUG: Looking for jobs to run
+2025-05-13 07:51:54,609 DEBUG: Next wakeup is due at 2025-05-13 07:52:54.609380-07:00 (in 60.000000 seconds)
+2025-05-13 07:51:54,609 WARNING: Python-dotenv could not parse statement starting at line 7
+2025-05-13 07:51:54,609 WARNING: Python-dotenv could not parse statement starting at line 8
+2025-05-13 07:51:54,633 WARNING:  * Debugger is active!
+2025-05-13 07:51:54,635 INFO:  * Debugger PIN: 109-151-583
+2025-05-13 07:52:02,205 DEBUG: Building SSL context
+2025-05-13 07:52:03,403 DEBUG: Switching to SSL
+2025-05-13 07:52:03,754 DEBUG: SSL has been enabled
+2025-05-13 07:52:03,754 DEBUG: Starting authorization phase
+2025-05-13 07:52:03,754 DEBUG: The provided initial strategy is caching_sha2_password
+2025-05-13 07:52:03,754 INFO: package: mysql.connector.plugins
+2025-05-13 07:52:03,754 INFO: plugin_name: caching_sha2_password
+2025-05-13 07:52:03,754 INFO: AUTHENTICATION_PLUGIN_CLASS: MySQLCachingSHA2PasswordAuthPlugin
+2025-05-13 07:52:04,167 DEBUG: Exchanging further packets
+2025-05-13 07:52:04,167 DEBUG: caching_sha2_password completed succesfully
+2025-05-13 07:52:04,677 DEBUG: Fetching listing with ID: 34
+2025-05-13 07:52:05,094 DEBUG: Fetching ratings
+2025-05-13 07:52:05,203 DEBUG: Fetching reviews
+2025-05-13 07:52:05,392 DEBUG: Fetching offered items
+2025-05-13 07:52:05,601 ERROR: Error in listing_details: 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'condition, image1, image2, image3, image4
+            FROM offered_items
+       ' at line 1
+Traceback (most recent call last):
+  File "C:\Users\Touton SA\Desktop\Swap Chief\app.py", line 288, in listing_details
+    cursor.execute("""
+  File "C:\Users\Touton SA\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\mysql\connector\cursor.py", line 537, in execute
+    self._handle_result(self._connection.cmd_query(stmt))
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Touton SA\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\mysql\connector\opentelemetry\context_propagation.py", line 97, in wrapper
+    return method(cnx, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Touton SA\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\mysql\connector\connection.py", line 872, in cmd_query
+    result = self._handle_result(self._send_cmd(ServerCmd.QUERY, query))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Touton SA\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\mysql\connector\connection.py", line 648, in _handle_result
+    raise get_exception(packet)
+mysql.connector.errors.ProgrammingError: 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'condition, image1, image2, image3, image4
+            FROM offered_items
+       ' at line 1
+2025-05-13 07:52:05,823 INFO: 127.0.0.1 - - [13/May/2025 07:52:05] "[35m[1mGET /listing/34 HTTP/1.1[0m" 500 -
+2025-05-13 07:52:05,834 ERROR: Error on request:
+Traceback (most recent call last):
+  File "C:\Users\Touton SA\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\werkzeug\debug\__init__.py", line 342, in debug_application
+    app_iter = self.app(environ, start_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Touton SA\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\flask\app.py", line 1498, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Touton SA\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\flask\app.py", line 1476, in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Touton SA\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Touton SA\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Touton SA\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Touton SA\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Touton SA\Desktop\Swap Chief\app.py", line 288, in listing_details
+    cursor.execute("""
+  File "C:\Users\Touton SA\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\mysql\connector\cursor.py", line 537, in execute
+    self._handle_result(self._connection.cmd_query(stmt))
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Touton SA\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\mysql\connector\opentelemetry\context_propagation.py", line 97, in wrapper
+    return method(cnx, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Touton SA\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\mysql\connector\connection.py", line 872, in cmd_query
+    result = self._handle_result(self._send_cmd(ServerCmd.QUERY, query))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Touton SA\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\mysql\connector\connection.py", line 648, in _handle_result
+    raise get_exception(packet)
+mysql.connector.errors.ProgrammingError: 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'condition, image1, image2, image3, image4
+            FROM offered_items
+       ' at line 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Touton SA\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\werkzeug\serving.py", line 370, in run_wsgi
+    execute(self.server.app)
+  File "C:\Users\Touton SA\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\werkzeug\serving.py", line 333, in execute
+    for data in application_iter:
+                ^^^^^^^^^^^^^^^^^
+  File "C:\Users\Touton SA\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\werkzeug\debug\__init__.py", line 377, in debug_application
+    environ["wsgi.errors"].write("".join(tb.render_traceback_text()))
+OSError: [Errno 22] Invalid argument
+2025-05-13 07:52:06,131 INFO: 127.0.0.1 - - [13/May/2025 07:52:06] "[36mGET /listing/34?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+2025-05-13 07:52:06,140 INFO: 127.0.0.1 - - [13/May/2025 07:52:06] "[36mGET /listing/34?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1[0m" 304 -
+2025-05-13 07:52:06,165 INFO: 127.0.0.1 - - [13/May/2025 07:52:06] "GET /listing/34?__debugger__=yes&cmd=resource&f=console.png&s=ZVP4VUEvmN2zj1e3UltU HTTP/1.1" 200 -
+2025-05-13 07:52:06,245 INFO: 127.0.0.1 - - [13/May/2025 07:52:06] "[36mGET /listing/34?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2025-05-13 07:52:08,114 INFO: 127.0.0.1 - - [13/May/2025 07:52:08] "[36mGET /service-worker.js HTTP/1.1[0m" 304 -
+2025-05-13 07:52:32,200 INFO:  * Detected change in 'C:\\Users\\Touton SA\\Desktop\\Swap Chief\\app.py', reloading
+2025-05-13 07:52:33,180 INFO:  * Detected change in 'C:\\Users\\Touton SA\\Desktop\\Swap Chief\\app.py', reloading

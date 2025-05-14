@@ -81,128 +81,166 @@ def get_db_connection():
         user=db_user,
         password=db_password,
         database=db_database,
-        port=db_port
+        port=db_port,
+        charset='utf8mb4',
+        collation='utf8mb4_unicode_ci',
+        use_unicode=True
     )
+
+
 
 @app.route('/')
 def home():
+    # 0) Initialize filter variables so they're always in scope
+    search = request.args.get('search', '').strip()
+    selected_category = request.args.get('category', 'All')
+    deal_type_filter = request.args.get('deal_type', 'All')
+    location_q = request.args.get('location', '').strip()
+
     conn = None
     listings = []
     categories = []
+    user_logged_in = 'user_id' in session
+    user_subscribed = False
+
     try:
+        # 1) Push subscription check
+        if user_logged_in:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT 1 FROM push_subscriptions WHERE user_id = %s",
+                (session['user_id'],)
+            )
+            user_subscribed = cur.fetchone() is not None
+            cur.close()
+            conn.close()
+
+        # 2) Fetch listings
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # --- pull in all four inputs ---
-        search            = request.args.get('search', '').strip()
-        selected_category = request.args.get('category', 'All')
-        deal_type_filter  = request.args.get('deal_type', 'All')
-        location_q        = request.args.get('location', '').strip()
-
-        # --- base query ---
+        # Build base query
         query = """
           SELECT
-            listings.*,
-            users.username,
-            IFNULL(metrics.impressions, 0) AS impressions
-          FROM listings
-          JOIN users ON listings.user_id = users.id
-          LEFT JOIN listing_metrics AS metrics
-            ON listings.listing_id = metrics.listing_id
+            l.*,
+            u.username,
+            IFNULL(m.impressions, 0) AS impressions
+          FROM listings AS l
+          JOIN users    AS u ON l.user_id = u.id
+          LEFT JOIN listing_metrics AS m
+            ON l.listing_id = m.listing_id
           WHERE 1=1
         """
         params = []
 
-        # --- keyword search ---
+        # Apply text search
         if search:
             like = f'%{search}%'
             query += """
               AND (
-                listings.title       LIKE %s OR
-                listings.description LIKE %s OR
-                listings.category    LIKE %s
+                l.title       LIKE %s OR
+                l.description LIKE %s OR
+                l.category    LIKE %s
               )
             """
             params += [like, like, like]
 
-        # --- category filter ---
+        # Category filter
         if selected_category != 'All':
-            query += " AND listings.category = %s"
+            query += " AND l.category = %s"
             params.append(selected_category)
 
-        # --- deal‐type filter ---
+        # Deal‐type filter
         if deal_type_filter != 'All':
-            query += " AND listings.deal_type = %s"
+            query += " AND l.deal_type = %s"
             params.append(deal_type_filter)
 
-        # --- ordering: plan priority always first ---
+        # Ordering (with optional location boost)
         if location_q:
-            # location fuzzy clauses only when user typed location
             query += """
               ORDER BY
-                CASE listings.plan
+                CASE l.plan
                   WHEN 'Diamond' THEN 5
                   WHEN 'Gold'    THEN 4
                   WHEN 'Silver'  THEN 3
                   WHEN 'Bronze'  THEN 2
                   ELSE 1
                 END DESC,
-                (listings.location = %s) DESC,
-                (SOUNDEX(listings.location) = SOUNDEX(%s)) DESC,
-                (listings.location LIKE %s) DESC,
-                listings.created_at DESC
+                (l.location = %s) DESC,
+                (SOUNDEX(l.location) = SOUNDEX(%s)) DESC,
+                (l.location LIKE %s) DESC,
+                l.created_at DESC
             """
-            params += [
-                location_q,
-                location_q,
-                f'%{location_q}%'
-            ]
+            params += [location_q, location_q, f'%{location_q}%']
         else:
-            # no location entered → skip fuzzy clauses
             query += """
               ORDER BY
-                CASE listings.plan
+                CASE l.plan
                   WHEN 'Diamond' THEN 5
                   WHEN 'Gold'    THEN 4
                   WHEN 'Silver'  THEN 3
                   WHEN 'Bronze'  THEN 2
                   ELSE 1
                 END DESC,
-                listings.created_at DESC
+                l.created_at DESC
             """
 
-        # --- execute & fetch ---
         cursor.execute(query, params)
         listings = cursor.fetchall()
 
-        # --- get categories for your dropdown/UI ---
+        # Pull distinct categories
         cursor.execute("SELECT DISTINCT category FROM listings")
         categories = [r['category'] for r in cursor.fetchall()]
+
+        # Fetch offered_items for each swap listing
+        for l in listings:
+            # Build full image URL
+            if l.get('image_url'):
+                l['image_url'] = url_for('static', filename='images/' + l['image_url'])
+            else:
+                l['image_url'] = url_for('static', filename='images/placeholder.jpg')
+
+            if l['deal_type'] == 'Swap Deal':
+                cursor.execute("""
+                  SELECT item_id, title, description, image1, `condition`
+                  FROM offered_items
+                  WHERE listing_id = %s
+                  ORDER BY item_id ASC
+                """, (l['listing_id'],))
+                offers = cursor.fetchall() or []
+                # Build full image URL for each offer
+                for o in offers:
+                    if o.get('image1'):
+                        o['image1'] = url_for('static', filename='images/' + o['image1'])
+                    else:
+                        o['image1'] = url_for('static', filename='images/placeholder.jpg')
+                l['offers'] = offers
+            else:
+                l['offers'] = []
 
         cursor.close()
 
     except Exception as e:
         logging.error("Error fetching listings: %s", e)
-
     finally:
         if conn:
             conn.close()
 
-    # --- full image URLs ---
-    for l in listings:
-        if l.get('image_url'):
-            l['image_url'] = url_for('static', filename='images/' + l['image_url'])
-
     return render_template(
         'home.html',
         listings=listings,
+        categories=categories,
         search=search,
         selected_category=selected_category,
         deal_type_filter=deal_type_filter,
         location=location_q,
-        categories=categories,
-        vapid_public_key=VAPID_PUBLIC_KEY
+        user_logged_in=user_logged_in,
+        user_subscribed=user_subscribed
     )
+
+
+
 
 
 
@@ -210,54 +248,76 @@ def home():
 
 @app.route('/listing/<int:listing_id>')
 def listing_details(listing_id):
-    conn    = None
-    cursor  = None
+    conn = None
+    cursor = None
     listing = None
     try:
-        conn   = get_db_connection()
+        conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
+        
+        # Log query execution
+        app.logger.debug(f"Fetching listing with ID: {listing_id}")
         
         # 1) Fetch the main listing + owner info
         cursor.execute("""
             SELECT l.*, u.username, u.email
             FROM listings AS l
-            JOIN users    AS u ON l.user_id = u.id
+            JOIN users AS u ON l.user_id = u.id
             WHERE l.listing_id = %s
         """, (listing_id,))
         listing = cursor.fetchone()
         if not listing:
+            app.logger.warning(f"No listing found for ID: {listing_id}")
             abort(404)
         
         # 2) Fetch average rating & total count
+        app.logger.debug("Fetching ratings")
         cursor.execute("""
             SELECT 
-              AVG(rating_value) AS avg_rating, 
-              COUNT(*)          AS rating_count
+                AVG(rating_value) AS avg_rating, 
+                COUNT(*) AS rating_count
             FROM ratings
             WHERE listing_id = %s
         """, (listing_id,))
         rd = cursor.fetchone() or {}
-        listing['avg_rating']   = float(rd.get('avg_rating')   or 0)
-        listing['rating_count'] =     rd.get('rating_count') or 0
+        listing['avg_rating'] = float(rd.get('avg_rating') or 0)
+        listing['rating_count'] = rd.get('rating_count') or 0
         
-        # 3) Fetch all reviews for this listing (with reviewer username)
+        # 3) Fetch all reviews
+        app.logger.debug("Fetching reviews")
         cursor.execute("""
             SELECT r.review_id,
                    r.review_text,
                    r.created_at,
                    u.username AS reviewer
             FROM reviews AS r
-            JOIN users   AS u ON r.user_id = u.id
+            JOIN users AS u ON r.user_id = u.id
             WHERE r.listing_id = %s
             ORDER BY r.created_at DESC
         """, (listing_id,))
         listing['reviews'] = cursor.fetchall() or []
         
-    except Exception as e:
-        logging.error("Error fetching listing details: %s", e)
+        # 4) Fetch offered items with escaped `condition` column
+        app.logger.debug("Fetching offered items")
+        cursor.execute("""
+            SELECT title, description, `condition`, image1, image2, image3, image4
+            FROM offered_items
+            WHERE listing_id = %s
+        """, (listing_id,))
+        listing['offered_items'] = cursor.fetchall() or []
+        
+        app.logger.debug(f"Listing data: {listing}")
+        
+    except mysql.connector.Error as e:
+        app.logger.error(f"Database error in listing_details: {str(e)}", exc_info=True)
         if conn:
             conn.rollback()
-        abort(500)
+        abort(500, description=f"Database error: {str(e)}")
+    except Exception as e:
+        app.logger.error(f"Unexpected error in listing_details: {str(e)}", exc_info=True)
+        if conn:
+            conn.rollback()
+        abort(500, description=f"Unexpected error: {str(e)}")
     finally:
         if cursor:
             cursor.close()
@@ -265,7 +325,6 @@ def listing_details(listing_id):
             conn.close()
     
     return render_template('listing_details.html', listing=listing)
-
 
 
 
@@ -1050,293 +1109,274 @@ from werkzeug.utils import secure_filename
 @app.route('/listings', methods=['POST'])
 @login_required
 def create_listing():
-    conn = None
-    cursor = None
-    try:
-        # 1) Determine deal_type (Swap Deal or Outright Sales)
-        deal_type = request.form.get('deal_type', 'Swap Deal')
-        if deal_type != 'Swap Deal':
-            deal_type = 'Outright Sales'
+    # 1) Common
+    dt = request.form.get('deal_type','Swap Deal')
+    deal_type = dt if dt=='Swap Deal' else 'Outright Sales'
+    title       = request.form['title']
+    description = request.form.get('description','')
+    category    = request.form['category']
+    location    = request.form['location']
+    contact     = request.form['contact']
+    plan        = request.form.get('plan','Free')
 
-        # 2) Common fields
-        title       = request.form.get('title')
-        description = request.form.get('description')
-        category    = request.form.get('category')
-        location    = request.form.get('location')
-        contact     = request.form.get('contact')
-        plan        = request.form.get('plan')
+    # 2) Main images
+    main_images=[]
+    for f in request.files.getlist('images[]'):
+        if f and allowed_file(f.filename):
+            fn   = secure_filename(f.filename)
+            u    = f"{uuid.uuid4().hex}_{fn}"
+            f.save(os.path.join(app.config['UPLOAD_FOLDER'],u))
+            main_images.append(u)
+            if len(main_images)>=5: break
 
-        # 3) Deal‐specific fields
-        if deal_type == 'Swap Deal':
-            desired_swap              = request.form.get('desired_swap')
-            desired_swap_description  = request.form.get('desired_swap_description')
-            additional_cash           = request.form.get('additional_cash') or None
-            required_cash             = request.form.get('required_cash')   or None
-            condition                 = request.form.get('condition')
-            price                     = None
-        else:  # Outright Sales
-            price                     = request.form.get('price')
-            condition                 = request.form.get('sale_condition')
-            desired_swap              = None
-            desired_swap_description  = None
-            additional_cash           = None
-            required_cash             = None
+    # 3) Offered items
+    off_titles = request.form.getlist('offer_title[]')
+    off_conds  = request.form.getlist('offer_condition[]')
+    off_descs  = request.form.getlist('offer_description[]')
+    files1     = request.files.getlist('offer_image1[]')
+    files2     = request.files.getlist('offer_image2[]')
+    files3     = request.files.getlist('offer_image3[]')
+    files4     = request.files.getlist('offer_image4[]')
 
-        # 4) Handle image uploads (up to 5)
-        image_paths = []
-        for file in request.files.getlist('images'):
-            if file and allowed_file(file.filename):
-                filename     = secure_filename(file.filename)
-                unique_name  = f"{uuid.uuid4().hex}_{filename}"
-                filepath     = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
-                file.save(filepath)
-                image_paths.append(unique_name)
-                if len(image_paths) >= 5:
-                    break
+    def save(files):
+        out=[]
+        for f in files:
+            if f and allowed_file(f.filename):
+                fn = secure_filename(f.filename)
+                u  = f"{uuid.uuid4().hex}_{fn}"
+                f.save(os.path.join(app.config['UPLOAD_FOLDER'],u))
+                out.append(u)
+        return out
 
-        conn   = get_db_connection()
-        cursor = conn.cursor()
+    imgs1 = save(files1)
+    imgs2 = save(files2)
+    imgs3 = save(files3)
+    imgs4 = save(files4)
 
-        # 5) Insert direct for Free plan
-        if plan == 'Free':
-            cursor.execute("""
-                INSERT INTO listings (
-                    user_id, title, description, category,
-                    desired_swap, desired_swap_description,
-                    additional_cash, required_cash,
-                    `condition`, location, contact,
-                    image_url, image1, image2, image3, image4,
-                    plan, deal_type, price
-                )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                        %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                session['user_id'],
-                title,
-                description,
-                category,
-                desired_swap,
-                desired_swap_description,
-                additional_cash,
-                required_cash,
-                condition,
-                location,
-                contact,
-                image_paths[0] if len(image_paths) > 0 else None,
-                image_paths[1] if len(image_paths) > 1 else None,
-                image_paths[2] if len(image_paths) > 2 else None,
-                image_paths[3] if len(image_paths) > 3 else None,
-                image_paths[4] if len(image_paths) > 4 else None,
-                plan,
-                deal_type,
-                price
-            ))
-            conn.commit()
+    # 4) Specifics
+    desired_swap             = None
+    desired_swap_description = None
+    additional_cash          = None
+    required_cash            = None
+    price                    = None
 
-            flash("Your product has been listed successfully!", "success")
-            # Redirect the user back to the home page
+    if deal_type=='Swap Deal':
+        if not (1 <= len(off_conds) <= 3):
+            flash("Offer between 1 and 3 items.", "error")
             return redirect(url_for('dashboard'))
+        desired_swap             = request.form.get('desired_swap')
+        desired_swap_description = request.form.get('desired_swap_description')
+        additional_cash          = request.form.get('additional_cash') or None
+        required_cash            = request.form.get('required_cash')   or None
+    else:
+        price     = request.form.get('price') or None
+        off_conds = [request.form.get('condition')]
+        off_descs = [request.form.get('description')]
+        imgs1     = [None]; imgs2=[None]; imgs3=[None]; imgs4=[None]
+        off_titles= ['']  # will fallback to title
 
-        # 6) Otherwise, paid plan → store in session and go pay
-        session['pending_listing'] = {
-            'user_id':                   session['user_id'],
-            'title':                     title,
-            'description':               description,
-            'category':                  category,
-            'desired_swap':              desired_swap,
-            'desired_swap_description':  desired_swap_description,
-            'additional_cash':           additional_cash,
-            'required_cash':             required_cash,
-            'condition':                 condition,
-            'location':                  location,
-            'contact':                   contact,
-            'image_paths':               image_paths,
-            'plan':                      plan,
-            'deal_type':                 deal_type,
-            'price':                     price
+    # 5) Plan fee
+    plan_prices={'Standard':20,'Premium':50,'Diamond':100}
+    fee = plan_prices.get(plan,0)
+    if fee>0:
+        session['pending_listing']={
+          'user_id':session['user_id'], 'title':title,'description':description,
+          'category':category,'location':location,'contact':contact,
+          'deal_type':deal_type,'plan':plan,'price':price,
+          'desired_swap':desired_swap,'desired_swap_description':desired_swap_description,
+          'additional_cash':additional_cash,'required_cash':required_cash,
+          'main_images':main_images,
+          'off_titles':off_titles,'off_conds':off_conds,'off_descs':off_descs,
+          'imgs1':imgs1,'imgs2':imgs2,'imgs3':imgs3,'imgs4':imgs4
         }
-        # Determine payment amount
-        plan_prices = {'Diamond': 100, 'Gold': 70, 'Silver': 40, 'Bronze': 20}
-        amount = plan_prices.get(plan, 0)
-        return redirect(url_for('paystack_payment', amount=amount, plan=plan))
+        return redirect(url_for('paystack_payment',plan=plan,amount=fee))
 
-    except Exception as e:
-        app.logger.error(f"Error creating listing: {e}")
-        if conn:
-            conn.rollback()
-        flash("An error occurred while creating your listing.", "error")
-        return redirect(url_for('dashboard'))
+    # 6) Free insert
+    conn   = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+      INSERT INTO listings (
+        user_id,title,description,category,
+        desired_swap,desired_swap_description,
+        additional_cash,required_cash,
+        `condition`,location,contact,
+        image_url,image1,image2,image3,image4,
+        plan,deal_type,price
+      ) VALUES (
+        %s,%s,%s,%s,
+        %s,%s,%s,%s,
+        %s,%s,%s,
+        %s,%s,%s,%s,%s,
+        %s,%s,%s
+      )
+    """,(
+      session['user_id'],title,description,category,
+      desired_swap,desired_swap_description,
+      additional_cash,required_cash,
+      off_conds[0],location,contact,
+      *main_images,*( [None]*(5-len(main_images)) ),
+      plan,deal_type,price
+    ))
+    lid=cursor.lastrowid
 
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-
-
-
-
-
-
+    if deal_type=='Swap Deal':
+        for i in range(len(off_conds)):
+            name = off_titles[i].strip() or title
+            cursor.execute("""
+              INSERT INTO offered_items (
+                listing_id,title,description,`condition`,
+                image1,image2,image3,image4
+              ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+            """,(
+              lid,name,off_descs[i],off_conds[i],
+              imgs1[i] if i<len(imgs1) else None,
+              imgs2[i] if i<len(imgs2) else None,
+              imgs3[i] if i<len(imgs3) else None,
+              imgs4[i] if i<len(imgs4) else None
+            ))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    flash("Listing created successfully!", "success")
+    return redirect(url_for('dashboard'))
 
 @app.route('/paystack_payment')
 @login_required
 def paystack_payment():
-    # Get the plan and amount from query parameters
-    amount = request.args.get('amount', type=float)
-    plan = request.args.get('plan')
-    
-    if not amount or not plan:
+    plan   = request.args.get('plan')
+    amount = request.args.get('amount',type=float)
+    if amount is None or not plan:
         flash("Invalid payment parameters.", "error")
         return redirect(url_for('home'))
-    
-    # Convert amount from GHS to kobo
-    amount_kobo = int(amount * 100)
-    
-    # Get the user's email using the user_id in session
-    conn = get_db_connection()
+
+    amount_kobo = int(amount*100)
+    conn   = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    try:
-        cursor.execute("SELECT email FROM users WHERE id = %s", (session['user_id'],))
-        user = cursor.fetchone()
-        if not user:
-            flash("User not found.", "error")
-            return redirect(url_for('home'))
-        email = user['email']
-    except Exception as e:
-        app.logger.error(f"Error fetching user email: {str(e)}")
-        flash("Error fetching user data.", "error")
-        return redirect(url_for('home'))
-    finally:
-        cursor.close()
-        conn.close()
-    
-    # Prepare payload with callback_url
-    payload = {
-        "email": email,
-        "amount": amount_kobo,
-        "metadata": {
-            "plan": plan,
-            "user_id": session['user_id']
-        },
-        "callback_url": url_for('paystack_verify', _external=True)
-    }
-    
-    headers = {
-        "Authorization": "Bearer sk_test_38d38a400d7c1a34c826930691e8c23fce8dde98",  # Using test key for development
-        "Content-Type": "application/json"
-    }
-    
-    try:
-        response = requests.post("https://api.paystack.co/transaction/initialize", json=payload, headers=headers)
-        response_data = response.json()
-        app.logger.info(f"Paystack init response: {response_data}")
-        if response_data.get('status'):
-            auth_url = response_data['data']['authorization_url']
-            return redirect(auth_url)
-        else:
-            app.logger.error("Paystack initialization failed: " + response_data.get('message', 'Unknown error'))
-            flash("Payment initialization failed. Please try again.", "error")
-            return redirect(url_for('home'))
-    except Exception as e:
-        app.logger.error(f"Error initializing Paystack transaction: {str(e)}")
-        flash("Error initializing payment. Please try again.", "error")
+    cursor.execute("SELECT email FROM users WHERE id=%s",(session['user_id'],))
+    user=cursor.fetchone()
+    cursor.close()
+    conn.close()
+    if not user:
+        flash("User not found.", "error")
         return redirect(url_for('home'))
 
-
-
-
+    payload={
+      "email":user['email'],
+      "amount":amount_kobo,
+      "metadata":{"pending_listing":session.get('pending_listing')},
+      "callback_url":url_for('paystack_verify',_external=True)
+    }
+    headers={
+      "Authorization":"Bearer sk_test_38d38a400d7c1a34c826930691e8c23fce8dde98",
+      "Content-Type":"application/json"
+    }
+    resp = requests.post("https://api.paystack.co/transaction/initialize",
+                         json=payload,headers=headers)
+    data=resp.json()
+    if data.get('status'):
+      return redirect(data['data']['authorization_url'])
+    flash("Payment initialization failed.", "error")
+    return redirect(url_for('home'))
 
 @app.route('/paystack_verify')
 @login_required
 def paystack_verify():
-    reference = request.args.get('reference')
-    if not reference:
-        flash("Payment reference not provided.", "error")
-        return redirect(url_for('home'))
-    
-    headers = {
-        "Authorization": "Bearer sk_test_38d38a400d7c1a34c826930691e8c23fce8dde98",
-    }
-    verify_url = f"https://api.paystack.co/transaction/verify/{reference}"
-    
-    try:
-        response = requests.get(verify_url, headers=headers)
-        data = response.json()
-        app.logger.info(f"Paystack verify response: {data}")
-        
-        if data.get("status") and data['data']['status'] == 'success':
-            pending = session.get('pending_listing')
-            if not pending:
-                flash("No pending listing found.", "error")
-                return redirect(url_for('home'))
-            
-            # Normalize cash fields to None if empty
-            add_cash = pending.get('additional_cash') or None
-            req_cash = pending.get('required_cash')   or None
-
-            conn   = get_db_connection()
-            cursor = conn.cursor()
-            try:
-                cursor.execute("""
-                    INSERT INTO listings (
-                        user_id, title, description, category,
-                        desired_swap, desired_swap_description,
-                        additional_cash, required_cash,
-                        `condition`, location, contact,
-                        image_url, image1, image2, image3, image4,
-                        deal_type, plan
-                    ) VALUES (
-                        %s, %s, %s, %s,
-                        %s, %s, %s, %s,
-                        %s, %s, %s,
-                        %s, %s, %s, %s, %s,
-                        %s, %s
-                    )
-                """, (
-                    pending['user_id'],
-                    pending['title'],
-                    pending['description'],
-                    pending['category'],
-                    pending['desired_swap'],
-                    pending['desired_swap_description'],
-                    add_cash,
-                    req_cash,
-                    pending['condition'],
-                    pending['location'],
-                    pending['contact'],
-                    pending['image_paths'][0] if pending.get('image_paths') else None,
-                    pending['image_paths'][1] if len(pending.get('image_paths', [])) > 1 else None,
-                    pending['image_paths'][2] if len(pending.get('image_paths', [])) > 2 else None,
-                    pending['image_paths'][3] if len(pending.get('image_paths', [])) > 3 else None,
-                    None,  # or image_paths[4] if you allow 5 images
-                    pending.get('deal_type'),
-                    pending['plan']
-                ))
-                conn.commit()
-                app.logger.info("Listing inserted successfully after payment.")
-                flash("Your product has been listed successfully!", "success")
-            except Exception as e:
-                conn.rollback()
-                app.logger.error(f"Error inserting listing after payment: {e}")
-                flash("Payment succeeded, but we couldn't list your product.", "error")
-            finally:
-                cursor.close()
-                conn.close()
-
-            # Clean up session and send user to their dashboard
-            session.pop('pending_listing', None)
-            return redirect(url_for('dashboard'))
-
-        else:
-            flash("Payment verification failed. Please try again.", "error")
-            return redirect(url_for('home'))
-
-    except Exception as e:
-        app.logger.error(f"Error verifying payment: {e}")
-        flash("Error verifying payment. Please try again.", "error")
+    ref = request.args.get('reference')
+    if not ref:
+        flash("Payment reference missing.", "error")
         return redirect(url_for('home'))
 
+    # Verify with Paystack
+    headers = {"Authorization": "Bearer sk_test_38d38a400d7c1a34c826930691e8c23fce8dde98"}
+    resp = requests.get(f"https://api.paystack.co/transaction/verify/{ref}", headers=headers)
+    result = resp.json()
+    if not (result.get('status') and result['data']['status'] == 'success'):
+        flash("Payment verification failed.", "error")
+        return redirect(url_for('home'))
+
+    # Pull pending listing from metadata or session
+    p = result['data']['metadata'].get('pending_listing') or session.pop('pending_listing', None)
+    if not p:
+        flash("No pending listing.", "error")
+        return redirect(url_for('home'))
+
+    # ─── Clean up numeric fields ────────────────────────────────────────────
+    raw_additional = str(p.get('additional_cash', '')).strip()
+    raw_required   = str(p.get('required_cash', '')).strip()
+    raw_price      = str(p.get('price', '')).strip()
+
+    additional_cash = int(float(raw_additional)) if raw_additional else None
+    required_cash   = int(float(raw_required))   if raw_required   else None
+    price           = int(float(raw_price))      if raw_price      else None
+
+    # ─── Unpack arrays (with correct keys) ─────────────────────────────────
+    off_conds  = p.get('off_conds', [])
+    off_titles = p.get('off_titles', [])
+    off_descs  = p.get('off_descs', [])
+    imgs1      = p.get('imgs1', [])
+    imgs2      = p.get('imgs2', [])
+    imgs3      = p.get('imgs3', [])
+    imgs4      = p.get('imgs4', [])
+
+    # ─── Insert into listings ──────────────────────────────────────────────
+    conn   = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+      INSERT INTO listings (
+        user_id, title, description, category,
+        desired_swap, desired_swap_description,
+        additional_cash, required_cash,
+        `condition`, location, contact,
+        image_url, image1, image2, image3, image4,
+        plan, deal_type, price
+      ) VALUES (
+        %s, %s, %s, %s,
+        %s, %s, %s, %s,
+        %s, %s, %s,
+        %s, %s, %s, %s, %s,
+        %s, %s, %s
+      )
+    """, (
+      p['user_id'], p['title'], p['description'], p['category'],
+      p.get('desired_swap'), p.get('desired_swap_description'),
+      additional_cash, required_cash,
+      # first offered-item condition (or None)
+      off_conds[0] if off_conds else None,
+      p['location'], p['contact'],
+      # main_images list plus padding to 5
+      *p.get('main_images', []),
+      *([None] * (5 - len(p.get('main_images', [])))),
+      p['plan'], p['deal_type'], price
+    ))
+    lid = cursor.lastrowid
+
+    # ─── Insert each offered item ──────────────────────────────────────────
+    if p['deal_type'] == 'Swap Deal':
+        for i, cond in enumerate(off_conds):
+            title_i = off_titles[i].strip() or p['title']
+            desc_i  = off_descs[i]
+            cursor.execute("""
+              INSERT INTO offered_items (
+                listing_id, title, description, `condition`,
+                image1, image2, image3, image4
+              ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+              lid, title_i, desc_i, cond,
+              imgs1[i] if i < len(imgs1) else None,
+              imgs2[i] if i < len(imgs2) else None,
+              imgs3[i] if i < len(imgs3) else None,
+              imgs4[i] if i < len(imgs4) else None
+            ))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    # Clean up session
+    session.pop('pending_listing', None)
+
+    flash("Your product has been listed!", "success")
+    return redirect(url_for('dashboard'))
 
 
 
@@ -1824,7 +1864,9 @@ def service_worker():
 @app.route('/subscribe', methods=['POST'])
 @login_required
 def subscribe():
-    sub = request.get_json()
+    app.logger.info("Subscribe called; session user_id=%s", session.get('user_id'))
+    sub = request.get_json() or {}
+    app.logger.debug("Subscription payload: %s", sub)
     endpoint = sub.get('endpoint')
     keys     = sub.get('keys', {})
     p256dh   = keys.get('p256dh')
@@ -1832,23 +1874,30 @@ def subscribe():
     user_id  = session['user_id']
 
     if not (endpoint and p256dh and auth_key):
+        app.logger.warning("Invalid subscription payload: %s", sub)
         return jsonify({'error': 'Invalid subscription'}), 400
 
     conn   = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("""
-      SELECT 1 FROM push_subscriptions
-      WHERE user_id=%s AND endpoint=%s
-    """, (user_id, endpoint))
-    if not cursor.fetchone():
-        cursor.execute("""
-          INSERT INTO push_subscriptions
-            (user_id, endpoint, p256dh, auth)
-          VALUES (%s,%s,%s,%s)
-        """, (user_id, endpoint, p256dh, auth_key))
-        conn.commit()
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute(
+            "SELECT 1 FROM push_subscriptions WHERE user_id=%s AND endpoint=%s",
+            (user_id, endpoint)
+        )
+        if not cursor.fetchone():
+            cursor.execute("""
+              INSERT INTO push_subscriptions
+                (user_id, endpoint, p256dh, auth)
+              VALUES (%s, %s, %s, %s)
+            """, (user_id, endpoint, p256dh, auth_key))
+            conn.commit()
+            app.logger.info("Inserted new push subscription for user %s", user_id)
+        else:
+            app.logger.info("Subscription already exists for user %s", user_id)
+    finally:
+        cursor.close()
+        conn.close()
+
     return jsonify({'status': 'subscribed'}), 201
 
 
