@@ -196,13 +196,13 @@ def home():
         for l in listings:
             # main image_url
             if l.get('image_url'):
-                l['image_url'] = url_for('static', filename='images/' + l['image_url'])
+                l['image_url'] = url_for('static', filename='images/' + l['image_url'], _external=True)
             else:
                 l['image_url'] = url_for('static', filename='images/placeholder.jpg')
 
             # banner_image (for carousel) from image1 column
             if l.get('image1'):
-                l['banner_image'] = url_for('static', filename='images/' + l['image1'])
+                l['banner_image'] = url_for('static', filename='images/' + l['image1'], _external=True)
             else:
                 l['banner_image'] = url_for('static', filename='images/placeholder.jpg')
 
