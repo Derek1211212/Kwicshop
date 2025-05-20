@@ -230,70 +230,6 @@
       background: var(--primary-dark);
     }
 
-/* Redesigned Filter Section */
-.filter-section {
-  max-width: 1200px;
-  margin: 2rem auto;
-  padding: 1rem;
-  background: var(--surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
-}
-
-.filter-tabs,
-.filter-tags {
-  display: flex;
-  gap: 0.5rem;
-  overflow-x: auto;
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.filter-tabs::-webkit-scrollbar,
-.filter-tags::-webkit-scrollbar {
-  height: 6px;
-}
-
-.filter-tabs::-webkit-scrollbar-thumb,
-.filter-tags::-webkit-scrollbar-thumb {
-  background: var(--primary);
-  border-radius: 3px;
-}
-
-.filter-tab,
-.filter-tag {
-  flex: none;
-  white-space: nowrap;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 20px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
-  background: var(--background);
-  color: var(--text-light);
-}
-
-.filter-tab.active,
-.filter-tag.active {
-  background: var(--primary);
-  color: var(--surface);
-}
-
-@media (max-width: 768px) {
-  .filter-tabs,
-  .filter-tags {
-    gap: 0.25rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .filter-tab,
-  .filter-tag {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.9rem;
-  }
-}
 
 
     /* Professional Listings Grid */
@@ -952,155 +888,55 @@
 
 
 /* =========== FILTER TABS =========== */
-.filter-tabs-container {
-  max-width:1200px; margin:0 auto 2rem;
-  padding:0 1rem;
-}
-.filter-tabs, .filter-tags {
-  display:flex; gap:0.75rem; flex-wrap:wrap;
-  margin-bottom:0.75rem;
-}
-.filter-tab, .filter-tag {
-  background:#f0f0f0; border:none;
-  padding:0.5rem 1rem; border-radius:999px;
-  cursor:pointer; transition:background .3s, color .3s;
-}
-.filter-tab.active, .filter-tag.active {
-  background:#2ECC71; color:#fff;
+/* Container for both deal‑type & category filters */
+/* Wrapper around both filter groups */
+.filters-container {
+  max-width: 1200px;
+  margin: 0 auto 2rem;
+  padding: 0 1rem;
 }
 
+.filters-scroll {
+  display: flex;
+  flex-wrap: nowrap;              /* Prevent wrapping */
+  overflow-x: auto;               /* Enable horizontal scroll */
+  overflow-y: hidden;
+  gap: 0.75rem;
+  padding-bottom: 0.5rem;
+  -webkit-overflow-scrolling: touch; /* Smooth mobile scrolling */
+}
 
-  </style>
+/* Filter button style */
+.filter-button {
+  flex: 0 0 auto;                  /* Don't shrink */
+  white-space: nowrap;            /* Prevent multi-line */
+  background: #f0f0f0;
+  color: #333;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background 0.3s, color 0.3s;
+}
 
-    <script>
-    const USER_LOGGED_IN  = {{ 'true' if user_logged_in else 'false' }};
-    const USER_SUBSCRIBED = {{ 'true' if user_subscribed else 'false' }};
-  </script>
-</head>
-<body>
-  <!-- Modern Navigation -->
-  <nav class="navbar">
-    <div class="brand">
-      <svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--primary)">
-        <path d="M11 5h2v14h-2V5zm-4 7h2v7H7v-7zm8-7h2v14h-2V5z"/>
-      </svg>
-      <span>SwapSphere</span>
-    </div>
-    
-    <div class="nav-links">
-      <a href="/dashboard" class="active">Dashboard</a>
-      <a href="/my-proposals">My Offers</a>
-      
-      
-      {% if session.get('user_id') %}
-        <a href="/Dash">Account</a>
-        <a href="/logout" class="btn btn-outline">Logout</a>
-      {% else %}
-        <a href="/login">Login</a>
-        <a href="/signup" class="btn btn-primary">Sign Up</a>
-      {% endif %}
-    </div>
-    
-    <div class="hamburger">
-      <div></div>
-      <div></div>
-      <div></div>
-    </div>
-  </nav>
+/* Active state */
+.filter-button.active {
+  background: #2ECC71;
+  color: #fff;
+}
 
-<!-- Enhanced Hero + Search + Filters Section -->
-<section class="hero-search-filters">
+/* Optional scrollbar style */
+.filters-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.filters-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
 
-  <!-- 1) Improved Hero Carousel -->
-  <div class="hero-carousel">
-    <div class="carousel-inner">
-      {% for listing in listings %}
-      <div class="carousel-item{% if loop.first %} active{% endif %}" 
-           data-id="{{ listing.listing_id }}">
-        <div class="carousel-image" 
-             style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('{{ listing.banner_image }}')">
-        </div>
-        <div class="carousel-caption">
-          <h2 class="carousel-title">{{ listing.title }}</h2>
-          <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}" 
-             class="carousel-button">
-            View Listing
-            <i class="fas fa-arrow-right"></i>
-          </a>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-    <div class="carousel-controls">
-      <button class="control-prev" aria-label="Previous slide">
-        <i class="fas fa-chevron-left"></i>
-      </button>
-      <div class="carousel-dots">
-        {% for _ in listings %}
-        <button class="dot{% if loop.first %} active{% endif %}" 
-                aria-label="Slide {{ loop.index }}"></button>
-        {% endfor %}
-      </div>
-      <button class="control-next" aria-label="Next slide">
-        <i class="fas fa-chevron-right"></i>
-      </button>
-    </div>
-  </div>
 
-  <!-- 2) Enhanced Search Bar -->
-  <div class="search-container">
-    <form id="search-form" action="{{ url_for('home') }}" method="GET" class="search-form">
-      <div class="search-grid">
-        <div class="search-group">
-          <i class="search-icon fas fa-search"></i>
-          <input type="text" name="search" class="search-input" 
-                 placeholder="What are you looking for?" value="{{ search }}">
-        </div>
-        <div class="search-group">
-          <i class="search-icon fas fa-map-marker-alt"></i>
-          <input type="text" name="location" class="search-input" 
-                 placeholder="Location (e.g. Madina…)" value="{{ location }}">
-        </div>
-        <button type="submit" class="search-button">
-          <span class="button-text">Search</span>
-          <i class="fas fa-search"></i>
-        </button>
-      </div>
-      <input type="hidden" name="category" id="selected-category" value="{{ selected_category }}">
-      <input type="hidden" name="deal_type" id="selected-deal-type" value="{{ deal_type_filter }}">
-    </form>
-  </div>
 
-  <!-- 3) Improved Filter Section -->
-  <div class="filters-container">
-    <div class="filters-scroll">
-      <div class="deal-filters">
-        {% set deal_types = ['All', 'Swap Deal', 'Outright Sales'] %}
-        {% for deal in deal_types %}
-        <button class="deal-filter{% if deal_type_filter == deal %} active{% endif %}" 
-                data-type="deal_type" data-value="{{ deal }}">
-          {{ deal }}
-        </button>
-        {% endfor %}
-      </div>
-      <div class="category-filters">
-        <button class="category-filter{% if selected_category == 'All' %} active{% endif %}" 
-                data-type="category" data-value="All">
-          All
-        </button>
-        {% for cat in categories %}
-        <button class="category-filter{% if selected_category == cat %} active{% endif %}" 
-                data-type="category" data-value="{{ cat }}">
-          {{ cat }}
-        </button>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
 
-</section>
-
-<style>
 /* Improved Carousel Styles */
 .hero-carousel {
   position: relative;
@@ -1259,39 +1095,7 @@
   transition: background 0.3s ease;
 }
 
-/* Improved Filter Styles */
-.filters-container {
-  padding: 0 1rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
 
-.filters-scroll {
-  overflow-x: auto;
-  padding-bottom: 0.5rem;
-}
-
-.deal-filters, .category-filters {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.deal-filter, .category-filter {
-  padding: 0.75rem 1.5rem;
-  border: 2px solid #ddd;
-  border-radius: 50px;
-  background: white;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-}
-
-.deal-filter.active, .category-filter.active {
-  border-color: var(--primary-color);
-  background: var(--primary-color);
-  color: white;
-}
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -1314,9 +1118,7 @@
     display: none;
   }
 
-  .filters-scroll {
-    padding-bottom: 1rem;
-  }
+
 }
 
 @media (max-width: 480px) {
@@ -1331,11 +1133,7 @@
     font-size: 0.9rem;
   }
 
-  .deal-filter, .category-filter {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-  }
-}
+
 
 /* Make only the active slide clickable */
 .carousel-item {
@@ -1344,45 +1142,138 @@
 .carousel-item.active {
   pointer-events: auto;
 }
+  </style>
 
-</style>
-
-<script>
-// Add basic carousel functionality
-document.addEventListener('DOMContentLoaded', function() {
-  const carouselItems = document.querySelectorAll('.carousel-item');
-  const dots = document.querySelectorAll('.dot');
-  let currentIndex = 0;
-
-  function showSlide(index) {
-    carouselItems.forEach(item => item.classList.remove('active'));
-    dots.forEach(dot => dot.classList.remove('active'));
+    <script>
+    const USER_LOGGED_IN  = {{ 'true' if user_logged_in else 'false' }};
+    const USER_SUBSCRIBED = {{ 'true' if user_subscribed else 'false' }};
+  </script>
+</head>
+<body>
+  <!-- Modern Navigation -->
+  <nav class="navbar">
+    <div class="brand">
+      <svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--primary)">
+        <path d="M11 5h2v14h-2V5zm-4 7h2v7H7v-7zm8-7h2v14h-2V5z"/>
+      </svg>
+      <span>SwapSphere</span>
+    </div>
     
-    carouselItems[index].classList.add('active');
-    dots[index].classList.add('active');
-    currentIndex = index;
-  }
+    <div class="nav-links">
+      <a href="/dashboard" class="active">Dashboard</a>
+      <a href="/my-proposals">My Offers</a>
+      
+      
+      {% if session.get('user_id') %}
+        <a href="/Dash">Account</a>
+        <a href="/logout" class="btn btn-outline">Logout</a>
+      {% else %}
+        <a href="/login">Login</a>
+        <a href="/signup" class="btn btn-primary">Sign Up</a>
+      {% endif %}
+    </div>
+    
+    <div class="hamburger">
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+  </nav>
 
-  dots.forEach((dot, index) => {
-    dot.addEventListener('click', () => showSlide(index));
-  });
+<!-- Enhanced Hero + Search + Filters Section -->
+<section class="hero-search-filters">
 
-  document.querySelector('.control-prev').addEventListener('click', () => {
-    let newIndex = currentIndex - 1;
-    if (newIndex < 0) newIndex = carouselItems.length - 1;
-    showSlide(newIndex);
-  });
+  <!-- 1) Improved Hero Carousel -->
+  <div class="hero-carousel">
+    <div class="carousel-inner">
+      {% for listing in listings %}
+      <div class="carousel-item{% if loop.first %} active{% endif %}" 
+           data-id="{{ listing.listing_id }}">
+        <div class="carousel-image" 
+             style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('{{ listing.banner_image }}')">
+        </div>
+        <div class="carousel-caption">
+          <h2 class="carousel-title">{{ listing.title }}</h2>
+          <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}" 
+             class="carousel-button">
+            View Listing
+            <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="carousel-controls">
+      <button class="control-prev" aria-label="Previous slide">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <div class="carousel-dots">
+        {% for _ in listings %}
+        <button class="dot{% if loop.first %} active{% endif %}" 
+                aria-label="Slide {{ loop.index }}"></button>
+        {% endfor %}
+      </div>
+      <button class="control-next" aria-label="Next slide">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
 
-  document.querySelector('.control-next').addEventListener('click', () => {
-    let newIndex = currentIndex + 1;
-    if (newIndex >= carouselItems.length) newIndex = 0;
-    showSlide(newIndex);
-  });
+  <!-- 2) Enhanced Search Bar -->
+  <div class="search-container">
+    <form id="search-form" action="{{ url_for('home') }}" method="GET" class="search-form">
+      <div class="search-grid">
+        <div class="search-group">
+          <i class="search-icon fas fa-search"></i>
+          <input type="text" name="search" class="search-input" 
+                 placeholder="What are you looking for?" value="{{ search }}">
+        </div>
+        <div class="search-group">
+          <i class="search-icon fas fa-map-marker-alt"></i>
+          <input type="text" name="location" class="search-input" 
+                 placeholder="Location (e.g. Madina…)" value="{{ location }}">
+        </div>
+        <button type="submit" class="search-button">
+          <span class="button-text">Search</span>
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+      <input type="hidden" name="category" id="selected-category" value="{{ selected_category }}">
+      <input type="hidden" name="deal_type" id="selected-deal-type" value="{{ deal_type_filter }}">
+    </form>
+  </div>
 
-  // Auto-advance every 8 seconds
-  setInterval(() => showSlide((currentIndex + 1) % carouselItems.length), 8000);
-});
-</script>
+<!-- 3) Improved Filter Section -->
+<div class="filters-container">
+  <!-- Deal Type Filters -->
+  <div class="filters-scroll deal-filter-row">
+    {% set deal_types = ['All', 'Swap Deal', 'Outright Sales'] %}
+    {% for deal in deal_types %}
+    <button class="filter-button deal-filter{% if deal_type_filter == deal %} active{% endif %}"
+            data-type="deal_type" data-value="{{ deal }}">
+      {{ deal }}
+    </button>
+    {% endfor %}
+  </div>
+
+  <!-- Category Filters -->
+  <div class="filters-scroll category-filter-row">
+    <button class="filter-button category-filter{% if selected_category == 'All' %} active{% endif %}"
+            data-type="category" data-value="All">
+      All
+    </button>
+    {% for cat in categories %}
+    <button class="filter-button category-filter{% if selected_category == cat %} active{% endif %}"
+            data-type="category" data-value="{{ cat }}">
+      {{ cat }}
+    </button>
+    {% endfor %}
+  </div>
+</div>
+
+
+</section>
+
 
   <!-- Notification Banner (initially hidden) -->
   <div id="notify-prompt" style="display:none; position:fixed; top:0; left:0; right:0; background:#2563eb; color:white; padding:1rem; text-align:center; z-index:1000;">
@@ -1688,25 +1579,31 @@ document.addEventListener('DOMContentLoaded', function() {
       hamburger.classList.toggle('active');
     });
 
-    // Filter Functionality
-    document.querySelectorAll('.filter-tag').forEach(tag => {
-      tag.addEventListener('click', function() {
-        document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-        document.getElementById('selected-category').value = this.dataset.category;
-        document.getElementById('search-form').submit();
-      });
-    });
+// Category Tabs
+document.querySelectorAll('.category-filter').forEach(btn => {
+  btn.addEventListener('click', function() {
+    // toggle active class
+    document.querySelectorAll('.category-filter').forEach(t => t.classList.remove('active'));
+    this.classList.add('active');
+    
+    // set hidden input and submit
+    document.getElementById('selected-category').value = this.dataset.value;
+    document.getElementById('search-form').submit();
+  });
+});
 
-    // Deal Type Tabs
-    document.querySelectorAll('.filter-tab').forEach(tab => {
-      tab.addEventListener('click', function() {
-        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-        document.getElementById('selected-deal-type').value = this.dataset.dealType;
-        document.getElementById('search-form').submit();
-      });
-    });
+// Deal‐Type Tabs
+document.querySelectorAll('.deal-filter').forEach(btn => {
+  btn.addEventListener('click', function() {
+    // toggle active class
+    document.querySelectorAll('.deal-filter').forEach(t => t.classList.remove('active'));
+    this.classList.add('active');
+    
+    // set hidden input and submit
+    document.getElementById('selected-deal-type').value = this.dataset.value;
+    document.getElementById('search-form').submit();
+  });
+});
 
     // Lazy Loading Images
     const lazyLoadImages = () => {
@@ -1816,6 +1713,43 @@ document.addEventListener('DOMContentLoaded',()=>{
 </script>
 
 
+
+<script>
+// Add basic carousel functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const carouselItems = document.querySelectorAll('.carousel-item');
+  const dots = document.querySelectorAll('.dot');
+  let currentIndex = 0;
+
+  function showSlide(index) {
+    carouselItems.forEach(item => item.classList.remove('active'));
+    dots.forEach(dot => dot.classList.remove('active'));
+    
+    carouselItems[index].classList.add('active');
+    dots[index].classList.add('active');
+    currentIndex = index;
+  }
+
+  dots.forEach((dot, index) => {
+    dot.addEventListener('click', () => showSlide(index));
+  });
+
+  document.querySelector('.control-prev').addEventListener('click', () => {
+    let newIndex = currentIndex - 1;
+    if (newIndex < 0) newIndex = carouselItems.length - 1;
+    showSlide(newIndex);
+  });
+
+  document.querySelector('.control-next').addEventListener('click', () => {
+    let newIndex = currentIndex + 1;
+    if (newIndex >= carouselItems.length) newIndex = 0;
+    showSlide(newIndex);
+  });
+
+  // Auto-advance every 8 seconds
+  setInterval(() => showSlide((currentIndex + 1) % carouselItems.length), 8000);
+});
+</script>
 
 </body>
 </html>
