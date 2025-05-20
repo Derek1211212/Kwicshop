@@ -1397,6 +1397,34 @@ input[type="file"] {
     }
 }
 
+.social-share {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.share-btn {
+  background: #eee;
+  border: none;
+  padding: 0.4rem 0.9rem;
+  border-radius: 30px;
+  font-size: 14px;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: background 0.3s;
+  text-decoration: none;
+}
+
+.share-btn:hover {
+  background: #2ecc71;
+  color: white;
+}
+
     </style>
 </head>
 <body>
@@ -1485,6 +1513,21 @@ input[type="file"] {
                 </button>
                 <button class="btn btn-outline-danger delete-listing" data-id="{{ listing.listing_id }}">Delete</button>
             </div>
+
+            <!-- Social Share Buttons -->
+<div class="social-share">
+    <button class="share-btn" onclick="shareOnWhatsApp('{{ url_for('listing_details', listing_id=listing.listing_id, _external=True) }}')">
+        <i class="fab fa-whatsapp"></i> WhatsApp
+    </button>
+    <button class="share-btn" onclick="shareOnX('{{ url_for('listing_details', listing_id=listing.listing_id, _external=True) }}', '{{ listing.title }}')">
+        <i class="fab fa-x-twitter"></i> X
+    </button>
+    <a href="{{ url_for('static', filename='images/' + listing.image_url.split('/')[-1]) }}"
+       download class="share-btn" title="Download to post on Instagram Story">
+        <i class="fab fa-instagram"></i> IG Story
+    </a>
+</div>
+
         </div>
         {% endfor %}
     </div>
@@ -2332,6 +2375,20 @@ document.querySelectorAll('.plan-option').forEach(option => {
   });
 </script>
 
+
+<script>
+  function shareOnWhatsApp(url) {
+    const text = `Check out my listing on SwapSphere: ${url}`;
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(waUrl, '_blank');
+  }
+
+  function shareOnX(url, title) {
+    const text = `${title} on SwapSphere\n${url}`;
+    const xUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+    window.open(xUrl, '_blank');
+  }
+</script>
 
 
 
