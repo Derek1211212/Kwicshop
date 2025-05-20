@@ -235,9 +235,11 @@ def home():
             conn.close()
 
     # 3) Render the template
+    featured_listing = listings[0] if listings else None
     return render_template(
         'home.html',
         listings=listings,
+        featured_listing=featured_listing,
         categories=categories,
         search=search,
         selected_category=selected_category,
@@ -246,6 +248,7 @@ def home():
         user_logged_in=user_logged_in,
         user_subscribed=user_subscribed
     )
+
 
 
 
