@@ -4,17 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Open Graph meta tags -->
-<meta property="og:title" content="{{ listing.title }}">
-<meta property="og:description" content="{{ listing.description[:150] }}">
-<meta property="og:image" content="{{ url_for('static', filename='images/' + listing.image_url.split('/')[-1], _external=True) }}">
-<meta property="og:url" content="{{ url_for('listing_details', listing_id=listing.listing_id, _external=True) }}">
+<meta property="og:title" content="{{ listings.title }}">
+<meta property="og:description" content="{{ listings.description[:150] }}">
+<meta property="og:image" content="{{ url_for('static', filename='images/' + listings.image_url.split('/')[-1], _external=True) }}">
+<meta property="og:url" content="{{ url_for('listing_details', listing_id=listings.listing_id, _external=True) }}">
 <meta property="og:type" content="website">
 
 <!-- Twitter Card meta (for X/Twitter) -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="{{ listing.title }}">
-<meta name="twitter:description" content="{{ listing.description[:150] }}">
-<meta name="twitter:image" content="{{ url_for('static', filename='images/' + listing.image_url.split('/')[-1], _external=True) }}">
+<meta name="twitter:title" content="{{ listings.title }}">
+<meta name="twitter:description" content="{{ listings.description[:150] }}">
+<meta name="twitter:image" content="{{ url_for('static', filename='images/' + listings.image_url.split('/')[-1], _external=True) }}">
 
     <title>Swap Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
