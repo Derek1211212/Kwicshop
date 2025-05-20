@@ -880,6 +880,94 @@
   color: #2ECC71;
 }
 
+.hero-search-filters {
+  font-family: Poppins, sans-serif;
+}
+
+/* =========== HERO CAROUSEL =========== */
+.hero-carousel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  height: 350px;
+  margin-bottom: 2rem;
+}
+.hero-slide {
+  position: absolute; top:0; left:0;
+  width:100%; height:100%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0; transition: opacity 1s ease-in-out;
+}
+.hero-slide.active { opacity:1; }
+.hero-overlay {
+  position: absolute; inset:0;
+  background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+  display:flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1.5rem;
+  color: #fff;
+}
+.hero-overlay h2 {
+  font-size: 1.8rem; margin-bottom: 0.5rem;
+}
+.hero-btn {
+  align-self: flex-start;
+  background: #fff; color:#333;
+  padding: 0.6rem 1.2rem;
+  border-radius: 999px;
+  font-weight:600;
+  text-decoration:none;
+  transition: background .3s;
+}
+.hero-btn:hover { background:#f0f0f0; }
+
+.hero-brand {
+  position: absolute;
+  top:1rem; left:1rem;
+  z-index:10;
+  font-size:1.6rem; font-weight:700;
+  color:#fff;
+  text-shadow:0 2px 4px rgba(0,0,0,0.6);
+}
+
+.hero-dots {
+  position:absolute; bottom:0.8rem; left:50%;
+  transform:translateX(-50%);
+  display:flex; gap:0.5rem;
+}
+.hero-dots .dot {
+  width:10px; height:10px;
+  background:rgba(255,255,255,0.5);
+  border-radius:50%;
+  cursor:pointer;
+  transition:background .3s;
+}
+.hero-dots .dot.active,
+.hero-dots .dot:hover {
+  background:#fff;
+}
+
+
+
+/* =========== FILTER TABS =========== */
+.filter-tabs-container {
+  max-width:1200px; margin:0 auto 2rem;
+  padding:0 1rem;
+}
+.filter-tabs, .filter-tags {
+  display:flex; gap:0.75rem; flex-wrap:wrap;
+  margin-bottom:0.75rem;
+}
+.filter-tab, .filter-tag {
+  background:#f0f0f0; border:none;
+  padding:0.5rem 1rem; border-radius:999px;
+  cursor:pointer; transition:background .3s, color .3s;
+}
+.filter-tab.active, .filter-tag.active {
+  background:#2ECC71; color:#fff;
+}
 
 
   </style>
@@ -920,57 +1008,382 @@
     </div>
   </nav>
 
-<!-- Hero Search Section -->
-<section class="search-section">
-  <div class="search-container">
-    <div class="search-header">
-      <h1>Find Your Perfect Swap</h1>
-      <p>Trade items you no longer need for things you want. No cash needed, or add cash to sweeten the deal.</p>
-    </div>
-    
-    <form id="search-form" action="/" method="GET">
-      <div class="search-bar">
-        <!-- Item search -->
-        <div class="input-group">
-          <i class="fas fa-search"></i>
-          <input
-            type="text"
-            name="search"
-            class="search-input"
-            placeholder="What are you looking for?"
-            value="{{ search }}">
+<!-- Enhanced Hero + Search + Filters Section -->
+<section class="hero-search-filters">
+
+  <!-- 1) Improved Hero Carousel -->
+  <div class="hero-carousel">
+    <div class="hero-brand">SwapSphere</div>
+    <div class="carousel-inner">
+      {% for listing in listings %}
+      <div class="carousel-item{% if loop.first %} active{% endif %}" 
+           data-id="{{ listing.listing_id }}">
+        <div class="carousel-image" 
+             style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('{{ listing.banner_image }}')">
         </div>
-
-        <!-- Location search -->
-        <div class="input-group">
-          <i class="fas fa-map-marker-alt"></i>
-          <input
-            type="text"
-            name="location"
-            class="search-input"
-            placeholder="Location (e.g. Madina…)"
-            value="{{ location }}">
+        <div class="carousel-caption">
+          <h2 class="carousel-title">{{ listing.title }}</h2>
+          <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}" 
+             class="carousel-button">
+            View Listing
+            <i class="fas fa-arrow-right"></i>
+          </a>
         </div>
-
-        <button type="submit" class="search-btn">Search</button>
-
-        <!-- Hidden fields to maintain filters during searches -->
-        <input
-          type="hidden"
-          name="category"
-          id="selected-category"
-          value="{{ selected_category }}">
-        <input
-          type="hidden"
-          name="deal_type"
-          id="selected-deal-type"
-          value="{{ deal_type_filter }}">
       </div>
+      {% endfor %}
+    </div>
+    <div class="carousel-controls">
+      <button class="control-prev" aria-label="Previous slide">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <div class="carousel-dots">
+        {% for _ in listings %}
+        <button class="dot{% if loop.first %} active{% endif %}" 
+                aria-label="Slide {{ loop.index }}"></button>
+        {% endfor %}
+      </div>
+      <button class="control-next" aria-label="Next slide">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- 2) Enhanced Search Bar -->
+  <div class="search-container">
+    <form id="search-form" action="{{ url_for('home') }}" method="GET" class="search-form">
+      <div class="search-grid">
+        <div class="search-group">
+          <i class="search-icon fas fa-search"></i>
+          <input type="text" name="search" class="search-input" 
+                 placeholder="What are you looking for?" value="{{ search }}">
+        </div>
+        <div class="search-group">
+          <i class="search-icon fas fa-map-marker-alt"></i>
+          <input type="text" name="location" class="search-input" 
+                 placeholder="Location (e.g. Madina…)" value="{{ location }}">
+        </div>
+        <button type="submit" class="search-button">
+          <span class="button-text">Search</span>
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+      <input type="hidden" name="category" id="selected-category" value="{{ selected_category }}">
+      <input type="hidden" name="deal_type" id="selected-deal-type" value="{{ deal_type_filter }}">
     </form>
   </div>
+
+  <!-- 3) Improved Filter Section -->
+  <div class="filters-container">
+    <div class="filters-scroll">
+      <div class="deal-filters">
+        {% set deal_types = ['All', 'Swap Deal', 'Outright Sales'] %}
+        {% for deal in deal_types %}
+        <button class="deal-filter{% if deal_type_filter == deal %} active{% endif %}" 
+                data-type="deal_type" data-value="{{ deal }}">
+          {{ deal }}
+        </button>
+        {% endfor %}
+      </div>
+      <div class="category-filters">
+        <button class="category-filter{% if selected_category == 'All' %} active{% endif %}" 
+                data-type="category" data-value="All">
+          All
+        </button>
+        {% for cat in categories %}
+        <button class="category-filter{% if selected_category == cat %} active{% endif %}" 
+                data-type="category" data-value="{{ cat }}">
+          {{ cat }}
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
 </section>
 
+<style>
+/* Improved Carousel Styles */
+.hero-carousel {
+  position: relative;
+  height: 70vh;
+  max-height: 800px;
+  min-height: 400px;
+  overflow: hidden;
+  border-radius: 16px;
+  margin: 1rem;
+}
 
+.carousel-inner {
+  position: relative;
+  height: 100%;
+}
+
+.carousel-item {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.carousel-item.active {
+  opacity: 1;
+}
+
+.carousel-image {
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+}
+
+.carousel-caption {
+  position: absolute;
+  bottom: 20%;
+  left: 10%;
+  color: white;
+  max-width: 600px;
+}
+
+.carousel-title {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.carousel-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: var(--primary-color);
+  color: white;
+  border-radius: 50px;
+  text-decoration: none;
+  transition: transform 0.2s ease;
+}
+
+.carousel-button:hover {
+  transform: translateY(-2px);
+}
+
+.carousel-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.carousel-dots {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid white;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.dot.active {
+  background: white;
+  transform: scale(1.2);
+}
+
+.control-prev, .control-next {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  padding: 0.5rem;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Enhanced Search Bar Styles */
+/* Enhanced Search Bar Styles */
+.search-container {
+  padding: 0 1rem;
+  margin: 2rem auto 2rem;
+  max-width: 1400px;
+}
+
+.search-grid {
+  display: grid;
+  /* make search + location twice as wide as the button */
+  grid-template-columns: 2fr 2fr auto;
+  gap: 1rem;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+
+
+.search-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  color: #666;
+}
+
+.search-input {
+  width: 100%;
+  padding: 1rem 1rem 1rem 2.5rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.search-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: green;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+/* Improved Filter Styles */
+.filters-container {
+  padding: 0 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.filters-scroll {
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.deal-filters, .category-filters {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.deal-filter, .category-filter {
+  padding: 0.75rem 1.5rem;
+  border: 2px solid #ddd;
+  border-radius: 50px;
+  background: white;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.deal-filter.active, .category-filter.active {
+  border-color: var(--primary-color);
+  background: var(--primary-color);
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero-carousel {
+    height: 50vh;
+    min-height: 300px;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .carousel-title {
+    font-size: 1.5rem;
+  }
+
+  .search-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .search-button .button-text {
+    display: none;
+  }
+
+  .filters-scroll {
+    padding-bottom: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .carousel-caption {
+    bottom: 10%;
+    left: 5%;
+    right: 5%;
+  }
+
+  .carousel-button {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+  }
+
+  .deal-filter, .category-filter {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Make only the active slide clickable */
+.carousel-item {
+  pointer-events: none;
+}
+.carousel-item.active {
+  pointer-events: auto;
+}
+
+</style>
+
+<script>
+// Add basic carousel functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const carouselItems = document.querySelectorAll('.carousel-item');
+  const dots = document.querySelectorAll('.dot');
+  let currentIndex = 0;
+
+  function showSlide(index) {
+    carouselItems.forEach(item => item.classList.remove('active'));
+    dots.forEach(dot => dot.classList.remove('active'));
+    
+    carouselItems[index].classList.add('active');
+    dots[index].classList.add('active');
+    currentIndex = index;
+  }
+
+  dots.forEach((dot, index) => {
+    dot.addEventListener('click', () => showSlide(index));
+  });
+
+  document.querySelector('.control-prev').addEventListener('click', () => {
+    let newIndex = currentIndex - 1;
+    if (newIndex < 0) newIndex = carouselItems.length - 1;
+    showSlide(newIndex);
+  });
+
+  document.querySelector('.control-next').addEventListener('click', () => {
+    let newIndex = currentIndex + 1;
+    if (newIndex >= carouselItems.length) newIndex = 0;
+    showSlide(newIndex);
+  });
+
+  // Auto-advance every 8 seconds
+  setInterval(() => showSlide((currentIndex + 1) % carouselItems.length), 8000);
+});
+</script>
 
   <!-- Notification Banner (initially hidden) -->
   <div id="notify-prompt" style="display:none; position:fixed; top:0; left:0; right:0; background:#2563eb; color:white; padding:1rem; text-align:center; z-index:1000;">
@@ -1054,25 +1467,6 @@
 
 
 
-
-
-  <!-- Filter Section -->
-  <section class="filter-section">
-    <!-- Deal Type Tabs -->
-    <div class="filter-tabs">
-      <button class="filter-tab {% if deal_type_filter == 'All' %}active{% endif %}" data-deal-type="All">All Listings</button>
-      <button class="filter-tab {% if deal_type_filter == 'Swap Deal' %}active{% endif %}" data-deal-type="Swap Deal">Swap Deals</button>
-      <button class="filter-tab {% if deal_type_filter == 'Outright Sales' %}active{% endif %}" data-deal-type="Outright Sales">For Sale</button>
-    </div>
-    
-    <!-- Category Filters -->
-    <div class="filter-tags">
-      <button class="filter-tag {% if selected_category == 'All' %}active{% endif %}" data-category="All">All Categories</button>
-      {% for category in categories %}
-        <button class="filter-tag {% if selected_category == category %}active{% endif %}" data-category="{{ category }}">{{ category }}</button>
-      {% endfor %}
-    </div>
-  </section>
 
 <section class="listings-container">
   <div class="listings-grid">
@@ -1397,6 +1791,32 @@
       });
     }
   </script>
+
+<!-- HERO CAROUSEL SCRIPT -->
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const slides = document.querySelectorAll('.hero-slide');
+  const dots   = document.querySelectorAll('.hero-dots .dot');
+  let idx = 0, total = slides.length;
+  if(total<2) return;
+
+  function showSlide(n){
+    slides.forEach((s,i)=> s.classList.toggle('active', i===n));
+    dots.forEach((d,i)=> d.classList.toggle('active', i===n));
+  }
+
+  // auto-advance
+  setInterval(()=>{
+    idx = (idx+1)%total;
+    showSlide(idx);
+  }, 5000);
+
+  // dot clicks
+  dots.forEach((d,i)=> d.addEventListener('click',()=>{ idx=i; showSlide(i); }));
+});
+</script>
+
+
 
 </body>
 </html>

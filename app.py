@@ -91,50 +91,49 @@ def get_db_connection():
 
 @app.route('/')
 def home():
-    # 0) Initialize filter variables so they're always in scope
-    search = request.args.get('search', '').strip()
-    selected_category = request.args.get('category', 'All')
-    deal_type_filter = request.args.get('deal_type', 'All')
-    location_q = request.args.get('location', '').strip()
+    # 0) Keep these in scope for the template
+    search             = request.args.get('search', '').strip()
+    selected_category  = request.args.get('category', 'All')
+    deal_type_filter   = request.args.get('deal_type', 'All')
+    location_q         = request.args.get('location', '').strip()
 
-    conn = None
     listings = []
     categories = []
     user_logged_in = 'user_id' in session
     user_subscribed = False
+    conn = None
 
     try:
-        # 1) Push subscription check
+        # 1) Check push subscription
         if user_logged_in:
             conn = get_db_connection()
             cur = conn.cursor()
-            cur.execute(
-                "SELECT 1 FROM push_subscriptions WHERE user_id = %s",
-                (session['user_id'],)
-            )
+            cur.execute("SELECT 1 FROM push_subscriptions WHERE user_id = %s",
+                        (session['user_id'],))
             user_subscribed = cur.fetchone() is not None
             cur.close()
             conn.close()
+            conn = None
 
-        # 2) Fetch listings
+        # 2) Fetch matching listings
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Build base query
+        # Base query
         query = """
-          SELECT
-            l.*,
-            u.username,
-            IFNULL(m.impressions, 0) AS impressions
-          FROM listings AS l
-          JOIN users    AS u ON l.user_id = u.id
-          LEFT JOIN listing_metrics AS m
-            ON l.listing_id = m.listing_id
-          WHERE 1=1
+        SELECT
+          l.*,
+          u.username,
+          IFNULL(m.impressions, 0) AS impressions
+        FROM listings AS l
+        JOIN users    AS u ON l.user_id = u.id
+        LEFT JOIN listing_metrics AS m
+          ON l.listing_id = m.listing_id
+        WHERE 1=1
         """
         params = []
 
-        # Apply text search
+        # Text search
         if search:
             like = f'%{search}%'
             query += """
@@ -151,7 +150,7 @@ def home():
             query += " AND l.category = %s"
             params.append(selected_category)
 
-        # Deal‐type filter
+        # Deal type filter
         if deal_type_filter != 'All':
             query += " AND l.deal_type = %s"
             params.append(deal_type_filter)
@@ -189,18 +188,25 @@ def home():
         cursor.execute(query, params)
         listings = cursor.fetchall()
 
-        # Pull distinct categories
+        # Fetch categories for filter tags
         cursor.execute("SELECT DISTINCT category FROM listings")
         categories = [r['category'] for r in cursor.fetchall()]
 
-        # Fetch offered_items for each swap listing
+        # Build static URLs for each listing and its offers
         for l in listings:
-            # Build full image URL
+            # main image_url
             if l.get('image_url'):
                 l['image_url'] = url_for('static', filename='images/' + l['image_url'])
             else:
                 l['image_url'] = url_for('static', filename='images/placeholder.jpg')
 
+            # banner_image (for carousel) from image1 column
+            if l.get('image1'):
+                l['banner_image'] = url_for('static', filename='images/' + l['image1'])
+            else:
+                l['banner_image'] = url_for('static', filename='images/placeholder.jpg')
+
+            # offered items for swap deals
             if l['deal_type'] == 'Swap Deal':
                 cursor.execute("""
                   SELECT item_id, title, description, image1, `condition`
@@ -209,7 +215,6 @@ def home():
                   ORDER BY item_id ASC
                 """, (l['listing_id'],))
                 offers = cursor.fetchall() or []
-                # Build full image URL for each offer
                 for o in offers:
                     if o.get('image1'):
                         o['image1'] = url_for('static', filename='images/' + o['image1'])
@@ -223,10 +228,13 @@ def home():
 
     except Exception as e:
         logging.error("Error fetching listings: %s", e)
+        if conn:
+            conn.rollback()
     finally:
         if conn:
             conn.close()
 
+    # 3) Render the template
     return render_template(
         'home.html',
         listings=listings,
