@@ -21,5 +21,6 @@ Flask-WTF==1.1.1
 flask-bcrypt
 twilio
 pywebpush>=1.9.4
+Authlib>=1.2.0
 
 
