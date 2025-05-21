@@ -24,6 +24,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import json
 from notifications import send_push
 from config import VAPID_PUBLIC_KEY
+from authlib.integrations.flask_client import OAuth
 
 
 
@@ -86,6 +87,18 @@ def get_db_connection():
         collation='utf8mb4_unicode_ci',
         use_unicode=True
     )
+
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=os.environ['GOOGLE_CLIENT_ID'],
+    client_secret=os.environ['GOOGLE_CLIENT_SECRET'],
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={
+        # Remove 'openid' so no id_token is returned
+        'scope': 'email profile'
+    }
+)
 
 
 
@@ -361,42 +374,122 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# Login Route
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    # preserve any ?next= URL
+    next_url = request.args.get('next') or request.form.get('next') or url_for('home')
+
     if request.method == 'POST':
+        # Email/password flow
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
-        # Get the next URL from the form; if not provided or empty, default to 'home'
-        next_url = request.form.get('next')
-        if not next_url:
-            next_url = url_for('home')
-        
-        # Basic input validation
         if not email or not password:
             flash('Please enter both email and password', 'danger')
             return redirect(url_for('login', next=next_url))
-        
-        # Authenticate user
+
         user = authenticate_user(email, password)
-        
         if user:
-            # Successful login
             session['user_id'] = user['id']
-            session.permanent = True  # Optional: make session persistent
-            
-            # Security logging
+            session.permanent = True
             logging.info(f"User {user['id']} logged in successfully")
-            
             return redirect(next_url)
         else:
-            # Failed login
             logging.warning(f"Failed login attempt for email: {email}")
             flash('Invalid email or password', 'danger')
+
+    # GET or failed POST
+    return render_template('login.html', next_url=next_url)
+
+
+# ─── 2) Kick‐off Google OAuth Flow ────────────────────────────────────────────
+@app.route('/login/google')
+def login_google():
+    next_url = request.args.get('next') or url_for('home')
+    redirect_uri = url_for('authorize', _external=True)
+    return google.authorize_redirect(redirect_uri, state=next_url)
+
+
+# ─── 3) OAuth2 Callback Handler ──────────────────────────────────────────────
+@app.route('/oauth2callback')
+def authorize():
+    # Exchange code for access token
+    token = google.authorize_access_token()
+
+    # Fetch userinfo endpoint from metadata
+    userinfo_endpoint = google.server_metadata.get('userinfo_endpoint')
+    resp = google.get(userinfo_endpoint)
+    resp.raise_for_status()
+    user_info = resp.json()
+
+    # Extract the Google ID
+    google_id = user_info.get('sub') or user_info.get('id')
+    if not google_id:
+        raise RuntimeError("No 'sub' or 'id' in userinfo response")
+
+    # Create or find the user
+    user = get_or_create_user(
+        google_id=google_id,
+        email=user_info.get('email'),
+        username=user_info.get('name'),  # your non-null field
+        avatar=user_info.get('picture')
+    )
+
+    # Log them in using 'id'
+    session['user_id'] = user['id']
+    session.permanent = True
+    logging.info(f"User {user['id']} logged in via Google")
+
+    # Redirect back to original page
+    next_url = request.args.get('state') or url_for('home')
+    return redirect(next_url)
+
+
+
+
+
+
     
-    # GET request or failed POST
-    # Pass along the 'next' parameter (if any) to the template
-    return render_template('login.html', next_url=request.args.get('next', ''))
+
+# ─── 5) Helper: find-or-create user by Google ID ────────────────────────────
+def get_or_create_user(google_id, email, username, avatar=None):
+    """
+    Look up a user by google_id. If none exists, insert a new user
+    providing username (non-null) and a NULL password for Google SSO.
+    Returns a dict with at least 'id' (the PK) and other fields.
+    """
+    conn = get_db_connection()
+    cur  = conn.cursor(dictionary=True)
+
+    # Try to find existing user
+    cur.execute("SELECT * FROM users WHERE google_id = %s", (google_id,))
+    user = cur.fetchone()
+
+    if not user:
+        # Insert new user
+        cur.execute("""
+            INSERT INTO users
+              (google_id, email, username, avatar, role, password, created_at)
+            VALUES
+              (%s, %s, %s, %s, 'Customer', NULL, NOW())
+        """, (google_id, email, username, avatar))
+        conn.commit()
+        new_id = cur.lastrowid
+        # Build a minimal user dict
+        user = {
+            'id': new_id,
+            'google_id': google_id,
+            'email': email,
+            'username': username,
+            'avatar': avatar,
+            'role': 'Customer'
+        }
+
+    cur.close()
+    conn.close()
+    return user
+
+
+
 
 
 
