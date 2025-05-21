@@ -1301,72 +1301,95 @@
 
   <!-- … your other scripts … -->
 
-  <script>
-    // Service Worker registration (unchanged)
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
-          .then(reg => console.log('SW registered:', reg.scope))
-          .catch(err => console.error('SW registration failed:', err));
-      });
-    }
-
-    // Decode VAPID
-    function urlBase64ToUint8Array(base64String) {
-      const padding = '='.repeat((4 - base64String.length % 4) % 4);
-      const base64  = (base64String + padding).replace(/-/g,'+').replace(/_/g,'/');
-      const rawData = atob(base64);
-      return new Uint8Array([...rawData].map(c=>c.charCodeAt(0)));
-    }
-
-    // Subscribe logic (unchanged except credentials)
-    async function subscribeUser() {
-      try {
-        const reg = await navigator.serviceWorker.ready;
-        const perm = await Notification.requestPermission();
-        if (perm !== 'granted') throw new Error('Permission not granted');
-        const key = '{{ vapid_public_key }}';
-        const sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(key)
-        });
-        const resp = await fetch('/subscribe', {
-          method:      'POST',
-          credentials: 'include',  // ensure cookies go out
-          headers:     { 'Content-Type':'application/json' },
-          body:        JSON.stringify(sub)
-        });
-        if (!resp.ok) throw new Error(`Subscribe API: ${resp.status}`);
-        console.log('✅ Subscribed for push:', sub);
-      } catch (err) {
-        console.error('❌ Subscription error:', err);
-      }
-    }
-
-    // Banner logic
-    document.addEventListener('DOMContentLoaded', () => {
-      const PROMPT_KEY = 'swapsphere_notif_prompted';
-      const banner     = document.getElementById('notify-prompt');
-
-      if (
-        USER_LOGGED_IN  === true &&
-        USER_SUBSCRIBED === false &&
-        !localStorage.getItem(PROMPT_KEY)
-      ) {
-        banner.style.display = 'block';
-      }
-
-      document.getElementById('notify-yes').onclick = () => {
-        subscribeUser();
-        localStorage.setItem(PROMPT_KEY, 'yes');
-        banner.remove();
-      };
-      document.getElementById('notify-no').onclick = () => {
-        localStorage.setItem(PROMPT_KEY, 'no');
-        banner.remove();
-      };
+<script>
+  // Service Worker registration
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(reg => console.log('SW registered:', reg.scope))
+        .catch(err => console.error('SW registration failed:', err));
     });
-  </script>
+  }
+
+  // Helper to convert our URL-safe VAPID key into a UInt8Array
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+    const rawData = atob(base64);
+    return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
+  }
+
+  // Main subscription logic
+  async function subscribeUser() {
+    try {
+      // 1) Wait for the service worker to be ready
+      const reg = await navigator.serviceWorker.ready;
+
+      // 2) Ask the user for permission
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') {
+        throw new Error('Notification permission not granted');
+      }
+
+      // 3) Grab the VAPID public key injected by Flask
+      const key = {{ vapid_public_key | tojson }};
+      console.log('🔑 VAPID key (raw):', key);
+      if (!key) {
+        throw new Error('Missing VAPID public key!');
+      }
+      console.log('Key length:', key.length);
+
+      // 4) Subscribe for push notifications
+      const subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(key)
+      });
+      console.log('✅ Obtained subscription:', subscription);
+
+      // 5) Send the subscription object to our backend
+      const resp = await fetch('/subscribe', {
+        method:      'POST',
+        credentials: 'include',
+        headers:     { 'Content-Type': 'application/json' },
+        body:        JSON.stringify(subscription)
+      });
+      if (!resp.ok) {
+        throw new Error(`Subscribe API failed: ${resp.status}`);
+      }
+      console.log('✅ Subscription stored on server');
+
+    } catch (err) {
+      console.error('❌ Subscription error:', err);
+    }
+  }
+
+  // Notification banner logic
+  document.addEventListener('DOMContentLoaded', () => {
+    const PROMPT_KEY = 'swapsphere_notif_prompted';
+    const banner     = document.getElementById('notify-prompt');
+
+    if (
+      USER_LOGGED_IN === true &&
+      USER_SUBSCRIBED === false &&
+      !localStorage.getItem(PROMPT_KEY)
+    ) {
+      banner.style.display = 'block';
+    }
+
+    document.getElementById('notify-yes').onclick = () => {
+      subscribeUser();
+      localStorage.setItem(PROMPT_KEY, 'yes');
+      banner.remove();
+    };
+    document.getElementById('notify-no').onclick = () => {
+      localStorage.setItem(PROMPT_KEY, 'no');
+      banner.remove();
+    };
+  });
+</script>
+
 
 
 
@@ -1482,8 +1505,6 @@
       <p>&copy; 2025 SwapSphere. All rights reserved. | <a href="/privacy">Privacy Policy</a> | <a href="/terms">Terms of Service</a></p>
     </div>
   </footer>
-
-  <button id="enable-notifications">Enable Notifications</button>
 
 
 <script>

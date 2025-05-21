@@ -40,6 +40,7 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__, template_folder=os.path.join(BASE_DIR, 'templates'))
 
 app.config['SECRET_KEY'] = 'fa470fe714e44404511cbad16224f52777068d05bb5c29ed'
+app.config.from_pyfile('config.py')  
 
 from logging.handlers import RotatingFileHandler
 if not app.debug:
@@ -259,7 +260,8 @@ def home():
         deal_type_filter=deal_type_filter,
         location=location_q,
         user_logged_in=user_logged_in,
-        user_subscribed=user_subscribed
+        user_subscribed=user_subscribed,
+        vapid_public_key=app.config.get('VAPID_PUBLIC_KEY')
     )
 
 
@@ -448,7 +450,7 @@ def authorize():
 
 
 
-    
+
 
 # ─── 5) Helper: find-or-create user by Google ID ────────────────────────────
 def get_or_create_user(google_id, email, username, avatar=None):
