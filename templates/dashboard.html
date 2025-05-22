@@ -1862,16 +1862,12 @@ input[type="file"] {
 
             <p><strong>Proposed Item:</strong> {{ proposal.proposed_item }}</p>
             <p>{{ proposal.message }}</p>
-            {% if proposal.additional_cash > 0 %}
-           <p><strong>Additional Cash:</strong>
-    {% if proposal.additional_cash is not none %}
-        ₵{{ "%.2f"|format(proposal.additional_cash) }}
-    {% else %}
-        None
-    {% endif %}
-</p>
+{% if proposal.additional_cash is not none and proposal.additional_cash > 0 %}
+    <p><strong>Additional Cash:</strong> ₵{{ "%.2f"|format(proposal.additional_cash) }}</p>
+{% else %}
+    <p><strong>Additional Cash:</strong> None</p>
+{% endif %}
 
-            {% endif %}
             <div class="proposal-actions">
                 {% if proposal.status == 'pending' or proposal.status == 'declined' %}
                     <button class="btn btn-success accept-proposal" data-id="{{ proposal.id }}">Accept</button>
