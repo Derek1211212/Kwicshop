@@ -2,11 +2,18 @@
 
 import json
 from pywebpush import webpush, WebPushException
-from config import VAPID_PRIVATE_KEY, VAPID_CLAIMS
+
+# ← Import current_app from Flask
+from flask import current_app
 
 def send_push(user_id, title, body, url="/"):
-    from app import get_db_connection
+    """
+    Send a web-push notification to every subscription for `user_id`,
+    using VAPID keys stored in current_app.config.
+    """
+    from app import get_db_connection  # your own DB helper
 
+    # Fetch subscriptions
     conn   = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("""
@@ -19,7 +26,7 @@ def send_push(user_id, title, body, url="/"):
     conn.close()
 
     if not subs:
-        print(f"[send_push] No subscriptions for user {user_id}")
+        current_app.logger.info(f"[send_push] No subscriptions for user {user_id}")
         return
 
     payload = json.dumps({
@@ -27,6 +34,10 @@ def send_push(user_id, title, body, url="/"):
         "body":  body,
         "url":   url
     })
+
+    # Pull VAPID credentials from Flask’s config
+    vapid_private = current_app.config['VAPID_PRIVATE_KEY']
+    vapid_claims  = current_app.config['VAPID_CLAIMS']
 
     for s in subs:
         subscription_info = {
@@ -40,9 +51,24 @@ def send_push(user_id, title, body, url="/"):
             webpush(
                 subscription_info=subscription_info,
                 data=payload,
-                vapid_private_key=VAPID_PRIVATE_KEY,
-                vapid_claims=VAPID_CLAIMS
+                vapid_private_key=vapid_private,
+                vapid_claims=vapid_claims
             )
-            print(f"[send_push] Notification sent to user {user_id}")
+            current_app.logger.info(f"[send_push] Notification sent to user {user_id}")
         except WebPushException as ex:
-            print(f"[send_push] Push failed for user {user_id}: {repr(ex)}")
+            status = getattr(ex, 'response', None) and ex.response.status_code
+            current_app.logger.warning(
+                f"[send_push] Push failed ({status}) for user {user_id}: {ex}"
+            )
+            # Optional: remove expired subscriptions
+            if status in (404, 410):
+                current_app.logger.info(f"[send_push] Removing expired subscription for user {user_id}")
+                conn2 = get_db_connection()
+                cur2 = conn2.cursor()
+                cur2.execute(
+                    "DELETE FROM push_subscriptions WHERE user_id=%s AND endpoint=%s",
+                    (user_id, s["endpoint"])
+                )
+                conn2.commit()
+                cur2.close()
+                conn2.close()

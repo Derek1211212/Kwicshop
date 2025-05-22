@@ -1302,7 +1302,7 @@
   <!-- … your other scripts … -->
 
 <script>
-  // Service Worker registration
+  // 1) Register your Service Worker
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/service-worker.js')
@@ -1311,7 +1311,7 @@
     });
   }
 
-  // Helper to convert our URL-safe VAPID key into a UInt8Array
+  // 2) Helper: convert URL-safe Base64 VAPID key to a UInt8Array
   function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding)
@@ -1321,34 +1321,33 @@
     return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
   }
 
-  // Main subscription logic
+  // 3) Main push-subscribe logic
   async function subscribeUser() {
     try {
-      // 1) Wait for the service worker to be ready
+      // Wait until SW is active
       const reg = await navigator.serviceWorker.ready;
 
-      // 2) Ask the user for permission
+      // Request notification permission
       const perm = await Notification.requestPermission();
       if (perm !== 'granted') {
         throw new Error('Notification permission not granted');
       }
 
-      // 3) Grab the VAPID public key injected by Flask
+      // Retrieve the VAPID public key injected by Flask
       const key = {{ vapid_public_key | tojson }};
-      console.log('🔑 VAPID key (raw):', key);
+      console.log('🔑 VAPID key:', key);
       if (!key) {
         throw new Error('Missing VAPID public key!');
       }
-      console.log('Key length:', key.length);
 
-      // 4) Subscribe for push notifications
+      // Subscribe with applicationServerKey
       const subscription = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(key)
       });
       console.log('✅ Obtained subscription:', subscription);
 
-      // 5) Send the subscription object to our backend
+      // Send subscription to backend
       const resp = await fetch('/subscribe', {
         method:      'POST',
         credentials: 'include',
@@ -1365,7 +1364,7 @@
     }
   }
 
-  // Notification banner logic
+  // 4) Banner display & button handlers
   document.addEventListener('DOMContentLoaded', () => {
     const PROMPT_KEY = 'swapsphere_notif_prompted';
     const banner     = document.getElementById('notify-prompt');
@@ -1389,6 +1388,8 @@
     };
   });
 </script>
+
+
 
 
 

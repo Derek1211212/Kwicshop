@@ -40,7 +40,8 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__, template_folder=os.path.join(BASE_DIR, 'templates'))
 
 app.config['SECRET_KEY'] = 'fa470fe714e44404511cbad16224f52777068d05bb5c29ed'
-app.config.from_pyfile('config.py')  
+
+app.config.from_pyfile('config.py')
 
 from logging.handlers import RotatingFileHandler
 if not app.debug:
@@ -261,7 +262,7 @@ def home():
         location=location_q,
         user_logged_in=user_logged_in,
         user_subscribed=user_subscribed,
-        vapid_public_key=app.config.get('VAPID_PUBLIC_KEY')
+        vapid_public_key=app.config['VAPID_PUBLIC_KEY']
     )
 
 
@@ -2024,7 +2025,7 @@ def test_push():
 
 
 
-# app.py (after app = Flask(__name__) and all routes)
+# app.py (after you define app and routes)
 from apscheduler.schedulers.background import BackgroundScheduler
 from jobs import check_ad_performance_alerts
 
@@ -2036,7 +2037,8 @@ scheduler.add_job(
     id='ad_metrics_alerts',
     replace_existing=True
 )
-scheduler.start()  # start as soon as the module loads
+scheduler.start()
+
 
 
 
