@@ -682,7 +682,8 @@ def create_proposal(listing_id):
             # 1) Gather form data
             proposer_id          = session['user_id']
             proposed_item        = request.form['proposed_item']
-            additional_cash      = request.form.get('additional_cash', 0.00)
+            additional_cash_raw = request.form.get('additional_cash', '').strip()
+            additional_cash = float(additional_cash_raw) if additional_cash_raw else None
             message              = request.form.get('message', '').strip()
             detailed_description = request.form['detailed_description']
             condition            = request.form['condition']
