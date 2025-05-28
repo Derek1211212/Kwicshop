@@ -1140,37 +1140,61 @@ def update_listing(listing_id):
 
 @app.route('/my-proposals')
 def my_proposals():
-    # Check if user is logged in
+    # 1) Ensure the user is logged in
     if 'user_id' not in session:
-        # Store the current URL to redirect back after login
         return redirect(url_for('login', next=request.url))
-    
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    
     try:
-        # Get all proposals with listing and lister details
+        # 2) Fetch proposals, coalescing additional_cash and created_at
         cursor.execute("""
             SELECT 
                 p.*,
-                l.title AS listing_title,
-                l.description AS listing_description,
-                l.user_id AS lister_id,
-                l.contact AS listing_contact,
-                u.username AS lister_username,
-                u.contact AS lister_contact
+                l.title            AS listing_title,
+                l.description      AS listing_description,
+                l.user_id          AS lister_id,
+                l.contact          AS listing_contact,
+                u.username         AS lister_username,
+                u.name             AS lister_name,
+                u.contact          AS lister_contact,
+                IFNULL(p.additional_cash, 0)   AS additional_cash,
+                IFNULL(p.created_at, '1970-01-01 00:00:00') AS created_at
             FROM proposals p
-            JOIN listings l ON p.listing_id = l.listing_id
-            JOIN users u ON l.user_id = u.id
+            JOIN listings l 
+              ON p.listing_id = l.listing_id
+            JOIN users u 
+              ON l.user_id = u.id
             WHERE p.user_id = %s
-            ORDER BY p.created_at DESC
+            ORDER BY 
+              created_at DESC
         """, (session['user_id'],))
+
         proposals = cursor.fetchall()
-        
+
+        # 3) Post-process each row:
+        for p in proposals:
+            # a) Convert created_at from string to datetime if needed
+            ca = p.get('created_at')
+            if isinstance(ca, str):
+                try:
+                    p['created_at'] = datetime.strptime(ca, '%Y-%m-%d %H:%M:%S')
+                except ValueError:
+                    # fallback if format differs:
+                    p['created_at'] = None
+
+            # b) Ensure any numeric comparisons in template are safe
+            if p.get('additional_cash') is None:
+                p['additional_cash'] = 0
+            # If you compare other fields, default them here:
+            # if p.get('some_number') is None:
+            #     p['some_number'] = 0
+
         return render_template('my_proposals.html', proposals=proposals)
+
     except Exception as e:
-        print(f"Error fetching proposals: {e}")
-        return render_template('my_proposals.html', proposals=None)
+        app.logger.error(f"Error fetching proposals: {e}")
+        return render_template('my_proposals.html', proposals=[])
     finally:
         cursor.close()
         conn.close()
