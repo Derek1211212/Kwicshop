@@ -32,7 +32,7 @@ def send_push(user_id, title, body, url="/"):
     payload = json.dumps({
         "title": title,
         "body":  body,
-        "url":   url
+        "url":   url,
         "icon":  "https://swap-chief.onrender.com/static/icons/ss.png"
     })
 
