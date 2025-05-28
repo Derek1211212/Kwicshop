@@ -859,6 +859,9 @@ def delete_listing(listing_id):
 
 
 
+import threading
+from flask import current_app
+
 @app.route('/proposals/<int:proposal_id>', methods=['PUT'])
 @login_required
 def update_proposal(proposal_id):
@@ -879,7 +882,7 @@ def update_proposal(proposal_id):
               l.user_id   AS owner_id,
               l.title     AS listing_title
             FROM proposals p
-            JOIN listings  l  ON p.listing_id = l.listing_id
+            JOIN listings l ON p.listing_id = l.listing_id
             WHERE p.id = %s
         """, (proposal_id,))
         row = cursor.fetchone()
@@ -908,46 +911,48 @@ def update_proposal(proposal_id):
         # 5) Determine alert_type & push text
         if status == 'accepted':
             alert_type = 'proposal_accepted'
-            title = "Proposal Accepted"
-            body  = f"Your proposal for “{listing_title}” was accepted!"
+            title_text = "Proposal Accepted"
+            body_text  = f"Your proposal for “{listing_title}” was accepted!"
         elif status == 'declined':
             alert_type = 'proposal_declined'
-            title = "Proposal Declined"
-            body  = f"Your proposal for “{listing_title}” was declined."
+            title_text = "Proposal Declined"
+            body_text  = f"Your proposal for “{listing_title}” was declined."
         else:
             alert_type = 'proposal_negotiated'
-            title = "Proposal Negotiated"
-            body  = f"Your proposal for “{listing_title}” is up for negotiation."
+            title_text = "Proposal Negotiated"
+            body_text  = f"Your proposal for “{listing_title}” is up for negotiation."
 
-        # 6) Always log in notification_log (for offline/in-app notifications)
+        # 6) Log in notification_log
         cursor.execute("""
             INSERT INTO notification_log (listing_id, user_id, alert_type)
             VALUES (%s, %s, %s)
         """, (listing_id, proposer_id, alert_type))
         conn.commit()
 
-        # 7) Fire off a push if possible
-        push_error = None
-        try:
-            send_push(
-                proposer_id,
-                title,
-                body,
-                url_for('listing_details', listing_id=listing_id)
-            )
-        except Exception as e:
-            push_error = str(e)
-            app.logger.error("Push error: %s", e)
-
-        # 8) Return success + reload flag
-        resp = {'success': True, 'reload': True}
-        if push_error:
-            resp['push_error'] = push_error
-        return jsonify(resp), 200
-
     finally:
         cursor.close()
         conn.close()
+
+    # 7) Respond immediately
+    resp = {'success': True, 'reload': True}
+    response = jsonify(resp)
+    
+    # 8) Fire push in background thread
+    def notify():
+        try:
+            send_push(
+                proposer_id,
+                title_text,
+                body_text,
+                url_for('listing_details', listing_id=listing_id)
+            )
+            current_app.logger.info(f"Push sent to user {proposer_id}")
+        except Exception as e:
+            current_app.logger.error(f"Push notification error for user {proposer_id}: {e}")
+
+    threading.Thread(target=notify).start()
+
+    return response, 200
 
 
 
