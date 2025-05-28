@@ -33,6 +33,7 @@ def send_push(user_id, title, body, url="/"):
         "title": title,
         "body":  body,
         "url":   url
+        "icon":  "https://swap-chief.onrender.com/static/icons/ss.png"
     })
 
     # Pull VAPID credentials from Flask’s config

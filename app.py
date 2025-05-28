@@ -862,16 +862,16 @@ def delete_listing(listing_id):
 @app.route('/proposals/<int:proposal_id>', methods=['PUT'])
 @login_required
 def update_proposal(proposal_id):
-    # 1) Read & validate the new status
+    # 1) Validate status
     status = request.json.get('status', '').lower()
     if status not in ('accepted', 'declined', 'negotiated'):
         return jsonify({'error': 'Invalid status'}), 400
 
     actor_id = session['user_id']
-    conn   = get_db_connection()
+    conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
-        # 2) Fetch proposer, owner, and listing info
+        # 2) Fetch proposer, owner, listing
         cursor.execute("""
             SELECT
               p.user_id   AS proposer_id,
@@ -887,15 +887,15 @@ def update_proposal(proposal_id):
             return jsonify({'error': 'Proposal not found'}), 404
 
         proposer_id   = row['proposer_id']
-        listing_id    = row['listing_id']
         owner_id      = row['owner_id']
+        listing_id    = row['listing_id']
         listing_title = row['listing_title']
 
-        # 3) Authorization: only the listing owner may update
+        # 3) Authorization
         if owner_id != actor_id:
             return jsonify({'error': 'Not authorized'}), 403
 
-        # 4) Update the proposal status
+        # 4) Update status
         cursor.execute("""
             UPDATE proposals
                SET status = %s
@@ -905,49 +905,45 @@ def update_proposal(proposal_id):
             return jsonify({'error': 'Update failed'}), 500
         conn.commit()
 
-        # 5) Choose alert_type based on status
+        # 5) Determine alert_type & push text
         if status == 'accepted':
             alert_type = 'proposal_accepted'
-            push_title = "Proposal Accepted"
-            push_body  = f"Your proposal for “{listing_title}” was accepted!"
+            title = "Proposal Accepted"
+            body  = f"Your proposal for “{listing_title}” was accepted!"
         elif status == 'declined':
             alert_type = 'proposal_declined'
-            push_title = "Proposal Declined"
-            push_body  = f"Your proposal for “{listing_title}” was declined."
-        else:  # negotiated
+            title = "Proposal Declined"
+            body  = f"Your proposal for “{listing_title}” was declined."
+        else:
             alert_type = 'proposal_negotiated'
-            push_title = "Proposal Negotiated"
-            push_body  = f"Your proposal for “{listing_title}” is up for negotiation."
+            title = "Proposal Negotiated"
+            body  = f"Your proposal for “{listing_title}” is up for negotiation."
 
-        # 6) Log to notification_log
+        # 6) Always log in notification_log (for offline/in-app notifications)
         cursor.execute("""
             INSERT INTO notification_log (listing_id, user_id, alert_type)
             VALUES (%s, %s, %s)
-        """, (
-            listing_id,
-            proposer_id,
-            alert_type
-        ))
+        """, (listing_id, proposer_id, alert_type))
         conn.commit()
 
-        # 7) Attempt push notification
+        # 7) Fire off a push if possible
         push_error = None
         try:
             send_push(
                 proposer_id,
-                push_title,
-                push_body,
+                title,
+                body,
                 url_for('listing_details', listing_id=listing_id)
             )
         except Exception as e:
             push_error = str(e)
-            app.logger.error("Push notification error: %s", e)
+            app.logger.error("Push error: %s", e)
 
-        # 8) Return success, including any push error
-        response = {'success': True}
+        # 8) Return success + reload flag
+        resp = {'success': True, 'reload': True}
         if push_error:
-            response['push_error'] = push_error
-        return jsonify(response), 200
+            resp['push_error'] = push_error
+        return jsonify(resp), 200
 
     finally:
         cursor.close()
