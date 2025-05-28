@@ -1,18 +1,15 @@
-// service-worker.js
-
 const CACHE_NAME    = 'swap-chief-cache-v6';
 const PLACEHOLDER   = '/static/icons/ss.png';
 const STATIC_ASSETS = [
   '/static/manifest.json',
   '/static/icons/ss.png',
   PLACEHOLDER,
-  // add any other truly static assets you want pre-cached
+  // Add any other static assets you want pre-cached
 ];
 
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(async cache => {
-      // Attempt to cache each asset individually, ignoring failures
       await Promise.all(
         STATIC_ASSETS.map(async path => {
           try {
@@ -25,7 +22,6 @@ self.addEventListener('install', event => {
           }
         })
       );
-      // Activate immediately
       return self.skipWaiting();
     })
   );
@@ -65,28 +61,26 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 4) Other GET requests: network-first, simple offline fallback
+  // 4) Other GET requests: network-first
   if (req.method === 'GET' && url.protocol.startsWith('http')) {
     event.respondWith(handleOther(req));
   }
 });
 
-// Network-first for navigations
+// Navigation: network-first
 async function handleNavigation(req) {
   try {
     const networkRes = await fetch(req);
-    if (req.method === 'GET') {
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(req, networkRes.clone());
-    }
+    const cache = await caches.open(CACHE_NAME);
+    cache.put(req, networkRes.clone());
     return networkRes;
   } catch (err) {
-    console.warn('[SW] Navigation failed, serve from cache:', req.url);
+    console.warn('[SW] Navigation failed, serving from cache:', req.url);
     return (await caches.match(req)) || new Response('Offline', { status: 503 });
   }
 }
 
-// Cache-first for static assets
+// Static assets: cache-first
 async function handleStatic(req) {
   const cached = await caches.match(req);
   if (cached) return cached;
@@ -97,11 +91,11 @@ async function handleStatic(req) {
     return networkRes;
   } catch (err) {
     console.warn('[SW] Static asset failed:', req.url);
-    return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+    return new Response('Offline', { status: 503 });
   }
 }
 
-// Network-first for images, placeholder on failure
+// Images: network-first, fallback to placeholder
 async function handleImage(req) {
   try {
     return await fetch(req);
@@ -112,17 +106,17 @@ async function handleImage(req) {
   }
 }
 
-// Network-first for other requests
+// Other GETs: network-first
 async function handleOther(req) {
   try {
     return await fetch(req);
   } catch (err) {
     console.warn('[SW] Request failed, offline fallback for:', req.url);
-    return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+    return new Response('Offline', { status: 503 });
   }
 }
 
-// Helper: detect image requests
+// Image detection helper
 function isImageRequest(req) {
   const accept = req.headers.get('Accept') || '';
   const ext = req.url.split('.').pop().split(/\#|\?/)[0];
@@ -136,26 +130,46 @@ function isImageRequest(req) {
 // — PUSH & NOTIFICATION HANDLERS — //
 
 self.addEventListener('push', event => {
-  let data = { title: 'New Notification', body: '', url: '/' };
-  try {
-    data = event.data.json();
-  } catch (e) {
-    // No payload or malformed JSON
-  }
-  const options = {
-    body:   data.body,
-    icon:   '/static/icons/ss.png',
-    icon: data.icon,
-    badge:  '/static/icons/ss.png',
-    data:   data.url,
-    vibrate:[100,50,100],
+  let payload = {
+    title: 'New Notification',
+    body: '',
+    icon: '/static/icons/ss.png',
+    badge: '/static/icons/ss.png',
+    data: { url: '/' }
   };
-  event.waitUntil(self.registration.showNotification(data.title, options));
+
+  try {
+    const incoming = event.data.json();
+    if (incoming.notification) {
+      payload = {
+        ...payload,
+        ...incoming.notification,
+        data: {
+          ...payload.data,
+          ...(incoming.notification.data || {})
+        }
+      };
+    }
+  } catch (e) {
+    console.warn('[SW] Malformed push payload');
+  }
+
+  const options = {
+    body: payload.body,
+    icon: payload.icon,
+    badge: payload.badge,
+    data: payload.data,
+    vibrate: [100, 50, 100],
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title, options)
+  );
 });
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  const urlToOpen = event.notification.data || '/';
+  const urlToOpen = event.notification.data?.url || '/';
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then(windowClients => {

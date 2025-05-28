@@ -29,12 +29,18 @@ def send_push(user_id, title, body, url="/"):
         current_app.logger.info(f"[send_push] No subscriptions for user {user_id}")
         return
 
-    payload = json.dumps({
+payload = json.dumps({
+    "notification": {
         "title": title,
-        "body":  body,
-        "url":   url,
-        "icon":  "https://swap-chief.onrender.com/static/icons/ss.png"
-    })
+        "body": body,
+        "icon": "https://swap-chief.onrender.com/static/icons/ss.png",
+        "badge": "https://swap-chief.onrender.com/static/icons/ss.png",
+        "data": {
+            "url": url
+        }
+    }
+})
+
 
     # Pull VAPID credentials from Flask’s config
     vapid_private = current_app.config['VAPID_PRIVATE_KEY']
