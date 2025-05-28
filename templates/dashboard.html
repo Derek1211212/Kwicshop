@@ -1441,6 +1441,294 @@ input[type="file"] {
   color: white;
 }
 
+
+        .listing-container {
+            max-width: 1000px;
+            margin: 1rem auto;
+            padding: 0 1rem;
+        }
+        
+        .form-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: var(--transition);
+            border: none;
+        }
+        
+        .form-card:hover {
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+        }
+        
+        .section-title {
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: var(--primary);
+        }
+        
+        .deal-type-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .deal-type-card {
+            flex: 1;
+            cursor: pointer;
+            border-radius: var(--border-radius);
+            border: 2px solid #e9ecef;
+            padding: 1.5rem;
+            text-align: center;
+            transition: var(--transition);
+            background: white;
+        }
+        
+        .deal-type-card.active {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+        }
+        
+        .deal-type-card i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+        
+        .deal-type-card.active i {
+            color: var(--secondary);
+        }
+        
+        .deal-type-card h5 {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+        
+        .deal-type-card p {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+            font-size: 0.95rem;
+        }
+        
+        .required-field::after {
+            content: "*";
+            color: #dc3545;
+            margin-left: 4px;
+        }
+        
+        .input-icon {
+            background-color: var(--light);
+            border-right: none;
+            color: var(--primary);
+        }
+        
+        .form-control, .form-select {
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e9ecef;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+        }
+        
+        .offered-item {
+            position: relative;
+            padding: 1.5rem;
+            background: var(--light);
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+        }
+        
+        .item-number {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            background: var(--primary);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .remove-item-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #dc3545;
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: var(--transition);
+        }
+        
+        .remove-item-btn:hover {
+            opacity: 1;
+        }
+        
+        .add-item-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+            margin-bottom: 1.5rem;
+        }
+        
+        .add-item-btn:hover {
+            background-color: var(--secondary);
+            transform: translateY(-2px);
+        }
+        
+        .add-item-btn:disabled {
+            background-color: #adb5bd;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .file-upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background-color: var(--light);
+            margin-bottom: 1rem;
+        }
+        
+        .file-upload-area:hover {
+            border-color: var(--primary);
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+        
+        .file-upload-area i {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        
+        .file-upload-area p {
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .file-upload-area small {
+            color: #6c757d;
+        }
+        
+        .file-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .file-preview-item {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #e9ecef;
+        }
+        
+        .file-preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .file-preview-item button {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(0,0,0,0.5);
+            border: none;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+            transition: var(--transition);
+            width: 100%;
+            margin-top: 1rem;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(67, 97, 238, 0.4);
+        }
+        
+        .help-text {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+        
+        @media (max-width: 768px) {
+            .listing-container {
+                padding: 0 0.75rem;
+            }
+            
+            .deal-type-container {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            
+            .form-card {
+                padding: 1.25rem;
+            }
+            
+            .section-title {
+                font-size: 1.3rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -2008,123 +2296,385 @@ input[type="file"] {
     </script>
 
 
+<div id="undo-toast">
+  <span id="undo-message"></span>
+  <button id="undo-btn">Undo</button>
+</div>
 
 
 <!-- Proposals Section -->
 <section id="proposals" class="dashboard-section">
-    <h2>Received Proposals</h2>
+  <style>
+    /* Animation styles */
+    @keyframes bubblePop {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.2);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
     
-    <!-- Filter Dropdown -->
-    <div class="proposal-filter">
-        <label for="proposal-filter-select">Filter by Item:</label>
-        <select id="proposal-filter-select" class="form-control">
-            <option value="all">All</option>
-            {% for title in unique_titles %}
-                <option value="{{ title }}">{{ title }}</option>
-            {% endfor %}
-        </select>
-    </div>
+    @keyframes slideBounce {
+      0% {
+        transform: translateX(-20px);
+        opacity: 0;
+      }
+      60% {
+        transform: translateX(10px);
+      }
+      100% {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
     
-    <div class="proposals-list">
-        {% for proposal in proposals %}
-        <div class="proposal-card" data-listing-title="{{ proposal.listing_title }}">
-            <div class="proposal-header">
-                <h3>For: {{ proposal.listing_title }}</h3>
-                <span class="status-badge status-{{ proposal.status }}">
-                    {{ proposal.status }}
-                </span>
-            </div>
-            
-            <!-- Sender Information -->
-            <div class="sender-info">
-                <p><strong>From:</strong> {{ proposal.sender_username }}</p>
-                <p><strong>Contact:</strong> {{ proposal.sender_contact }}</p>
-            </div>
-            
-            <!-- Proposal Images Grid -->
-            <div class="proposal-images" data-proposal-id="{{ proposal.id }}">
-                {% for i in range(1,5) %}
-                    {% set image = proposal['image' ~ i] %}
-                    {% if image %}
-                    <img src="{{ url_for('static', filename='images/' + image.split('/')[-1]) }}" 
-                         class="proposal-image"
-                         alt="Proposal image {{ i }}"
-                         onclick="openModal(this)"
-                         onerror="this.style.display='none'">
-                    {% endif %}
-                {% endfor %}
-            </div>
-
-            <p><strong>Proposed Item:</strong> {{ proposal.proposed_item }}</p>
-            <p>{{ proposal.message }}</p>
-{% if proposal.additional_cash is not none and proposal.additional_cash > 0 %}
-    <p><strong>Additional Cash:</strong> ₵{{ "%.2f"|format(proposal.additional_cash) }}</p>
-{% else %}
-    <p><strong>Additional Cash:</strong> None</p>
-{% endif %}
-
-            <div class="proposal-actions">
-                {% if proposal.status == 'pending' or proposal.status == 'declined' %}
-                    <button class="btn btn-success accept-proposal" data-id="{{ proposal.id }}">Accept</button>
-                    <button class="btn btn-outline-warning negotiate-proposal" data-id="{{ proposal.id }}">Negotiate</button>
-                    <button class="btn btn-outline-danger decline-proposal" data-id="{{ proposal.id }}">Decline</button>
-                {% elif proposal.status == 'negotiated' %}
-                    <button class="btn btn-success accept-proposal" data-id="{{ proposal.id }}">Accept</button>
-                    <button class="btn btn-outline-danger decline-proposal" data-id="{{ proposal.id }}">Decline</button>
-                {% elif proposal.status == 'accepted' %}
-                    <span class="status-badge status-accepted">{{ proposal.status.capitalize() }}</span>
-                {% endif %}
-            </div>
-        </div>
+    @keyframes shakeFade {
+      0% {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      20% {
+        transform: translateX(-10px);
+      }
+      40% {
+        transform: translateX(10px);
+      }
+      60% {
+        transform: translateX(-10px);
+      }
+      80% {
+        transform: translateX(10px);
+      }
+      100% {
+        transform: translateX(0);
+        opacity: 0;
+      }
+    }
+    
+    .status-badge.accept-animation {
+      animation: bubblePop 0.6s ease-out;
+      background-color: #28a745 !important;
+    }
+    
+    .status-badge.negotiate-animation {
+      animation: slideBounce 0.7s ease-out;
+      background-color: #ffc107 !important;
+      color: #212529 !important;
+    }
+    
+    .status-badge.decline-animation {
+      animation: shakeFade 0.8s ease-out;
+      background-color: #dc3545 !important;
+    }
+    
+    .action-icon {
+      display: inline-block;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+    
+    .negotiate-icon {
+      display: inline-block;
+      font-size: 1.1em;
+      margin-right: 3px;
+    }
+  </style>
+  
+  <h2>Received Proposals</h2>
+  
+  <!-- Filter Dropdown -->
+  <div class="proposal-filter">
+    <label for="proposal-filter-select">Filter by Item:</label>
+    <select id="proposal-filter-select" class="form-control">
+      <option value="all">All</option>
+      {% for title in unique_titles %}
+      <option value="{{ title }}">{{ title }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  
+  <div class="proposals-list">
+    {% for proposal in proposals %}
+    <div class="proposal-card" data-id="{{ proposal.id }}">
+      <div class="proposal-header">
+        <h3>For: {{ proposal.listing_title }}</h3>
+        <span class="status-badge status-{{ proposal.status }}" 
+              data-status="{{ proposal.status }}">
+          {{ proposal.status }}
+        </span>
+      </div>
+      
+      <!-- Sender Information -->
+      <div class="sender-info">
+        <p><strong>From:</strong> {{ proposal.sender_username }}</p>
+        <p><strong>Contact:</strong> {{ proposal.sender_contact }}</p>
+      </div>
+      
+      <!-- Images -->
+      <div class="proposal-images">
+        {% for i in range(1,5) %}
+          {% set img = proposal['image' ~ i] %}
+          {% if img %}
+          <img src="{{ url_for('static', filename='images/' + img.split('/')[-1]) }}"
+               class="proposal-image"
+               alt="Image {{ i }}"
+               onclick="openModal(this)"
+               onerror="this.style.display='none'">
+          {% endif %}
         {% endfor %}
+      </div>
+      
+      <p><strong>Proposed Item:</strong> {{ proposal.proposed_item }}</p>
+      <p>{{ proposal.message }}</p>
+      {% if proposal.additional_cash and proposal.additional_cash > 0 %}
+      <p><strong>Additional Cash:</strong> ₵{{ "%.2f"|format(proposal.additional_cash) }}</p>
+      {% else %}
+      <p><strong>Additional Cash:</strong> None</p>
+      {% endif %}
+      
+      <div class="proposal-actions">
+        {% if proposal.status in ['pending','declined'] %}
+        <button class="btn btn-success accept-proposal">Accept</button>
+        <button class="btn btn-outline-warning negotiate-proposal">Negotiate</button>
+        <button class="btn btn-outline-danger decline-proposal">Decline</button>
+        {% elif proposal.status == 'negotiated' %}
+        <button class="btn btn-success accept-proposal">Accept</button>
+        <button class="btn btn-outline-danger decline-proposal">Decline</button>
+        {% elif proposal.status == 'accepted' %}
+        <span class="status-badge status-accepted">{{ proposal.status.capitalize() }}</span>
+        {% endif %}
+      </div>
     </div>
-</section>
+    {% endfor %}
+  </div>
+  
+  <script>
+    // Handle Accept button
+    document.querySelectorAll('.accept-proposal').forEach(button => {
+      button.addEventListener('click', function() {
+        const card = this.closest('.proposal-card');
+        const badge = card.querySelector('.status-badge');
+        const originalStatus = badge.dataset.status;
+        const proposalId = card.dataset.id;
 
-<script>
-  // Utility to update a proposal’s status
-  async function updateProposalStatus(proposalId, newStatus) {
-    try {
-      const res = await fetch(`/proposals/${proposalId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
+        // Store original content and status
+        const originalHTML = badge.innerHTML;
+        const originalClass = badge.className;
+
+        // Show checkmark animation
+        badge.innerHTML = '<span class="action-icon">✓</span>';
+        badge.className = 'status-badge accept-animation';
+
+        // Simulate API call
+        setTimeout(() => {
+          // Update to active status
+          badge.innerHTML = 'Active';
+          badge.className = 'status-badge status-active';
+          badge.dataset.status = 'active';
+          
+          // Hide action buttons
+          card.querySelector('.proposal-actions').innerHTML = 
+            '<span class="status-badge status-accepted">Active</span>';
+        }, 1000);
+      });
+    });
+
+    // Handle Negotiate button
+    document.querySelectorAll('.negotiate-proposal').forEach(button => {
+      button.addEventListener('click', function() {
+        const card = this.closest('.proposal-card');
+        const badge = card.querySelector('.status-badge');
+        const originalStatus = badge.dataset.status;
+        const proposalId = card.dataset.id;
+
+        // Store original content
+        const originalHTML = badge.innerHTML;
+        const originalClass = badge.className;
+
+        // Show negotiate animation
+        badge.innerHTML = '<span class="negotiate-icon">↔</span> Negotiating';
+        badge.className = 'status-badge negotiate-animation';
+
+        // Simulate API call
+        setTimeout(() => {
+          // Update to negotiated status
+          badge.innerHTML = 'Negotiated';
+          badge.className = 'status-badge status-negotiated';
+          badge.dataset.status = 'negotiated';
+          
+          // Update action buttons
+          const actionsDiv = card.querySelector('.proposal-actions');
+          actionsDiv.innerHTML = `
+            <button class="btn btn-success accept-proposal">Accept</button>
+            <button class="btn btn-outline-danger decline-proposal">Decline</button>
+          `;
+          
+          // Reattach event listeners to new buttons
+          attachEventListeners(card);
+        }, 1000);
+      });
+    });
+
+    // Handle Decline button
+    document.querySelectorAll('.decline-proposal').forEach(button => {
+      button.addEventListener('click', function() {
+        const card = this.closest('.proposal-card');
+        const badge = card.querySelector('.status-badge');
+        const originalStatus = badge.dataset.status;
+        const proposalId = card.dataset.id;
+
+        // Store original content
+        const originalHTML = badge.innerHTML;
+        const originalClass = badge.className;
+
+        // Show decline animation
+        badge.innerHTML = '<span class="action-icon">✕</span>';
+        badge.className = 'status-badge decline-animation';
+
+        // Simulate API call
+        setTimeout(() => {
+          // Update to declined status
+          badge.innerHTML = 'Declined';
+          badge.className = 'status-badge status-declined';
+          badge.dataset.status = 'declined';
+          
+          // Hide action buttons (or show different options if needed)
+          card.querySelector('.proposal-actions').innerHTML = 
+            '<span class="status-badge status-declined">Declined</span>';
+        }, 800);
+      });
+    });
+
+    // Helper function to reattach event listeners after DOM updates
+    function attachEventListeners(card) {
+      card.querySelector('.accept-proposal')?.addEventListener('click', function() {
+        // Same accept handler as above
+        const badge = card.querySelector('.status-badge');
+        badge.innerHTML = '<span class="action-icon">✓</span>';
+        badge.className = 'status-badge accept-animation';
+
+        setTimeout(() => {
+          badge.innerHTML = 'Active';
+          badge.className = 'status-badge status-active';
+          badge.dataset.status = 'active';
+          card.querySelector('.proposal-actions').innerHTML = 
+            '<span class="status-badge status-accepted">Active</span>';
+        }, 1000);
       });
 
-      if (!res.ok) {
-        const err = await res.json();
-        return alert('Error: ' + (err.error || res.statusText));
-      }
+      card.querySelector('.decline-proposal')?.addEventListener('click', function() {
+        // Same decline handler as above
+        const badge = card.querySelector('.status-badge');
+        badge.innerHTML = '<span class="action-icon">✕</span>';
+        badge.className = 'status-badge decline-animation';
 
-      // Success — you can reload or update the card UI here
-      alert(`Proposal ${newStatus} successfully.`);
-      // Optionally reload to reflect the new status:
-      // window.location.reload();
+        setTimeout(() => {
+          badge.innerHTML = 'Declined';
+          badge.className = 'status-badge status-declined';
+          badge.dataset.status = 'declined';
+          card.querySelector('.proposal-actions').innerHTML = 
+            '<span class="status-badge status-declined">Declined</span>';
+        }, 800);
+      });
+    }
+  </script>
+</section>
 
-    } catch (e) {
-      console.error(e);
-      alert('Network error: could not update proposal.');
+<!-- Undo Toast Styles & Markup -->
+<style>
+  #undo-toast {
+    display: none;
+    position: fixed; bottom: 1rem; left: 50%;
+    transform: translateX(-50%);
+    background: #333; color: #fff;
+    padding: 0.75rem 1.5rem; border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    font-size: 0.9rem; z-index: 1001;
+  }
+  #undo-toast button {
+    background: transparent; border: none;
+    color: #4FC3F7; margin-left: 1rem;
+    cursor: pointer; font-weight: bold;
+  }
+</style>
+<div id="undo-toast">
+  <span id="undo-message"></span>
+  <button id="undo-btn">Undo</button>
+</div>
+
+<script>
+  let lastAction = null;
+
+  async function updateProposalStatus(card, newStatus) {
+    const id = card.getAttribute('data-id');
+    try {
+      const res  = await fetch(`/proposals/${id}`, {
+        method: 'PUT',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({status: newStatus})
+      });
+      const data = await res.json();
+      if (!data.success) return console.error('Update failed:', data.error);
+
+      // Inline badge update
+      const badge = card.querySelector('.status-badge');
+      const prev  = badge.textContent;
+      badge.textContent = newStatus;
+      badge.className   = `status-badge status-${newStatus}`;
+
+      // Disable action buttons
+      card.querySelectorAll('.proposal-actions button')
+          .forEach(b => b.disabled = true);
+
+      // Show undo toast
+      lastAction = {card, prev};
+      showToast(`Marked "${newStatus}"`, true);
+    } catch (err) {
+      console.error('Network error:', err);
+      showToast('Network error', false);
     }
   }
 
-  // Attach click handlers to each action button
+  function showToast(message, canUndo) {
+    const toast = document.getElementById('undo-toast');
+    document.getElementById('undo-message').textContent = message;
+    document.getElementById('undo-btn').style.display = canUndo ? 'inline' : 'none';
+    toast.style.display = 'block';
+    clearTimeout(toast._hideTimer);
+    toast._hideTimer = setTimeout(() => toast.style.display = 'none', 5000);
+  }
+
+  document.getElementById('undo-btn').addEventListener('click', () => {
+    if (lastAction) {
+      updateProposalStatus(lastAction.card, lastAction.prev);
+      lastAction = null;
+    }
+    document.getElementById('undo-toast').style.display = 'none';
+  });
+
   document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.accept-proposal').forEach(btn => {
-      btn.addEventListener('click', () => {
-        updateProposalStatus(btn.dataset.id, 'Accepted');
-      });
-    });
-    document.querySelectorAll('.decline-proposal').forEach(btn => {
-      btn.addEventListener('click', () => {
-        updateProposalStatus(btn.dataset.id, 'Declined');
-      });
-    });
-    document.querySelectorAll('.negotiate-proposal').forEach(btn => {
-      btn.addEventListener('click', () => {
-        updateProposalStatus(btn.dataset.id, 'Negotiated');
-      });
+    // Attach direct button handlers
+    document.querySelectorAll('.proposal-card').forEach(card => {
+      card.querySelector('.accept-proposal')?.addEventListener('click', () =>
+        updateProposalStatus(card, 'accepted'));
+      card.querySelector('.decline-proposal')?.addEventListener('click', () =>
+        updateProposalStatus(card, 'declined'));
+      card.querySelector('.negotiate-proposal')?.addEventListener('click', () =>
+        updateProposalStatus(card, 'negotiated'));
     });
   });
 </script>
+
+
+
+
 
 
 <!-- Profile Section -->
