@@ -874,7 +874,7 @@ def update_proposal(proposal_id):
     conn   = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
-        # 2) Fetch proposal + listing + owner + proposer
+        # 2) Fetch proposer, listing owner, and listing title
         cursor.execute("""
             SELECT
               p.user_id   AS proposer_id,
@@ -882,7 +882,7 @@ def update_proposal(proposal_id):
               l.user_id   AS owner_id,
               l.title     AS listing_title
             FROM proposals AS p
-            JOIN listings  AS l ON p.listing_id = l.listing_id
+            JOIN listings  AS l  ON p.listing_id = l.listing_id
             WHERE p.id = %s
         """, (proposal_id,))
         row = cursor.fetchone()
@@ -891,15 +891,10 @@ def update_proposal(proposal_id):
             app.logger.warning("Proposal %s not found", proposal_id)
             return jsonify({'error': 'Proposal not found'}), 404
 
-        proposer_id    = row['proposer_id']
-        listing_id     = row['listing_id']
-        owner_id       = row['owner_id']
-        listing_title  = row['listing_title']
-
-        app.logger.debug(
-            "Proposal %s → listing %s owned by %s; proposer is %s",
-            proposal_id, listing_id, owner_id, proposer_id
-        )
+        proposer_id   = row['proposer_id']
+        listing_id    = row['listing_id']
+        owner_id      = row['owner_id']
+        listing_title = row['listing_title']
 
         # 3) Authorization: only listing owner may update
         if owner_id != user_id:
@@ -916,18 +911,18 @@ def update_proposal(proposal_id):
         conn.commit()
         app.logger.info("Proposal %s status updated to '%s'", proposal_id, status)
 
-        # 5) Choose notification content based on status
+        # 5) Build notification title and body
         if status == 'accepted':
             notif_title = "Proposal Accepted"
-            notif_body  = f"Your proposal for '{listing_title}' was accepted!"
+            notif_body  = f"Your proposal for “{listing_title}” was accepted!"
         elif status == 'declined':
             notif_title = "Proposal Declined"
-            notif_body  = f"Your proposal for '{listing_title}' was declined."
-        else:  # status == 'negotiated'
+            notif_body  = f"Your proposal for “{listing_title}” was declined."
+        else:  # negotiated
             notif_title = "Proposal Negotiated"
-            notif_body  = f"Your proposal for '{listing_title}' is up for negotiation."
+            notif_body  = f"Your proposal for “{listing_title}” is up for negotiation."
 
-        # 6) Send the push notification
+        # 6) Send the notification to the proposer
         try:
             send_push(
                 proposer_id,
