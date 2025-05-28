@@ -2300,120 +2300,159 @@ input[type="file"] {
 
 <!-- Proposals Section -->
 <section id="proposals" class="dashboard-section">
-    <h2>Received Proposals</h2>
-    
-    <!-- Filter Dropdown -->
-    <div class="proposal-filter">
-        <label for="proposal-filter-select">Filter by Item:</label>
-        <select id="proposal-filter-select" class="form-control">
-            <option value="all">All</option>
-            {% for title in unique_titles %}
-                <option value="{{ title }}">{{ title }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    
-    <div class="proposals-list">
-        {% for proposal in proposals %}
-        <div class="proposal-card" data-listing-title="{{ proposal.listing_title }}">
-            <div class="proposal-header">
-                <h3>For: {{ proposal.listing_title }}</h3>
-                <span class="status-badge status-{{ proposal.status }}">
-                    {{ proposal.status }}
-                </span>
-            </div>
-            
-            <!-- Sender Information -->
-            <div class="sender-info">
-                <p><strong>From:</strong> {{ proposal.sender_username }}</p>
-                <p><strong>Contact:</strong> {{ proposal.sender_contact }}</p>
-            </div>
-            
-            <!-- Proposal Images Grid -->
-            <div class="proposal-images" data-proposal-id="{{ proposal.id }}">
-                {% for i in range(1,5) %}
-                    {% set image = proposal['image' ~ i] %}
-                    {% if image %}
-                    <img src="{{ url_for('static', filename='images/' + image.split('/')[-1]) }}" 
-                         class="proposal-image"
-                         alt="Proposal image {{ i }}"
-                         onclick="openModal(this)"
-                         onerror="this.style.display='none'">
-                    {% endif %}
-                {% endfor %}
-            </div>
-
-            <p><strong>Proposed Item:</strong> {{ proposal.proposed_item }}</p>
-            <p>{{ proposal.message }}</p>
-{% if proposal.additional_cash is not none and proposal.additional_cash > 0 %}
-    <p><strong>Additional Cash:</strong> ₵{{ "%.2f"|format(proposal.additional_cash) }}</p>
-{% else %}
-    <p><strong>Additional Cash:</strong> None</p>
-{% endif %}
-
-            <div class="proposal-actions">
-                {% if proposal.status == 'pending' or proposal.status == 'declined' %}
-                    <button class="btn btn-success accept-proposal" data-id="{{ proposal.id }}">Accept</button>
-                    <button class="btn btn-outline-warning negotiate-proposal" data-id="{{ proposal.id }}">Negotiate</button>
-                    <button class="btn btn-outline-danger decline-proposal" data-id="{{ proposal.id }}">Decline</button>
-                {% elif proposal.status == 'negotiated' %}
-                    <button class="btn btn-success accept-proposal" data-id="{{ proposal.id }}">Accept</button>
-                    <button class="btn btn-outline-danger decline-proposal" data-id="{{ proposal.id }}">Decline</button>
-                {% elif proposal.status == 'accepted' %}
-                    <span class="status-badge status-accepted">{{ proposal.status.capitalize() }}</span>
-                {% endif %}
-            </div>
-        </div>
+  <h2>Received Proposals</h2>
+  
+  <!-- Filter Dropdown -->
+  <div class="proposal-filter">
+    <label for="proposal-filter-select">Filter by Item:</label>
+    <select id="proposal-filter-select" class="form-control">
+      <option value="all">All</option>
+      {% for title in unique_titles %}
+      <option value="{{ title }}">{{ title }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  
+  <div class="proposals-list">
+    {% for proposal in proposals %}
+    <div class="proposal-card" data-id="{{ proposal.id }}">
+      <div class="proposal-header">
+        <h3>For: {{ proposal.listing_title }}</h3>
+        <span class="status-badge status-{{ proposal.status }}">
+          {{ proposal.status }}
+        </span>
+      </div>
+      
+      <!-- Sender Information -->
+      <div class="sender-info">
+        <p><strong>From:</strong> {{ proposal.sender_username }}</p>
+        <p><strong>Contact:</strong> {{ proposal.sender_contact }}</p>
+      </div>
+      
+      <!-- Images -->
+      <div class="proposal-images">
+        {% for i in range(1,5) %}
+          {% set img = proposal['image' ~ i] %}
+          {% if img %}
+          <img src="{{ url_for('static', filename='images/' + img.split('/')[-1]) }}"
+               class="proposal-image"
+               alt="Image {{ i }}"
+               onclick="openModal(this)"
+               onerror="this.style.display='none'">
+          {% endif %}
         {% endfor %}
+      </div>
+      
+      <p><strong>Proposed Item:</strong> {{ proposal.proposed_item }}</p>
+      <p>{{ proposal.message }}</p>
+      {% if proposal.additional_cash and proposal.additional_cash > 0 %}
+      <p><strong>Additional Cash:</strong> ₵{{ "%.2f"|format(proposal.additional_cash) }}</p>
+      {% else %}
+      <p><strong>Additional Cash:</strong> None</p>
+      {% endif %}
+      
+      <div class="proposal-actions">
+        {% if proposal.status in ['pending','declined'] %}
+        <button class="btn btn-success accept-proposal">Accept</button>
+        <button class="btn btn-outline-warning negotiate-proposal">Negotiate</button>
+        <button class="btn btn-outline-danger decline-proposal">Decline</button>
+        {% elif proposal.status == 'negotiated' %}
+        <button class="btn btn-success accept-proposal">Accept</button>
+        <button class="btn btn-outline-danger decline-proposal">Decline</button>
+        {% elif proposal.status == 'accepted' %}
+        <span class="status-badge status-accepted">{{ proposal.status.capitalize() }}</span>
+        {% endif %}
+      </div>
     </div>
+    {% endfor %}
+  </div>
 </section>
 
+<!-- Undo Toast Styles & Markup -->
+<style>
+  #undo-toast {
+    display: none;
+    position: fixed; bottom: 1rem; left: 50%;
+    transform: translateX(-50%);
+    background: #333; color: #fff;
+    padding: 0.75rem 1.5rem; border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    font-size: 0.9rem; z-index: 1001;
+  }
+  #undo-toast button {
+    background: transparent; border: none;
+    color: #4FC3F7; margin-left: 1rem;
+    cursor: pointer; font-weight: bold;
+  }
+</style>
+<div id="undo-toast">
+  <span id="undo-message"></span>
+  <button id="undo-btn">Undo</button>
+</div>
+
 <script>
-  // Utility to update a proposal’s status
-  async function updateProposalStatus(proposalId, newStatus) {
+  let lastAction = null;
+
+  async function updateProposalStatus(card, newStatus) {
+    const id = card.getAttribute('data-id');
     try {
-      const res  = await fetch(`/proposals/${proposalId}`, {
+      const res  = await fetch(`/proposals/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({status: newStatus})
       });
-      const data = await res.json();              // always parse JSON
+      const data = await res.json();
+      if (!data.success) return console.error('Update failed:', data.error);
 
-      if (!data.success) {
-        // Only show an error if the backend really failed its core work
-        return alert('Error: ' + (data.error || 'Update failed'));
-      }
+      // Inline badge update
+      const badge = card.querySelector('.status-badge');
+      const prev  = badge.textContent;
+      badge.textContent = newStatus;
+      badge.className   = `status-badge status-${newStatus}`;
 
-      // Success — update UI or reload
-      // e.g. update the badge text in-place:
-      const card = document.querySelector(`.proposal-card[data-listing-title][data-id="${proposalId}"]`);
-      if (card) {
-        const badge = card.querySelector('.status-badge');
-        badge.textContent = newStatus.toLowerCase();
-        badge.className = `status-badge status-${newStatus.toLowerCase()}`;
-      }
-      // Or simply reload:
-      window.location.reload();
+      // Disable action buttons
+      card.querySelectorAll('.proposal-actions button')
+          .forEach(b => b.disabled = true);
 
-    } catch (e) {
-      console.error(e);
-      alert('Network error: could not update proposal.');
+      // Show undo toast
+      lastAction = {card, prev};
+      showToast(`Marked "${newStatus}"`, true);
+    } catch (err) {
+      console.error('Network error:', err);
+      showToast('Network error', false);
     }
   }
 
-  // Attach click handlers
+  function showToast(message, canUndo) {
+    const toast = document.getElementById('undo-toast');
+    document.getElementById('undo-message').textContent = message;
+    document.getElementById('undo-btn').style.display = canUndo ? 'inline' : 'none';
+    toast.style.display = 'block';
+    clearTimeout(toast._hideTimer);
+    toast._hideTimer = setTimeout(() => toast.style.display = 'none', 5000);
+  }
+
+  document.getElementById('undo-btn').addEventListener('click', () => {
+    if (lastAction) {
+      updateProposalStatus(lastAction.card, lastAction.prev);
+      lastAction = null;
+    }
+    document.getElementById('undo-toast').style.display = 'none';
+  });
+
   document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.accept-proposal').forEach(btn =>
-      btn.addEventListener('click', () => updateProposalStatus(btn.dataset.id, 'accepted'))
-    );
-    document.querySelectorAll('.decline-proposal').forEach(btn =>
-      btn.addEventListener('click', () => updateProposalStatus(btn.dataset.id, 'declined'))
-    );
-    document.querySelectorAll('.negotiate-proposal').forEach(btn =>
-      btn.addEventListener('click', () => updateProposalStatus(btn.dataset.id, 'negotiated'))
-    );
+    // Attach direct button handlers
+    document.querySelectorAll('.proposal-card').forEach(card => {
+      card.querySelector('.accept-proposal')?.addEventListener('click', () =>
+        updateProposalStatus(card, 'accepted'));
+      card.querySelector('.decline-proposal')?.addEventListener('click', () =>
+        updateProposalStatus(card, 'declined'));
+      card.querySelector('.negotiate-proposal')?.addEventListener('click', () =>
+        updateProposalStatus(card, 'negotiated'));
+    });
   });
 </script>
+
 
 
 

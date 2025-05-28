@@ -1155,6 +1155,36 @@
 .carousel-item.active {
   pointer-events: auto;
 }
+
+  .filters-container {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 500;
+    padding: 0.5rem 0;
+  }
+  #undo-toast {
+    display: none;
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    font-size: 0.9rem;
+    z-index: 1001;
+  }
+  #undo-toast button {
+    background: transparent;
+    border: none;
+    color: #4FC3F7;
+    margin-left: 1rem;
+    cursor: pointer;
+    font-weight: bold;
+  }
   </style>
 
     <script>
@@ -1459,7 +1489,11 @@
 </section>
 
 
-
+<!-- Undo toast markup -->
+<div id="undo-toast">
+  <span id="undo-message"></span>
+  <button id="undo-btn">Undo</button>
+</div>
 
 
 
@@ -1509,281 +1543,225 @@
 
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('enable-notifications');
-    if (!btn) {
-      console.warn('[Client] No "enable-notifications" button found');
-      return;
-    }
-
-    btn.addEventListener('click', async () => {
-      console.log('[Client] Clicked Enable Notifications');
-      try {
-        const reg = await navigator.serviceWorker.register('/service-worker.js');
-        console.log('[Client] SW registered', reg);
-
-        const perm = await Notification.requestPermission();
-        console.log('[Client] Notification permission:', perm);
-        if (perm !== 'granted') throw new Error('Permission not granted');
-
-        const vapidPublicKey = "BMtSvERTURwR1YKBRM7fPZZEDDTkx8Gxyunu1s0X6xdGy5b2i2d9fn042-E4VIx_0gIiv7QFq2l8I0uXO_bagR8";
-        const convertedKey = urlBase64ToUint8Array(vapidPublicKey);
-        console.log('[Client] Converted VAPID key:', convertedKey);
-
-        const sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: convertedKey
-        });
-        console.log('[Client] Got subscription:', sub);
-
-        const resp = await fetch('/subscribe', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify(sub)
-        });
-        console.log('[Client] /subscribe response:', resp.status, await resp.text());
-      } catch (err) {
-        console.error('[Client] Subscription error:', err);
-      }
-    });
-  });
-</script>
-
-<script>
-  // 0) Make sure this helper is defined first
+  //======== 1) Service Worker Registration & Push Subscription ========//
+  // Convert VAPID key
   function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding)
-      .replace(/-/g, '+')
-      .replace(/_/g, '/');
-    const rawData = window.atob(base64);
+      .replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = atob(base64);
     return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
   }
 
-  // 1) Wire up your button
-  document.getElementById('enable-notifications').addEventListener('click', async () => {
-    console.log('[Client] Clicked Enable Notifications');
+  async function subscribeUser() {
     try {
-      // 2) Register SW
-      const reg = await navigator.serviceWorker.register('/service-worker.js');
-      console.log('[Client] SW registered', reg);
-
-      // 3) Ask permission
+      const reg = await navigator.serviceWorker.ready;
       const perm = await Notification.requestPermission();
-      console.log('[Client] Notification permission:', perm);
       if (perm !== 'granted') throw new Error('Permission not granted');
 
-      // 4) Prepare VAPID key
-      const vapidPublicKey = "{{ vapid_public_key }}";  // or hard-coded for testing
-      const convertedKey   = urlBase64ToUint8Array(vapidPublicKey);
-      console.log('[Client] Converted VAPID key:', convertedKey);
-
-      // 5) Subscribe
+      const vapidKey = {{ vapid_public_key|tojson }};
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: convertedKey
+        applicationServerKey: urlBase64ToUint8Array(vapidKey)
       });
-      console.log('[Client] Got subscription:', sub);
-
-      // 6) Send to server
-      const resp = await fetch('/subscribe', {
+      await fetch('/subscribe', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: {'Content-Type':'application/json'},
         body: JSON.stringify(sub)
       });
-      console.log('[Client] /subscribe response:', resp.status, await resp.text());
+      console.log('[Push] Subscribed');
     } catch (err) {
-      console.error('[Client] Subscription error:', err);
+      console.error('[Push] Subscription error:', err);
     }
-  });
-</script>
+  }
 
-
-
-
-
-
-
-  <script>
-    // Mobile Navigation Toggle
-    const hamburger = document.querySelector('.hamburger');
-    const navLinks = document.querySelector('.nav-links');
-    
-    hamburger.addEventListener('click', () => {
-      navLinks.classList.toggle('active');
-      hamburger.classList.toggle('active');
-    });
-
-// Category Tabs
-document.querySelectorAll('.category-filter').forEach(btn => {
-  btn.addEventListener('click', function() {
-    // toggle active class
-    document.querySelectorAll('.category-filter').forEach(t => t.classList.remove('active'));
-    this.classList.add('active');
-    
-    // set hidden input and submit
-    document.getElementById('selected-category').value = this.dataset.value;
-    document.getElementById('search-form').submit();
-  });
-});
-
-// Deal‐Type Tabs
-document.querySelectorAll('.deal-filter').forEach(btn => {
-  btn.addEventListener('click', function() {
-    // toggle active class
-    document.querySelectorAll('.deal-filter').forEach(t => t.classList.remove('active'));
-    this.classList.add('active');
-    
-    // set hidden input and submit
-    document.getElementById('selected-deal-type').value = this.dataset.value;
-    document.getElementById('search-form').submit();
-  });
-});
-
-    // Lazy Loading Images
-    const lazyLoadImages = () => {
-      const images = document.querySelectorAll('.card-image img[data-src]');
-      
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const img = entry.target;
-            img.src = img.dataset.src;
-            img.removeAttribute('data-src');
-            observer.unobserve(img);
-          }
-        });
-      }, {
-        rootMargin: '200px'
-      });
-      
-      images.forEach(img => observer.observe(img));
-    };
-    
-    // Track Impressions
-    const trackImpression = (listingId) => {
-      fetch('/api/track_impression', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ listing_id: listingId })
-      })
-      .catch(err => console.error('Error tracking impression:', err));
-    };
-    
-    // Set up impression tracking
-    const setupImpressionTracking = () => {
-      const listingCards = document.querySelectorAll('.listing-card-link');
-      
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const listingId = entry.target.dataset.listingId;
-            trackImpression(listingId);
-            observer.unobserve(entry.target);
-          }
-        });
-      }, {
-        threshold: 0.5
-      });
-      
-      listingCards.forEach(card => observer.observe(card));
-    };
-    
-    // Initialize functions when DOM is loaded
-    document.addEventListener('DOMContentLoaded', () => {
-      lazyLoadImages();
-      setupImpressionTracking();
-    });
-    
-    // Track click function
-    function trackClick(event, listingId) {
-      fetch('/api/track_click', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ listing_id: listingId })
-      })
-      .catch(err => console.error('Error tracking click:', err));
-    }
-    
-    // Service Worker Registration
+  document.addEventListener('DOMContentLoaded', () => {
+    // Register service worker
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
-          .then(registration => {
-            console.log('ServiceWorker registration successful:', registration.scope);
-          })
-          .catch(err => {
-            console.log('ServiceWorker registration failed:', err);
-          });
-      });
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(reg => console.log('[SW] registered', reg.scope))
+        .catch(console.error);
     }
-  </script>
 
-<!-- HERO CAROUSEL SCRIPT -->
-<script>
-document.addEventListener('DOMContentLoaded',()=>{
-  const slides = document.querySelectorAll('.hero-slide');
-  const dots   = document.querySelectorAll('.hero-dots .dot');
-  let idx = 0, total = slides.length;
-  if(total<2) return;
+    // Staggered notification prompt: show after first listing click
+    const PROMPT_KEY = 'swapsphere_notif_prompted';
+    document.querySelectorAll('.listing-card-link').forEach(link => {
+      link.addEventListener('click', () => {
+        if (USER_LOGGED_IN && !USER_SUBSCRIBED && !localStorage.getItem(PROMPT_KEY)) {
+          document.getElementById('notify-prompt').style.display = 'block';
+        }
+      });
+    });
+    document.getElementById('notify-yes').onclick = () => {
+      subscribeUser();
+      localStorage.setItem(PROMPT_KEY, 'yes');
+      document.getElementById('notify-prompt').remove();
+    };
+    document.getElementById('notify-no').onclick = () => {
+      localStorage.setItem(PROMPT_KEY, 'no');
+      document.getElementById('notify-prompt').remove();
+    };
+  });
 
-  function showSlide(n){
-    slides.forEach((s,i)=> s.classList.toggle('active', i===n));
-    dots.forEach((d,i)=> d.classList.toggle('active', i===n));
+  //======== 2) Proposal Status Update with Inline Badge & Undo ========//
+  let lastAction = null;
+
+  async function updateProposalStatus(id, status) {
+    try {
+      const res  = await fetch(`/proposals/${id}`, {
+        method: 'PUT',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({status})
+      });
+      const data = await res.json();
+      if (!data.success) {
+        return showToast('Update failed', false);
+      }
+
+      // Update badge inline
+      const card = document.querySelector(`.proposal-card[data-id="${id}"]`);
+      const badge = card.querySelector('.status-badge');
+      const prev  = badge.textContent;
+      badge.textContent = status;
+      badge.className   = `status-badge status-${status}`;
+
+      // Disable action buttons
+      card.querySelectorAll('.proposal-actions button').forEach(b => b.disabled = true);
+
+      // Show undo toast
+      lastAction = {id, prev};
+      showToast(`Marked "${status}"`, true);
+
+    } catch (e) {
+      console.error(e);
+      showToast('Network error', false);
+    }
   }
 
-  // auto-advance
-  setInterval(()=>{
-    idx = (idx+1)%total;
-    showSlide(idx);
-  }, 5000);
-
-  // dot clicks
-  dots.forEach((d,i)=> d.addEventListener('click',()=>{ idx=i; showSlide(i); }));
-});
-</script>
-
-
-
-<script>
-// Add basic carousel functionality
-document.addEventListener('DOMContentLoaded', function() {
-  const carouselItems = document.querySelectorAll('.carousel-item');
-  const dots = document.querySelectorAll('.dot');
-  let currentIndex = 0;
-
-  function showSlide(index) {
-    carouselItems.forEach(item => item.classList.remove('active'));
-    dots.forEach(dot => dot.classList.remove('active'));
-    
-    carouselItems[index].classList.add('active');
-    dots[index].classList.add('active');
-    currentIndex = index;
+  function showToast(msg, canUndo) {
+    const toast = document.getElementById('undo-toast');
+    document.getElementById('undo-message').textContent = msg;
+    document.getElementById('undo-btn').style.display = canUndo ? 'inline' : 'none';
+    toast.style.display = 'block';
+    clearTimeout(toast.hideTimer);
+    toast.hideTimer = setTimeout(() => toast.style.display = 'none', 5000);
   }
 
-  dots.forEach((dot, index) => {
-    dot.addEventListener('click', () => showSlide(index));
+  document.getElementById('undo-btn').addEventListener('click', () => {
+    if (lastAction) {
+      updateProposalStatus(lastAction.id, lastAction.prev);
+      lastAction = null;
+    }
+    document.getElementById('undo-toast').style.display = 'none';
   });
 
-  document.querySelector('.control-prev').addEventListener('click', () => {
-    let newIndex = currentIndex - 1;
-    if (newIndex < 0) newIndex = carouselItems.length - 1;
-    showSlide(newIndex);
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.accept-proposal')
+      .forEach(btn => btn.addEventListener('click', () => updateProposalStatus(btn.dataset.id, 'accepted')));
+    document.querySelectorAll('.decline-proposal')
+      .forEach(btn => btn.addEventListener('click', () => updateProposalStatus(btn.dataset.id, 'declined')));
+    document.querySelectorAll('.negotiate-proposal')
+      .forEach(btn => btn.addEventListener('click', () => updateProposalStatus(btn.dataset.id, 'negotiated')));
   });
 
-  document.querySelector('.control-next').addEventListener('click', () => {
-    let newIndex = currentIndex + 1;
-    if (newIndex >= carouselItems.length) newIndex = 0;
-    showSlide(newIndex);
+  //======== 3) Mobile Navigation Toggle ========//
+  const hamburger = document.querySelector('.hamburger');
+  const navLinks = document.querySelector('.nav-links');
+  hamburger.addEventListener('click', () => {
+    navLinks.classList.toggle('active');
+    hamburger.classList.toggle('active');
   });
 
-  // Auto-advance every 8 seconds
-  setInterval(() => showSlide((currentIndex + 1) % carouselItems.length), 8000);
-});
+  //======== 4) Category & Deal-Type Filters ========//
+  document.querySelectorAll('.category-filter').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.category-filter').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+      document.getElementById('selected-category').value = this.dataset.value;
+      document.getElementById('search-form').submit();
+    });
+  });
+  document.querySelectorAll('.deal-filter').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.deal-filter').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+      document.getElementById('selected-deal-type').value = this.dataset.value;
+      document.getElementById('search-form').submit();
+    });
+  });
+
+  //======== 5) Lazy Loading Images ========//
+  function lazyLoadImages() {
+    const images = document.querySelectorAll('img[loading="lazy"]');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          const src = img.dataset.src;
+          if (src) {
+            img.src = src;
+            img.removeAttribute('data-src');
+          }
+          observer.unobserve(img);
+        }
+      });
+    }, {rootMargin: '200px'});
+    images.forEach(img => observer.observe(img));
+  }
+
+  //======== 6) Track Impressions & Clicks ========//
+  function trackImpression(id) {
+    fetch('/api/track_impression', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({listing_id: id})
+    }).catch(console.error);
+  }
+  function trackClick(id) {
+    fetch('/api/track_click', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({listing_id: id})
+    }).catch(console.error);
+  }
+  function setupImpressionTracking() {
+    const cards = document.querySelectorAll('.listing-card-link');
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          trackImpression(entry.target.dataset.listingId);
+          obs.unobserve(entry.target);
+        }
+      });
+    }, {threshold: 0.5});
+    cards.forEach(card => obs.observe(card));
+  }
+
+  //======== 7) Hero Carousel ========//
+  function initCarousel() {
+    const items = document.querySelectorAll('.carousel-item');
+    const dots  = document.querySelectorAll('.dot');
+    const prev  = document.querySelector('.control-prev');
+    const next  = document.querySelector('.control-next');
+    let idx = 0, total = items.length;
+    function show(n) {
+      items.forEach((it,i) => it.classList.toggle('active', i===n));
+      dots.forEach((d,i) => d.classList.toggle('active', i===n));
+      idx = n;
+    }
+    dots.forEach((d,i) => d.addEventListener('click', () => show(i)));
+    prev.addEventListener('click', () => show((idx-1+total)%total));
+    next.addEventListener('click', () => show((idx+1)%total));
+    setInterval(() => show((idx+1)%total), 8000);
+  }
+
+  //======== Initialize on DOMContentLoaded ========//
+  document.addEventListener('DOMContentLoaded', () => {
+    lazyLoadImages();
+    setupImpressionTracking();
+    initCarousel();
+  });
 </script>
 
 </body>
