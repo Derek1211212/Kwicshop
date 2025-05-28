@@ -2372,21 +2372,28 @@ input[type="file"] {
   // Utility to update a proposal’s status
   async function updateProposalStatus(proposalId, newStatus) {
     try {
-      const res = await fetch(`/proposals/${proposalId}`, {
+      const res  = await fetch(`/proposals/${proposalId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
       });
+      const data = await res.json();              // always parse JSON
 
-      if (!res.ok) {
-        const err = await res.json();
-        return alert('Error: ' + (err.error || res.statusText));
+      if (!data.success) {
+        // Only show an error if the backend really failed its core work
+        return alert('Error: ' + (data.error || 'Update failed'));
       }
 
-      // Success — you can reload or update the card UI here
-      alert(`Proposal ${newStatus} successfully.`);
-      // Optionally reload to reflect the new status:
-      // window.location.reload();
+      // Success — update UI or reload
+      // e.g. update the badge text in-place:
+      const card = document.querySelector(`.proposal-card[data-listing-title][data-id="${proposalId}"]`);
+      if (card) {
+        const badge = card.querySelector('.status-badge');
+        badge.textContent = newStatus.toLowerCase();
+        badge.className = `status-badge status-${newStatus.toLowerCase()}`;
+      }
+      // Or simply reload:
+      window.location.reload();
 
     } catch (e) {
       console.error(e);
@@ -2394,25 +2401,20 @@ input[type="file"] {
     }
   }
 
-  // Attach click handlers to each action button
+  // Attach click handlers
   document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.accept-proposal').forEach(btn => {
-      btn.addEventListener('click', () => {
-        updateProposalStatus(btn.dataset.id, 'Accepted');
-      });
-    });
-    document.querySelectorAll('.decline-proposal').forEach(btn => {
-      btn.addEventListener('click', () => {
-        updateProposalStatus(btn.dataset.id, 'Declined');
-      });
-    });
-    document.querySelectorAll('.negotiate-proposal').forEach(btn => {
-      btn.addEventListener('click', () => {
-        updateProposalStatus(btn.dataset.id, 'Negotiated');
-      });
-    });
+    document.querySelectorAll('.accept-proposal').forEach(btn =>
+      btn.addEventListener('click', () => updateProposalStatus(btn.dataset.id, 'accepted'))
+    );
+    document.querySelectorAll('.decline-proposal').forEach(btn =>
+      btn.addEventListener('click', () => updateProposalStatus(btn.dataset.id, 'declined'))
+    );
+    document.querySelectorAll('.negotiate-proposal').forEach(btn =>
+      btn.addEventListener('click', () => updateProposalStatus(btn.dataset.id, 'negotiated'))
+    );
   });
 </script>
+
 
 
 
