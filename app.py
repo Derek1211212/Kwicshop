@@ -357,11 +357,14 @@ def listing_details(listing_id):
 
 
 
-# User Authentication Helper
+# User lookup now returns account_status
 def authenticate_user(email, password):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT id FROM users WHERE email = %s AND password = %s", (email, password))
+    cursor.execute(
+        "SELECT id, account_status FROM users WHERE email = %s AND password = %s",
+        (email, password)
+    )
     user = cursor.fetchone()
     cursor.close()
     conn.close()
@@ -379,30 +382,77 @@ def login_required(f):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # preserve any ?next= URL
     next_url = request.args.get('next') or request.form.get('next') or url_for('home')
+    # Initialize or retrieve the per-email failure counts
+    session.setdefault('failed_logins', {})
 
     if request.method == 'POST':
-        # Email/password flow
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
+
         if not email or not password:
             flash('Please enter both email and password', 'danger')
             return redirect(url_for('login', next=next_url))
 
+        # Check how many times this email has failed so far
+        failed = session['failed_logins'].get(email, 0)
+
+        # If already suspended by prior logic, block immediately
+        # (In case they cleared session but DB is suspended)
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT account_status FROM users WHERE email = %s", (email,))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+        if row and row[0] == 'Suspended':
+            flash('Your account is suspended. Please email swapsphere@gmail.com to request reactivation.', 'danger')
+            return redirect(url_for('login', next=next_url))
+
+        # Authenticate
         user = authenticate_user(email, password)
         if user:
+            # Successful login: clear fail count and log in
+            session['failed_logins'].pop(email, None)
             session['user_id'] = user['id']
             session.permanent = True
             logging.info(f"User {user['id']} logged in successfully")
             return redirect(next_url)
         else:
-            logging.warning(f"Failed login attempt for email: {email}")
-            flash('Invalid email or password', 'danger')
+            # Increment fail count
+            failed += 1
+            session['failed_logins'][email] = failed
+            logging.warning(f"Failed login attempt {failed} for email: {email}")
 
-    # GET or failed POST
+            # On 3rd failure, warn that next will lock
+            if failed == 3:
+                flash('Warning: One more failed attempt will lock your account.', 'warning')
+            # On 4th failure, suspend account and instruct
+            elif failed >= 4:
+                try:
+                    conn = get_db_connection()
+                    cur = conn.cursor()
+                    cur.execute(
+                        "UPDATE users SET account_status = 'Suspended' WHERE email = %s",
+                        (email,)
+                    )
+                    conn.commit()
+                    cur.close()
+                    conn.close()
+                    logging.warning(f"User account suspended due to repeated failures: {email}")
+                except Exception as e:
+                    logging.error(f"Error suspending account {email}: {e}")
+                flash(
+                    'Your account has been suspended due to multiple failed login attempts. '
+                    'Please email swapsphere@gmail.com to request reactivation.',
+                    'danger'
+                )
+            else:
+                # Standard invalid credentials message
+                flash('Invalid email or password', 'danger')
+
+    # GET or after POST
     return render_template('login.html', next_url=next_url)
-
 
 # ─── 2) Kick‐off Google OAuth Flow ────────────────────────────────────────────
 @app.route('/login/google')

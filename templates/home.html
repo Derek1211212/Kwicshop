@@ -1185,6 +1185,101 @@
     cursor: pointer;
     font-weight: bold;
   }
+
+
+      /* ======= MOBILE BOTTOM NAVIGATION BAR ======= */
+    .mobile-bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+      z-index: 1000;
+      padding: 8px 0;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+    }
+    
+    .nav-items {
+      display: flex;
+      justify-content: space-around;
+    }
+    
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 12px;
+      text-decoration: none;
+      color: #6b7280;
+      transition: all 0.3s ease;
+      min-width: 70px;
+    }
+    
+    .nav-item:hover {
+      background: rgba(129, 199, 132, 0.05);
+    }
+    
+    .nav-item.active {
+      color: #81C784;
+      background: rgba(129, 199, 132, 0.1);
+    }
+    
+    .nav-icon {
+      font-size: 1.4rem;
+      margin-bottom: 4px;
+    }
+    
+    .nav-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    
+    /* Active indicator */
+    .active-indicator {
+      position: absolute;
+      top: 4px;
+      width: 6px;
+      height: 6px;
+      background: #81C784;
+      border-radius: 50%;
+    }
+    
+    /* Body padding to avoid content overlap */
+    @media (max-width: 768px) {
+      body {
+        padding-bottom: 70px;
+      }
+      
+      .mobile-bottom-nav {
+        display: block;
+      }
+      
+      /* Hide the hamburger menu on mobile */
+      .hamburger {
+        display: none;
+      }
+      
+      /* Hide the nav-links on mobile */
+      .nav-links {
+        display: none !important;
+      }
+    }
+    
+    /* Responsive adjustments for bottom nav */
+    @media (max-width: 480px) {
+      .nav-label {
+        font-size: 0.65rem;
+      }
+      
+      .nav-item {
+        padding: 8px 6px;
+        min-width: 60px;
+      }
+    }
   </style>
 
     <script>
@@ -1222,6 +1317,72 @@
       <div></div>
     </div>
   </nav>
+
+
+ <!-- Mobile Bottom Navigation -->
+  <div class="mobile-bottom-nav">
+    <div class="nav-items">
+      <a href="/" class="nav-item active">
+        <i class="fas fa-home nav-icon"></i>
+        <span class="nav-label">Home</span>
+        <span class="active-indicator"></span>
+      </a>
+      
+      <a href="/my-proposals" class="nav-item">
+        <i class="fas fa-exchange-alt nav-icon"></i>
+        <span class="nav-label">Offers</span>
+      </a>
+      
+      {% if session.get('user_id') %}
+        <a href="/Dash" class="nav-item">
+          <i class="fas fa-user nav-icon"></i>
+          <span class="nav-label">Account</span>
+        </a>
+        
+        <a href="/logout" class="nav-item">
+          <i class="fas fa-sign-out-alt nav-icon"></i>
+          <span class="nav-label">Logout</span>
+        </a>
+      {% else %}
+        <a href="/login" class="nav-item">
+          <i class="fas fa-sign-in-alt nav-icon"></i>
+          <span class="nav-label">Login</span>
+        </a>
+        
+        <a href="/signup" class="nav-item">
+          <i class="fas fa-user-plus nav-icon"></i>
+          <span class="nav-label">Sign Up</span>
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+
+    <script>
+    // ... existing JavaScript ...
+    
+    // Highlight active nav item in mobile bottom nav
+    document.addEventListener('DOMContentLoaded', function() {
+      const navItems = document.querySelectorAll('.nav-item');
+      const currentPath = window.location.pathname;
+      
+      navItems.forEach(item => {
+        const href = item.getAttribute('href');
+        if (currentPath === href) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+        
+        item.addEventListener('click', function() {
+          navItems.forEach(i => i.classList.remove('active'));
+          this.classList.add('active');
+        });
+      });
+    });
+  </script>
+
+
 
 <!-- Enhanced Hero + Search + Filters Section -->
 <section class="hero-search-filters">
