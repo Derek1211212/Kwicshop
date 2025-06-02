@@ -833,70 +833,7 @@
   font-family: Poppins, sans-serif;
 }
 
-/* =========== HERO CAROUSEL =========== */
-.hero-carousel {
-  position: relative;
-  overflow: hidden;
-  border-radius: 16px;
-  height: 350px;
-  margin-bottom: 2rem;
-}
-.hero-slide {
-  position: absolute; top:0; left:0;
-  width:100%; height:100%;
-  background-size: cover;
-  background-position: center;
-  opacity: 0; transition: opacity 1s ease-in-out;
-}
-.hero-slide.active { opacity:1; }
-.hero-overlay {
-  position: absolute; inset:0;
-  background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
-  display:flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 1.5rem;
-  color: #fff;
-}
-.hero-overlay h2 {
-  font-size: 1.8rem; margin-bottom: 0.5rem;
-}
-.hero-btn {
-  align-self: flex-start;
-  background: #fff; color:#333;
-  padding: 0.6rem 1.2rem;
-  border-radius: 999px;
-  font-weight:600;
-  text-decoration:none;
-  transition: background .3s;
-}
-.hero-btn:hover { background:#f0f0f0; }
 
-.hero-brand {
-  position: absolute;
-  top:1rem; left:1rem;
-  z-index:10;
-  font-size:1.6rem; font-weight:700;
-  color:#fff;
-  text-shadow:0 2px 4px rgba(0,0,0,0.6);
-}
-
-.hero-dots {
-  position:absolute; bottom:0.8rem; left:50%;
-  transform:translateX(-50%);
-  display:flex; gap:0.5rem;
-}
-.hero-dots .dot {
-  width:10px; height:10px;
-  background:rgba(255,255,255,0.5);
-  border-radius:50%;
-  cursor:pointer;
-  transition:background .3s;
-}
-.hero-dots .dot.active,
-.hero-dots .dot:hover {
-  background:#fff;
-}
 
 
 
@@ -950,108 +887,7 @@
 
 
 
-/* Improved Carousel Styles */
-.hero-carousel {
-  position: relative;
-  height: 70vh;
-  max-height: 800px;
-  min-height: 400px;
-  overflow: hidden;
-  border-radius: 16px;
-  margin: 1rem;
-}
 
-.carousel-inner {
-  position: relative;
-  height: 100%;
-}
-
-.carousel-item {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  transition: opacity 0.5s ease-in-out;
-}
-
-.carousel-item.active {
-  opacity: 1;
-}
-
-.carousel-image {
-  height: 100%;
-  background-size: cover;
-  background-position: center;
-}
-
-.carousel-caption {
-  position: absolute;
-  bottom: 20%;
-  left: 10%;
-  color: white;
-  max-width: 600px;
-}
-
-.carousel-title {
-  font-size: 2.5rem;
-  margin-bottom: 1.5rem;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-
-.carousel-button {
-  display: inline-flex;
-  align-items: center;
-  padding: 1rem 2rem;
-  background: var(--primary-color);
-  color: white;
-  border-radius: 50px;
-  text-decoration: none;
-  transition: transform 0.2s ease;
-}
-
-.carousel-button:hover {
-  transform: translateY(-2px);
-}
-
-.carousel-controls {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.carousel-dots {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 2px solid white;
-  background: transparent;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.dot.active {
-  background: white;
-  transform: scale(1.2);
-}
-
-.control-prev, .control-next {
-  background: rgba(255,255,255,0.2);
-  border: none;
-  color: white;
-  padding: 0.5rem;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
 
 /* Enhanced Search Bar Styles */
 /* Enhanced Search Bar Styles */
@@ -1298,6 +1134,11 @@ body .mobile-bottom-nav {
   }
 }
 
+
+
+
+
+
   </style>
 
     <script>
@@ -1306,212 +1147,679 @@ body .mobile-bottom-nav {
   </script>
 </head>
 <body>
-  <!-- Modern Navigation -->
-  <nav class="navbar">
-    <div class="brand">
-      <svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--primary)">
-        <path d="M11 5h2v14h-2V5zm-4 7h2v7H7v-7zm8-7h2v14h-2V5z"/>
-      </svg>
-      <span>SwapSphere</span>
-    </div>
-    
-    <div class="nav-links">
-      <a href="/dashboard" class="active">Dashboard</a>
-      <a href="/my-proposals">My Offers</a>
-      {% if session.get('user_id') %}
-        <a href="/Dash">Account</a>
-        <a href="/logout" class="btn btn-outline">Logout</a>
-      {% else %}
-        <a href="/login">Login</a>
-        <a href="/signup" class="btn btn-primary">Sign Up</a>
-      {% endif %}
-    </div>
-    
-    <div class="hamburger">
-      <div></div>
-      <div></div>
-      <div></div>
-    </div>
-  </nav>
+<!-- ===== MODERN NAVIGATION ===== -->
+<nav class="navbar">
+  <div class="brand">
+    <svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--primary)">
+      <path d="M11 5h2v14h-2V5zm-4 7h2v7H7v-7zm8-7h2v14h-2V5z"/>
+    </svg>
+    <span>SwapSphere</span>
+  </div>
+  
+  <div class="nav-links">
+    <a href="/dashboard" class="active">Dashboard</a>
+    <a href="/my-proposals">My Offers</a>
+    {% if session.get('user_id') %}
+      <a href="/Dash">Account</a>
+      <a href="/logout" class="btn btn-outline">Logout</a>
+    {% else %}
+      <a href="/login">Login</a>
+      <a href="/signup" class="btn btn-primary">Sign Up</a>
+    {% endif %}
+  </div>
+  
+  <div class="hamburger">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+</nav>
 
-
- <!-- Mobile Bottom Navigation -->
-  <div class="mobile-bottom-nav">
-    <div class="nav-items">
-      <a href="/" class="nav-item active">
-        <i class="fas fa-home nav-icon"></i>
-        <span class="nav-label">Home</span>
-        <span class="active-indicator"></span>
+<!-- ===== MOBILE BOTTOM NAVIGATION ===== -->
+<div class="mobile-bottom-nav">
+  <div class="nav-items">
+    <a href="/" class="nav-item active">
+      <i class="fas fa-home nav-icon"></i>
+      <span class="nav-label">Home</span>
+      <span class="active-indicator"></span>
+    </a>
+    
+    <a href="/my-proposals" class="nav-item">
+      <i class="fas fa-exchange-alt nav-icon"></i>
+      <span class="nav-label">Offers</span>
+    </a>
+    
+    {% if session.get('user_id') %}
+      <a href="/dashboard" class="nav-item">
+        <i class="fas fa-user nav-icon"></i>
+        <span class="nav-label">Dashboard</span>
       </a>
       
-      <a href="/my-proposals" class="nav-item">
-        <i class="fas fa-exchange-alt nav-icon"></i>
-        <span class="nav-label">Offers</span>
+      <a href="/logout" class="nav-item">
+        <i class="fas fa-sign-out-alt nav-icon"></i>
+        <span class="nav-label">Logout</span>
+      </a>
+    {% else %}
+      <a href="/login" class="nav-item">
+        <i class="fas fa-sign-in-alt nav-icon"></i>
+        <span class="nav-label">Login</span>
       </a>
       
-      {% if session.get('user_id') %}
-        <a href="/Dash" class="nav-item">
-          <i class="fas fa-user nav-icon"></i>
-          <span class="nav-label">Account</span>
-        </a>
-        
-        <a href="/logout" class="nav-item">
-          <i class="fas fa-sign-out-alt nav-icon"></i>
-          <span class="nav-label">Logout</span>
-        </a>
-      {% else %}
-        <a href="/login" class="nav-item">
-          <i class="fas fa-sign-in-alt nav-icon"></i>
-          <span class="nav-label">Login</span>
-        </a>
-        
-        <a href="/signup" class="nav-item">
-          <i class="fas fa-user-plus nav-icon"></i>
-          <span class="nav-label">Sign Up</span>
-        </a>
-      {% endif %}
-    </div>
+      <a href="/signup" class="nav-item">
+        <i class="fas fa-user-plus nav-icon"></i>
+        <span class="nav-label">Sign Up</span>
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  // Highlight active nav item in mobile bottom nav
+  document.addEventListener('DOMContentLoaded', function() {
+    const navItems = document.querySelectorAll('.nav-item');
+    const currentPath = window.location.pathname;
+    
+    navItems.forEach(item => {
+      const href = item.getAttribute('href');
+      if (currentPath === href) {
+        item.classList.add('active');
+      } else {
+        item.classList.remove('active');
+      }
+      
+      item.addEventListener('click', function() {
+        navItems.forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+  });
+
+  // Toggle mobile bottom nav visibility
+  const nav = document.querySelector('.mobile-bottom-nav');
+  function updateMobileNav() {
+    if (window.innerWidth <= 768) {
+      nav.style.display = 'flex';
+    } else {
+      nav.style.display = 'none';
+    }
+  }
+  window.addEventListener('load', updateMobileNav);
+  window.addEventListener('resize', updateMobileNav);
+</script>
+
+<!-- ===== HERO + SEARCH + FILTERS SECTION ===== -->
+<section class="hero-search-filters">
+  
+  <!-- 1) MERGED SEARCH BAR -->
+  <div class="search-bar" style="padding: 1rem 2rem; background: var(--surface); box-shadow: var(--shadow-sm); margin-bottom: 1rem; position: relative;">
+    <!-- “Search items” input -->
+    <i class="fas fa-search search-icon" style="position: absolute; left: 2.5rem; top: 50%; transform: translateY(-50%); color: var(--text-light);"></i>
+    <input
+      type="text"
+      name="search"
+      class="search-input"
+      placeholder="What are you looking for?"
+      value="{{ search }}"
+      style="width: 100%; padding: 0.75rem 3.5rem 0.75rem 3rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 1rem; color: var(--text); box-shadow: var(--shadow-sm);"
+    />
+    <!-- Map‐pin icon to toggle “location” field -->
+    <button type="button" class="location-btn" aria-label="Show Location Search" style="background: none; border: none; position: absolute; right: 2rem; top: 50%; transform: translateY(-50%); font-size: 1.1rem; color: var(--text-light); cursor: pointer; transition: color 0.2s;">
+      <i class="fas fa-map-marker-alt"></i>
+    </button>
+    <!-- Hidden “location” input (initially display:none) -->
+    <input
+      type="text"
+      name="location"
+      class="location-input"
+      placeholder="Location (e.g. Madina…)"
+      value="{{ location }}"
+      style="width: 100%; margin-top: 0.75rem; padding: 0.75rem 2.5rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 1rem; color: var(--text); box-shadow: var(--shadow-sm); display: none;"
+    />
   </div>
 
-
-    <script>
-    // ... existing JavaScript ...
-    
-    // Highlight active nav item in mobile bottom nav
-    document.addEventListener('DOMContentLoaded', function() {
-      const navItems = document.querySelectorAll('.nav-item');
-      const currentPath = window.location.pathname;
+  <script>
+    // Toggle “location” field when pin icon is clicked
+    document.addEventListener("DOMContentLoaded", () => {
+      const locationBtn = document.querySelector(".location-btn");
+      const locationInput = document.querySelector(".location-input");
       
-      navItems.forEach(item => {
-        const href = item.getAttribute('href');
-        if (currentPath === href) {
-          item.classList.add('active');
+      locationBtn.addEventListener("click", () => {
+        if (locationInput.style.display === "none" || !locationInput.style.display) {
+          locationInput.style.display = "block";
+          locationInput.focus();
         } else {
-          item.classList.remove('active');
+          locationInput.style.display = "none";
         }
-        
-        item.addEventListener('click', function() {
-          navItems.forEach(i => i.classList.remove('active'));
-          this.classList.add('active');
+      });
+    });
+  </script>
+
+  <!-- 2) DEAL‐TYPE FILTERS -->
+  <div class="filters-scroll deal-filter-row" style="display: flex; gap: 0.75rem; overflow-x: auto; padding: 0.75rem 2rem; margin-bottom: 0.5rem; background: var(--surface); box-shadow: var(--shadow-sm);">
+    {% set deal_types = ['All', 'Swap Deal', 'Outright Sales'] %}
+    {% for deal in deal_types %}
+      <button
+        class="filter-button deal-filter{% if deal_type_filter == deal %} active{% endif %}"
+        data-type="deal_type"
+        data-value="{{ deal }}"
+        style="flex: 0 0 auto; background: #f0f0f0; color: #333; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
+      >
+        {{ deal }}
+      </button>
+    {% endfor %}
+  </div>
+
+  <!-- 3) CATEGORY FILTERS -->
+  <div class="filters-scroll category-filter-row" style="display: flex; gap: 0.75rem; overflow-x: auto; padding: 0.75rem 2rem; margin-bottom: 1rem; background: var(--surface); box-shadow: var(--shadow-sm);">
+    <button
+      class="filter-button category-filter{% if selected_category == 'All' %} active{% endif %}"
+      data-type="category"
+      data-value="All"
+      style="flex: 0 0 auto; background: #f0f0f0; color: #333; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
+    >
+      All
+    </button>
+    {% for cat in categories %}
+      <button
+        class="filter-button category-filter{% if selected_category == cat %} active{% endif %}"
+        data-type="category"
+        data-value="{{ cat }}"
+        style="flex: 0 0 auto; background: #f0f0f0; color: #333; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
+      >
+        {{ cat }}
+      </button>
+    {% endfor %}
+  </div>
+
+  <script>
+    // Deal‐type filter clicks
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".deal-filter").forEach((btn) => {
+        btn.addEventListener("click", function () {
+          document.querySelectorAll(".deal-filter").forEach((t) => t.classList.remove("active"));
+          this.classList.add("active");
+          document.getElementById("selected-deal-type").value = this.dataset.value;
+          document.getElementById("search-form").submit();
+        });
+      });
+      // Category filter clicks
+      document.querySelectorAll(".category-filter").forEach((btn) => {
+        btn.addEventListener("click", function () {
+          document.querySelectorAll(".category-filter").forEach((t) => t.classList.remove("active"));
+          this.classList.add("active");
+          document.getElementById("selected-category").value = this.dataset.value;
+          document.getElementById("search-form").submit();
         });
       });
     });
-
-
-    const nav = document.querySelector('.mobile-bottom-nav');
-if (window.innerWidth <= 768) {
-  nav.style.display = 'flex';
-} else {
-  nav.style.display = 'none';
-}
-// Add a resize listener if needed
-window.addEventListener('resize', () => {
-  if (window.innerWidth <= 768) {
-    nav.style.display = 'flex';
-  } else {
-    nav.style.display = 'none';
-  }
-});
   </script>
 
-
-
-<!-- Enhanced Hero + Search + Filters Section -->
-<section class="hero-search-filters">
-
-  <!-- 1) Improved Hero Carousel -->
-  <div class="hero-carousel">
-    <div class="carousel-inner">
+   <!-- ===== MULTI-ITEM HERO CAROUSEL ===== -->
+  <div class="multi-carousel-container">
+    <div class="multi-carousel-track">
       {% for listing in listings %}
-      <div class="carousel-item{% if loop.first %} active{% endif %}" 
-           data-id="{{ listing.listing_id }}">
-        <div class="carousel-image" 
-             style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('{{ listing.banner_image }}')">
-        </div>
-        <div class="carousel-caption">
-          <h2 class="carousel-title">{{ listing.title }}</h2>
-          <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}" 
-             class="carousel-button">
-            View Listing
-            <i class="fas fa-arrow-right"></i>
-          </a>
+      <div class="multi-carousel-item" data-id="{{ listing.listing_id }}">
+        <div
+          class="multi-carousel-image"
+          style="background-image:
+                 linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)),
+                 url('{{ listing.banner_image }}')"
+        >
+          <div class="multi-carousel-overlay">
+            <h3 class="multi-carousel-title">{{ listing.title }}</h3>
+            <a
+              href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
+              class="multi-carousel-button"
+            >
+              View Listing <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
         </div>
       </div>
       {% endfor %}
     </div>
-    <div class="carousel-controls">
-      <button class="control-prev" aria-label="Previous slide">
-        <i class="fas fa-chevron-left"></i>
-      </button>
-      <div class="carousel-dots">
-        {% for _ in listings %}
-        <button class="dot{% if loop.first %} active{% endif %}" 
-                aria-label="Slide {{ loop.index }}"></button>
-        {% endfor %}
-      </div>
-      <button class="control-next" aria-label="Next slide">
-        <i class="fas fa-chevron-right"></i>
-      </button>
-    </div>
   </div>
 
-  <!-- 2) Enhanced Search Bar -->
-  <div class="search-container">
-    <form id="search-form" action="{{ url_for('home') }}" method="GET" class="search-form">
-      <div class="search-grid">
-        <div class="search-group">
-          <i class="search-icon fas fa-search"></i>
-          <input type="text" name="search" class="search-input" 
-                 placeholder="What are you looking for?" value="{{ search }}">
-        </div>
-        <div class="search-group">
-          <i class="search-icon fas fa-map-marker-alt"></i>
-          <input type="text" name="location" class="search-input" 
-                 placeholder="Location (e.g. Madina…)" value="{{ location }}">
-        </div>
-        <button type="submit" class="search-button">
-          <span class="button-text">Search</span>
-          <i class="fas fa-search"></i>
-        </button>
-      </div>
-      <input type="hidden" name="category" id="selected-category" value="{{ selected_category }}">
-      <input type="hidden" name="deal_type" id="selected-deal-type" value="{{ deal_type_filter }}">
-    </form>
+  <!-- =============================== -->
+  <!--   WAVE DIVIDER WITH CENTERED TEXT   -->
+  <!-- =============================== -->
+  <div class="carousel-divider">
+    <span class="divider-text">Find Your Next Swap Below</span>
   </div>
-
-<!-- 3) Improved Filter Section -->
-<div class="filters-container">
-  <!-- Deal Type Filters -->
-  <div class="filters-scroll deal-filter-row">
-    {% set deal_types = ['All', 'Swap Deal', 'Outright Sales'] %}
-    {% for deal in deal_types %}
-    <button class="filter-button deal-filter{% if deal_type_filter == deal %} active{% endif %}"
-            data-type="deal_type" data-value="{{ deal }}">
-      {{ deal }}
-    </button>
-    {% endfor %}
-  </div>
-
-  <!-- Category Filters -->
-  <div class="filters-scroll category-filter-row">
-    <button class="filter-button category-filter{% if selected_category == 'All' %} active{% endif %}"
-            data-type="category" data-value="All">
-      All
-    </button>
-    {% for cat in categories %}
-    <button class="filter-button category-filter{% if selected_category == cat %} active{% endif %}"
-            data-type="category" data-value="{{ cat }}">
-      {{ cat }}
-    </button>
-    {% endfor %}
-  </div>
-</div>
-
-
 </section>
 
+<!-- ===== LISTINGS GRID ===== -->
+<section class="listings-container">
+  <div class="listings-grid">
+    {% for listing in listings %}
+      <a
+        href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
+        class="listing-card-link"
+        data-listing-id="{{ listing.listing_id }}"
+      >
+        <div class="listing-card {% if listing.deal_type == 'Swap Deal' %}swap-card{% else %}sale-card{% endif %}">
 
+          <!-- Badge -->
+          <div class="deal-type-badge">{{ listing.deal_type }}</div>
+
+          <!-- Photos for Swap Deals -->
+          {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 1 %}
+            <div class="swap-photo-row">
+              {% for o in listing.offers[:3] %}
+                <div class="swap-photo">
+                  <img src="{{ o.image1 }}" alt="{{ o.title }}" loading="lazy">
+                </div>
+              {% endfor %}
+            </div>
+            <div class="swap-offer-titles">
+              {{ listing.offers[:3] | map(attribute='title') | join(' + ') }}
+            </div>
+          {% else %}
+            <div class="card-image">
+              <img src="{{ listing.image_url }}" alt="{{ listing.title }}" loading="lazy">
+            </div>
+          {% endif %}
+
+          <!-- Content -->
+          <div class="card-content">
+            {% if listing.deal_type == 'Outright Sales' or listing.offers|length <= 1 %}
+              <h3 class="listing-title">
+                {{ listing.title }}
+                {% if listing.required_cash|float > 0 %}
+                  <span class="required-cash">+ ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span>
+                {% endif %}
+              </h3>
+            {% endif %}
+
+            {% if listing.deal_type == 'Outright Sales' %}
+              <div class="price-display">
+                ₵{{ "{:,.2f}".format(listing.price|float) }}
+              </div>
+            {% else %}
+              <div class="swap-details">
+                <div class="detail-item">
+                  <span class="detail-label">Wanted:</span>
+                  <span class="detail-value">{{ listing.desired_swap }}</span>
+                </div>
+                {% if listing.additional_cash|float > 0 %}
+                  <div class="detail-item">
+                    <span class="detail-label">Plus Cash:</span>
+                    <span class="detail-value cash-adjustment">
+                      + ₵{{ "{:,.2f}".format(listing.additional_cash|float) }}
+                    </span>
+                  </div>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
 </section>
+
+<!-- ===== AUTO-SCROLL SCRIPT ===== -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const track = document.querySelector(".multi-carousel-track");
+    const items = Array.from(document.querySelectorAll(".multi-carousel-item"));
+    let currentIndex = 0;
+    let itemsPerView = 1;
+    let itemWidth = 0;
+    let autoScrollInterval;
+
+    function calculateLayout() {
+      const container = document.querySelector(".multi-carousel-container");
+      const containerWidth = container.clientWidth;
+
+      if (window.innerWidth >= 1024) {
+        itemsPerView = 4;
+      } else if (window.innerWidth >= 768) {
+        itemsPerView = 3;
+      } else if (window.innerWidth >= 480) {
+        itemsPerView = 2;
+      } else {
+        itemsPerView = 1;
+      }
+
+      itemWidth = containerWidth / itemsPerView;
+      scrollToIndex(currentIndex);
+    }
+
+    function scrollToIndex(index) {
+      if (index > items.length - itemsPerView) {
+        index = 0;
+      }
+      if (index < 0) {
+        index = items.length - itemsPerView;
+      }
+      currentIndex = index;
+      const offset = -currentIndex * itemWidth;
+      track.style.transform = `translateX(${offset}px)`;
+    }
+
+    function autoScroll() {
+      let nextIndex = currentIndex + 1;
+      if (nextIndex > items.length - itemsPerView) {
+        nextIndex = 0;
+      }
+      scrollToIndex(nextIndex);
+    }
+
+    function startAutoScroll() {
+      autoScrollInterval = setInterval(autoScroll, 4000);
+    }
+    function stopAutoScroll() {
+      clearInterval(autoScrollInterval);
+    }
+
+    window.addEventListener("resize", () => {
+      calculateLayout();
+    });
+
+    document
+      .querySelector(".multi-carousel-container")
+      .addEventListener("mouseenter", stopAutoScroll);
+    document
+      .querySelector(".multi-carousel-container")
+      .addEventListener("mouseleave", startAutoScroll);
+
+    calculateLayout();
+    startAutoScroll();
+  });
+</script>
+
+<!-- ===== REQUIRED CSS (add these rules at the bottom of your stylesheet) ===== -->
+<style>
+  /* ===== REDUCED HERO CAROUSEL HEIGHT ===== */
+  .hero-carousel {
+    height: 300px;       /* desktop */
+    margin-bottom: 0;    /* divider handles spacing */
+  }
+  @media (max-width: 768px) {
+    .hero-carousel {
+      height: 200px;     /* mobile */
+    }
+  }
+
+ 
+
+  /* ===== MULTI-ITEM CAROUSEL LAYOUT ===== */
+  .multi-carousel-container {
+    position: relative;
+    overflow: hidden;
+    margin: 1rem 1rem 1rem;  /* adjust as needed */
+  }
+  .multi-carousel-track {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+    will-change: transform;
+  }
+  .multi-carousel-item {
+    flex: 0 0 100%;
+    max-width: 100%;
+    padding: 0 0.5rem;
+    box-sizing: border-box;
+  }
+  .multi-carousel-image {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%;  /* 16:9 aspect ratio */
+    background-size: cover;
+    background-position: center;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.3s ease;
+  }
+  .multi-carousel-image:hover {
+    transform: scale(1.03);
+  }
+  .multi-carousel-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      rgba(0, 0, 0, 0.6)
+    );
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    color: #fff;
+  }
+  .multi-carousel-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  .multi-carousel-button {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: background 0.2s ease;
+  }
+  .multi-carousel-button:hover {
+    background: #fff;
+  }
+
+  /* ===== RESPONSIVE: CARDS PER VIEW ===== */
+  @media (min-width: 480px) {
+    .multi-carousel-item {
+      flex: 0 0 50%;
+      max-width: 100%;
+    }
+  }
+  @media (min-width: 768px) {
+    .multi-carousel-item {
+      flex: 0 0 33.3333%;
+      max-width: 33.3333%;
+    }
+  }
+  @media (min-width: 1024px) {
+    .multi-carousel-item {
+      flex: 0 0 25%;
+      max-width: 25%;
+    }
+  }
+
+  /* ===== WAVE DIVIDER ===== */
+  .carousel-divider {
+    position: relative;
+    width: 100%;
+    height: 100px;            /* height for wave + text */
+    margin-bottom: 2rem;      /* space before listings */
+    background-color: var(--background);
+    overflow: hidden;
+  }
+  .carousel-divider::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 100' preserveAspectRatio='none'>\
+  <path fill='%23ffffff' d='M0,30 C360,90 720,0 1080,30 C1440,60 1440,100 1440,100 L0,100 Z'/>\
+</svg>\
+");
+  }
+  .carousel-divider .divider-text {
+    position: absolute;
+    top: 12px;                  /* float just above wave crest */
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    padding: 0.5rem 1.5rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 999px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+  }
+  @media (max-width: 480px) {
+    .carousel-divider {
+      height: 70px;
+    }
+    .carousel-divider::before {
+      background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 70' preserveAspectRatio='none'>\
+  <path fill='%23ffffff' d='M0,20 C200,60 400,0 600,20 C800,40 900,10 900,70 L0,70 Z'/>\
+</svg>\
+");
+    }
+    .carousel-divider .divider-text {
+      font-size: 1.1rem;
+      top: 6px;
+      padding: 0.4rem 1rem;
+    }
+  }
+
+  /* ===== LISTINGS GRID STYLING (unchanged) ===== */
+  .listings-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem 3rem;
+  }
+  .listings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.5rem;
+  }
+  .listing-card-link {
+    text-decoration: none;
+  }
+  .listing-card {
+    position: relative;
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .listing-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+  }
+  .deal-type-badge {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background: var(--primary);
+    color: #fff;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    z-index: 2;
+  }
+  .deal-type-badge.swap {
+    background: var(--success);
+  }
+  .deal-type-badge.sale {
+    background: var(--error);
+  }
+  .swap-photo-row {
+    display: flex;
+    gap: 2px;
+    height: 140px;
+    overflow: hidden;
+  }
+  .swap-photo {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+  .swap-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+  }
+  .swap-photo:hover img {
+    transform: scale(1.1);
+  }
+  .swap-offer-titles {
+    padding: 0.5rem 1rem 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--secondary);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+  .card-image {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+  }
+  .card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+  }
+  .listing-card:hover .card-image img {
+    transform: scale(1.05);
+  }
+  .card-content {
+    padding: 1.25rem;
+  }
+  .listing-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--secondary);
+    margin-bottom: 0.5rem;
+  }
+  .required-cash {
+    font-size: 0.9rem;
+    color: var(--warning);
+    margin-left: 0.5rem;
+  }
+  .price-display {
+    font-size: 1.5rem;
+    color: var(--error);
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+  }
+  .swap-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+  }
+  .detail-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+  }
+  .detail-label {
+    font-weight: 500;
+  }
+  .detail-value {
+    font-weight: 600;
+  }
+  .cash-adjustment {
+    color: var(--success);
+  }
+</style>
+
+
 
 
   <!-- Notification Banner (initially hidden) -->
@@ -1617,72 +1925,6 @@ window.addEventListener('resize', () => {
 
 
 
-
-
-
-
-<section class="listings-container">
-  <div class="listings-grid">
-    {% for listing in listings %}
-      <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}" class="listing-card-link">
-        <div class="listing-card {% if listing.deal_type=='Swap Deal' %}swap-card{% else %}sale-card{% endif %}">
-
-          <!-- Badge -->
-          <div class="deal-type-badge">{{ listing.deal_type }}</div>
-
-          <!-- Photos for Swap Deals -->
-          {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 1 %}
-            <div class="swap-photo-row">
-              {% for o in listing.offers[:3] %}
-                <div class="swap-photo">
-                  <img src="{{ o.image1 }}" alt="{{ o.title }}" loading="lazy">
-                </div>
-              {% endfor %}
-            </div>
-            <div class="swap-offer-titles">
-              {{ listing.offers[:3] | map(attribute='title') | join(' + ') }}
-            </div>
-          {% else %}
-            <div class="card-image">
-              <img src="{{ listing.image_url }}" alt="{{ listing.title }}" loading="lazy">
-            </div>
-          {% endif %}
-
-          <!-- Content -->
-          <div class="card-content">
-            {# Only show the big listing.title if 0 or 1 offers #}
-            {% if listing.deal_type=='Outright Sales' or listing.offers|length <= 1 %}
-            <h3 class="listing-title">
-              {{ listing.title }}
-              {% if listing.required_cash|float > 0 %}
-                <span class="required-cash">+ ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span>
-              {% endif %}
-            </h3>
-            {% endif %}
-
-            {% if listing.deal_type=='Outright Sales' %}
-              <div class="price-display">₵{{ "{:,.2f}".format(listing.price|float) }}</div>
-            {% else %}
-              <div class="swap-details">
-                <div class="detail-item">
-                  <span class="detail-label">Wanted:</span>
-                  <span class="detail-value">{{ listing.desired_swap }}</span>
-                </div>
-                {% if listing.additional_cash|float > 0 %}
-                <div class="detail-item">
-                  <span class="detail-label">Plus Cash:</span>
-                  <span class="detail-value cash-adjustment">+ ₵{{ "{:,.2f}".format(listing.additional_cash|float) }}</span>
-                </div>
-                {% endif %}
-              </div>
-            {% endif %}
-          </div>
-
-        </div>
-      </a>
-    {% endfor %}
-  </div>
-</section>
 
 
 <!-- Undo toast markup -->
