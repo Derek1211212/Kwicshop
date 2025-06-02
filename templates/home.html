@@ -42,7 +42,14 @@
       --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background-color: var(--background); color: var(--text); line-height: 1.6; }
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background-color: var(--background); 
+      color: var(--text); 
+      line-height: 1.6; 
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 0 !important;
+    }
     a { text-decoration: none; color: inherit; }
     .listing-card-link { text-decoration: none; }
 
@@ -51,13 +58,6 @@
     .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
 
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--background);
-      color: var(--text);
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-    }
 
     /* Enhanced Navigation */
     .navbar {
@@ -1187,99 +1187,117 @@
   }
 
 
-      /* ======= MOBILE BOTTOM NAVIGATION BAR ======= */
-    .mobile-bottom-nav {
-      display: none;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: white;
-      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
-      z-index: 1000;
-      padding: 8px 0;
-      border-top-left-radius: 20px;
-      border-top-right-radius: 20px;
-    }
-    
-    .nav-items {
-      display: flex;
-      justify-content: space-around;
-    }
-    
-    .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 8px 12px;
-      border-radius: 12px;
-      text-decoration: none;
-      color: #6b7280;
-      transition: all 0.3s ease;
-      min-width: 70px;
-    }
-    
-    .nav-item:hover {
-      background: rgba(129, 199, 132, 0.05);
-    }
-    
-    .nav-item.active {
-      color: #81C784;
-      background: rgba(129, 199, 132, 0.1);
-    }
-    
-    .nav-icon {
-      font-size: 1.4rem;
-      margin-bottom: 4px;
-    }
-    
-    .nav-label {
-      font-size: 0.75rem;
-      font-weight: 500;
-    }
-    
-    /* Active indicator */
-    .active-indicator {
-      position: absolute;
-      top: 4px;
-      width: 6px;
-      height: 6px;
-      background: #81C784;
-      border-radius: 50%;
-    }
-    
-    /* Body padding to avoid content overlap */
-    @media (max-width: 768px) {
-      body {
-        padding-bottom: 70px;
-      }
-      
-      .mobile-bottom-nav {
-        display: block;
-      }
-      
-      /* Hide the hamburger menu on mobile */
-      .hamburger {
-        display: none;
-      }
-      
-      /* Hide the nav-links on mobile */
-      .nav-links {
-        display: none !important;
-      }
-    }
-    
-    /* Responsive adjustments for bottom nav */
-    @media (max-width: 480px) {
-      .nav-label {
-        font-size: 0.65rem;
-      }
-      
-      .nav-item {
-        padding: 8px 6px;
-        min-width: 60px;
-      }
-    }
+/* ======= MOBILE BOTTOM NAVIGATION BAR ======= */
+/* Mobile Bottom Navigation Bar */
+.mobile-bottom-nav {
+  display: none !important; /* Hidden by default on all screens */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface); /* Falls back to #fff if undefined */
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+  z-index: 1000;
+  padding: 8px 0;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+}
+
+/* Show on small screens (≤768px) */
+@media only screen and (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: flex !important;
+    justify-content: space-around;
+    align-items: center;
+  }
+  body {
+    padding-bottom: 70px !important;
+  }
+  .hamburger,
+  .nav-links {
+    display: none !important;
+  }
+}
+
+/* Explicitly hide on large screens (≥769px) */
+@media only screen and (min-width: 769px) {
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+}
+
+/* Inner items styling (applies when visible) */
+.mobile-bottom-nav .nav-items {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+}
+
+.mobile-bottom-nav .nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0;
+  text-decoration: none;
+  color: #6b7280;
+  position: relative;
+  transition: background 0.3s, color 0.3s;
+}
+
+.mobile-bottom-nav .nav-item:hover {
+  background: rgba(129, 199, 132, 0.05);
+}
+
+.mobile-bottom-nav .nav-item.active {
+  color: #81C784;
+  background: rgba(129, 199, 132, 0.1);
+}
+
+.mobile-bottom-nav .nav-icon {
+  font-size: 1.4rem;
+  margin-bottom: 4px;
+}
+
+.mobile-bottom-nav .nav-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.mobile-bottom-nav .active-indicator {
+  position: absolute;
+  top: 4px;
+  width: 6px;
+  height: 6px;
+  background: #81C784;
+  border-radius: 50%;
+}
+
+body .mobile-bottom-nav {
+  display: none !important;
+}
+
+@media only screen and (max-width: 768px) {
+  body .mobile-bottom-nav {
+    display: flex !important;
+    justify-content: space-around;
+    align-items: center;
+  }
+  body {
+    padding-bottom: 70px !important;
+  }
+  .hamburger,
+  .nav-links {
+    display: none !important;
+  }
+}
+
+@media only screen and (min-width: 769px) {
+  body .mobile-bottom-nav {
+    display: none !important;
+  }
+}
+
   </style>
 
     <script>
@@ -1300,8 +1318,6 @@
     <div class="nav-links">
       <a href="/dashboard" class="active">Dashboard</a>
       <a href="/my-proposals">My Offers</a>
-      
-      
       {% if session.get('user_id') %}
         <a href="/Dash">Account</a>
         <a href="/logout" class="btn btn-outline">Logout</a>
@@ -1380,6 +1396,22 @@
         });
       });
     });
+
+
+    const nav = document.querySelector('.mobile-bottom-nav');
+if (window.innerWidth <= 768) {
+  nav.style.display = 'flex';
+} else {
+  nav.style.display = 'none';
+}
+// Add a resize listener if needed
+window.addEventListener('resize', () => {
+  if (window.innerWidth <= 768) {
+    nav.style.display = 'flex';
+  } else {
+    nav.style.display = 'none';
+  }
+});
   </script>
 
 
@@ -1474,6 +1506,9 @@
     {% endfor %}
   </div>
 </div>
+
+
+</section>
 
 
 </section>
