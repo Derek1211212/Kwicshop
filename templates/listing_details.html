@@ -415,150 +415,353 @@
       margin-top: 0.5rem;
     }
 
-    /* Modal Styles */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.7);
-      z-index: 1000;
-      overflow-y: auto;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
+        /* Modal Styles */
+           .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+            overflow-y: auto;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
 
-    .modal.show {
-      opacity: 1;
-    }
+        .modal.show {
+            display: block;
+            opacity: 1;
+        }
 
-    .modal-content {
-      background: white;
-      margin: 10% auto;
-      padding: 2rem;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 500px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-      position: relative;
-      transform: translateY(-50px);
-      transition: transform 0.3s ease;
-    }
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            position: relative;
+            transform: translateY(-50px);
+            transition: transform 0.4s ease;
+        }
 
-    .modal.show .modal-content {
-      transform: translateY(0);
-    }
+        .modal.show .modal-content {
+            transform: translateY(0);
+        }
 
-    .close-modal {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      font-size: 1.5rem;
-      cursor: pointer;
-      color: var(--secondary-color);
-    }
+        .close-modal {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: var(--dark);
+            background: none;
+            border: none;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
 
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
+        .close-modal:hover {
+            background: var(--light);
+            color: var(--secondary);
+        }
 
-    .form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-    }
+        .modal-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--secondary);
+            position: relative;
+            padding-bottom: 15px;
+        }
 
-    .form-group input,
-    .form-group textarea {
-      width: 100%;
-      padding: 0.8rem;
-      border: 2px solid var(--medium-gray);
-      border-radius: 8px;
-      font-size: 1rem;
-    }
+        .modal-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
 
-    .form-group textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
 
-    .modal-submit-btn {
-      background: var(--primary-color);
-      color: white;
-      padding: 1rem;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 500;
-      cursor: pointer;
-      width: 100%;
-      transition: background-color 0.3s;
-    }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.6rem;
+            font-weight: 600;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-    .modal-submit-btn:hover {
-      background-color: #27ae60;
-    }
+        .form-group label i {
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
 
-    /* Desktop Styles */
-    @media (min-width: 768px) {
-      .navbar {
-        padding: 1rem 2rem;
-      }
+        .required {
+            color: var(--error);
+        }
 
-      .brand {
-        font-size: 1.5rem;
-      }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.9rem 1.2rem;
+            border: 2px solid var(--medium);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: var(--transition);
+            background: white;
+        }
 
-      .listing-details-container {
-        padding: 3rem;
-        margin: 3rem auto;
-      }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.2);
+        }
 
-      .main-image-container {
-        height: 500px;
-      }
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
 
-      .thumbnail {
-        width: 100px;
-        height: 100px;
-      }
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #bdc3c7;
+        }
 
-      .details-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 3rem;
-      }
+        .form-row {
+            display: flex;
+            gap: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
 
-      .user-card {
-        flex-direction: row;
-        text-align: left;
-      }
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
 
-      .offer-button {
-        width: auto;
-        padding: 1rem 2rem;
-      }
+        /* Image Upload Area - Fixed and Working */
+        .image-upload-container {
+            border: 3px dashed var(--medium);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            transition: var(--transition);
+            background: rgba(245, 247, 250, 0.5);
+            position: relative;
+        }
 
-      .modal-content {
-        margin: 15% auto;
-      }
-    }
+        .image-upload-container.dragover {
+            border-color: var(--primary);
+            background: rgba(39, 174, 96, 0.05);
+        }
 
-    /* Tablet Styles */
-    @media (min-width: 480px) and (max-width: 767px) {
-      .main-image-container {
-        height: 400px;
-      }
-    }
+        .upload-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
 
-    @media (max-width: 480px) {
-      .modal-content {
-        margin: 20% auto;
-        padding: 1.5rem;
-      }
-    }
+        .upload-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            color: var(--secondary);
+        }
+
+        .upload-subtext {
+            color: var(--dark);
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .upload-btn {
+            background: var(--primary);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-block;
+            transition: var(--transition);
+            border: none;
+            font-size: 1rem;
+        }
+
+        .upload-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 1.5rem;
+            justify-content: center;
+        }
+
+        .file-item {
+            background: white;
+            border: 1px solid var(--medium);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 100%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .file-icon {
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-name {
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.9rem;
+        }
+
+        .file-size {
+            font-size: 0.8rem;
+            color: var(--dark);
+        }
+
+        .remove-file {
+            color: var(--error);
+            cursor: pointer;
+            transition: var(--transition);
+            padding: 4px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .remove-file:hover {
+            background: rgba(231, 76, 60, 0.1);
+        }
+
+        .preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .image-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 1px solid var(--medium);
+        }
+
+        .modal-submit-btn {
+            background: var(--primary);
+            color: white;
+            padding: 1.1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: var(--transition);
+            margin-top: 0.5rem;
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+        }
+
+        .modal-submit-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(39, 174, 96, 0.4);
+        }
+
+        .modal-submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .form-note {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--dark);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .form-note a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .form-note a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                padding: 2rem;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+            
+            .image-upload-container {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .modal-content {
+                padding: 1.5rem;
+                margin: 10% auto;
+            }
+            
+            .modal-title {
+                font-size: 1.5rem;
+            }
+            
+            .header h1 {
+                font-size: 1.6rem;
+            }
+        }
+
 
     .flash-messages {
       position: fixed;
@@ -1164,66 +1367,353 @@
       {% endif %}
     </div>
 
-    <!-- Proposal Modal (only shown for swap deals) -->
-    <div id="proposalModal" class="modal">
-      <div class="modal-content">
-        <span class="close-modal" id="closeModal">×</span>
-        <h2>Make Swap Offer</h2>
-        <form id="proposalForm" action="{{ url_for('create_proposal', listing_id=listing.listing_id) }}" method="POST" enctype="multipart/form-data">
+
+
+  <div class="container">
+    <div class="header">
+      <h1>Swap Proposal Modal</h1>
+      <p>Working image upload with preview functionality</p>
+    </div>
+
+    <div class="demo-section">
+      <button id="openModal" class="btn">
+        <i class="fas fa-exchange-alt"></i> Open Proposal Modal
+      </button>
+    </div>
+  </div>
+
+  <!-- =====================================
+       ENHANCED PROPOSAL MODAL
+       ===================================== -->
+  <div id="proposalModal" class="modal">
+    <div class="modal-content">
+      <button class="close-modal" id="closeModal" aria-label="Close Modal">&times;</button>
+      <h2 class="modal-title">Make Swap Offer</h2>
+
+      <form id="proposalForm" action="#" method="POST" enctype="multipart/form-data" novalidate>
+        <!-- Item & Condition -->
+        <div class="form-group">
+          <label for="proposed_item">
+            <i class="fas fa-gift"></i>Item You’re Offering<span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="proposed_item"
+            name="proposed_item"
+            required
+            placeholder="Enter the item you’re offering for swap"
+          />
+        </div>
+
+        <div class="form-row">
           <div class="form-group">
-            <label for="proposed_item">Item You're Offering:</label>
-            <input type="text" id="proposed_item" name="proposed_item" required>
+            <label for="additional_cash">
+              <i class="fas fa-money-bill-wave"></i>Additional Cash (GHS)
+            </label>
+            <input
+              type="number"
+              id="additional_cash"
+              name="additional_cash"
+              step="0.01"
+              min="0"
+              placeholder="0.00"
+            />
           </div>
+
           <div class="form-group">
-            <label for="additional_cash">Additional Cash (GHS):</label>
-            <input type="number" id="additional_cash" name="additional_cash" step="0.01" min="0">
-          </div>
-          <div class="form-group">
-            <label for="condition">Condition:</label>
+            <label for="condition">
+              <i class="fas fa-star"></i>Condition<span class="required">*</span>
+            </label>
             <select id="condition" name="condition" required>
-              <option value="">Select Condition</option>
+              <option value="" disabled selected>Select Condition</option>
               <option value="new">New</option>
               <option value="like_new">Like New</option>
               <option value="used">Used</option>
               <option value="refurbished">Refurbished</option>
             </select>
           </div>
-          <div class="form-group">
-            <label for="phone_number">Phone Number:</label>
-            <input type="text" id="phone_number" name="phone_number" required>
+        </div>
+
+        <!-- Multi-image Upload Section -->
+        <div class="form-group">
+          <label>
+            <i class="fas fa-images"></i>Upload Item Images (Max 4)<span class="required">*</span>
+          </label>
+          <div class="image-upload-container" id="uploadContainer">
+            <div class="upload-icon">
+              <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <h3 class="upload-text">Drag & Drop your images here</h3>
+            <p class="upload-subtext">or click to browse files</p>
+            <button type="button" class="upload-btn" id="uploadBtn">
+              <i class="fas fa-folder-open"></i> Select Images
+            </button>
+            <!-- Now off-screen instead of display:none -->
+            <input type="file" id="fileInput" class="file-input" accept="image/*" multiple />
+            
+            <div class="file-list" id="fileList">
+              <p class="upload-subtext">No images selected</p>
+            </div>
+            
+            <div class="preview-container" id="previewContainer"></div>
           </div>
+        </div>
+
+        <!-- Detailed Description -->
+        <div class="form-group">
+          <label for="detailed_description">
+            <i class="fas fa-align-left"></i>Detailed Description<span class="required">*</span>
+          </label>
+          <textarea
+            id="detailed_description"
+            name="detailed_description"
+            rows="4"
+            required
+            placeholder="Describe your item including any flaws, special features, etc."
+          ></textarea>
+        </div>
+
+        <!-- Contact Info -->
+        <div class="form-row">
           <div class="form-group">
-            <label for="email_address">Email Address:</label>
-            <input type="email" id="email_address" name="email_address" required>
+            <label for="phone_number">
+              <i class="fas fa-phone"></i>Phone Number<span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="phone_number"
+              name="phone_number"
+              required
+              placeholder="e.g., 0241234567"
+            />
           </div>
+
           <div class="form-group">
-            <label for="image1">Image 1:</label>
-            <input type="file" id="image1" name="image1" accept="image/*">
+            <label for="email_address">
+              <i class="fas fa-envelope"></i>Email Address<span class="required">*</span>
+            </label>
+            <input
+              type="email"
+              id="email_address"
+              name="email_address"
+              required
+              placeholder="e.g., yourname@example.com"
+            />
           </div>
-          <div class="form-group">
-            <label for="image2">Image 2:</label>
-            <input type="file" id="image2" name="image2" accept="image/*">
+        </div>
+
+        <!-- Optional Message -->
+        <div class="form-group">
+          <label for="message">
+            <i class="fas fa-comment"></i>Message to Owner (Optional)
+          </label>
+          <textarea
+            id="message"
+            name="message"
+            rows="3"
+            placeholder="Add a personal message to the owner of the item"
+          ></textarea>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="modal-submit-btn">
+          <div class="btn-content">
+            <i class="fas fa-paper-plane"></i> Submit Offer
           </div>
-          <div class="form-group">
-            <label for="image3">Image 3:</label>
-            <input type="file" id="image3" name="image3" accept="image/*">
-          </div>
-          <div class="form-group">
-            <label for="image4">Image 4:</label>
-            <input type="file" id="image4" name="image4" accept="image/*">
-          </div>
-          <div class="form-group">
-            <label for="detailed_description">Detailed Description:</label>
-            <textarea id="detailed_description" name="detailed_description" rows="4" required></textarea>
-          </div>
-          <div class="form-group">
-            <label for="message">Message to Owner (Optional):</label>
-            <textarea id="message" name="message" rows="3"></textarea>
-          </div>
-          <button type="submit" class="modal-submit-btn">Submit Offer</button>
-        </form>
-      </div>
+        </button>
+
+        <p class="form-note">
+          By submitting this offer, you agree to our
+          <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+          Required fields are marked with <span class="required">*</span>.
+        </p>
+      </form>
     </div>
+  </div>
+
+  <!-- =====================================
+       JAVASCRIPT (Modal + Image Upload Logic)
+       ===================================== -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const modal = document.getElementById('proposalModal');
+      const openBtn = document.getElementById('openModal');
+      const closeBtn = document.getElementById('closeModal');
+      const form = document.getElementById('proposalForm');
+      const uploadBtn = document.getElementById('uploadBtn');
+      const fileInput = document.getElementById('fileInput');
+      const uploadContainer = document.getElementById('uploadContainer');
+      const fileList = document.getElementById('fileList');
+      const previewContainer = document.getElementById('previewContainer');
+
+      let files = [];
+      const maxFiles = 4;
+
+      // -------- Open & Close Modal --------
+      openBtn.addEventListener('click', function() {
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+      });
+      closeBtn.addEventListener('click', function() {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+      });
+      window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+          modal.classList.remove('show');
+          document.body.style.overflow = '';
+        }
+      });
+
+      // -------- Form Submission --------
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        // Ensure at least one image
+        if (files.length === 0) {
+          alert('Please upload at least one image of your item');
+          return;
+        }
+        // Demo: show success
+        const successMsg = `
+          Swap offer submitted successfully!
+          \nItem: ${document.getElementById('proposed_item').value}
+          \nImages uploaded: ${files.length}
+        `;
+        alert(successMsg);
+
+        // Reset
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+        form.reset();
+        files = [];
+        renderFileList();
+        renderPreviews();
+      });
+
+      // -------- File Upload Button --------
+      uploadBtn.addEventListener('click', function() {
+        fileInput.click();
+      });
+
+      // -------- Handle File Selection --------
+      fileInput.addEventListener('change', function() {
+        if (this.files && this.files.length > 0) {
+          handleFiles(this.files);
+        }
+      });
+
+      // -------- Drag & Drop Functionality --------
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadContainer.addEventListener(eventName, preventDefaults, false);
+      });
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      ['dragenter', 'dragover'].forEach(eventName => {
+        uploadContainer.addEventListener(eventName, highlight, false);
+      });
+      ['dragleave', 'drop'].forEach(eventName => {
+        uploadContainer.addEventListener(eventName, unhighlight, false);
+      });
+      function highlight() {
+        uploadContainer.classList.add('dragover');
+      }
+      function unhighlight() {
+        uploadContainer.classList.remove('dragover');
+      }
+      uploadContainer.addEventListener('drop', handleDrop, false);
+      function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const droppedFiles = dt.files;
+        handleFiles(droppedFiles);
+      }
+
+      // -------- Add & Track Files --------
+      function handleFiles(selectedFiles) {
+        // Clear if at max capacity
+        if (files.length >= maxFiles) {
+          files = [];
+        }
+        for (let i = 0; i < selectedFiles.length; i++) {
+          if (files.length >= maxFiles) break;
+          const file = selectedFiles[i];
+          if (file.type.match('image.*')) {
+            files.push(file);
+          }
+        }
+        renderFileList();
+        renderPreviews();
+      }
+
+      // -------- Render File List --------
+      function renderFileList() {
+        fileList.innerHTML = '';
+        if (files.length === 0) {
+          fileList.innerHTML = '<p class="upload-subtext">No images selected</p>';
+          return;
+        }
+        files.forEach((file, index) => {
+          const fileItem = document.createElement('div');
+          fileItem.className = 'file-item';
+          fileItem.innerHTML = `
+            <div class="file-icon"><i class="fas fa-file-image"></i></div>
+            <div class="file-info">
+              <div class="file-name">${file.name}</div>
+              <div class="file-size">${formatFileSize(file.size)}</div>
+            </div>
+            <div class="remove-file" data-index="${index}">
+              <i class="fas fa-times"></i>
+            </div>
+          `;
+          fileList.appendChild(fileItem);
+        });
+        document.querySelectorAll('.remove-file').forEach(button => {
+          button.addEventListener('click', function() {
+            const index = parseInt(this.getAttribute('data-index'));
+            files.splice(index, 1);
+            renderFileList();
+            renderPreviews();
+          });
+        });
+      }
+
+      // -------- Render Previews --------
+      function renderPreviews() {
+        previewContainer.innerHTML = '';
+        if (files.length === 0) return;
+        files.forEach((file, index) => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const preview = document.createElement('img');
+            preview.className = 'image-preview';
+            preview.src = e.target.result;
+            preview.alt = `Preview ${index + 1}`;
+            preview.title = file.name;
+            preview.style.width = '80px';
+            preview.style.height = '80px';
+            preview.style.objectFit = 'cover';
+            preview.style.borderRadius = '6px';
+            preview.style.margin = '0 5px 5px 0';
+            previewContainer.appendChild(preview);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      // -------- Format File Size Utility --------
+      function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+      }
+
+      // Initialize
+      renderFileList();
+    });
+  </script>
 
     {% with messages = get_flashed_messages(with_categories=True) %}
       {% if messages %}
