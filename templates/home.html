@@ -1133,401 +1133,7 @@ body .mobile-bottom-nav {
     display: none !important;
   }
 }
-
-
-
-
-
-
   </style>
-
-    <script>
-    const USER_LOGGED_IN  = {{ 'true' if user_logged_in else 'false' }};
-    const USER_SUBSCRIBED = {{ 'true' if user_subscribed else 'false' }};
-  </script>
-</head>
-<body>
-<!-- ===== MODERN NAVIGATION ===== -->
-<nav class="navbar">
-  <div class="brand">
-    <svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--primary)">
-      <path d="M11 5h2v14h-2V5zm-4 7h2v7H7v-7zm8-7h2v14h-2V5z"/>
-    </svg>
-    <span>SwapSphere</span>
-  </div>
-  
-  <div class="nav-links">
-    <a href="/dashboard" class="active">Dashboard</a>
-    <a href="/my-proposals">My Offers</a>
-    {% if session.get('user_id') %}
-      <a href="/Dash">Account</a>
-      <a href="/logout" class="btn btn-outline">Logout</a>
-    {% else %}
-      <a href="/login">Login</a>
-      <a href="/signup" class="btn btn-primary">Sign Up</a>
-    {% endif %}
-  </div>
-  
-  <div class="hamburger">
-    <div></div>
-    <div></div>
-    <div></div>
-  </div>
-</nav>
-
-<!-- ===== MOBILE BOTTOM NAVIGATION ===== -->
-<div class="mobile-bottom-nav">
-  <div class="nav-items">
-    <a href="/" class="nav-item active">
-      <i class="fas fa-home nav-icon"></i>
-      <span class="nav-label">Home</span>
-      <span class="active-indicator"></span>
-    </a>
-    
-    <a href="/my-proposals" class="nav-item">
-      <i class="fas fa-exchange-alt nav-icon"></i>
-      <span class="nav-label">Offers</span>
-    </a>
-    
-    {% if session.get('user_id') %}
-      <a href="/dashboard" class="nav-item">
-        <i class="fas fa-user nav-icon"></i>
-        <span class="nav-label">Dashboard</span>
-      </a>
-      
-      <a href="/logout" class="nav-item">
-        <i class="fas fa-sign-out-alt nav-icon"></i>
-        <span class="nav-label">Logout</span>
-      </a>
-    {% else %}
-      <a href="/login" class="nav-item">
-        <i class="fas fa-sign-in-alt nav-icon"></i>
-        <span class="nav-label">Login</span>
-      </a>
-      
-      <a href="/signup" class="nav-item">
-        <i class="fas fa-user-plus nav-icon"></i>
-        <span class="nav-label">Sign Up</span>
-      </a>
-    {% endif %}
-  </div>
-</div>
-
-<script>
-  // Highlight active nav item in mobile bottom nav
-  document.addEventListener('DOMContentLoaded', function() {
-    const navItems = document.querySelectorAll('.nav-item');
-    const currentPath = window.location.pathname;
-    
-    navItems.forEach(item => {
-      const href = item.getAttribute('href');
-      if (currentPath === href) {
-        item.classList.add('active');
-      } else {
-        item.classList.remove('active');
-      }
-      
-      item.addEventListener('click', function() {
-        navItems.forEach(i => i.classList.remove('active'));
-        this.classList.add('active');
-      });
-    });
-  });
-
-  // Toggle mobile bottom nav visibility
-  const nav = document.querySelector('.mobile-bottom-nav');
-  function updateMobileNav() {
-    if (window.innerWidth <= 768) {
-      nav.style.display = 'flex';
-    } else {
-      nav.style.display = 'none';
-    }
-  }
-  window.addEventListener('load', updateMobileNav);
-  window.addEventListener('resize', updateMobileNav);
-</script>
-
-<!-- ===== HERO + SEARCH + FILTERS SECTION ===== -->
-<section class="hero-search-filters">
-  
-  <!-- 1) MERGED SEARCH BAR -->
-  <div class="search-bar" style="padding: 1rem 2rem; background: var(--surface); box-shadow: var(--shadow-sm); margin-bottom: 1rem; position: relative;">
-    <!-- “Search items” input -->
-    <i class="fas fa-search search-icon" style="position: absolute; left: 2.5rem; top: 50%; transform: translateY(-50%); color: var(--text-light);"></i>
-    <input
-      type="text"
-      name="search"
-      class="search-input"
-      placeholder="What are you looking for?"
-      value="{{ search }}"
-      style="width: 100%; padding: 0.75rem 3.5rem 0.75rem 3rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 1rem; color: var(--text); box-shadow: var(--shadow-sm);"
-    />
-    <!-- Map‐pin icon to toggle “location” field -->
-    <button type="button" class="location-btn" aria-label="Show Location Search" style="background: none; border: none; position: absolute; right: 2rem; top: 50%; transform: translateY(-50%); font-size: 1.1rem; color: var(--text-light); cursor: pointer; transition: color 0.2s;">
-      <i class="fas fa-map-marker-alt"></i>
-    </button>
-    <!-- Hidden “location” input (initially display:none) -->
-    <input
-      type="text"
-      name="location"
-      class="location-input"
-      placeholder="Location (e.g. Madina…)"
-      value="{{ location }}"
-      style="width: 100%; margin-top: 0.75rem; padding: 0.75rem 2.5rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 1rem; color: var(--text); box-shadow: var(--shadow-sm); display: none;"
-    />
-  </div>
-
-  <script>
-    // Toggle “location” field when pin icon is clicked
-    document.addEventListener("DOMContentLoaded", () => {
-      const locationBtn = document.querySelector(".location-btn");
-      const locationInput = document.querySelector(".location-input");
-      
-      locationBtn.addEventListener("click", () => {
-        if (locationInput.style.display === "none" || !locationInput.style.display) {
-          locationInput.style.display = "block";
-          locationInput.focus();
-        } else {
-          locationInput.style.display = "none";
-        }
-      });
-    });
-  </script>
-
-  <!-- 2) DEAL‐TYPE FILTERS -->
-  <div class="filters-scroll deal-filter-row" style="display: flex; gap: 0.75rem; overflow-x: auto; padding: 0.75rem 2rem; margin-bottom: 0.5rem; background: var(--surface); box-shadow: var(--shadow-sm);">
-    {% set deal_types = ['All', 'Swap Deal', 'Outright Sales'] %}
-    {% for deal in deal_types %}
-      <button
-        class="filter-button deal-filter{% if deal_type_filter == deal %} active{% endif %}"
-        data-type="deal_type"
-        data-value="{{ deal }}"
-        style="flex: 0 0 auto; background: #f0f0f0; color: #333; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
-      >
-        {{ deal }}
-      </button>
-    {% endfor %}
-  </div>
-
-  <!-- 3) CATEGORY FILTERS -->
-  <div class="filters-scroll category-filter-row" style="display: flex; gap: 0.75rem; overflow-x: auto; padding: 0.75rem 2rem; margin-bottom: 1rem; background: var(--surface); box-shadow: var(--shadow-sm);">
-    <button
-      class="filter-button category-filter{% if selected_category == 'All' %} active{% endif %}"
-      data-type="category"
-      data-value="All"
-      style="flex: 0 0 auto; background: #f0f0f0; color: #333; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
-    >
-      All
-    </button>
-    {% for cat in categories %}
-      <button
-        class="filter-button category-filter{% if selected_category == cat %} active{% endif %}"
-        data-type="category"
-        data-value="{{ cat }}"
-        style="flex: 0 0 auto; background: #f0f0f0; color: #333; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
-      >
-        {{ cat }}
-      </button>
-    {% endfor %}
-  </div>
-
-  <script>
-    // Deal‐type filter clicks
-    document.addEventListener("DOMContentLoaded", () => {
-      document.querySelectorAll(".deal-filter").forEach((btn) => {
-        btn.addEventListener("click", function () {
-          document.querySelectorAll(".deal-filter").forEach((t) => t.classList.remove("active"));
-          this.classList.add("active");
-          document.getElementById("selected-deal-type").value = this.dataset.value;
-          document.getElementById("search-form").submit();
-        });
-      });
-      // Category filter clicks
-      document.querySelectorAll(".category-filter").forEach((btn) => {
-        btn.addEventListener("click", function () {
-          document.querySelectorAll(".category-filter").forEach((t) => t.classList.remove("active"));
-          this.classList.add("active");
-          document.getElementById("selected-category").value = this.dataset.value;
-          document.getElementById("search-form").submit();
-        });
-      });
-    });
-  </script>
-
-   <!-- ===== MULTI-ITEM HERO CAROUSEL ===== -->
-  <div class="multi-carousel-container">
-    <div class="multi-carousel-track">
-      {% for listing in listings %}
-      <div class="multi-carousel-item" data-id="{{ listing.listing_id }}">
-        <div
-          class="multi-carousel-image"
-          style="background-image:
-                 linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)),
-                 url('{{ listing.banner_image }}')"
-        >
-          <div class="multi-carousel-overlay">
-            <h3 class="multi-carousel-title">{{ listing.title }}</h3>
-            <a
-              href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
-              class="multi-carousel-button"
-            >
-              View Listing <i class="fas fa-arrow-right"></i>
-            </a>
-          </div>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-
-  <!-- =============================== -->
-  <!--   WAVE DIVIDER WITH CENTERED TEXT   -->
-  <!-- =============================== -->
-  <div class="carousel-divider">
-    <span class="divider-text">Find Your Next Swap Below</span>
-  </div>
-</section>
-
-<!-- ===== LISTINGS GRID ===== -->
-<section class="listings-container">
-  <div class="listings-grid">
-    {% for listing in listings %}
-      <a
-        href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
-        class="listing-card-link"
-        data-listing-id="{{ listing.listing_id }}"
-      >
-        <div class="listing-card {% if listing.deal_type == 'Swap Deal' %}swap-card{% else %}sale-card{% endif %}">
-
-          <!-- Badge -->
-          <div class="deal-type-badge">{{ listing.deal_type }}</div>
-
-          <!-- Photos for Swap Deals -->
-          {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 1 %}
-            <div class="swap-photo-row">
-              {% for o in listing.offers[:3] %}
-                <div class="swap-photo">
-                  <img src="{{ o.image1 }}" alt="{{ o.title }}" loading="lazy">
-                </div>
-              {% endfor %}
-            </div>
-            <div class="swap-offer-titles">
-              {{ listing.offers[:3] | map(attribute='title') | join(' + ') }}
-            </div>
-          {% else %}
-            <div class="card-image">
-              <img src="{{ listing.image_url }}" alt="{{ listing.title }}" loading="lazy">
-            </div>
-          {% endif %}
-
-          <!-- Content -->
-          <div class="card-content">
-            {% if listing.deal_type == 'Outright Sales' or listing.offers|length <= 1 %}
-              <h3 class="listing-title">
-                {{ listing.title }}
-                {% if listing.required_cash|float > 0 %}
-                  <span class="required-cash">+ ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span>
-                {% endif %}
-              </h3>
-            {% endif %}
-
-            {% if listing.deal_type == 'Outright Sales' %}
-              <div class="price-display">
-                ₵{{ "{:,.2f}".format(listing.price|float) }}
-              </div>
-            {% else %}
-              <div class="swap-details">
-                <div class="detail-item">
-                  <span class="detail-label">Wanted:</span>
-                  <span class="detail-value">{{ listing.desired_swap }}</span>
-                </div>
-                {% if listing.additional_cash|float > 0 %}
-                  <div class="detail-item">
-                    <span class="detail-label">Plus Cash:</span>
-                    <span class="detail-value cash-adjustment">
-                      + ₵{{ "{:,.2f}".format(listing.additional_cash|float) }}
-                    </span>
-                  </div>
-                {% endif %}
-              </div>
-            {% endif %}
-          </div>
-        </div>
-      </a>
-    {% endfor %}
-  </div>
-</section>
-
-<!-- ===== AUTO-SCROLL SCRIPT ===== -->
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const track = document.querySelector(".multi-carousel-track");
-    const items = Array.from(document.querySelectorAll(".multi-carousel-item"));
-    let currentIndex = 0;
-    let itemsPerView = 1;
-    let itemWidth = 0;
-    let autoScrollInterval;
-
-    function calculateLayout() {
-      const container = document.querySelector(".multi-carousel-container");
-      const containerWidth = container.clientWidth;
-
-      if (window.innerWidth >= 1024) {
-        itemsPerView = 4;
-      } else if (window.innerWidth >= 768) {
-        itemsPerView = 3;
-      } else if (window.innerWidth >= 480) {
-        itemsPerView = 2;
-      } else {
-        itemsPerView = 1;
-      }
-
-      itemWidth = containerWidth / itemsPerView;
-      scrollToIndex(currentIndex);
-    }
-
-    function scrollToIndex(index) {
-      if (index > items.length - itemsPerView) {
-        index = 0;
-      }
-      if (index < 0) {
-        index = items.length - itemsPerView;
-      }
-      currentIndex = index;
-      const offset = -currentIndex * itemWidth;
-      track.style.transform = `translateX(${offset}px)`;
-    }
-
-    function autoScroll() {
-      let nextIndex = currentIndex + 1;
-      if (nextIndex > items.length - itemsPerView) {
-        nextIndex = 0;
-      }
-      scrollToIndex(nextIndex);
-    }
-
-    function startAutoScroll() {
-      autoScrollInterval = setInterval(autoScroll, 4000);
-    }
-    function stopAutoScroll() {
-      clearInterval(autoScrollInterval);
-    }
-
-    window.addEventListener("resize", () => {
-      calculateLayout();
-    });
-
-    document
-      .querySelector(".multi-carousel-container")
-      .addEventListener("mouseenter", stopAutoScroll);
-    document
-      .querySelector(".multi-carousel-container")
-      .addEventListener("mouseleave", startAutoScroll);
-
-    calculateLayout();
-    startAutoScroll();
-  });
-</script>
 
 <!-- ===== REQUIRED CSS (add these rules at the bottom of your stylesheet) ===== -->
 <style>
@@ -1818,7 +1424,435 @@ body .mobile-bottom-nav {
     color: var(--success);
   }
 </style>
+    <script>
+    const USER_LOGGED_IN  = {{ 'true' if user_logged_in else 'false' }};
+    const USER_SUBSCRIBED = {{ 'true' if user_subscribed else 'false' }};
+  </script>
+</head>
+<body>
+<!-- ===== MODERN NAVIGATION ===== -->
+<nav class="navbar">
+  <div class="brand">
+    <svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--primary)">
+      <path d="M11 5h2v14h-2V5zm-4 7h2v7H7v-7zm8-7h2v14h-2V5z"/>
+    </svg>
+    <span>SwapSphere</span>
+  </div>
+  
+  <div class="nav-links">
+    <a href="/dashboard" class="active">Dashboard</a>
+    <a href="/my-proposals">My Offers</a>
+    {% if session.get('user_id') %}
+      <a href="/Dash">Account</a>
+      <a href="/logout" class="btn btn-outline">Logout</a>
+    {% else %}
+      <a href="/login">Login</a>
+      <a href="/signup" class="btn btn-primary">Sign Up</a>
+    {% endif %}
+  </div>
+  
+  <div class="hamburger">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+</nav>
 
+<!-- ===== MOBILE BOTTOM NAVIGATION ===== -->
+<div class="mobile-bottom-nav">
+  <div class="nav-items">
+    <a href="/" class="nav-item active">
+      <i class="fas fa-home nav-icon"></i>
+      <span class="nav-label">Home</span>
+      <span class="active-indicator"></span>
+    </a>
+    
+    <a href="/my-proposals" class="nav-item">
+      <i class="fas fa-exchange-alt nav-icon"></i>
+      <span class="nav-label">Offers</span>
+    </a>
+    
+    {% if session.get('user_id') %}
+      <a href="/dashboard" class="nav-item">
+        <i class="fas fa-user nav-icon"></i>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      
+      <a href="/logout" class="nav-item">
+        <i class="fas fa-sign-out-alt nav-icon"></i>
+        <span class="nav-label">Logout</span>
+      </a>
+    {% else %}
+      <a href="/login" class="nav-item">
+        <i class="fas fa-sign-in-alt nav-icon"></i>
+        <span class="nav-label">Login</span>
+      </a>
+      
+      <a href="/signup" class="nav-item">
+        <i class="fas fa-user-plus nav-icon"></i>
+        <span class="nav-label">Sign Up</span>
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  // Highlight active nav item in mobile bottom nav
+  document.addEventListener('DOMContentLoaded', function() {
+    const navItems = document.querySelectorAll('.nav-item');
+    const currentPath = window.location.pathname;
+    
+    navItems.forEach(item => {
+      const href = item.getAttribute('href');
+      if (currentPath === href) {
+        item.classList.add('active');
+      } else {
+        item.classList.remove('active');
+      }
+      
+      item.addEventListener('click', function() {
+        navItems.forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+  });
+
+  // Toggle mobile bottom nav visibility
+  const nav = document.querySelector('.mobile-bottom-nav');
+  function updateMobileNav() {
+    if (window.innerWidth <= 768) {
+      nav.style.display = 'flex';
+    } else {
+      nav.style.display = 'none';
+    }
+  }
+  window.addEventListener('load', updateMobileNav);
+  window.addEventListener('resize', updateMobileNav);
+</script>
+
+<!-- ===== HERO + SEARCH + FILTERS SECTION ===== -->
+<section class="hero-search-filters">
+  
+  <!-- 1) MERGED SEARCH BAR -->
+<!-- ===== ENHANCED SEARCH + FILTER SECTION ===== -->
+
+<!-- 1) SEARCH FORM (with hidden inputs for deal_type & category) -->
+<form id="search-form" action="{{ url_for('home') }}" method="GET">
+  <div class="search-bar" style="padding: 1rem 2rem; background: var(--surface); box-shadow: var(--shadow-sm); margin-bottom: 1rem; position: relative;">
+    <!-- “Search items” input -->
+    <i class="fas fa-search search-icon" style="position: absolute; left: 2.5rem; top: 50%; transform: translateY(-50%); color: var(--text-light);"></i>
+    <input
+      type="text"
+      name="search"
+      class="search-input"
+      placeholder="What are you looking for?"
+      value="{{ search }}"
+      style="width: 100%; padding: 0.75rem 3.5rem 0.75rem 3rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 1rem; color: var(--text); box-shadow: var(--shadow-sm);"
+    />
+
+    <!-- Hidden submit button ensures Enter key submits the form -->
+    <button type="submit" style="display: none;"></button>
+
+    <!-- “Location” input toggled by pin button -->
+    <button type="button" class="location-btn" aria-label="Show Location Search" style="background: none; border: none; position: absolute; right: 2rem; top: 50%; transform: translateY(-50%); font-size: 1.1rem; color: var(--text-light); cursor: pointer; transition: color 0.2s;">
+      <i class="fas fa-map-marker-alt"></i>
+    </button>
+    <input
+      type="text"
+      name="location"
+      class="location-input"
+      placeholder="Location (e.g. Madina…)"
+      value="{{ location }}"
+      style="width: 100%; margin-top: 0.75rem; padding: 0.75rem 2.5rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 1rem; color: var(--text); box-shadow: var(--shadow-sm); display: none;"
+    />
+
+    <!-- HIDDEN INPUTS for deal_type & category -->
+    <input type="hidden" name="deal_type" id="selected-deal-type" value="{{ deal_type_filter }}">
+    <input type="hidden" name="category" id="selected-category" value="{{ selected_category }}">
+  </div>
+</form>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // Toggle “location” input visibility when pin icon is clicked
+    const locationBtn = document.querySelector(".location-btn");
+    const locationInput = document.querySelector(".location-input");
+
+    locationBtn.addEventListener("click", () => {
+      if (!locationInput.style.display || locationInput.style.display === "none") {
+        locationInput.style.display = "block";
+        locationInput.focus();
+      } else {
+        locationInput.style.display = "none";
+      }
+    });
+  });
+</script>
+
+
+   <!-- ===== MULTI-ITEM HERO CAROUSEL ===== -->
+  <div class="multi-carousel-container">
+    <div class="multi-carousel-track">
+      {% for listing in listings %}
+      <div class="multi-carousel-item" data-id="{{ listing.listing_id }}">
+        <div
+          class="multi-carousel-image"
+          style="background-image:
+                 linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)),
+                 url('{{ listing.banner_image }}')"
+        >
+          <div class="multi-carousel-overlay">
+            <h3 class="multi-carousel-title">{{ listing.title }}</h3>
+            <a
+              href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
+              class="multi-carousel-button"
+            >
+              View Listing <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+<!-- 2) DEAL‐TYPE FILTERS -->
+<div class="filters-scroll deal-filter-row" style="display: flex; gap: 0.75rem; overflow-x: auto; padding: 0.75rem 2rem; margin-bottom: 0.5rem; background: var(--surface); box-shadow: var(--shadow-sm);">
+  {% set deal_types = ['All', 'Swap Deal', 'Outright Sales'] %}
+  {% for deal in deal_types %}
+    <button
+      type="button"
+      class="filter-button deal-filter{% if deal_type_filter == deal %} active{% endif %}"
+      data-value="{{ deal }}"
+      style="flex: 0 0 auto; background: {% if deal_type_filter == deal %}var(--primary){% else %}#f0f0f0{% endif %}; color: {% if deal_type_filter == deal %}#fff{% else %}#333{% endif %}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
+    >
+      {{ deal }}
+    </button>
+  {% endfor %}
+</div>
+
+<!-- 3) CATEGORY FILTERS -->
+<div class="filters-scroll category-filter-row" style="display: flex; gap: 0.75rem; overflow-x: auto; padding: 0.75rem 2rem; margin-bottom: 1rem; background: var(--surface); box-shadow: var(--shadow-sm);">
+  <button
+    type="button"
+    class="filter-button category-filter{% if selected_category == 'All' %} active{% endif %}"
+    data-value="All"
+    style="flex: 0 0 auto; background: {% if selected_category == 'All' %}var(--primary){% else %}#f0f0f0{% endif %}; color: {% if selected_category == 'All' %}#fff{% else %}#333{% endif %}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
+  >
+    All
+  </button>
+  {% for cat in categories %}
+    <button
+      type="button"
+      class="filter-button category-filter{% if selected_category == cat %} active{% endif %}"
+      data-value="{{ cat }}"
+      style="flex: 0 0 auto; background: {% if selected_category == cat %}var(--primary){% else %}#f0f0f0{% endif %}; color: {% if selected_category == cat %}#fff{% else %}#333{% endif %}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
+    >
+      {{ cat }}
+    </button>
+  {% endfor %}
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // Deal‐type filter clicks
+    document.querySelectorAll(".deal-filter").forEach(btn => {
+      btn.addEventListener("click", function () {
+        // Remove “active” class and reset style for all deal buttons
+        document.querySelectorAll(".deal-filter").forEach(t => {
+          t.classList.remove("active");
+          t.style.background = "#f0f0f0";
+          t.style.color = "#333";
+        });
+
+        // Mark this button as active
+        this.classList.add("active");
+        this.style.background = "var(--primary)";
+        this.style.color = "#fff";
+
+        // Put its value into the hidden input, then submit the form
+        document.getElementById("selected-deal-type").value = this.dataset.value;
+        document.getElementById("search-form").submit();
+      });
+    });
+
+    // Category filter clicks
+    document.querySelectorAll(".category-filter").forEach(btn => {
+      btn.addEventListener("click", function () {
+        // Remove “active” class and reset style for all category buttons
+        document.querySelectorAll(".category-filter").forEach(t => {
+          t.classList.remove("active");
+          t.style.background = "#f0f0f0";
+          t.style.color = "#333";
+        });
+
+        // Mark this button as active
+        this.classList.add("active");
+        this.style.background = "var(--primary)";
+        this.style.color = "#fff";
+
+        // Put its value into the hidden input, then submit the form
+        document.getElementById("selected-category").value = this.dataset.value;
+        document.getElementById("search-form").submit();
+      });
+    });
+  });
+</script>
+
+
+
+
+
+  
+
+  <!-- =============================== -->
+  <!--   WAVE DIVIDER WITH CENTERED TEXT   -->
+  <!-- =============================== -->
+  <div class="carousel-divider">
+    <span class="divider-text">Find Your Next Swap Below</span>
+  </div>
+</section>
+
+<!-- ===== LISTINGS GRID ===== -->
+<section class="listings-container">
+  <div class="listings-grid">
+    {% for listing in listings %}
+      <a
+        href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
+        class="listing-card-link"
+        data-listing-id="{{ listing.listing_id }}"
+      >
+        <div class="listing-card {% if listing.deal_type == 'Swap Deal' %}swap-card{% else %}sale-card{% endif %}">
+
+          <!-- Badge -->
+          <div class="deal-type-badge">{{ listing.deal_type }}</div>
+
+          <!-- Photos for Swap Deals -->
+          {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 1 %}
+            <div class="swap-photo-row">
+              {% for o in listing.offers[:3] %}
+                <div class="swap-photo">
+                  <img src="{{ o.image1 }}" alt="{{ o.title }}" loading="lazy">
+                </div>
+              {% endfor %}
+            </div>
+            <div class="swap-offer-titles">
+              {{ listing.offers[:3] | map(attribute='title') | join(' + ') }}
+            </div>
+          {% else %}
+            <div class="card-image">
+              <img src="{{ listing.image_url }}" alt="{{ listing.title }}" loading="lazy">
+            </div>
+          {% endif %}
+
+          <!-- Content -->
+          <div class="card-content">
+            {% if listing.deal_type == 'Outright Sales' or listing.offers|length <= 1 %}
+              <h3 class="listing-title">
+                {{ listing.title }}
+                {% if listing.required_cash|float > 0 %}
+                  <span class="required-cash">+ ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span>
+                {% endif %}
+              </h3>
+            {% endif %}
+
+            {% if listing.deal_type == 'Outright Sales' %}
+              <div class="price-display">
+                ₵{{ "{:,.2f}".format(listing.price|float) }}
+              </div>
+            {% else %}
+              <div class="swap-details">
+                <div class="detail-item">
+                  <span class="detail-label">Wanted:</span>
+                  <span class="detail-value">{{ listing.desired_swap }}</span>
+                </div>
+                {% if listing.additional_cash|float > 0 %}
+                  <div class="detail-item">
+                    <span class="detail-label">Plus Cash:</span>
+                    <span class="detail-value cash-adjustment">
+                      + ₵{{ "{:,.2f}".format(listing.additional_cash|float) }}
+                    </span>
+                  </div>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ===== AUTO-SCROLL SCRIPT ===== -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const track = document.querySelector(".multi-carousel-track");
+    const items = Array.from(document.querySelectorAll(".multi-carousel-item"));
+    let currentIndex = 0;
+    let itemsPerView = 1;
+    let itemWidth = 0;
+    let autoScrollInterval;
+
+    function calculateLayout() {
+      const container = document.querySelector(".multi-carousel-container");
+      const containerWidth = container.clientWidth;
+
+      if (window.innerWidth >= 1024) {
+        itemsPerView = 4;
+      } else if (window.innerWidth >= 768) {
+        itemsPerView = 3;
+      } else if (window.innerWidth >= 480) {
+        itemsPerView = 2;
+      } else {
+        itemsPerView = 1;
+      }
+
+      itemWidth = containerWidth / itemsPerView;
+      scrollToIndex(currentIndex);
+    }
+
+    function scrollToIndex(index) {
+      if (index > items.length - itemsPerView) {
+        index = 0;
+      }
+      if (index < 0) {
+        index = items.length - itemsPerView;
+      }
+      currentIndex = index;
+      const offset = -currentIndex * itemWidth;
+      track.style.transform = `translateX(${offset}px)`;
+    }
+
+    function autoScroll() {
+      let nextIndex = currentIndex + 1;
+      if (nextIndex > items.length - itemsPerView) {
+        nextIndex = 0;
+      }
+      scrollToIndex(nextIndex);
+    }
+
+    function startAutoScroll() {
+      autoScrollInterval = setInterval(autoScroll, 4000);
+    }
+    function stopAutoScroll() {
+      clearInterval(autoScrollInterval);
+    }
+
+    window.addEventListener("resize", () => {
+      calculateLayout();
+    });
+
+    document
+      .querySelector(".multi-carousel-container")
+      .addEventListener("mouseenter", stopAutoScroll);
+    document
+      .querySelector(".multi-carousel-container")
+      .addEventListener("mouseleave", startAutoScroll);
+
+    calculateLayout();
+    startAutoScroll();
+  });
+</script>
 
 
 
