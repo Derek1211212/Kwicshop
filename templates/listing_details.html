@@ -597,8 +597,8 @@
         }
 
         .upload-btn {
-            background: var(--primary);
-            color: white;
+            background: lightgreen;
+            color: black;
             padding: 0.8rem 1.5rem;
             border-radius: 8px;
             font-weight: 600;
@@ -615,7 +615,7 @@
         }
 
         .file-input {
-            display: none;
+            display: hidden;
         }
 
         .file-list {
@@ -690,8 +690,8 @@
         }
 
         .modal-submit-btn {
-            background: var(--primary);
-            color: white;
+            background: lightgreen;
+            color: black;
             padding: 1.1rem;
             border: none;
             border-radius: 8px;
@@ -1387,7 +1387,7 @@
        ===================================== -->
   <div id="proposalModal" class="modal">
     <div class="modal-content">
-      <button class="close-modal" id="closeModal" aria-label="Close Modal">&times;</button>
+     <button class="close-modal" id="closeModal" aria-label="Close Modal">&times;</button>
       <h2 class="modal-title">Make Swap Offer</h2>
 
       <form id="proposalForm" action="#" method="POST" enctype="multipart/form-data" novalidate>
@@ -1435,25 +1435,28 @@
         </div>
 
         <!-- Multi-image Upload Section -->
-        <div class="form-group">
-          <label>
-            <i class="fas fa-images"></i>Upload Item Images (Max 4)<span class="required">*</span>
-          </label>
-          <div class="image-upload-container" id="uploadContainer">
-            <div class="upload-icon">
-              <i class="fas fa-cloud-upload-alt"></i>
-            </div>
-            <h3 class="upload-text">Drag & Drop your images here</h3>
-            <p class="upload-subtext">or click to browse files</p>
-            <button type="button" class="upload-btn" id="uploadBtn">
-              <i class="fas fa-folder-open"></i> Select Images
-            </button>
-            <!-- Now off-screen instead of display:none -->
-            <input type="file" id="fileInput" class="file-input" accept="image/*" multiple />
-            
-            <div class="file-list" id="fileList">
-              <p class="upload-subtext">No images selected</p>
-            </div>
+<div class="form-group">
+  <label>
+    <i class="fas fa-images"></i> Upload Item Images (Max 4) <span class="required">*</span>
+  </label>
+
+  <div class="image-upload-container" id="uploadContainer">
+    <div class="upload-icon">
+      <i class="fas fa-cloud-upload-alt"></i>
+    </div>
+    <h3 class="upload-text">Drag & Drop your images here</h3>
+    <p class="upload-subtext">or click to browse files</p>
+
+    <button type="button" class="upload-btn">
+      <i class="fas fa-folder-open"></i> Select Images
+    </button>
+
+    <!-- Hidden file input -->
+    <input type="file" id="fileInput" class="file-input" accept="image/*" multiple hidden />
+
+    <div class="file-list" id="fileList">
+      <p class="upload-subtext">No images selected</p>
+    </div>
             
             <div class="preview-container" id="previewContainer"></div>
           </div>
@@ -1727,6 +1730,32 @@
       {% endif %}
     {% endwith %}
   </div>
+
+
+<script>
+  const uploadContainer = document.getElementById('uploadContainer');
+  const fileInput = document.getElementById('fileInput');
+
+  // Trigger file input when container is clicked
+  uploadContainer.addEventListener('click', () => {
+    fileInput.click();
+  });
+
+  // Optional: show selected file names
+  fileInput.addEventListener('change', () => {
+    const fileList = document.getElementById('fileList');
+    const files = fileInput.files;
+    if (files.length === 0) {
+      fileList.innerHTML = '<p class="upload-subtext">No images selected</p>';
+    } else {
+      fileList.innerHTML = '<ul>' + Array.from(files).map(file => `<li>${file.name}</li>`).join('') + '</ul>';
+    }
+  });
+</script>
+
+
+
+
 
   <script>
     // Mobile Menu Toggle
@@ -2003,5 +2032,26 @@
       }
     });
   </script>
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Ensure this matches your modal’s ID
+    const modal = document.getElementById('proposalModal');
+    const closeBtn = document.getElementById('closeModal');
+
+    // If the close button ID is correct, this will fire on click
+    closeBtn.addEventListener('click', () => {
+      modal.classList.remove('show');
+      document.body.style.overflow = '';
+    });
+
+    // Also allow clicking the backdrop to close
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+      }
+    });
+  });
+</script>
 </body>
 </html>
