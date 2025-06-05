@@ -428,11 +428,13 @@
             overflow-y: auto;
             opacity: 0;
             transition: opacity 0.3s ease;
+            pointer-events: none;
         }
 
         .modal.show {
             display: block;
             opacity: 1;
+            pointer-events: auto;
         }
 
         .modal-content {
@@ -475,6 +477,18 @@
             color: var(--secondary);
         }
 
+
+
+  @media (max-width: 768px) {
+    .close-modal {
+      top: 1rem;
+      right: 1rem;
+      width: 50px;
+      height: 50px;
+      font-size: 2.2rem;
+      z-index: 1001;
+    }
+  }
         .modal-title {
             text-align: center;
             margin-bottom: 2rem;
@@ -1848,47 +1862,54 @@
     });
 
     // Modal Handling
-    const modal = document.getElementById('proposalModal');
-    const offerButton = document.getElementById('offerButton');
-    const closeModalButton = document.getElementById('closeModal');
-    const proposalForm = document.getElementById('proposalForm');
+  const modal = document.getElementById('proposalModal');
+  const offerButton = document.getElementById('offerButton');
+  const closeModalButton = document.getElementById('closeModal');
+  const proposalForm = document.getElementById('proposalForm');
 
-    function openModal() {
-      modal.style.display = 'block';
-      setTimeout(() => modal.classList.add('show'), 10);
+  function openModal() {
+    modal.style.display = 'block';
+    setTimeout(() => {
+      modal.classList.add('show');
       document.body.style.overflow = 'hidden';
+    }, 10);
+  }
+
+  function closeModal() {
+    modal.classList.remove('show');
+    setTimeout(() => {
+      modal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }, 300);
+  }
+
+  offerButton.addEventListener('click', function(e) {
+    e.preventDefault();
+    openModal();
+  });
+
+  // FIX: Add both click and touch events for mobile
+  closeModalButton.addEventListener('click', closeModal);
+  closeModalButton.addEventListener('touchend', closeModal);
+
+  // FIX: Handle backdrop touches
+  modal.addEventListener('touchend', function(e) {
+    if (e.target === modal) {
+      closeModal();
     }
+  });
 
-    function closeModal() {
-      modal.classList.remove('show');
-      setTimeout(() => {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-      }, 300);
+  window.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      closeModal();
     }
+  });
 
-    offerButton.addEventListener('click', function(e) {
-      e.preventDefault();
-      {% if 'user_id' not in session %}
-        window.location.href = "{{ url_for('login', next=url_for('listing_details', listing_id=listing.listing_id)) }}";
-      {% else %}
-        openModal();
-      {% endif %}
-    });
-
-    closeModalButton.addEventListener('click', closeModal);
-
-    window.addEventListener('click', function(e) {
-      if (e.target === modal) {
-        closeModal();
-      }
-    });
-
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && modal.style.display === 'block') {
-        closeModal();
-      }
-    });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal.classList.contains('show')) {
+      closeModal();
+    }
+  });
 
     // Form submission handling
     proposalForm.addEventListener('submit', function(e) {
