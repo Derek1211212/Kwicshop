@@ -104,38 +104,66 @@ google = oauth.register(
 
 
 
+OFFSET_PATH = os.path.join(os.path.dirname(__file__), "carousel_offset.txt")
+
+def read_offset():
+    """Read the integer offset from OFFSET_PATH, or return 0 if not present / invalid."""
+    try:
+        with open(OFFSET_PATH, "r") as f:
+            val = int(f.read().strip())
+            return val
+    except Exception:
+        return 0
+
+def write_offset(val):
+    """Write the integer val into OFFSET_PATH (overwriting)."""
+    try:
+        with open(OFFSET_PATH, "w") as f:
+            f.write(str(val))
+    except Exception as e:
+        # If writing fails (permissions, etc.), just log and skip.
+        logging.error(f"Failed to write carousel_offset.txt: {e}")
+
+
 @app.route('/')
 def home():
-    # 0) Keep these in scope for the template
-    search             = request.args.get('search', '').strip()
-    selected_category  = request.args.get('category', 'All')
-    deal_type_filter   = request.args.get('deal_type', 'All')
-    location_q         = request.args.get('location', '').strip()
+    # ───────────────────────────────────────────────────────────
+    # 0) Read search & filter parameters
+    # ───────────────────────────────────────────────────────────
+    search            = request.args.get('search', '').strip()
+    selected_category = request.args.get('category', 'All')
+    deal_type_filter  = request.args.get('deal_type', 'All')
+    location_q        = request.args.get('location', '').strip()
 
-    listings = []
-    categories = []
+    listings       = []
+    categories     = []
     user_logged_in = 'user_id' in session
     user_subscribed = False
     conn = None
 
     try:
-        # 1) Check push subscription
+        # ───────────────────────────────────────────────────────
+        # 1) Check push subscription if user is logged in
+        # ───────────────────────────────────────────────────────
         if user_logged_in:
             conn = get_db_connection()
             cur = conn.cursor()
-            cur.execute("SELECT 1 FROM push_subscriptions WHERE user_id = %s",
-                        (session['user_id'],))
+            cur.execute(
+                "SELECT 1 FROM push_subscriptions WHERE user_id = %s",
+                (session['user_id'],)
+            )
             user_subscribed = cur.fetchone() is not None
             cur.close()
             conn.close()
             conn = None
 
-        # 2) Fetch matching listings
+        # ───────────────────────────────────────────────────────
+        # 2) Fetch listings from the database (same as before)
+        # ───────────────────────────────────────────────────────
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Base query
-        query = """
+        base_query = """
         SELECT
           l.*,
           u.username,
@@ -148,10 +176,10 @@ def home():
         """
         params = []
 
-        # Text search
+        # 2.1) Text search
         if search:
             like = f'%{search}%'
-            query += """
+            base_query += """
               AND (
                 l.title       LIKE %s OR
                 l.description LIKE %s OR
@@ -160,19 +188,19 @@ def home():
             """
             params += [like, like, like]
 
-        # Category filter
+        # 2.2) Category filter
         if selected_category != 'All':
-            query += " AND l.category = %s"
+            base_query += " AND l.category = %s"
             params.append(selected_category)
 
-        # Deal type filter
+        # 2.3) Deal‐type filter
         if deal_type_filter != 'All':
-            query += " AND l.deal_type = %s"
+            base_query += " AND l.deal_type = %s"
             params.append(deal_type_filter)
 
-        # Ordering (with optional location boost)
+        # 2.4) ORDER BY (with optional location boost)
         if location_q:
-            query += """
+            base_query += """
               ORDER BY
                 CASE l.plan
                   WHEN 'Diamond' THEN 5
@@ -188,7 +216,7 @@ def home():
             """
             params += [location_q, location_q, f'%{location_q}%']
         else:
-            query += """
+            base_query += """
               ORDER BY
                 CASE l.plan
                   WHEN 'Diamond' THEN 5
@@ -200,31 +228,52 @@ def home():
                 l.created_at DESC
             """
 
-        cursor.execute(query, params)
+        cursor.execute(base_query, params)
         listings = cursor.fetchall()
 
-        # Fetch categories for filter tags
+        # 2.5) Fetch distinct categories for filter tags
         cursor.execute("SELECT DISTINCT category FROM listings")
         categories = [r['category'] for r in cursor.fetchall()]
 
-        # Build static URLs for each listing and its offers
+        # 2.6) Build full URLs for each listing’s images, and fetch offered_items if Swap Deal
         for l in listings:
-            # main image_url
+            # (a) Main image
             if l.get('image_url'):
-                l['image_url'] = url_for('static', filename='images/' + l['image_url'], _external=True)
+                l['image_url'] = url_for(
+                    'static',
+                    filename='images/' + l['image_url'],
+                    _external=True
+                )
             else:
-                l['image_url'] = url_for('static', filename='images/placeholder.jpg')
+                l['image_url'] = url_for(
+                    'static',
+                    filename='images/placeholder.jpg',
+                    _external=True
+                )
 
-            # banner_image (for carousel) from image1 column
+            # (b) Carousel banner = image1 if exists, else placeholder
             if l.get('image1'):
-                l['banner_image'] = url_for('static', filename='images/' + l['image1'], _external=True)
+                l['banner_image'] = url_for(
+                    'static',
+                    filename='images/' + l['image1'],
+                    _external=True
+                )
             else:
-                l['banner_image'] = url_for('static', filename='images/placeholder.jpg')
+                l['banner_image'] = url_for(
+                    'static',
+                    filename='images/placeholder.jpg',
+                    _external=True
+                )
 
-            # offered items for swap deals
+            # (c) If Swap Deal, load offered_items
             if l['deal_type'] == 'Swap Deal':
                 cursor.execute("""
-                  SELECT item_id, title, description, image1, `condition`
+                  SELECT
+                    item_id,
+                    title,
+                    description,
+                    image1,
+                    `condition`
                   FROM offered_items
                   WHERE listing_id = %s
                   ORDER BY item_id ASC
@@ -232,9 +281,17 @@ def home():
                 offers = cursor.fetchall() or []
                 for o in offers:
                     if o.get('image1'):
-                        o['image1'] = url_for('static', filename='images/' + o['image1'])
+                        o['image1'] = url_for(
+                            'static',
+                            filename='images/' + o['image1'],
+                            _external=True
+                        )
                     else:
-                        o['image1'] = url_for('static', filename='images/placeholder.jpg')
+                        o['image1'] = url_for(
+                            'static',
+                            filename='images/placeholder.jpg',
+                            _external=True
+                        )
                 l['offers'] = offers
             else:
                 l['offers'] = []
@@ -249,7 +306,27 @@ def home():
         if conn:
             conn.close()
 
-    # 3) Render the template
+    # ───────────────────────────────────────────────────────────────────
+    # 3) Rotate the entire `listings` list by a file‐based offset of +1
+    # ───────────────────────────────────────────────────────────────────
+    total_count = len(listings)
+    if total_count > 0:
+        # 3.1) Read offset from disk (default 0)
+        offset = read_offset() % total_count
+
+        # 3.2) Rotate listings by offset
+        rotated = listings[offset:] + listings[:offset]
+
+        # 3.3) Increment offset by 1, wrap around
+        next_offset = (offset + 1) % total_count
+        write_offset(next_offset)
+
+        # 3.4) Use rotated list
+        listings = rotated
+
+    # ───────────────────────────────────────────────────────────────────
+    # 4) Render `home.html` with rotated listings
+    # ───────────────────────────────────────────────────────────────────
     featured_listing = listings[0] if listings else None
     return render_template(
         'home.html',
