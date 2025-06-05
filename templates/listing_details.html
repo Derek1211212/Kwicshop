@@ -1115,61 +1115,126 @@
     {% endif %}
 
 <div class="details-grid">
-  <!-- LEFT COLUMN: one gallery per offered_item -->
+
+  <!-- LEFT COLUMN: either “Outright Sales” images or a separate gallery per offered_item -->
   <div class="gallery-column">
-    {% for item in listing.offered_items %}
-      {% set idx = loop.index0 %}
-      <div class="offered-gallery-block">
-        <!-- Item metadata above its gallery -->
+
+    {% if listing.deal_type == 'Outright Sales' %}
+      {# — Outright Sales: show the images directly from the listings table — #}
+      <div class="sale-gallery-block">
+
         <div class="offered-item-header">
-          <h4 class="gallery-title">{{ item.title }}</h4>
-          <span class="condition-badge condition-{{ item.condition|lower }}">
-            {{ item.condition }}
+          <h4 class="gallery-title">{{ listing.title }}</h4>
+          <span class="condition-badge">
+            {{ listing.condition }}
           </span>
-          <p class="gallery-description">{{ item.description }}</p>
+          <p class="gallery-description">{{ listing.description }}</p>
         </div>
 
         <div class="image-gallery">
+          <!-- MAIN IMAGE -->
           <div class="main-image-container">
             <img
-              id="mainImage-{{ idx }}"
+              id="mainImage-sale"
               class="main-image"
-              src="{{ url_for('static', filename='images/' ~ (item.image1 or 'placeholder.jpg')) }}"
-              alt="{{ item.title }}"
+              src="{{ url_for('static', filename='images/' ~ (listing.image_url or 'placeholder.jpg')) }}"
+              alt="{{ listing.title }}"
             />
             <div class="image-overlay">
               <div class="listing-meta">
                 <i class="fas fa-images"></i>
-                <span id="image-counter-{{ idx }}">
-                  1 of {{ [item.image1, item.image2, item.image3, item.image4]|select|list|length }}
+                {# Count how many non-null images exist in the listing #}
+                {% set sale_imgs = [listing.image_url, listing.image1, listing.image2, listing.image3, listing.image4] 
+                                   | select | list %}
+                <span id="image-counter-sale">
+                  1 of {{ sale_imgs | length }}
                 </span>
               </div>
               <button
                 class="zoom-button"
-                onclick="toggleZoom('mainImage-{{ idx }}')"
+                onclick="toggleZoom('mainImage-sale')"
                 style="background:none;border:none;color:white;cursor:pointer;"
               >
                 <i class="fas fa-search-plus"></i>
               </button>
             </div>
           </div>
-          <div class="thumbnail-container" id="thumbnailContainer-{{ idx }}">
-            {% set imgs = [item.image1, item.image2, item.image3, item.image4] %}
-            {% for img in imgs %}
-              {% if img %}
-                {% set thumb = url_for('static', filename='images/' ~ img) %}
-                <img
-                  src="{{ thumb }}"
-                  class="thumbnail {% if loop.first %}active{% endif %}"
-                  alt="Thumbnail {{ loop.index }} of {{ item.title }}"
-                  onclick="changeMainImage(this, '{{ thumb }}', 'mainImage-{{ idx }}', 'thumbnailContainer-{{ idx }}')"
-                />
-              {% endif %}
+
+          <!-- THUMBNAILS FOR SALE -->
+          <div class="thumbnail-container" id="thumbnailContainer-sale">
+            {% for img in sale_imgs %}
+              {% set thumb = url_for('static', filename='images/' ~ img) %}
+              <img
+                src="{{ thumb }}"
+                class="thumbnail {% if loop.first %}active{% endif %}"
+                alt="Thumbnail {{ loop.index }} of {{ listing.title }}"
+                onclick="changeMainImage(this, '{{ thumb }}', 'mainImage-sale', 'thumbnailContainer-sale')"
+              />
             {% endfor %}
           </div>
         </div>
       </div>
-    {% endfor %}
+
+    {% else %}
+      {# — Swap Deal: render one gallery‐block per offered_item — #}
+      {% for item in listing.offered_items %}
+        {% set idx = loop.index0 %}
+        <div class="offered-gallery-block">
+          <!-- Item metadata above its gallery -->
+          <div class="offered-item-header">
+            <h4 class="gallery-title">{{ item.title }}</h4>
+            <span class="condition-badge condition-{{ item.condition|lower }}">
+              {{ item.condition }}
+            </span>
+            <p class="gallery-description">{{ item.description }}</p>
+          </div>
+
+          <div class="image-gallery">
+            <div class="main-image-container">
+              <img
+                id="mainImage-{{ idx }}"
+                class="main-image"
+                src="{{ url_for('static', filename='images/' ~ (item.image1 or 'placeholder.jpg')) }}"
+                alt="{{ item.title }}"
+              />
+              <div class="image-overlay">
+                <div class="listing-meta">
+                  <i class="fas fa-images"></i>
+                  <span id="image-counter-{{ idx }}">
+                    1 of {{ [ item.image1, item.image2, item.image3, item.image4 ] 
+                             | select 
+                             | list 
+                             | length }}
+                  </span>
+                </div>
+                <button
+                  class="zoom-button"
+                  onclick="toggleZoom('mainImage-{{ idx }}')"
+                  style="background:none;border:none;color:white;cursor:pointer;"
+                >
+                  <i class="fas fa-search-plus"></i>
+                </button>
+              </div>
+            </div>
+            <div class="thumbnail-container" id="thumbnailContainer-{{ idx }}">
+              {% set imgs = [ item.image1, item.image2, item.image3, item.image4 ] %}
+              {% for img in imgs %}
+                {% if img %}
+                  {% set thumb = url_for('static', filename='images/' ~ img) %}
+                  <img
+                    src="{{ thumb }}"
+                    class="thumbnail {% if loop.first %}active{% endif %}"
+                    alt="Thumbnail {{ loop.index }} of {{ item.title }}"
+                    onclick="changeMainImage(this, '{{ thumb }}', 'mainImage-{{ idx }}', 'thumbnailContainer-{{ idx }}')"
+                  />
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    {% endif %}
+
   </div>
 
 {% if listing.deal_type == 'Swap Deal' %}

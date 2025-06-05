@@ -2124,176 +2124,247 @@ input[type="file"] {
 </section>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Toggle between Swap and Sale sections
-        const swapRadio = document.getElementById('deal-swap'),
-              saleRadio = document.getElementById('deal-sale'),
-              swapSec = document.getElementById('swap-section'),
-              saleSec = document.getElementById('sale-section'),
-              dealCards = document.querySelectorAll('.deal-type-card');
-        
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Deal type radios and their sections
+        const swapRadio   = document.getElementById('deal-swap');
+        const saleRadio   = document.getElementById('deal-sale');
+        const swapSection = document.getElementById('swap-section');
+        const saleSection = document.getElementById('sale-section');
+        const dealCards   = document.querySelectorAll('.deal-type-card');
+
+        // All swap-only form controls that are required when Swap is active
+        const swapControls = Array.from(document.querySelectorAll(
+            'select[name="offer_condition[]"], textarea[name="offer_description[]"], input[name="offer_images[]"], input[name="desired_swap"], select[name="desired_condition"]'
+        ));
+
+        // Function to toggle between Swap vs Sale sections,
+        // and enable/disable required attributes accordingly
         function toggleSections() {
             const isSwap = swapRadio.checked;
-            
-            swapSec.style.display = isSwap ? 'block' : 'none';
-            saleSec.style.display = isSwap ? 'none' : 'block';
-            
+
+            // Show/hide the Swap and Sale sections
+            swapSection.style.display = isSwap ? 'block' : 'none';
+            saleSection.style.display = isSwap ? 'none' : 'block';
+
+            // Update "active" styling on deal-type cards
             dealCards.forEach(card => {
-                card.classList.toggle('active', card.contains(isSwap ? swapRadio : saleRadio));
+                const input = card.querySelector('input[type="radio"]');
+                card.classList.toggle('active', input.checked);
+            });
+
+            // Enable or disable all Swap-related controls
+            swapControls.forEach(ctrl => {
+                if (isSwap) {
+                    // Re-enable and re-add required attribute
+                    ctrl.disabled = false;
+                    if (ctrl.hasAttribute('data-was-required')) {
+                        ctrl.setAttribute('required', '');
+                    }
+                } else {
+                    // If currently required, remember it then remove attribute
+                    if (ctrl.hasAttribute('required')) {
+                        ctrl.setAttribute('data-was-required', 'true');
+                        ctrl.removeAttribute('required');
+                    }
+                    ctrl.disabled = true;
+                }
             });
         }
-        
+
+        // Attach listeners to radio buttons
         swapRadio.addEventListener('change', toggleSections);
         saleRadio.addEventListener('change', toggleSections);
-        
-        // Add item functionality
-        const container = document.getElementById('offered-items-container'),
-              addBtn = document.getElementById('add-item-btn');
-        
-        addBtn.addEventListener('click', () => {
-            const items = container.querySelectorAll('.offered-item'),
-                  count = items.length;
-            
-            if (count < 3) {
-                const template = container.querySelector('[data-clone="false"]'),
-                      clone = template.cloneNode(true);
-                
-                clone.dataset.clone = 'true';
-                
-                // Show the name field for new items
-                const nameField = clone.querySelector('.name-field');
-                nameField.style.display = 'block';
-                
-                // Update item number
-                const itemNumber = clone.querySelector('.item-number');
-                itemNumber.textContent = count + 1;
-                
-                // Show remove button
-                const removeBtn = clone.querySelector('.remove-item-btn');
-                removeBtn.style.display = 'block';
-                removeBtn.addEventListener('click', function() {
-                    this.closest('.offered-item').remove();
-                    updateItemNumbers();
-                    addBtn.disabled = false;
-                });
-                
-                // Clear values
-                clone.querySelectorAll('input, textarea, select').forEach(el => {
-                    if (el.tagName === 'SELECT') el.selectedIndex = 0;
-                    else if (el.type === 'file') {
-                        el.value = '';
-                        const preview = el.closest('.file-upload-area').querySelector('.file-preview');
-                        if (preview) preview.innerHTML = '';
-                    }
-                    else el.value = '';
-                });
-                
-                // Set up new file upload
-                const fileInput = clone.querySelector('input[type="file"]');
-                if (fileInput) {
-                    const uploadArea = fileInput.closest('.file-upload-area');
-                    uploadArea.addEventListener('click', () => fileInput.click());
-                    fileInput.addEventListener('change', handleFileUpload);
-                }
-                
-                container.appendChild(clone);
-                updateItemNumbers();
-                
-                // Disable add button if max reached
-                if (count + 1 >= 3) addBtn.disabled = true;
-            }
-        });
-        
-        // Update item numbers when items are added/removed
+
+        // Initialize on page load
+        toggleSections();
+
+        // -------------------------
+        // Offered Items Logic
+        // -------------------------
+        const container = document.getElementById('offered-items-container');
+        const addBtn    = document.getElementById('add-item-btn');
+
+        // Update item number labels and re-enable "Add" button if below max
         function updateItemNumbers() {
             const items = container.querySelectorAll('.offered-item');
             items.forEach((item, index) => {
-                const number = item.querySelector('.item-number');
-                if (number) number.textContent = index + 1;
+                const numElem = item.querySelector('.item-number');
+                if (numElem) numElem.textContent = index + 1;
             });
-            
-            // Re-enable add button if not at max
-            addBtn.disabled = items.length >= 3;
+            addBtn.disabled = (items.length >= 3);
         }
-        
-        // File upload handling
-        function handleFileUpload(e) {
-            const files = e.target.files;
-            const previewContainer = e.target.closest('.file-upload-area').querySelector('.file-preview');
-            previewContainer.innerHTML = '';
-            
-            if (files.length > 0) {
-                for (let i = 0; i < Math.min(files.length, 4); i++) {
-                    const file = files[i];
-                    if (file.type.match('image.*')) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const previewItem = document.createElement('div');
-                            previewItem.className = 'file-preview-item';
-                            previewItem.innerHTML = `
-                                <img src="${e.target.result}" alt="Preview">
-                                <button type="button"><i class="fas fa-times"></i></button>
-                            `;
-                            previewContainer.appendChild(previewItem);
-                            
-                            // Remove button functionality
-                            previewItem.querySelector('button').addEventListener('click', function() {
-                                previewItem.remove();
-                                // TODO: Handle actual file removal from input
-                            });
-                        }
-                        reader.readAsDataURL(file);
-                    }
+
+        // Add another offered-item block (max 3)
+        addBtn.addEventListener('click', () => {
+            const items = container.querySelectorAll('.offered-item');
+            if (items.length >= 3) return;
+
+            const template = container.querySelector('[data-clone="false"]');
+            const clone = template.cloneNode(true);
+            clone.dataset.clone = 'true';
+
+            // Show name field for clones
+            const nameField = clone.querySelector('.name-field');
+            if (nameField) nameField.style.display = 'block';
+
+            // Update item number
+            const numElem = clone.querySelector('.item-number');
+            if (numElem) numElem.textContent = items.length + 1;
+
+            // Show and wire up remove button
+            const removeBtn = clone.querySelector('.remove-item-btn');
+            removeBtn.style.display = 'block';
+            removeBtn.addEventListener('click', () => {
+                clone.remove();
+                updateItemNumbers();
+            });
+
+            // Clear all inputs in the clone
+            clone.querySelectorAll('input, textarea, select').forEach(el => {
+                if (el.tagName === 'SELECT') el.selectedIndex = 0;
+                else if (el.type === 'file') {
+                    el.value = '';
+                    const preview = el.closest('.file-upload-area').querySelector('.file-preview');
+                    if (preview) preview.innerHTML = '';
                 }
+                else el.value = '';
+            });
+
+            // Initialize file-upload logic for this clone
+            const fileInput = clone.querySelector('input[type="file"]');
+            if (fileInput) {
+                const uploadArea = fileInput.closest('.file-upload-area');
+                uploadArea.addEventListener('click', () => fileInput.click());
+                fileInput.addEventListener('change', handleFileUpload);
+                uploadArea.addEventListener('dragover', handleDragOver);
+                uploadArea.addEventListener('dragleave', handleDragLeave);
+                uploadArea.addEventListener('drop', handleDrop);
             }
+
+            container.appendChild(clone);
+            updateItemNumbers();
+        });
+
+        // Hide remove button on first item initially
+        const firstItem = container.querySelector('.offered-item[data-clone="false"]');
+        if (firstItem) {
+            const removeBtn = firstItem.querySelector('.remove-item-btn');
+            if (removeBtn) removeBtn.style.display = 'none';
         }
-        
-        // Initialize file upload areas
+
+        // -------------------------
+        // File Upload Handlers
+        // -------------------------
+
+        // Handle drag over
+  document.addEventListener('DOMContentLoaded', () => {
+    // Grab the upload area and its hidden <input>
+    const uploadArea = document.getElementById('main-images-upload');
+    const fileInput  = uploadArea.querySelector('input[type="file"]');
+
+    // 1) When the area is clicked at all, open the file picker:
+    uploadArea.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    // 2) Handle “drag over” styling:
+    function handleDragOver(e) {
+      e.preventDefault();
+      uploadArea.style.borderColor = 'var(--primary)';
+      uploadArea.style.backgroundColor = 'rgba(39, 174, 96, 0.05)';
+    }
+
+    // 3) Restore normal styling on drag leave:
+    function handleDragLeave(e) {
+      uploadArea.style.borderColor = '#dee2e6';
+      uploadArea.style.backgroundColor = 'var(--light)';
+    }
+
+    // 4) When files are dropped, put them all into the <input>:
+    function handleDrop(e) {
+      e.preventDefault();
+      // THIS LINE ensures all dropped files are sent to the server:
+      fileInput.files = e.dataTransfer.files;
+      // Trigger the 'change' event so that previews update immediately:
+      const changeEvent = new Event('change');
+      fileInput.dispatchEvent(changeEvent);
+
+      // Restore styling:
+      uploadArea.style.borderColor = '#dee2e6';
+      uploadArea.style.backgroundColor = 'var(--light)';
+    }
+
+    // 5) When the <input> actually changes (via browse or drop),
+    //    draw a thumbnail for each selected file (up to 4),
+    //    but we never remove any file from fileInput.files here:
+    function handleFileUpload(e) {
+      const files = e.target.files;
+      const previewContainer = uploadArea.querySelector('.file-preview');
+      previewContainer.innerHTML = '';
+
+      if (files.length === 0) {
+        previewContainer.innerHTML = '<p class="upload-subtext">No images selected</p>';
+        return;
+      }
+
+      // Only control how many **thumbnails** we show,
+      // but DO NOT rewrite fileInput.files itself:
+      for (let i = 0; i < Math.min(files.length, 4); i++) {
+        const file = files[i];
+        if (!file.type.match('image.*')) {
+          continue;
+        }
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const previewItem = document.createElement('div');
+          previewItem.className = 'file-preview-item';
+          previewItem.innerHTML = `
+            <img src="${event.target.result}" alt="Preview">
+            <button type="button"><i class="fas fa-times"></i></button>
+          `;
+          previewContainer.appendChild(previewItem);
+
+          // If the user clicks “×” on a thumbnail, we simply remove the preview from the DOM.
+          // **That does not change** fileInput.files. If you truly need to remove the file
+          // from fileInput.files itself, you’d have to rebuild a DataTransfer list manually.
+          previewItem.querySelector('button').addEventListener('click', () => {
+            previewItem.remove();
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Wire up all listeners:
+    fileInput.addEventListener('change', handleFileUpload);
+    uploadArea.addEventListener('dragover', handleDragOver);
+    uploadArea.addEventListener('dragleave', handleDragLeave);
+    uploadArea.addEventListener('drop', handleDrop);
+
+    // (Optional) Initialize a “No images selected” message if nothing is chosen yet:
+    handleFileUpload({ target: fileInput });
+  });
+
+        // Initialize all file-upload areas on page load
         function initFileUploads() {
             document.querySelectorAll('.file-upload-area').forEach(area => {
                 const fileInput = area.querySelector('input[type="file"]');
                 area.addEventListener('click', () => fileInput.click());
                 fileInput.addEventListener('change', handleFileUpload);
-                
-                // Drag and drop functionality
-                area.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    area.style.borderColor = 'var(--primary)';
-                    area.style.backgroundColor = 'rgba(67, 97, 238, 0.05)';
-                });
-                
-                area.addEventListener('dragleave', () => {
-                    area.style.borderColor = '#dee2e6';
-                    area.style.backgroundColor = 'var(--light)';
-                });
-                
-                area.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    area.style.borderColor = '#dee2e6';
-                    area.style.backgroundColor = 'var(--light)';
-                    fileInput.files = e.dataTransfer.files;
-                    const event = new Event('change');
-                    fileInput.dispatchEvent(event);
-                });
+                area.addEventListener('dragover', handleDragOver);
+                area.addEventListener('dragleave', handleDragLeave);
+                area.addEventListener('drop', handleDrop);
             });
         }
-        
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            toggleSections();
-            updateItemNumbers();
-            initFileUploads();
-            
-            // Set up remove button functionality for the first item if it's the only one
-            const firstItem = container.querySelector('.offered-item');
-            if (firstItem) {
-                const removeBtn = firstItem.querySelector('.remove-item-btn');
-                if (removeBtn) {
-                    removeBtn.style.display = 'none';
-                }
-            }
-        });
-    </script>
+
+        // Initialize on load
+        updateItemNumbers();
+        initFileUploads();
+    });
+</script>
+
+
 
 
 <div id="undo-toast">
