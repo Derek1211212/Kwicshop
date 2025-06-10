@@ -25,6 +25,7 @@ import json
 from notifications import send_push
 from config import VAPID_PUBLIC_KEY
 from authlib.integrations.flask_client import OAuth
+from apscheduler.schedulers.background import BackgroundScheduler
 
 
 
@@ -123,6 +124,67 @@ def write_offset(val):
     except Exception as e:
         # If writing fails (permissions, etc.), just log and skip.
         logging.error(f"Failed to write carousel_offset.txt: {e}")
+
+
+
+
+
+def check_and_update_expired_plans():
+    try:
+        # Connect to the database using your existing function
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Define plan durations in days
+        PLAN_DURATIONS = {
+            'Diamond': 90,   # 3 months
+            'Gold': 60,      # 2 months
+            'Silver': 30,    # 1 month
+            'Standard': 21   # 3 weeks
+        }
+
+        # Fetch listings with non-Free plans
+        cursor.execute("SELECT user_id, Plan, created_at FROM listings WHERE Plan != 'Free'")
+        listings = cursor.fetchall()
+
+        # Use current time (assuming database created_at is in UTC)
+        now = datetime.now()
+        expired_ids = []
+
+        # Check each listing for expiration
+        for listing_id, plan, created_at in listings:
+            duration_days = PLAN_DURATIONS.get(plan, 0)
+            if duration_days == 0:  # Skip invalid plans
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Warning: Invalid plan '{plan}' for listing ID {listing_id}")
+                continue
+            if now > created_at + timedelta(days=duration_days):
+                expired_ids.append(listing_id)
+
+        # Update expired listings to 'Free'
+        if expired_ids:
+            format_strings = ','.join(['%s'] * len(expired_ids))
+            cursor.execute(f"UPDATE listings SET Plan = 'Free' WHERE user_id IN ({format_strings})", tuple(expired_ids))
+            conn.commit()
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Updated {cursor.rowcount} expired listings to 'Free'.")
+        else:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] No expired listings to update.")
+
+        cursor.close()
+        conn.close()
+    except mysql.connector.Error as db_err:
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Database error: {db_err}")
+    except Exception as e:
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Error running expiration job: {e}")
+
+# APScheduler setup for testing
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=check_and_update_expired_plans, trigger="interval", hours=12)  # 10 seconds for testing
+scheduler.start()
+
+
+
+
+
 
 
 @app.route('/')
@@ -1170,79 +1232,93 @@ def edit_listing(listing_id):
 @app.route('/listings/<int:listing_id>/update', methods=['POST'])
 @login_required
 def update_listing(listing_id):
-    conn    = None
-    cursor  = None
+    conn = None
+    cursor = None
     try:
-        # 1) First verify ownership
-        conn   = get_db_connection()
+        # 1) Verify ownership and fetch deal_type
+        conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT user_id FROM listings WHERE listing_id = %s", (listing_id,))
+        cursor.execute("SELECT user_id, deal_type FROM listings WHERE listing_id = %s", (listing_id,))
         row = cursor.fetchone()
         if not row or row['user_id'] != session['user_id']:
             flash('You do not have permission to edit this listing', 'danger')
             return redirect(url_for('dashboard'))
 
-        # 2) Collect all scalar form fields
-        title                     = request.form.get('title')
-        description               = request.form.get('description')
-        condition                 = request.form.get('condition')
-        desired_swap              = request.form.get('desired_swap')
-        desired_swap_description  = request.form.get('desired_swap_description')
-        additional_cash           = request.form.get('additional_cash') or None
-        required_cash             = request.form.get('required_cash')   or None
-        location                  = request.form.get('location')
-        contact                   = request.form.get('contact')
+        deal_type = row['deal_type']
 
-        # 3) Handle file uploads for image_url + image1–image4
-        #    Save each into static/images/ and prepare an update map.
+        # 2) Collect common form fields
+        title = request.form.get('title')
+        description = request.form.get('description')
+        condition = request.form.get('condition')
+        location = request.form.get('location')
+        contact = request.form.get('contact')
+
+        # Initialize conditional fields
+        price = None
+        desired_swap = None
+        desired_swap_description = None
+        required_cash = None
+        additional_cash = None
+
+        # Process fields based on deal_type
+        if deal_type == 'Outright Sales':
+            price = request.form.get('price') or None
+        else:
+            desired_swap = request.form.get('desired_swap')
+            desired_swap_description = request.form.get('desired_swap_description')
+            required_cash = request.form.get('required_cash') or None
+            additional_cash = request.form.get('additional_cash') or None
+
+        # 3) Handle file uploads for images
         upload_dir = os.path.join(app.root_path, 'static', 'images')
         os.makedirs(upload_dir, exist_ok=True)
 
         img_fields = {
-            'image_url':   request.files.get('image'),
-            'image1':      request.files.get('image1'),
-            'image2':      request.files.get('image2'),
-            'image3':      request.files.get('image3'),
-            'image4':      request.files.get('image4')
+            'image_url': request.files.get('image'),
+            'image1': request.files.get('image1'),
+            'image2': request.files.get('image2'),
+            'image3': request.files.get('image3'),
+            'image4': request.files.get('image4')
         }
 
-        # Build dynamic SET clauses
+        # Build dynamic SET clauses for SQL UPDATE
         set_clauses = [
             "title=%s",
             "description=%s",
             "`condition`=%s",
+            "price=%s",
             "desired_swap=%s",
             "desired_swap_description=%s",
-            "additional_cash=%s",
             "required_cash=%s",
+            "additional_cash=%s",
             "location=%s",
             "contact=%s"
         ]
         params = [
             title, description, condition,
-            desired_swap, desired_swap_description,
-            additional_cash, required_cash,
+            price, desired_swap, desired_swap_description,
+            required_cash, additional_cash,
             location, contact
         ]
 
+        # Process image uploads
         for field, file in img_fields.items():
             if file and file.filename and allowed_file(file.filename):
-                # save to disk
+                # Generate unique filename and save
                 filename = secure_filename(file.filename)
                 unique_name = f"{uuid.uuid4().hex}_{filename}"
                 dest = os.path.join(upload_dir, unique_name)
                 file.save(dest)
-
-                # schedule this field for update
+                # Add to SET clause
                 set_clauses.append(f"{field}=%s")
                 params.append(unique_name)
 
-        # 4) Finalize and execute UPDATE
+        # 4) Execute UPDATE query
         params.append(listing_id)
         query = f"""
             UPDATE listings
-               SET {', '.join(set_clauses)}
-             WHERE listing_id=%s
+            SET {', '.join(set_clauses)}
+            WHERE listing_id=%s
         """
         cursor.execute(query, params)
         conn.commit()
@@ -1258,8 +1334,12 @@ def update_listing(listing_id):
         return redirect(url_for('edit_listing', listing_id=listing_id))
 
     finally:
-        if cursor: cursor.close()
-        if conn:    conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
 
 
 
@@ -2131,9 +2211,9 @@ def promote_listing(listing_id):
 
     # Define available promotion plans and their prices
     plan_prices = {
-        "Diamond": 100,
-        "Gold": 70,
-        "Silver": 40,
+        "Diamond": 200,
+        "Gold": 100,
+        "Silver": 50,
         "Bronze": 20
     }
     return render_template('promote.html', listing=listing, plan_prices=plan_prices)
@@ -2223,6 +2303,8 @@ scheduler.start()
 
 
 
+import atexit
+atexit.register(lambda: scheduler.shutdown())
 
 if __name__ == '__main__':
     app.run(debug=True)

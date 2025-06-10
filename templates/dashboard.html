@@ -553,54 +553,9 @@
             margin: 0 auto;
         }
         
-        .deal-type-selector {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .deal-option input[type="radio"] {
-            display: none;
-        }
-        
-        .deal-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem;
-            border: 1px solid var(--medium-gray);
-            border-radius: var(--radius-md);
-            background: var(--white);
-            cursor: pointer;
-            transition: var(--transition);
-            text-align: center;
-        }
-        
-        .deal-card:hover {
-            border-color: var(--primary);
-        }
-        
-        .deal-card i {
-            font-size: 1.5rem;
-            margin-bottom: 0.75rem;
-            color: var(--dark-gray);
-        }
-        
-        .deal-card span {
-            font-weight: 500;
-            color: var(--dark);
-        }
-        
-        input[type="radio"]:checked + .deal-card {
-            border-color: var(--primary);
-            background: var(--primary-light);
-        }
-        
-        input[type="radio"]:checked + .deal-card i {
-            color: var(--primary);
-        }
+
+
+        /* Keep your existing styles for larger screens */
         
         .cash-section-group {
             border: 1px solid var(--medium-gray);
@@ -1261,20 +1216,6 @@ textarea {
   resize: vertical;
 }
 
-/* ===== Deal Type Radios ===== */
-.deal-type-options {
-  display: flex;
-  gap: 1.5rem;
-}
-.deal-type-options label {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  font-weight: normal;
-}
-.deal-type-options input[type="radio"] {
-  margin-right: 0.5rem;
-}
 
 /* ===== Headings within Form ===== */
 #create-listing-form h3 {
@@ -1476,49 +1417,94 @@ input[type="file"] {
             color: var(--primary);
         }
         
-        .deal-type-container {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .deal-type-card {
-            flex: 1;
-            cursor: pointer;
-            border-radius: var(--border-radius);
-            border: 2px solid #e9ecef;
-            padding: 1.5rem;
-            text-align: center;
-            transition: var(--transition);
-            background: white;
-        }
-        
-        .deal-type-card.active {
-            border-color: var(--primary);
-            background-color: var(--primary-light);
-        }
-        
-        .deal-type-card i {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            color: var(--primary);
-        }
-        
-        .deal-type-card.active i {
-            color: var(--secondary);
-        }
-        
-        .deal-type-card h5 {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: var(--dark);
-        }
-        
-        .deal-type-card p {
-            color: #6c757d;
-            font-size: 0.9rem;
-            margin-bottom: 0;
-        }
+.deal-type-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.deal-type-card {
+    flex: 1;
+    cursor: pointer;
+    border-radius: var(--border-radius);
+    border: 2px solid #e9ecef;
+    padding: 1.5rem;
+    text-align: center;
+    transition: transform 0.2s ease-in-out, border-color 0.2s, background-color 0.2s;
+    background: white;
+    position: relative; /* For positioning the checkmark */
+}
+
+.deal-type-card:hover {
+    transform: scale(1.02); /* Slight enlargement on hover */
+}
+
+.deal-type-card.active {
+    border-color: var(--primary);
+    background-color: var(--primary-light);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Adds depth to the active card */
+}
+
+.deal-type-card.active::after {
+    content: '\f00c'; /* Font Awesome checkmark */
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: var(--primary);
+    font-size: 1.2rem;
+}
+
+.deal-type-card i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: var(--primary);
+}
+
+.deal-type-card.active i {
+    color: var(--secondary);
+}
+
+.deal-type-card h5 {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--dark);
+}
+
+.deal-type-card p {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 0;
+}
+
+/* Ensure side-by-side layout on all screens */
+@media (max-width: 768px) {
+    .deal-type-container {
+        flex-direction: row; /* Keep horizontal layout */
+        gap: 0.5rem; /* Reduce gap for smaller screens */
+    }
+
+    .deal-type-card {
+        padding: 1rem; /* Slightly reduce padding for mobile */
+        font-size: 0.9rem; /* Slightly smaller text for better fit */
+    }
+
+    .deal-type-card h5 {
+        font-size: 1rem; /* Adjust heading size for mobile */
+    }
+
+    .deal-type-card p {
+        font-size: 0.8rem; /* Adjust description size for mobile */
+    }
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+    .deal-type-container {
+        flex-direction: column;
+    }
+}
         
         .form-label {
             font-weight: 600;
@@ -1846,29 +1832,27 @@ input[type="file"] {
             <i class="fas fa-plus-circle"></i> Create New Listing
         </h1>
         
-        <form action="{{ url_for('create_listing') }}" method="POST" enctype="multipart/form-data">
-            <!-- Listing Type -->
-            <div class="form-card">
-                <h5 class="form-label mb-3">Listing Type <span class="required-field"></span></h5>
-                <div class="deal-type-container">
-                    <div class="deal-type-card active">
-                        <input type="radio" class="btn-check" name="deal_type" id="deal-swap" value="Swap Deal" checked>
-                        <label class="w-100 h-100" for="deal-swap">
-                            <i class="fas fa-exchange-alt"></i>
-                            <h5>Swap Deal</h5>
-                            <p>Trade items with other users</p>
-                        </label>
-                    </div>
-                    <div class="deal-type-card">
-                        <input type="radio" class="btn-check" name="deal_type" id="deal-sale" value="Outright Sales">
-                        <label class="w-100 h-100" for="deal-sale">
-                            <i class="fas fa-tag"></i>
-                            <h5>Outright Sale</h5>
-                            <p>Sell your item for cash</p>
-                        </label>
-                    </div>
-                </div>
-            </div>
+<div class="form-card">
+    <h5 class="form-label mb-3">Listing Type <span class="required-field"></span></h5>
+    <div class="deal-type-container">
+        <div class="deal-type-card active">
+            <input type="radio" class="btn-check" name="deal_type" id="deal-swap" value="Swap Deal" checked>
+            <label class="w-100 h-100" for="deal-swap">
+                <i class="fas fa-exchange-alt"></i>
+                <h5>Swap Deal</h5>
+                <p>Trade items with other users</p>
+            </label>
+        </div>
+        <div class="deal-type-card">
+            <input type="radio" class="btn-check" name="deal_type" id="deal-sale" value="Outright Sales">
+            <label class="w-100 h-100" for="deal-sale">
+                <i class="fas fa-tag"></i>
+                <h5>Outright Sale</h5>
+                <p>Sell your item for cash</p>
+            </label>
+        </div>
+    </div>
+</div>
             
             <!-- Basic Information -->
             <div class="form-card">
@@ -1907,10 +1891,11 @@ input[type="file"] {
                         <div class="input-group mb-3">
                             <span class="input-group-text input-icon"><i class="fas fa-crown"></i></span>
                             <select name="plan" class="form-select" required>
-                                <option value="Free">Free (₵0)</option>
-                                <option value="Standard">Standard (₵20)</option>
-                                <option value="Premium">Premium (₵50)</option>
-                                <option value="Diamond">Diamond (₵100)</option>
+                                <option value="Free">Free (₵0,No Promo)</option>
+                                <option value="Bronze">Bronze (₵20,3 Weeks Promo)</option>
+                                <option value="Silver">Silver (₵50,1 Month Promo)</option>
+                                <option value="Gold">Gold (₵100,2 Months Promo)</option>
+                                <option value="Diamond">Diamond (₵200,3 Months Promo)</option>
                             </select>
                         </div>
                         <p class="help-text">Better plans get more visibility</p>
@@ -2014,11 +1999,7 @@ input[type="file"] {
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Additional Notes</label>
-                        <textarea name="swap_notes" class="form-control" rows="3" placeholder="Any special requirements or preferences..."></textarea>
-                    </div>
+                
                     
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -2039,6 +2020,11 @@ input[type="file"] {
                         </div>
                     </div>
                 </div>
+
+                        <div class="mb-3">
+                        <label class="form-label">Additional Notes</label>
+                        <textarea name="swap_notes" class="form-control" rows="3" placeholder="Any special requirements or preferences..."></textarea>
+                    </div>
             </div>
             
             <!-- Sale Section -->
@@ -2073,23 +2059,6 @@ input[type="file"] {
                         <textarea name="description" class="form-control" rows="4" required placeholder="Describe your item in detail..."></textarea>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Listing Images -->
-            <div class="form-card">
-                <h5 class="section-title">
-                    <i class="fas fa-images"></i> Listing Images
-                </h5>
-                
-                <label class="form-label">Main Images (Optional)</label>
-                <div class="file-upload-area" id="main-images-upload">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <p>Click to upload or drag and drop</p>
-                    <small>JPEG, PNG (Max 5MB each)</small>
-                    <input type="file" name="images[]" class="d-none" multiple accept="image/*">
-                    <div class="file-preview mt-3"></div>
-                </div>
-                <p class="help-text">Upload high-quality photos to showcase your listing</p>
             </div>
             
             <!-- Location & Contact -->
