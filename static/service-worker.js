@@ -1,8 +1,8 @@
 const CACHE_NAME    = 'swap-chief-cache-v6';
-const PLACEHOLDER   = '/static/icons/ss.png';
+const PLACEHOLDER   = '/static/icons/sss.png';
 const STATIC_ASSETS = [
   '/static/manifest.json',
-  '/static/icons/ss.png',
+  '/static/icons/sss.png',
   PLACEHOLDER,
   // Add any other static assets you want pre-cached
 ];
