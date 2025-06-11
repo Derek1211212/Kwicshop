@@ -1695,24 +1695,35 @@ setTimeout(function() {
   >
     <img
       src="https://api.iconify.design/mdi:format-list-bulleted.svg"
-      alt="All"
+      alt=""
       class="category-icon"
-      onerror="this.onerror=null;this.src='{{ url_for('static',filename='icons/placeholder.svg') }}'"
+      onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';"
     >
     All
   </button>
 
   {% for cat in categories %}
+    {%- set full_slug = cat.name.lower().replace('&','and').replace(' ', '-') -%}
+    {%- set anchor   = cat.name.split('&')[0].split()[0].lower() -%}
     <button
       type="button"
       class="filter-button category-filter{% if selected_category==cat.name %} active{% endif %}"
       data-value="{{ cat.name }}"
     >
       <img
-        src="{{ cat.icon_url }}"
-        alt="{{ cat.name }}"
+        src="https://api.iconify.design/mdi:{{ full_slug }}.svg"
+        alt=""
         class="category-icon"
-        onerror="this.onerror=null;this.src='{{ url_for('static',filename='icons/placeholder.svg') }}'"
+        onerror="
+          if (!this.dataset.fallback) {
+            this.dataset.fallback = '1';
+            this.onerror = function() {
+              this.onerror = null;
+              this.src = '{{ url_for('static', filename='icons/placeholder.svg') }}';
+            };
+            this.src = 'https://api.iconify.design/mdi:{{ anchor }}.svg';
+          }
+        "
       >
       {{ cat.name }}
     </button>
@@ -1730,57 +1741,13 @@ setTimeout(function() {
   .category-icon {
     width: 20px;
     height: 20px;
+    object-fit: contain;
     vertical-align: middle;
     margin-right: 6px;
   }
 </style>
 
 
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    // Deal‐type filter clicks
-    document.querySelectorAll(".deal-filter").forEach(btn => {
-      btn.addEventListener("click", function () {
-        // Remove “active” class and reset style for all deal buttons
-        document.querySelectorAll(".deal-filter").forEach(t => {
-          t.classList.remove("active");
-          t.style.background = "#f0f0f0";
-          t.style.color = "#333";
-        });
-
-        // Mark this button as active
-        this.classList.add("active");
-        this.style.background = "var(--primary)";
-        this.style.color = "#fff";
-
-        // Put its value into the hidden input, then submit the form
-        document.getElementById("selected-deal-type").value = this.dataset.value;
-        document.getElementById("search-form").submit();
-      });
-    });
-
-    // Category filter clicks
-    document.querySelectorAll(".category-filter").forEach(btn => {
-      btn.addEventListener("click", function () {
-        // Remove “active” class and reset style for all category buttons
-        document.querySelectorAll(".category-filter").forEach(t => {
-          t.classList.remove("active");
-          t.style.background = "#f0f0f0";
-          t.style.color = "#333";
-        });
-
-        // Mark this button as active
-        this.classList.add("active");
-        this.style.background = "var(--primary)";
-        this.style.color = "#fff";
-
-        // Put its value into the hidden input, then submit the form
-        document.getElementById("selected-category").value = this.dataset.value;
-        document.getElementById("search-form").submit();
-      });
-    });
-  });
-</script>
 
 
 
