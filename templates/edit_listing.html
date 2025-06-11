@@ -6,9 +6,7 @@
     <title>Edit Product Listing</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- CSS remains unchanged, included inline as provided -->
     <style>
-        /* [Original CSS unchanged, included for completeness] */
         :root {
             --primary: #2a9d8f;
             --primary-hover: #248b7e;
@@ -139,6 +137,7 @@
             height: 160px;
             background: #f8f9fa;
             border: 2px dashed #dee2e6;
+            cursor: move;
             transition: var(--transition);
         }
 
@@ -184,14 +183,13 @@
             padding: 8px;
         }
 
-        .gallery-item:hover .item-actions,
-        .gallery-item.touched .item-actions {
+        .gallery-item:hover .item-actions {
             transform: translateY(0);
         }
 
         .gallery-item .btn-action {
-            width: 36px; /* Increased size for better touch target */
-            height: 36px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -200,17 +198,14 @@
             border: none;
             color: white;
             transition: var(--transition);
-            touch-action: manipulation; /* Prevent scrolling on touch */
         }
 
-        .gallery-item .btn-action:hover,
-        .gallery-item .btn-action:active {
+        .gallery-item .btn-action:hover {
             background: var(--primary);
             transform: scale(1.1);
         }
 
-        .gallery-item .btn-remove:hover,
-        .gallery-item .btn-remove:active {
+        .gallery-item .btn-remove:hover {
             background: var(--accent);
         }
 
@@ -306,6 +301,7 @@
             color: #dee2e6;
         }
 
+        /* Enhanced Button Styles */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -357,12 +353,14 @@
             border-color: #ffe2e2;
         }
 
+        /* Button Group Layout */
         .btn-group-mobile {
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
         }
 
+        /* Cash Sections */
         .cash-section {
             border-left: 4px solid var(--accent);
             padding: 1.5rem;
@@ -418,6 +416,7 @@
             padding-left: 35px;
         }
 
+        /* Responsive Adjustments */
         @media (max-width: 992px) {
             .gallery-container {
                 grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -478,7 +477,11 @@
             }
         }
 
-        /* Removed .sortable-ghost as drag feature is disabled */
+        .sortable-ghost {
+            opacity: 0.4;
+            background: #f8f9fa;
+        }
+        
         .section-divider {
             height: 1px;
             background: var(--border-color);
@@ -499,16 +502,10 @@
                         <div class="image-gallery-section">
                             <div class="gallery-header">
                                 <label class="form-label required">Product Images</label>
-                                <small class="text-muted">Main image first</small>
+                                <small class="text-muted">Tap image to edit/remove | Main image first</small>
                             </div>
                             
-                            <div class="preview-container" id="preview-container">
-                                <div class="preview-placeholder" id="preview-placeholder">
-                                    <i class="fas fa-image"></i>
-                                    <p>Select an image to preview</p>
-                                </div>
-                                <img src="" class="preview-image" id="preview-image" style="display: none;">
-                            </div>
+
                             
                             <div class="gallery-container" id="gallery-container">
                                 <!-- Main Image -->
@@ -557,8 +554,8 @@
                                 </div>
                                 {% endfor %}
                             </div>
-                        </div>
-
+                            
+                        
                         <div class="section-divider"></div>
 
                         <!-- Basic Information -->
@@ -740,7 +737,19 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
+        // Initialize gallery sortable
+        const galleryContainer = document.getElementById('gallery-container');
+        const sortable = new Sortable(galleryContainer, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            onEnd: function(evt) {
+                // Update image order logic would go here
+                console.log('New image order:', Array.from(galleryContainer.children).map(el => el.dataset.index));
+            }
+        });
+
         // Image preview functionality
         const previewContainer = document.getElementById('preview-container');
         const previewImage = document.getElementById('preview-image');
@@ -748,7 +757,6 @@
         const galleryItems = document.querySelectorAll('.gallery-item');
         
         galleryItems.forEach(item => {
-            // Handle click to select image for preview
             item.addEventListener('click', function(e) {
                 // Don't trigger if clicked on action buttons
                 if (e.target.closest('.item-actions')) return;
@@ -764,28 +772,6 @@
                     previewImage.style.display = 'block';
                     previewPlaceholder.style.display = 'none';
                 }
-            });
-
-            // Handle touch events for showing actions
-            item.addEventListener('touchstart', function(e) {
-                // Prevent default to avoid scrolling
-                e.preventDefault();
-                
-                // Toggle touched class to show actions
-                if (!this.classList.contains('touched')) {
-                    galleryItems.forEach(i => i.classList.remove('touched'));
-                    this.classList.add('touched');
-                }
-                
-                // Set timeout to hide actions after 3 seconds
-                setTimeout(() => {
-                    this.classList.remove('touched');
-                }, 3000);
-            });
-
-            // Prevent touchend from triggering click
-            item.addEventListener('touchend', function(e) {
-                e.preventDefault();
             });
         });
 
@@ -821,11 +807,55 @@
             });
         });
 
+        // Bulk upload functionality
+        const uploadArea = document.getElementById('upload-area');
+        const bulkUpload = document.getElementById('bulk-upload');
+        
+        uploadArea.addEventListener('click', function() {
+            bulkUpload.click();
+        });
+        
+        bulkUpload.addEventListener('change', function(e) {
+            if (this.files.length > 0) {
+                // Find next available image slot
+                const emptySlots = Array.from(galleryItems).filter(item => {
+                    const img = item.querySelector('img');
+                    return img && img.src.includes('placeholder.com');
+                });
+                
+                if (emptySlots.length > 0) {
+                    // Upload files to available slots
+                    const files = Array.from(this.files);
+                    const slotsToUse = Math.min(emptySlots.length, files.length);
+                    
+                    for (let i = 0; i < slotsToUse; i++) {
+                        const slot = emptySlots[i];
+                        const input = slot.querySelector('input[type="file"]');
+                        const img = slot.querySelector('img');
+                        
+                        // Create a new FileList for the input
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(files[i]);
+                        input.files = dataTransfer.files;
+                        
+                        // Update preview
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            img.src = event.target.result;
+                        };
+                        reader.readAsDataURL(files[i]);
+                    }
+                }
+                
+                // Reset bulk upload
+                this.value = '';
+            }
+        });
+
         // Image removal
         document.querySelectorAll('.btn-remove').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                e.preventDefault();
                 
                 const galleryItem = this.closest('.gallery-item');
                 const img = galleryItem.querySelector('img');
@@ -845,23 +875,6 @@
                     previewImage.style.display = 'none';
                     previewPlaceholder.style.display = 'block';
                 }
-            });
-
-            // Ensure touch events work for remove button
-            btn.addEventListener('touchstart', function(e) {
-                e.stopPropagation();
-                e.preventDefault();
-                this.click();
-            });
-        });
-
-        // Ensure touch events work for replace button
-        document.querySelectorAll('.btn-action label').forEach(label => {
-            label.addEventListener('touchstart', function(e) {
-                e.stopPropagation();
-                e.preventDefault();
-                const input = this.querySelector('input[type="file"]');
-                input.click();
             });
         });
 
@@ -906,14 +919,11 @@
 
         // Button interactions
         document.querySelectorAll('.btn, .upload-button').forEach(btn => {
-            btn.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                this.style.transform = 'scale(0.95)';
-                this.dispatchEvent(new Event('click'));
+            btn.addEventListener('touchstart', () => {
+                btn.style.transform = 'scale(0.95)';
             });
-            btn.addEventListener('touchend', function(e) {
-                e.preventDefault();
-                this.style.transform = 'scale(1)';
+            btn.addEventListener('touchend', () => {
+                btn.style.transform = 'scale(1)';
             });
             btn.addEventListener('mouseenter', () => {
                 btn.style.transform = 'translateY(-2px)';
@@ -927,43 +937,55 @@
     <script>
         // Master categories + synonyms
         const CATEGORY_DEFS = [
-            { name: 'Electronics', synonyms: ['electronics', 'gadget', 'device', 'tech'] },
-            { name: 'Computers & Accessories', synonyms: ['computer', 'laptop', 'desktop', 'monitor', 'keyboard'] },
-            { name: 'Mobile Phones', synonyms: ['phone', 'mobile', 'smartphone', 'cellphone'] },
-            { name: 'Fashion', synonyms: ['clothing', 'apparel', 'shoes', 'accessories'] },
-            { name: 'Home & Garden', synonyms: ['furniture', 'decor', 'appliances', 'garden'] },
-            { name: 'Sports & Outdoors', synonyms: ['sports', 'fitness', 'outdoor', 'equipment'] },
-            { name: 'Books', synonyms: ['book', 'novel', 'textbook', 'literature'] },
-            { name: 'Toys & Games', synonyms: ['toy', 'game', 'puzzle', 'board game'] },
-            { name: 'Health & Beauty', synonyms: ['health', 'beauty', 'cosmetics', 'skincare'] },
-            { name: 'Automotive', synonyms: ['car', 'auto', 'vehicle', 'motorcycle'] },
-            { name: 'Other', synonyms: [] }
+            { name: 'Electronics',            synonyms: ['gadget','device','tech'] },
+            { name: 'Computers & Networking', synonyms: ['pc','laptop','desktop','router','server'] },
+            { name: 'Mobile Phones & Accessories', synonyms: ['phone','mobile','charger','case'] },
+            { name: 'Software & Apps',        synonyms: ['app','program','software'] },
+            { name: 'Health & Beauty',        synonyms: ['skincare','makeup','wellness'] },
+            { name: 'Medical Equipment',      synonyms: ['stethoscope','syringe','hospital'] },
+            { name: 'Sports & Outdoors',      synonyms: ['sport','hiking','camping'] },
+            { name: 'Fashion & Apparel',      synonyms: ['clothes','shirt','dress','jeans'] },
+            { name: 'Jewelry & Watches',      synonyms: ['ring','necklace','watch'] },
+            { name: 'Home & Garden',          synonyms: ['furniture','decor','plants'] },
+            { name: 'Kitchen & Dining',       synonyms: ['cookware','utensils','appliances'] },
+            { name: 'Tools & DIY',            synonyms: ['hammer','drill','screwdriver'] },
+            { name: 'Automotive & Vehicles',  synonyms: ['car','vehicle','truck','motorcycle'] },
+            { name: 'Industrial & Scientific',synonyms: ['lab','industrial','machine'] },
+            { name: 'Agriculture & Farming',  synonyms: ['farm','tractor','crop'] },
+            { name: 'Food & Beverages',       synonyms: ['food','drink','beverage'] },
+            { name: 'Office Supplies',        synonyms: ['pen','paper','stationery'] },
+            { name: 'Books, Music & Movies',  synonyms: ['book','cd','dvd','movie'] },
+            { name: 'Toys & Games',           synonyms: ['toy','game','puzzle'] },
+            { name: 'Baby & Kids',            synonyms: ['baby','child','kids'] },
+            { name: 'Pets & Accessories',     synonyms: ['pet','dog','cat','leash'] },
+            { name: 'Art, Crafts & Sewing',   synonyms: ['art','craft','sewing'] },
+            { name: 'Collectibles & Hobbies', synonyms: ['coin','stamp','hobby'] },
+            { name: 'Travel & Experiences',   synonyms: ['trip','tour','holiday'] },
+            { name: 'Real Estate & Property', synonyms: ['house','apartment','land'] },
+            { name: 'Education & Training',   synonyms: ['course','lesson','training'] },
+            { name: 'Services',               synonyms: ['service','repair','consulting'] },
+            { name: 'Other',                  synonyms: [] }
         ];
 
         document.addEventListener('DOMContentLoaded', () => {
-            const input = document.getElementById('category-input');
-            const sugList = document.getElementById('category-suggestions');
+            const input       = document.getElementById('category-input');
+            const sugList     = document.getElementById('category-suggestions');
 
-            // Render suggestions
+            // render suggestions
             function renderSuggestions(term) {
                 const lower = term.trim().toLowerCase();
                 sugList.innerHTML = '';
                 const matches = CATEGORY_DEFS.filter(cat => {
                     if (!lower) return true;
-                    return cat.name.toLowerCase().includes(lower) ||
-                           cat.synonyms.some(s => s.toLowerCase().includes(lower));
+                    return cat.name.toLowerCase().includes(lower)
+                        || cat.synonyms.some(s => s.includes(lower));
                 });
                 matches.forEach(cat => {
                     const li = document.createElement('li');
                     li.textContent = cat.name;
                     li.style.padding = '8px';
-                    li.style.cursor = 'pointer';
+                    li.style.cursor  = 'pointer';
                     li.addEventListener('mousedown', () => {
-                        input.value = cat.name;
-                        hideSuggestions();
-                    });
-                    li.addEventListener('touchstart', function(e) {
-                        e.preventDefault();
                         input.value = cat.name;
                         hideSuggestions();
                     });
@@ -979,12 +1001,8 @@
             input.addEventListener('input', e => {
                 renderSuggestions(e.target.value);
             });
-            input.addEventListener('focus', () => {
-                renderSuggestions(input.value);
-            });
-            input.addEventListener('blur', () => {
-                setTimeout(hideSuggestions, 100);
-            });
+            input.addEventListener('focus', () => renderSuggestions(input.value));
+            input.addEventListener('blur', () => setTimeout(hideSuggestions, 100));
         });
     </script>
 </body>
