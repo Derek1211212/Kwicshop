@@ -1686,26 +1686,55 @@ setTimeout(function() {
 </div>
 
 <!-- 3) CATEGORY FILTERS -->
-<div class="filters-scroll category-filter-row" style="display: flex; gap: 0.75rem; overflow-x: auto; padding: 0.75rem 2rem; margin-bottom: 1rem; background: var(--surface); box-shadow: var(--shadow-sm);">
+<div class="filters-scroll category-filter-row">
+  <!-- “All” button -->
   <button
     type="button"
-    class="filter-button category-filter{% if selected_category == 'All' %} active{% endif %}"
+    class="filter-button category-filter{% if selected_category=='All' %} active{% endif %}"
     data-value="All"
-    style="flex: 0 0 auto; background: {% if selected_category == 'All' %}var(--primary){% else %}#f0f0f0{% endif %}; color: {% if selected_category == 'All' %}#fff{% else %}#333{% endif %}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
   >
+    <img
+      src="https://api.iconify.design/mdi:format-list-bulleted.svg"
+      alt="All"
+      class="category-icon"
+      onerror="this.onerror=null;this.src='{{ url_for('static',filename='icons/placeholder.svg') }}'"
+    >
     All
   </button>
+
   {% for cat in categories %}
     <button
       type="button"
-      class="filter-button category-filter{% if selected_category == cat %} active{% endif %}"
-      data-value="{{ cat }}"
-      style="flex: 0 0 auto; background: {% if selected_category == cat %}var(--primary){% else %}#f0f0f0{% endif %}; color: {% if selected_category == cat %}#fff{% else %}#333{% endif %}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
+      class="filter-button category-filter{% if selected_category==cat.name %} active{% endif %}"
+      data-value="{{ cat.name }}"
     >
-      {{ cat }}
+      <img
+        src="{{ cat.icon_url }}"
+        alt="{{ cat.name }}"
+        class="category-icon"
+        onerror="this.onerror=null;this.src='{{ url_for('static',filename='icons/placeholder.svg') }}'"
+      >
+      {{ cat.name }}
     </button>
   {% endfor %}
 </div>
+
+<style>
+  .filters-scroll.category-filter-row {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding: 0.75rem 2rem;
+    margin-bottom: 1rem;
+  }
+  .category-icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+</style>
+
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {

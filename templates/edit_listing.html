@@ -3,44 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Listing</title>
+    <title>Edit Product Listing</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary: #2a9d8f;
             --primary-hover: #248b7e;
+            --primary-light: #e6f4f1;
             --secondary: #264653;
             --secondary-hover: #1e3b4a;
             --accent: #e63946;
             --accent-hover: #d62839;
             --light-bg: #f8f9fa;
-            --primary-light: #e6f4f1;
-            --border-radius: 8px;
-            --btn-radius: 6px;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+            --border-radius: 12px;
+            --btn-radius: 8px;
             --transition: all 0.2s ease;
-            --shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.12);
         }
 
         body {
             background-color: var(--light-bg);
             padding-bottom: 3rem;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #333;
         }
 
         .edit-container {
-            max-width: 900px;
+            max-width: 1200px;
             margin: 2rem auto;
-            padding: 2rem;
-            background: white;
+            padding: 0;
+            background: transparent;
             border-radius: var(--border-radius);
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
             animation: fadeIn 0.5s ease-out;
         }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card-header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.25rem 1.5rem;
+            border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+        }
+
+        .card-title {
+            color: var(--secondary);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .card-body {
+            padding: 1.5rem;
         }
 
         .form-title {
@@ -55,6 +88,7 @@
         .form-label {
             font-weight: 600;
             color: var(--secondary);
+            margin-bottom: 8px;
         }
 
         .form-label.required::after {
@@ -65,8 +99,10 @@
 
         .form-control, .form-select {
             border-radius: var(--border-radius);
-            border: 1px solid #ced4da;
+            border: 1px solid var(--border-color);
+            padding: 12px 16px;
             transition: var(--transition);
+            font-size: 1rem;
         }
 
         .form-control:focus, .form-select:focus {
@@ -75,165 +111,246 @@
         }
 
         /* Image Gallery Styles */
-        .image-gallery {
+        .image-gallery-section {
+            position: relative;
             margin-bottom: 2rem;
-            position: relative;
         }
 
-        .carousel-container {
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .gallery-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 1.5rem;
+        }
+
+        .gallery-item {
             position: relative;
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
+            border-radius: 8px;
             overflow: hidden;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
+            height: 160px;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            cursor: move;
+            transition: var(--transition);
         }
 
-        .carousel-slide {
-            display: flex;
-            transition: transform 0.5s ease;
-        }
-
-        .carousel-image {
+        .gallery-item img {
             width: 100%;
-            height: 300px;
+            height: 100%;
             object-fit: cover;
-            flex-shrink: 0;
-            border-radius: var(--border-radius);
-        }
-
-        .carousel-nav {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: none;
-            padding: 10px;
-            cursor: pointer;
-            z-index: 10;
-            border-radius: 50%;
             transition: var(--transition);
         }
 
-        .carousel-nav:hover {
-            background: rgba(0, 0, 0, 0.7);
-            transform: translateY(-50%) scale(1.1);
-        }
-
-        .carousel-nav.prev { left: 10px; }
-        .carousel-nav.next { right: 10px; }
-
-        .thumbnail-container {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-
-        .thumbnail {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 4px;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .thumbnail.active, .thumbnail:hover {
-            border-color: var(--primary);
+        .gallery-item:hover img {
             transform: scale(1.05);
         }
 
-        /* Enhanced Button Styles */
-        .btn, .upload-button {
+        .gallery-item.active {
+            border-color: var(--primary);
+            border-width: 3px;
+        }
+
+        .gallery-item .item-label {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .gallery-item .item-actions {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            background: rgba(0,0,0,0.7);
+            transform: translateY(100%);
+            transition: var(--transition);
+            justify-content: center;
+            gap: 8px;
+            padding: 8px;
+        }
+
+        .gallery-item:hover .item-actions {
+            transform: translateY(0);
+        }
+
+        .gallery-item .btn-action {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            transition: var(--transition);
+        }
+
+        .gallery-item .btn-action:hover {
+            background: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .gallery-item .btn-remove:hover {
+            background: var(--accent);
+        }
+
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 24px;
+            text-align: center;
+            background: #fafafa;
+            transition: var(--transition);
+            cursor: pointer;
+            margin-bottom: 1rem;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .upload-area i {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .upload-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        .upload-subtext {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 12px;
+        }
+
+        .upload-button {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            padding: 12px 20px;
+            padding: 10px 24px;
             font-size: 1rem;
             font-weight: 500;
             border-radius: var(--btn-radius);
             transition: var(--transition);
-            min-height: 48px;
+            min-height: 46px;
             text-decoration: none;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn::after, .upload-button::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.4s ease, height 0.4s ease;
-        }
-
-        .btn:active::after, .upload-button:active::after {
-            width: 200px;
-            height: 200px;
-        }
-
-        .btn-primary {
-            background-color: var(--primary);
-            border-color: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--primary-hover);
-            border-color: var(--primary-hover);
-            box-shadow: var(--shadow);
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background-color: var(--secondary);
-            border-color: var(--secondary);
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background-color: var(--secondary-hover);
-            border-color: var(--secondary-hover);
-            box-shadow: var(--shadow);
-            transform: translateY(-2px);
-        }
-
-        .btn-delete {
-            background-color: var(--accent);
-            border-color: var(--accent);
-            color: white;
-        }
-
-        .btn-delete:hover {
-            background-color: var(--accent-hover);
-            border-color: var(--accent-hover);
-            box-shadow: var(--shadow);
-            transform: translateY(-2px);
-        }
-
-        .upload-button {
             background-color: var(--primary);
             color: white;
-            padding: 8px 16px;
-            font-size: 0.9rem;
-            min-height: 40px;
+            border: none;
+            cursor: pointer;
         }
 
         .upload-button:hover {
             background-color: var(--primary-hover);
             box-shadow: var(--shadow);
             transform: translateY(-2px);
+        }
+
+        .preview-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .preview-placeholder {
+            color: #6c757d;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .preview-placeholder i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: #dee2e6;
+        }
+
+        /* Enhanced Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: var(--btn-radius);
+            transition: var(--transition);
+            min-height: 48px;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            box-shadow: var(--shadow);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline-secondary {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--secondary);
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: #f8f9fa;
+            border-color: #ced4da;
+        }
+
+        .btn-delete {
+            background-color: #f8f9fa;
+            color: var(--accent);
+            border: 1px solid #f1f3f5;
+        }
+
+        .btn-delete:hover {
+            background-color: #fff5f5;
+            color: var(--accent-hover);
+            border-color: #ffe2e2;
         }
 
         /* Button Group Layout */
@@ -300,262 +417,307 @@
         }
 
         /* Responsive Adjustments */
+        @media (max-width: 992px) {
+            .gallery-container {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+            
+            .gallery-item {
+                height: 140px;
+            }
+            
+            .preview-container {
+                height: 350px;
+            }
+        }
+
         @media (max-width: 768px) {
             .edit-container {
-                padding: 1.5rem;
-                margin: 1rem;
+                padding: 0 1rem;
+                margin: 1rem auto;
             }
-
-            .carousel-container {
-                max-width: 100%;
+            
+            .gallery-container {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 12px;
             }
-
-            .carousel-image {
-                height: 200px;
+            
+            .gallery-item {
+                height: 120px;
             }
-
-            .thumbnail {
-                width: 50px;
-                height: 50px;
+            
+            .preview-container {
+                height: 300px;
             }
-
-            .btn-group-mobile {
-                flex-direction: column;
-                gap: 16px;
-                align-items: stretch;
-            }
-
-            .btn, .btn-primary, .btn-secondary, .btn-delete {
-                padding: 14px;
-                font-size: 1.1rem;
-                min-height: 52px;
-            }
-
-            .upload-button {
-                padding: 10px 18px;
-                min-height: 44px;
-            }
-
-            .btn-delete {
-                align-self: flex-start;
+            
+            .card-header, .card-body {
+                padding: 1.25rem;
             }
         }
 
         @media (max-width: 576px) {
-            .edit-container {
-                padding: 1rem;
+            .gallery-container {
+                grid-template-columns: repeat(2, 1fr);
             }
-
+            
+            .preview-container {
+                height: 250px;
+            }
+            
+            .btn-group-mobile {
+                flex-direction: column;
+            }
+            
+            .btn-delete {
+                align-self: flex-start;
+            }
+            
             .cash-section {
                 padding: 1rem;
             }
+        }
 
-            .thumbnail {
-                width: 40px;
-                height: 40px;
-            }
-
-            .btn, .btn-primary, .btn-secondary, .btn-delete {
-                font-size: 1rem;
-            }
-
-            .upload-button {
-                font-size: 0.85rem;
-            }
+        .sortable-ghost {
+            opacity: 0.4;
+            background: #f8f9fa;
+        }
+        
+        .section-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 2rem 0;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="edit-container">
-            <h2 class="form-title">Edit Listing</h2>
-            
-            <form method="POST" action="{{ url_for('update_listing', listing_id=listing.listing_id) }}" enctype="multipart/form-data">
-                <!-- Image Gallery Section -->
-                <div class="image-gallery">
-                    <label class="form-label required">Images</label>
-                    <div class="carousel-container">
-                        <div class="carousel-slide" id="carousel-slide">
-                            {% if listing.image_url %}
-                            <img src="{{ url_for('static', filename='images/' + listing.image_url) }}" 
-                                 class="carousel-image" 
-                                 onerror="this.src='https://via.placeholder.com/600x300?text=No+Image'"
-                                 alt="Main listing image">
-                            {% else %}
-                            <img src="https://via.placeholder.com/600x300?text=No+Image" 
-                                 class="carousel-image" alt="No main image">
-                            {% endif %}
-                            {% for i in range(1,5) %}
-                            {% if listing['image' ~ i] %}
-                            <img src="{{ url_for('static', filename='images/' + listing['image' ~ i]) }}" 
-                                 class="carousel-image" 
-                                 onerror="this.src='https://via.placeholder.com/600x300?text=No+Image'"
-                                 alt="Additional image {{ i }}">
-                            {% endif %}
-                            {% endfor %}
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Edit Product Listing</h2>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('update_listing', listing_id=listing.listing_id) }}" enctype="multipart/form-data">
+                        <!-- Image Gallery Section -->
+                        <div class="image-gallery-section">
+                            <div class="gallery-header">
+                                <label class="form-label required">Product Images</label>
+                                <small class="text-muted">Drag to reorder | Main image first</small>
+                            </div>
+                            
+                            <div class="preview-container" id="preview-container">
+                                <div class="preview-placeholder" id="preview-placeholder">
+                                    <i class="fas fa-image"></i>
+                                    <p>Select an image to preview</p>
+                                </div>
+                                <img src="" class="preview-image" id="preview-image" style="display: none;">
+                            </div>
+                            
+                            <div class="gallery-container" id="gallery-container">
+                                <!-- Main Image -->
+                                <div class="gallery-item active" data-index="0" data-type="main">
+                                    {% if listing.image_url %}
+                                    <img src="{{ url_for('static', filename='images/' + listing.image_url) }}" 
+                                         onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
+                                         alt="Main listing image">
+                                    {% else %}
+                                    <img src="https://via.placeholder.com/300?text=Main+Image" 
+                                         alt="No main image">
+                                    {% endif %}
+                                    <span class="item-label">Main</span>
+                                    <div class="item-actions">
+                                        <button type="button" class="btn-action btn-remove" title="Remove image">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <label class="btn-action" title="Replace image">
+                                            <i class="fas fa-sync"></i>
+                                            <input type="file" class="d-none" name="image" accept="image/*">
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Additional Images -->
+                                {% for i in range(1,5) %}
+                                <div class="gallery-item" data-index="{{ i }}" data-type="additional">
+                                    {% if listing['image' ~ i] %}
+                                    <img src="{{ url_for('static', filename='images/' + listing['image' ~ i]) }}" 
+                                         onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
+                                         alt="Additional image {{ i }}">
+                                    {% else %}
+                                    <img src="https://via.placeholder.com/300?text=Image+{{ i }}" 
+                                         alt="No additional image">
+                                    {% endif %}
+                                    <span class="item-label">Image {{ i }}</span>
+                                    <div class="item-actions">
+                                        <button type="button" class="btn-action btn-remove" title="Remove image">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <label class="btn-action" title="Replace image">
+                                            <i class="fas fa-sync"></i>
+                                            <input type="file" class="d-none" name="image{{ i }}" accept="image/*">
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                        
+                        <div class="section-divider"></div>
+
+                        <!-- Basic Information -->
+                        <div class="mb-4">
+                            <div class="mb-3">
+                                <label for="title" class="form-label required">Title</label>
+                                <input type="text" class="form-control" id="title" name="title" 
+                                       value="{{ listing.title }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="description" class="form-label required">Description</label>
+                                <textarea class="form-control" id="description" name="description" 
+                                          rows="4" required>{{ listing.description }}</textarea>
+                            </div>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="condition" class="form-label required">Condition</label>
+                                    <select class="form-select" id="condition" name="condition" required>
+                                        <option value="New" {% if listing.condition == 'New' %}selected{% endif %}>New</option>
+                                        <option value="Like New" {% if listing.condition == 'Like New' %}selected{% endif %}>Like New</option>
+                                        <option value="Good" {% if listing.condition == 'Good' %}selected{% endif %}>Good</option>
+                                        <option value="Fair" {% if listing.condition == 'Fair' %}selected{% endif %}>Fair</option>
+                                        <option value="Poor" {% if listing.condition == 'Poor' %}selected{% endif %}>Poor</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="location" class="form-label required">Location</label>
+                                    <input type="text" class="form-control" id="location" name="location"
+                                           value="{{ listing.location }}" required>
+                                </div>
+                            </div>
                         </div>
-                        <button class="carousel-nav prev" aria-label="Previous image"><i class="fas fa-chevron-left"></i></button>
-                        <button class="carousel-nav next" aria-label="Next image"><i class="fas fa-chevron-right"></i></button>
-                    </div>
-                    <div class="thumbnail-container" id="thumbnail-container">
-                        {% if listing.image_url %}
-                        <img src="{{ url_for('static', filename='images/' + listing.image_url) }}" 
-                             class="thumbnail active" 
-                             onerror="this.src='https://via.placeholder.com/60?text=No+Image'"
-                             alt="Main image thumbnail">
-                        {% else %}
-                        <img src="https://via.placeholder.com/60?text=No+Image" 
-                             class="thumbnail active" alt="No main image thumbnail">
+
+                        <div class="col-md-6" style="position: relative;">
+                            <label class="form-label required">Category</label>
+                            <div class="input-group mb-3">
+                                <span class="input-group-text input-icon">
+                                    <i class="fas fa-box"></i>
+                                </span>
+                                <input
+                                    id="category-input"
+                                    name="category"
+                                    type="text"
+                                    class="form-control"
+                                    placeholder="Start typing to search categories…"
+                                    autocomplete="off"
+                                    required
+                                    value="{{ listing.category }}"
+                                    style="position: relative; z-index: 2;"
+                                />
+                            </div>
+                            <ul id="category-suggestions"
+                                style="position: absolute; top: 100%; left: 0; right: 0;
+                                       background: #fff; border: 1px solid #ccc; border-top: none;
+                                       max-height: 200px; overflow-y: auto; z-index: 1; list-style: none;
+                                       margin: 0; padding: 0; display: none;">
+                                <!-- filled by JS -->
+                            </ul>
+                        </div>
+
+                        <!-- Price Section (Only for Outright Sales) -->
+                        {% if listing.deal_type == 'Outright Sales' %}
+                        <div class="mb-4">
+                            <label for="price" class="form-label required">Price (₵)</label>
+                            <div class="currency-input">
+                                <span class="currency-symbol">₵</span>
+                                <input type="number" class="form-control" id="price" name="price"
+                                       value="{{ listing.price }}" step="0.01" min="0" required>
+                            </div>
+                            <small class="form-text text-muted">Enter the outright sale price for this item.</small>
+                        </div>
                         {% endif %}
-                        {% for i in range(1,5) %}
-                        {% if listing['image' ~ i] %}
-                        <img src="{{ url_for('static', filename='images/' + listing['image' ~ i]) }}" 
-                             class="thumbnail" 
-                             onerror="this.src='https://via.placeholder.com/60?text=No+Image'"
-                             alt="Additional image {{ i }} thumbnail">
+
+                        <!-- Swap and Cash Sections (Only for non-Outright Sales) -->
+                        {% if listing.deal_type != 'Outright Sales' %}
+                        <div class="mb-4">
+                            <div class="mb-3">
+                                <label for="desired_swap" class="form-label required">Desired Swap</label>
+                                <input type="text" class="form-control" id="desired_swap" name="desired_swap"
+                                       value="{{ listing.desired_swap }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="desired_swap_description" class="form-label">Swap Description</label>
+                                <textarea class="form-control" id="desired_swap_description" name="desired_swap_description"
+                                          rows="3">{{ listing.desired_swap_description }}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="cash-section required">
+                            <div class="cash-header">
+                                <i class="fas fa-hand-holding-usd cash-icon"></i>
+                                <div>
+                                    <h4>Cash You Require from Buyer</h4>
+                                    <p class="cash-explanation">This is the cash amount someone needs to add <strong>WITH THEIR ITEM</strong> to get your product.</p>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label required">Additional Cash Required (₵)</label>
+                                <div class="currency-input">
+                                    <span class="currency-symbol">₵</span>
+                                    <input type="number" class="form-control" 
+                                           id="required_cash" name="required_cash"
+                                           value="{{ listing.required_cash }}" step="0.01" min="0">
+                                </div>
+                                <small class="form-text text-muted">Example: Buyer must add ₵100 with their laptop for your camera.</small>
+                            </div>
+                        </div>
+
+                        <div class="cash-section offered">
+                            <div class="cash-header">
+                                <i class="fas fa-money-bill-wave cash-icon"></i>
+                                <div>
+                                    <h4>Cash You're Offering to Add</h4>
+                                    <p class="cash-explanation">This is the cash amount you're willing to add <strong>WITH YOUR ITEM</strong> to make the swap attractive.</p>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Additional Cash Offer (₵)</label>
+                                <div class="currency-input">
+                                    <span class="currency-symbol">₵</span>
+                                    <input type="number" class="form-control" 
+                                           id="additional_cash" name="additional_cash"
+                                           value="{{ listing.additional_cash }}" step="0.01" min="0">
+                                </div>
+                                <small class="form-text text-muted">Example: You'll add ₵50 with your bicycle for a scooter.</small>
+                            </div>
+                        </div>
                         {% endif %}
-                        {% endfor %}
-                    </div>
-                    <div class="mt-3 d-flex flex-wrap gap-2">
-                        <label class="upload-button" for="image">
-                            <i class="fas fa-upload"></i> Main Image
-                        </label>
-                        <input type="file" class="d-none" id="image" name="image" accept="image/*">
-                        {% for i in range(1,5) %}
-                        <label class="upload-button" for="image{{ i }}">
-                            <i class="fas fa-upload"></i> Image {{ i }}
-                        </label>
-                        <input type="file" class="d-none" id="image{{ i }}" name="image{{ i }}" accept="image/*">
-                        {% endfor %}
-                        <small class="form-text text-muted d-block w-100 mt-1">Main image is required. Additional images are optional.</small>
-                    </div>
-                </div>
 
-                <!-- Basic Information -->
-                <div class="mb-4">
-                    <div class="mb-3">
-                        <label for="title" class="form-label required">Title</label>
-                        <input type="text" class="form-control" id="title" name="title" 
-                               value="{{ listing.title }}" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="description" class="form-label required">Description</label>
-                        <textarea class="form-control" id="description" name="description" 
-                                  rows="4" required>{{ listing.description }}</textarea>
-                    </div>
-                    
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="condition" class="form-label required">Condition</label>
-                            <select class="form-select" id="condition" name="condition" required>
-                                <option value="New" {% if listing.condition == 'New' %}selected{% endif %}>New</option>
-                                <option value="Like New" {% if listing.condition == 'Like New' %}selected{% endif %}>Like New</option>
-                                <option value="Good" {% if listing.condition == 'Good' %}selected{% endif %}>Good</option>
-                                <option value="Fair" {% if listing.condition == 'Fair' %}selected{% endif %}>Fair</option>
-                                <option value="Poor" {% if listing.condition == 'Poor' %}selected{% endif %}>Poor</option>
-                            </select>
+                        <!-- Contact Information -->
+                        <div class="mb-4">
+                            <label for="contact" class="form-label required">Contact Information</label>
+                            <input type="text" class="form-control" id="contact" name="contact"
+                                   value="{{ listing.contact }}" required>
                         </div>
-                        <div class="col-md-6">
-                            <label for="location" class="form-label required">Location</label>
-                            <input type="text" class="form-control" id="location" name="location"
-                                   value="{{ listing.location }}" required>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between align-items-center mt-5 btn-group-mobile">
+                            <button type="button" class="btn btn-delete" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                <i class="fas fa-trash-alt me-2"></i> Delete Listing
+                            </button>
+                            <div class="d-flex gap-3 btn-group-mobile">
+                                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i> Save Changes
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    </form>
                 </div>
-
-                <!-- Price Section (Only for Outright Sales) -->
-                {% if listing.deal_type == 'Outright Sales' %}
-                <div class="mb-4">
-                    <label for="price" class="form-label required">Price (₵)</label>
-                    <div class="currency-input">
-                        <span class="currency-symbol">₵</span>
-                        <input type="number" class="form-control" id="price" name="price"
-                               value="{{ listing.price }}" step="0.01" min="0" required>
-                    </div>
-                    <small class="form-text text-muted">Enter the outright sale price for this item.</small>
-                </div>
-                {% endif %}
-
-                <!-- Swap and Cash Sections (Only for non-Outright Sales) -->
-                {% if listing.deal_type != 'Outright Sales' %}
-                <div class="mb-4">
-                    <div class="mb-3">
-                        <label for="desired_swap" class="form-label required">Desired Swap</label>
-                        <input type="text" class="form-control" id="desired_swap" name="desired_swap"
-                               value="{{ listing.desired_swap }}" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="desired_swap_description" class="form-label">Swap Description</label>
-                        <textarea class="form-control" id="desired_swap_description" name="desired_swap_description"
-                                  rows="3">{{ listing.desired_swap_description }}</textarea>
-                    </div>
-                </div>
-
-                <div class="cash-section required">
-                    <div class="cash-header">
-                        <i class="fas fa-hand-holding-usd cash-icon"></i>
-                        <div>
-                            <h4>Cash You Require from Buyer</h4>
-                            <p class="cash-explanation">This is the cash amount someone needs to add <strong>WITH THEIR ITEM</strong> to get your product.</p>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label required">Additional Cash Required (₵)</label>
-                        <div class="currency-input">
-                            <span class="currency-symbol">₵</span>
-                            <input type="number" class="form-control" 
-                                   id="required_cash" name="required_cash"
-                                   value="{{ listing.required_cash }}" step="0.01" min="0">
-                        </div>
-                        <small class="form-text text-muted">Example: Buyer must add ₵100 with their laptop for your camera.</small>
-                    </div>
-                </div>
-
-                <div class="cash-section offered">
-                    <div class="cash-header">
-                        <i class="fas fa-money-bill-wave cash-icon"></i>
-                        <div>
-                            <h4>Cash You're Offering to Add</h4>
-                            <p class="cash-explanation">This is the cash amount you're willing to add <strong>WITH YOUR ITEM</strong> to make the swap attractive.</p>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Additional Cash Offer (₵)</label>
-                        <div class="currency-input">
-                            <span class="currency-symbol">₵</span>
-                            <input type="number" class="form-control" 
-                                   id="additional_cash" name="additional_cash"
-                                   value="{{ listing.additional_cash }}" step="0.01" min="0">
-                        </div>
-                        <small class="form-text text-muted">Example: You'll add ₵50 with your bicycle for a scooter.</small>
-                    </div>
-                </div>
-                {% endif %}
-
-                <!-- Contact Information -->
-                <div class="mb-4">
-                    <label for="contact" class="form-label required">Contact Information</label>
-                    <input type="text" class="form-control" id="contact" name="contact"
-                           value="{{ listing.contact }}" required>
-                </div>
-
-                <!-- Form Actions -->
-                <div class="d-flex justify-content-between align-items-center mt-5 btn-group-mobile">
-                    <button type="button" class="btn btn-delete" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                        <i class="fas fa-trash-alt me-2"></i> Delete Listing
-                    </button>
-                    <div class="d-flex gap-3 btn-group-mobile">
-                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
-                            <i class="fas fa-times me-2"></i> Cancel
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-2"></i> Save Changes
-                        </button>
-                    </div>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 
@@ -571,7 +733,7 @@
                     <p>Are you sure you want to delete this listing? This action cannot be undone.</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                     <form action="{{ url_for('delete_listing', listing_id=listing.listing_id) }}" method="POST" style="display: inline;">
                         <button type="submit" class="btn btn-danger">Delete Listing</button>
                     </form>
@@ -581,73 +743,143 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
-        // Carousel functionality
-        const slideContainer = document.getElementById('carousel-slide');
-        const images = slideContainer.querySelectorAll('.carousel-image');
-        const thumbnails = document.querySelectorAll('.thumbnail');
-        const prevBtn = document.querySelector('.carousel-nav.prev');
-        const nextBtn = document.querySelector('.carousel-nav.next');
-        let currentIndex = 0;
-
-        function updateCarousel() {
-            slideContainer.style.transform = `translateX(-${currentIndex * 100}%)`;
-            thumbnails.forEach((thumb, index) => {
-                thumb.classList.toggle('active', index === currentIndex);
-            });
-        }
-
-        prevBtn.addEventListener('click', () => {
-            currentIndex = (currentIndex - 1 + images.length) % images.length;
-            updateCarousel();
-        });
-
-        nextBtn.addEventListener('click', () => {
-            currentIndex = (currentIndex + 1) % images.length;
-            updateCarousel();
-        });
-
-        thumbnails.forEach((thumb, index) => {
-            thumb.addEventListener('click', () => {
-                currentIndex = index;
-                updateCarousel();
-            });
-        });
-
-        // Swipe support for mobile
-        let touchStartX = 0;
-        let touchEndX = 0;
-        slideContainer.addEventListener('touchstart', e => {
-            touchStartX = e.changedTouches[0].screenX;
-        });
-        slideContainer.addEventListener('touchend', e => {
-            touchEndX = e.changedTouches[0].screenX;
-            if (touchStartX - touchEndX > 50) {
-                currentIndex = (currentIndex + 1) % images.length;
-            } else if (touchEndX - touchStartX > 50) {
-                currentIndex = (currentIndex - 1 + images.length) % images.length;
+        // Initialize gallery sortable
+        const galleryContainer = document.getElementById('gallery-container');
+        const sortable = new Sortable(galleryContainer, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            onEnd: function(evt) {
+                // Update image order logic would go here
+                console.log('New image order:', Array.from(galleryContainer.children).map(el => el.dataset.index));
             }
-            updateCarousel();
         });
+
+        // Image preview functionality
+        const previewContainer = document.getElementById('preview-container');
+        const previewImage = document.getElementById('preview-image');
+        const previewPlaceholder = document.getElementById('preview-placeholder');
+        const galleryItems = document.querySelectorAll('.gallery-item');
+        
+        galleryItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                // Don't trigger if clicked on action buttons
+                if (e.target.closest('.item-actions')) return;
+                
+                // Update active class
+                galleryItems.forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Show preview
+                const img = this.querySelector('img');
+                if (img && img.src) {
+                    previewImage.src = img.src;
+                    previewImage.style.display = 'block';
+                    previewPlaceholder.style.display = 'none';
+                }
+            });
+        });
+
+        // Set the first image as active by default
+        if (galleryItems.length > 0) {
+            galleryItems[0].click();
+        }
 
         // Image upload preview
         document.querySelectorAll('input[type="file"]').forEach(input => {
             input.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
-                    const index = this.id === 'image' ? 0 : parseInt(this.id.replace('image', ''));
-                    const targetImage = images[index];
-                    const targetThumb = thumbnails[index];
-                    if (targetImage && targetThumb) {
-                        targetImage.style.opacity = '0.5';
+                    const parentItem = this.closest('.gallery-item');
+                    const img = parentItem.querySelector('img');
+                    if (img) {
+                        img.style.opacity = '0.5';
                         const reader = new FileReader();
                         reader.onload = function(event) {
-                            targetImage.src = event.target.result;
-                            targetThumb.src = event.target.result;
-                            targetImage.style.opacity = '1';
+                            img.src = event.target.result;
+                            img.style.opacity = '1';
+                            
+                            // If this is the active image, update preview
+                            if (parentItem.classList.contains('active')) {
+                                previewImage.src = event.target.result;
+                                previewImage.style.display = 'block';
+                                previewPlaceholder.style.display = 'none';
+                            }
                         };
                         reader.readAsDataURL(file);
                     }
+                }
+            });
+        });
+
+        // Bulk upload functionality
+        const uploadArea = document.getElementById('upload-area');
+        const bulkUpload = document.getElementById('bulk-upload');
+        
+        uploadArea.addEventListener('click', function() {
+            bulkUpload.click();
+        });
+        
+        bulkUpload.addEventListener('change', function(e) {
+            if (this.files.length > 0) {
+                // Find next available image slot
+                const emptySlots = Array.from(galleryItems).filter(item => {
+                    const img = item.querySelector('img');
+                    return img && img.src.includes('placeholder.com');
+                });
+                
+                if (emptySlots.length > 0) {
+                    // Upload files to available slots
+                    const files = Array.from(this.files);
+                    const slotsToUse = Math.min(emptySlots.length, files.length);
+                    
+                    for (let i = 0; i < slotsToUse; i++) {
+                        const slot = emptySlots[i];
+                        const input = slot.querySelector('input[type="file"]');
+                        const img = slot.querySelector('img');
+                        
+                        // Create a new FileList for the input
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(files[i]);
+                        input.files = dataTransfer.files;
+                        
+                        // Update preview
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            img.src = event.target.result;
+                        };
+                        reader.readAsDataURL(files[i]);
+                    }
+                }
+                
+                // Reset bulk upload
+                this.value = '';
+            }
+        });
+
+        // Image removal
+        document.querySelectorAll('.btn-remove').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                
+                const galleryItem = this.closest('.gallery-item');
+                const img = galleryItem.querySelector('img');
+                const input = galleryItem.querySelector('input[type="file"]');
+                
+                // Reset to placeholder
+                const isMain = galleryItem.dataset.type === 'main';
+                img.src = isMain ? 
+                    'https://via.placeholder.com/300?text=Main+Image' : 
+                    `https://via.placeholder.com/300?text=Image+${galleryItem.dataset.index}`;
+                
+                // Clear file input
+                input.value = '';
+                
+                // If this was the active image, reset preview
+                if (galleryItem.classList.contains('active')) {
+                    previewImage.style.display = 'none';
+                    previewPlaceholder.style.display = 'block';
                 }
             });
         });
@@ -705,6 +937,78 @@
             btn.addEventListener('mouseleave', () => {
                 btn.style.transform = 'translateY(0)';
             });
+        });
+    </script>
+
+    <script>
+        // Master categories + synonyms
+        const CATEGORY_DEFS = [
+            { name: 'Electronics',            synonyms: ['gadget','device','tech'] },
+            { name: 'Computers & Networking', synonyms: ['pc','laptop','desktop','router','server'] },
+            { name: 'Mobile Phones & Accessories', synonyms: ['phone','mobile','charger','case'] },
+            { name: 'Software & Apps',        synonyms: ['app','program','software'] },
+            { name: 'Health & Beauty',        synonyms: ['skincare','makeup','wellness'] },
+            { name: 'Medical Equipment',      synonyms: ['stethoscope','syringe','hospital'] },
+            { name: 'Sports & Outdoors',      synonyms: ['sport','hiking','camping'] },
+            { name: 'Fashion & Apparel',      synonyms: ['clothes','shirt','dress','jeans'] },
+            { name: 'Jewelry & Watches',      synonyms: ['ring','necklace','watch'] },
+            { name: 'Home & Garden',          synonyms: ['furniture','decor','plants'] },
+            { name: 'Kitchen & Dining',       synonyms: ['cookware','utensils','appliances'] },
+            { name: 'Tools & DIY',            synonyms: ['hammer','drill','screwdriver'] },
+            { name: 'Automotive & Vehicles',  synonyms: ['car','vehicle','truck','motorcycle'] },
+            { name: 'Industrial & Scientific',synonyms: ['lab','industrial','machine'] },
+            { name: 'Agriculture & Farming',  synonyms: ['farm','tractor','crop'] },
+            { name: 'Food & Beverages',       synonyms: ['food','drink','beverage'] },
+            { name: 'Office Supplies',        synonyms: ['pen','paper','stationery'] },
+            { name: 'Books, Music & Movies',  synonyms: ['book','cd','dvd','movie'] },
+            { name: 'Toys & Games',           synonyms: ['toy','game','puzzle'] },
+            { name: 'Baby & Kids',            synonyms: ['baby','child','kids'] },
+            { name: 'Pets & Accessories',     synonyms: ['pet','dog','cat','leash'] },
+            { name: 'Art, Crafts & Sewing',   synonyms: ['art','craft','sewing'] },
+            { name: 'Collectibles & Hobbies', synonyms: ['coin','stamp','hobby'] },
+            { name: 'Travel & Experiences',   synonyms: ['trip','tour','holiday'] },
+            { name: 'Real Estate & Property', synonyms: ['house','apartment','land'] },
+            { name: 'Education & Training',   synonyms: ['course','lesson','training'] },
+            { name: 'Services',               synonyms: ['service','repair','consulting'] },
+            { name: 'Other',                  synonyms: [] }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const input       = document.getElementById('category-input');
+            const sugList     = document.getElementById('category-suggestions');
+
+            // render suggestions
+            function renderSuggestions(term) {
+                const lower = term.trim().toLowerCase();
+                sugList.innerHTML = '';
+                const matches = CATEGORY_DEFS.filter(cat => {
+                    if (!lower) return true;
+                    return cat.name.toLowerCase().includes(lower)
+                        || cat.synonyms.some(s => s.includes(lower));
+                });
+                matches.forEach(cat => {
+                    const li = document.createElement('li');
+                    li.textContent = cat.name;
+                    li.style.padding = '8px';
+                    li.style.cursor  = 'pointer';
+                    li.addEventListener('mousedown', () => {
+                        input.value = cat.name;
+                        hideSuggestions();
+                    });
+                    sugList.appendChild(li);
+                });
+                sugList.style.display = matches.length ? 'block' : 'none';
+            }
+
+            function hideSuggestions() {
+                sugList.style.display = 'none';
+            }
+
+            input.addEventListener('input', e => {
+                renderSuggestions(e.target.value);
+            });
+            input.addEventListener('focus', () => renderSuggestions(input.value));
+            input.addEventListener('blur', () => setTimeout(hideSuggestions, 100));
         });
     </script>
 </body>

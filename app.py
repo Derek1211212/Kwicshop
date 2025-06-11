@@ -197,11 +197,11 @@ def home():
     deal_type_filter  = request.args.get('deal_type', 'All')
     location_q        = request.args.get('location', '').strip()
 
-    listings       = []
-    categories     = []
-    user_logged_in = 'user_id' in session
-    user_subscribed = False
-    conn = None
+    listings         = []
+    categories       = []
+    user_logged_in   = 'user_id' in session
+    user_subscribed  = False
+    conn             = None
 
     try:
         # ───────────────────────────────────────────────────────
@@ -220,47 +220,36 @@ def home():
             conn = None
 
         # ───────────────────────────────────────────────────────
-        # 2) Fetch listings from the database (same as before)
+        # 2) Fetch listings from the database
         # ───────────────────────────────────────────────────────
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        base_query = """
-        SELECT
-          l.*,
-          u.username,
-          IFNULL(m.impressions, 0) AS impressions
-        FROM listings AS l
-        JOIN users    AS u ON l.user_id = u.id
-        LEFT JOIN listing_metrics AS m
-          ON l.listing_id = m.listing_id
-        WHERE 1=1
-        """
+        # -- build base_query with search, filters, ordering --
+        base_query = """SELECT l.*, u.username,
+                               IFNULL(m.impressions, 0) AS impressions
+                        FROM listings AS l
+                        JOIN users AS u ON l.user_id = u.id
+                        LEFT JOIN listing_metrics AS m
+                          ON l.listing_id = m.listing_id
+                        WHERE 1=1"""
         params = []
 
-        # 2.1) Text search
         if search:
             like = f'%{search}%'
-            base_query += """
-              AND (
-                l.title       LIKE %s OR
-                l.description LIKE %s OR
-                l.category    LIKE %s
-              )
-            """
+            base_query += """ AND (l.title LIKE %s
+                                   OR l.description LIKE %s
+                                   OR l.category LIKE %s)"""
             params += [like, like, like]
 
-        # 2.2) Category filter
         if selected_category != 'All':
             base_query += " AND l.category = %s"
             params.append(selected_category)
 
-        # 2.3) Deal‐type filter
         if deal_type_filter != 'All':
             base_query += " AND l.deal_type = %s"
             params.append(deal_type_filter)
 
-        # 2.4) ORDER BY (with optional location boost)
         if location_q:
             base_query += """
               ORDER BY
@@ -293,71 +282,75 @@ def home():
         cursor.execute(base_query, params)
         listings = cursor.fetchall()
 
-        # 2.5) Fetch distinct categories for filter tags
-        cursor.execute("SELECT DISTINCT category FROM listings")
-        categories = [r['category'] for r in cursor.fetchall()]
+        # ───────────────────────────────────────────────────────
+        # 2.5) Fetch top-6 categories by listing count
+        # ───────────────────────────────────────────────────────
+        cursor.execute("""
+            SELECT category, COUNT(*) AS cnt
+              FROM listings
+             GROUP BY category
+             ORDER BY cnt DESC
+             LIMIT 6
+        """)
+        top_cats = cursor.fetchall()  # list of dicts
 
-        # 2.6) Build full URLs for each listing’s images, and fetch offered_items if Swap Deal
+        categories = []
+        for r in top_cats:
+            name = r['category']
+            slug = name.lower().replace(' ', '-')
+            icon_url = f"https://api.iconify.design/mdi:{slug}.svg"
+            categories.append({
+                'name': name,
+                'icon_url': icon_url
+            })
+
+        # ───────────────────────────────────────────────────────
+        # 2.6) Build image URLs & load offered_items for Swap Deal
+        # ───────────────────────────────────────────────────────
         for l in listings:
-            # (a) Main image
+            # main image
             if l.get('image_url'):
-                l['image_url'] = url_for(
-                    'static',
-                    filename='images/' + l['image_url'],
-                    _external=True
-                )
+                l['image_url'] = url_for('static',
+                                         filename='images/' + l['image_url'],
+                                         _external=True)
             else:
-                l['image_url'] = url_for(
-                    'static',
-                    filename='images/placeholder.jpg',
-                    _external=True
-                )
+                l['image_url'] = url_for('static',
+                                         filename='images/placeholder.jpg',
+                                         _external=True)
 
-            # (b) Carousel banner = image1 if exists, else placeholder
+            # banner image
             if l.get('image1'):
-                l['banner_image'] = url_for(
-                    'static',
-                    filename='images/' + l['image1'],
-                    _external=True
-                )
+                l['banner_image'] = url_for('static',
+                                            filename='images/' + l['image1'],
+                                            _external=True)
             else:
-                l['banner_image'] = url_for(
-                    'static',
-                    filename='images/placeholder.jpg',
-                    _external=True
-                )
+                l['banner_image'] = url_for('static',
+                                            filename='images/placeholder.jpg',
+                                            _external=True)
 
-            # (c) If Swap Deal, load offered_items
+            # offered items
             if l['deal_type'] == 'Swap Deal':
                 cursor.execute("""
-                  SELECT
-                    item_id,
-                    title,
-                    description,
-                    image1,
-                    `condition`
-                  FROM offered_items
-                  WHERE listing_id = %s
-                  ORDER BY item_id ASC
+                  SELECT item_id, title, description, image1, `condition`
+                    FROM offered_items
+                   WHERE listing_id = %s
+                   ORDER BY item_id ASC
                 """, (l['listing_id'],))
                 offers = cursor.fetchall() or []
                 for o in offers:
                     if o.get('image1'):
-                        o['image1'] = url_for(
-                            'static',
-                            filename='images/' + o['image1'],
-                            _external=True
-                        )
+                        o['image1'] = url_for('static',
+                                              filename='images/' + o['image1'],
+                                              _external=True)
                     else:
-                        o['image1'] = url_for(
-                            'static',
-                            filename='images/placeholder.jpg',
-                            _external=True
-                        )
+                        o['image1'] = url_for('static',
+                                              filename='images/placeholder.jpg',
+                                              _external=True)
                 l['offers'] = offers
             else:
                 l['offers'] = []
 
+        # close cursor before exiting try
         cursor.close()
 
     except Exception as e:
@@ -368,27 +361,18 @@ def home():
         if conn:
             conn.close()
 
-    # ───────────────────────────────────────────────────────────────────
-    # 3) Rotate the entire `listings` list by a file‐based offset of +1
-    # ───────────────────────────────────────────────────────────────────
+    # ───────────────────────────────────────────────────────────
+    # 3) Rotate listings by offset
+    # ───────────────────────────────────────────────────────────
     total_count = len(listings)
     if total_count > 0:
-        # 3.1) Read offset from disk (default 0)
         offset = read_offset() % total_count
+        listings = listings[offset:] + listings[:offset]
+        write_offset((offset + 1) % total_count)
 
-        # 3.2) Rotate listings by offset
-        rotated = listings[offset:] + listings[:offset]
-
-        # 3.3) Increment offset by 1, wrap around
-        next_offset = (offset + 1) % total_count
-        write_offset(next_offset)
-
-        # 3.4) Use rotated list
-        listings = rotated
-
-    # ───────────────────────────────────────────────────────────────────
-    # 4) Render `home.html` with rotated listings
-    # ───────────────────────────────────────────────────────────────────
+    # ───────────────────────────────────────────────────────────
+    # 4) Render template
+    # ───────────────────────────────────────────────────────────
     featured_listing = listings[0] if listings else None
     return render_template(
         'home.html',
@@ -1238,7 +1222,10 @@ def update_listing(listing_id):
         # 1) Verify ownership and fetch deal_type
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT user_id, deal_type FROM listings WHERE listing_id = %s", (listing_id,))
+        cursor.execute(
+            "SELECT user_id, deal_type FROM listings WHERE listing_id = %s",
+            (listing_id,)
+        )
         row = cursor.fetchone()
         if not row or row['user_id'] != session['user_id']:
             flash('You do not have permission to edit this listing', 'danger')
@@ -1247,38 +1234,39 @@ def update_listing(listing_id):
         deal_type = row['deal_type']
 
         # 2) Collect common form fields
-        title = request.form.get('title')
+        title       = request.form.get('title')
         description = request.form.get('description')
-        condition = request.form.get('condition')
-        location = request.form.get('location')
-        contact = request.form.get('contact')
+        condition   = request.form.get('condition')
+        location    = request.form.get('location')
+        contact     = request.form.get('contact')
+        category    = request.form.get('category')                  # <<< added
 
         # Initialize conditional fields
-        price = None
-        desired_swap = None
+        price                    = None
+        desired_swap             = None
         desired_swap_description = None
-        required_cash = None
-        additional_cash = None
+        required_cash            = None
+        additional_cash          = None
 
         # Process fields based on deal_type
         if deal_type == 'Outright Sales':
             price = request.form.get('price') or None
         else:
-            desired_swap = request.form.get('desired_swap')
+            desired_swap             = request.form.get('desired_swap')
             desired_swap_description = request.form.get('desired_swap_description')
-            required_cash = request.form.get('required_cash') or None
-            additional_cash = request.form.get('additional_cash') or None
+            required_cash            = request.form.get('required_cash') or None
+            additional_cash          = request.form.get('additional_cash') or None
 
-        # 3) Handle file uploads for images
+        # 3) Handle file uploads for images (unchanged)...
         upload_dir = os.path.join(app.root_path, 'static', 'images')
         os.makedirs(upload_dir, exist_ok=True)
 
         img_fields = {
             'image_url': request.files.get('image'),
-            'image1': request.files.get('image1'),
-            'image2': request.files.get('image2'),
-            'image3': request.files.get('image3'),
-            'image4': request.files.get('image4')
+            'image1':    request.files.get('image1'),
+            'image2':    request.files.get('image2'),
+            'image3':    request.files.get('image3'),
+            'image4':    request.files.get('image4')
         }
 
         # Build dynamic SET clauses for SQL UPDATE
@@ -1286,6 +1274,7 @@ def update_listing(listing_id):
             "title=%s",
             "description=%s",
             "`condition`=%s",
+            "category=%s",                                       # <<< added
             "price=%s",
             "desired_swap=%s",
             "desired_swap_description=%s",
@@ -1295,21 +1284,27 @@ def update_listing(listing_id):
             "contact=%s"
         ]
         params = [
-            title, description, condition,
-            price, desired_swap, desired_swap_description,
-            required_cash, additional_cash,
-            location, contact
+            title,
+            description,
+            condition,
+            category,                                           # <<< added
+            price,
+            desired_swap,
+            desired_swap_description,
+            required_cash,
+            additional_cash,
+            location,
+            contact
         ]
 
-        # Process image uploads
+        # Process image uploads (unchanged)…
         for field, file in img_fields.items():
             if file and file.filename and allowed_file(file.filename):
-                # Generate unique filename and save
-                filename = secure_filename(file.filename)
+                filename    = secure_filename(file.filename)
                 unique_name = f"{uuid.uuid4().hex}_{filename}"
-                dest = os.path.join(upload_dir, unique_name)
+                dest        = os.path.join(upload_dir, unique_name)
                 file.save(dest)
-                # Add to SET clause
+
                 set_clauses.append(f"{field}=%s")
                 params.append(unique_name)
 
@@ -1338,6 +1333,7 @@ def update_listing(listing_id):
             cursor.close()
         if conn:
             conn.close()
+
 
 
 
