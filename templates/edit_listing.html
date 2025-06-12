@@ -147,7 +147,6 @@
     object-fit: cover;
     transition: var(--transition);
   }
-
   .gallery-item:hover img {
     transform: scale(1.05);
   }
@@ -157,157 +156,132 @@
     border-width: 3px;
   }
 
-  .gallery-item .item-label {
+  .item-label {
     position: absolute;
     top: 8px;
     left: 8px;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
     padding: 3px 8px;
     border-radius: 4px;
     font-size: 0.8rem;
     font-weight: 500;
   }
 
-  /* Hide hover-only reveal */
-  /*
-  .gallery-item:hover .item-actions {
-    transform: translateY(0);
-  }
-  */
-
-  .gallery-item .item-actions {
+  .item-actions {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
     display: flex;
-    background: rgba(0, 0, 0, 0.7);
-    transform: translateY(100%);
-    transition: var(--transition);
     justify-content: center;
     gap: 8px;
     padding: 8px;
+    background: rgba(0,0,0,0.7);
+    transform: translateY(100%);
+    transition: var(--transition);
   }
-
-  /* Show actions on single tap */
   .gallery-item.show-actions .item-actions {
     transform: translateY(0);
   }
 
-  .gallery-item .btn-action {
-    width: 32px;
-    height: 32px;
+  .btn-action {
+    position: relative;
+    width: 32px; height: 32px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255,255,255,0.2);
+    color: #fff;
     border: none;
-    color: white;
     transition: var(--transition);
+    z-index: 2;
   }
-
-  .gallery-item .btn-action:hover {
+  .btn-remove {
+    padding: 12px;
+    margin: -12px;
+  }
+  .btn-action:hover {
     background: var(--primary);
     transform: scale(1.1);
   }
-
-  .gallery-item .btn-remove:hover {
+  .btn-remove:hover {
     background: var(--accent);
   }
-
-  .upload-area {
-    border: 2px dashed #dee2e6;
-    border-radius: var(--border-radius);
-    padding: 24px;
-    text-align: center;
-    background: #fafafa;
-    transition: var(--transition);
-    cursor: pointer;
-    margin-bottom: 1rem;
+  .btn-action input[type="file"] {
+    position: absolute; top:0; left:0;
+    width:100%; height:100%;
+    opacity:0; cursor:pointer; z-index:3;
   }
 
-  .upload-area:hover {
-    border-color: var(--primary);
-    background: var(--primary-light);
-  }
 
-  .upload-area i {
-    font-size: 2.5rem;
-    color: var(--primary);
-    margin-bottom: 12px;
-  }
 
-  .upload-text {
-    font-size: 1.1rem;
-    font-weight: 500;
-    color: var(--secondary);
-    margin-bottom: 8px;
-  }
+/* Preview & bulk upload (unchanged) */
+.upload-area {
+  border: 2px dashed #dee2e6;
+  border-radius: var(--border-radius);
+  padding: 24px;
+  text-align: center;
+  background: #fafafa;
+  transition: var(--transition);
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+.upload-area:hover {
+  border-color: var(--primary);
+  background: #e6f4f1;
+}
+.upload-area i {
+  font-size: 2.5rem; color: var(--primary);
+  margin-bottom: 12px;
+}
+.upload-text {
+  font-size: 1.1rem; font-weight: 500;
+  color: var(--secondary); margin-bottom: 8px;
+}
+.upload-subtext {
+  font-size: 0.9rem; color: #6c757d;
+  margin-bottom: 12px;
+}
+.d-none { display: none; }
 
-  .upload-subtext {
-    font-size: 0.9rem;
-    color: #6c757d;
-    margin-bottom: 12px;
-  }
+/* Preview container */
+.preview-container {
+  position: relative;
+  width: 100%; height: 400px;
+  border-radius: var(--border-radius);
+  overflow: hidden; box-shadow: var(--shadow);
+  margin-bottom: 1.5rem;
+  background: var(--light-bg);
+  display: flex; align-items: center; justify-content: center;
+}
+.preview-image {
+  max-width: 100%; max-height: 100%; object-fit: contain;
+  display: block;
+}
+.preview-placeholder {
+  color: #6c757d; text-align: center; padding: 2rem;
+}
+.preview-placeholder i {
+  font-size: 4rem; color: #dee2e6; margin-bottom: 1rem;
+}
 
-  .upload-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px 24px;
-    font-size: 1rem;
-    font-weight: 500;
-    border-radius: var(--btn-radius);
-    transition: var(--transition);
-    min-height: 46px;
-    text-decoration: none;
-    background-color: var(--primary);
-    color: white;
-    border: none;
-    cursor: pointer;
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .gallery-container {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
   }
-
-  .upload-button:hover {
-    background-color: var(--primary-hover);
-    box-shadow: var(--shadow);
-    transform: translateY(-2px);
+  .gallery-item { height: 120px; }
+  .preview-container { height: 300px; }
+}
+@media (max-width: 576px) {
+  .gallery-container {
+    grid-template-columns: repeat(2,1fr);
   }
-
-  .preview-container {
-    position: relative;
-    width: 100%;
-    height: 400px;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    box-shadow: var(--shadow);
-    margin-bottom: 1.5rem;
-    background: var(--light-bg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .preview-image {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    display: block;
-  }
-
-  .preview-placeholder {
-    color: #6c757d;
-    text-align: center;
-    padding: 2rem;
-  }
-
-  .preview-placeholder i {
-    font-size: 4rem;
-    margin-bottom: 1rem;
-    color: #dee2e6;
-  }
+  .preview-container { height: 250px; }
+}
 
   /* Enhanced Button Styles */
   .btn {
@@ -531,11 +505,16 @@
   <!-- Main Image -->
   <div class="gallery-item active" data-index="0" data-type="main">
     {% if listing.image_url %}
-    <img src="{{ url_for('static', filename='images/' + listing.image_url) }}"
-         onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
-         alt="Main listing image">
+      <img
+        src="{{ url_for('static', filename='images/' + listing.image_url) }}"
+        onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
+        alt="Main listing image"
+      >
     {% else %}
-    <img src="https://via.placeholder.com/300?text=Main+Image" alt="No main image">
+      <img
+        src="https://via.placeholder.com/300?text=Main+Image"
+        alt="No main image"
+      >
     {% endif %}
     <span class="item-label">Main</span>
     <div class="item-actions">
@@ -544,34 +523,54 @@
       </button>
       <label class="btn-action" title="Replace image">
         <i class="fas fa-sync"></i>
-        <input type="file" class="d-none" name="image" accept="image/*">
+        <input type="file" name="image" accept="image/*">
       </label>
     </div>
   </div>
 
   <!-- Additional Images -->
   {% for i in range(1,5) %}
-  <div class="gallery-item" data-index="{{ i }}" data-type="additional">
-    {% if listing['image' ~ i] %}
-    <img src="{{ url_for('static', filename='images/' + listing['image' ~ i]) }}"
-         onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
-         alt="Additional image {{ i }}">
-    {% else %}
-    <img src="https://via.placeholder.com/300?text=Image+{{ i }}" alt="No additional image">
-    {% endif %}
-    <span class="item-label">Image {{ i }}</span>
-    <div class="item-actions">
-      <button type="button" class="btn-action btn-remove" title="Remove image">
-        <i class="fas fa-trash"></i>
-      </button>
-      <label class="btn-action" title="Replace image">
-        <i class="fas fa-sync"></i>
-        <input type="file" class="d-none" name="image{{ i }}" accept="image/*">
-      </label>
+    <div class="gallery-item" data-index="{{ i }}" data-type="additional">
+      {% if listing['image' ~ i] %}
+        <img
+          src="{{ url_for('static', filename='images/' + listing['image' ~ i]) }}"
+          onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
+          alt="Additional image {{ i }}"
+        >
+      {% else %}
+        <img
+          src="https://via.placeholder.com/300?text=Image+{{ i }}"
+          alt="No additional image"
+        >
+      {% endif %}
+      <span class="item-label">Image {{ i }}</span>
+      <div class="item-actions">
+        <button type="button" class="btn-action btn-remove" title="Remove image">
+          <i class="fas fa-trash"></i>
+        </button>
+        <label class="btn-action" title="Replace image">
+          <i class="fas fa-sync"></i>
+          <input type="file" name="image{{ i }}" accept="image/*">
+        </label>
+      </div>
     </div>
-  </div>
   {% endfor %}
 </div>
+
+<div class="preview-container" id="preview-container">
+  <img id="preview-image" class="preview-image" style="display:none;">
+  <div id="preview-placeholder" class="preview-placeholder">
+    <i class="fas fa-image"></i><br>Select an image to preview
+  </div>
+</div>
+
+<div id="upload-area" class="upload-area">
+  <i class="fas fa-upload"></i>
+  <div class="upload-text">Bulk Upload</div>
+  <div class="upload-subtext">Click to select multiple files</div>
+</div>
+<input type="file" id="bulk-upload" class="d-none" multiple accept="image/*">
+
 
 <div class="section-divider"></div>
 
@@ -761,92 +760,84 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
-  // Initialize Sortable
-  const galleryContainer = document.getElementById('gallery-container');
-  new Sortable(galleryContainer, {
-    animation: 150,
-    ghostClass: 'sortable-ghost',
-    onEnd: evt => {
-      console.log('New image order:', Array.from(galleryContainer.children).map(el => el.dataset.index));
-    }
-  });
+  // Sortable
+  const gallery = document.getElementById('gallery-container');
+  new Sortable(gallery, { animation: 150, ghostClass: 'sortable-ghost' });
 
-  // Element references
-  const galleryItems       = document.querySelectorAll('.gallery-item');
-  const previewImage       = document.getElementById('preview-image');
-  const previewPlaceholder = document.getElementById('preview-placeholder');
-  const bulkUpload         = document.getElementById('bulk-upload');
-  const uploadArea         = document.getElementById('upload-area');
+  // Refs
+  const items       = document.querySelectorAll('.gallery-item');
+  const previewImg  = document.getElementById('preview-image');
+  const previewPlh  = document.getElementById('preview-placeholder');
+  const bulkInput   = document.getElementById('bulk-upload');
+  const uploadArea  = document.getElementById('upload-area');
 
-  // 1) Single-tap to show actions & preview
-  galleryItems.forEach(item => {
-    item.addEventListener('click', function(e) {
-      if (e.target.closest('.item-actions')) return; // let action buttons handle themselves
-      galleryItems.forEach(i => i.classList.remove('show-actions','active'));
-      this.classList.add('show-actions','active');
-      const img = this.querySelector('img');
+  // 1) Tap to show actions & preview
+  items.forEach(item => {
+    item.addEventListener('click', e => {
+      if (e.target.closest('.item-actions')) return;
+      items.forEach(i=>i.classList.remove('show-actions','active'));
+      item.classList.add('show-actions','active');
+      const img = item.querySelector('img');
       if (img && img.src) {
-        previewImage.src = img.src;
-        previewImage.style.display = 'block';
-        previewPlaceholder.style.display = 'none';
+        previewImg.src = img.src;
+        previewImg.style.display = 'block';
+        previewPlh.style.display = 'none';
       }
     });
   });
-  if (galleryItems.length) galleryItems[0].click();
+  if (items.length) items[0].click();
 
-  // 2) Replace image preview
-  document.querySelectorAll('.gallery-item input[type="file"]').forEach(input => {
-    input.addEventListener('change', function() {
-      const file = this.files[0];
-      if (!file) return;
-      const parent = this.closest('.gallery-item');
-      const img    = parent.querySelector('img');
-      const reader = new FileReader();
-      reader.onload = e => {
-        img.src = e.target.result;
-        if (parent.classList.contains('active')) {
-          previewImage.src = e.target.result;
-        }
+  // 2) Replace preview
+  document.querySelectorAll('.gallery-item input[type="file"]').forEach(inp=>{
+    inp.addEventListener('change', function(){
+      const file=this.files[0]; if(!file) return;
+      const parent=this.closest('.gallery-item');
+      const img=parent.querySelector('img');
+      const reader=new FileReader();
+      reader.onload=e=> {
+        img.src=e.target.result;
+        if(parent.classList.contains('active')) previewImg.src=e.target.result;
       };
       reader.readAsDataURL(file);
     });
   });
 
-  // 3) Remove image
-  document.querySelectorAll('.btn-remove').forEach(btn => {
-    btn.addEventListener('click', function(e) {
+  // 3) Remove
+  document.querySelectorAll('.btn-remove').forEach(btn=>{
+    const fn=e=>{
       e.stopPropagation();
-      const item  = this.closest('.gallery-item');
-      const idx   = item.dataset.index;
-      const img   = item.querySelector('img');
-      const input = item.querySelector('input[type="file"]');
-      img.src = item.dataset.type === 'main'
+      const item=btn.closest('.gallery-item');
+      const idx=item.dataset.index;
+      const img=item.querySelector('img');
+      const inp=item.querySelector('input[type="file"]');
+      img.src = item.dataset.type==='main'
         ? 'https://via.placeholder.com/300?text=Main+Image'
         : `https://via.placeholder.com/300?text=Image+${idx}`;
-      input.value = '';
+      inp.value='';
       item.classList.remove('active','show-actions');
-      previewImage.style.display = 'none';
-      previewPlaceholder.style.display = 'block';
-    });
+      previewImg.style.display='none';
+      previewPlh.style.display='block';
+    };
+    btn.addEventListener('click', fn);
+    btn.addEventListener('touchend', e=>{ e.preventDefault(); fn(e); });
   });
 
   // 4) Bulk upload
-  uploadArea.addEventListener('click', () => bulkUpload.click());
-  bulkUpload.addEventListener('change', function() {
-    const files = Array.from(this.files);
-    const emptySlots = Array.from(galleryItems).filter(it =>
+  uploadArea.addEventListener('click', ()=> bulkInput.click());
+  bulkInput.addEventListener('change', function(){
+    const files=Array.from(this.files);
+    const empties=Array.from(items).filter(it =>
       it.querySelector('img').src.includes('placeholder.com')
     );
-    emptySlots.slice(0, files.length).forEach((slot, i) => {
-      const inp = slot.querySelector('input[type="file"]');
-      const dt  = new DataTransfer();
+    empties.slice(0, files.length).forEach((slot,i)=>{
+      const dt=new DataTransfer();
       dt.items.add(files[i]);
-      inp.files = dt.files;
+      const inp=slot.querySelector('input[type="file"]');
+      inp.files=dt.files;
       inp.dispatchEvent(new Event('change'));
     });
-    this.value = '';
+    this.value='';
   });
-
   // 5) Image preview functionality for initial load
   // (Already handled by single-tap click above and default first click)
 
