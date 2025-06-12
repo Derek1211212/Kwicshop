@@ -1469,7 +1469,6 @@ body .mobile-bottom-nav {
   position: relative;
 }
 
-/* Base tooltip styles */
 .nav-links a .tooltip,
 .mobile-bottom-nav .nav-item .tooltip {
   position: absolute;
@@ -1482,40 +1481,34 @@ body .mobile-bottom-nav {
   z-index: 10;
 }
 
-/* Desktop tooltips */
 .nav-links a .tooltip {
-  top: calc(100% + 8px); /* Space for arrow */
+  top: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
 }
 
-/* Single upward arrow for desktop tooltips */
 .nav-links a .tooltip::before {
   content: '';
   position: absolute;
-  bottom: 100%; /* Above tooltip */
+  bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
   border: 5px solid transparent;
-  border-top-color: #333; /* Upward arrow */
+  border-top-color: #333;
 }
 
-/* Disable any ::after arrows on desktop tooltips */
 .nav-links a .tooltip::after {
   content: none;
 }
 
-/* Always show Login tooltip on desktop when not logged in */
 .nav-links a[href="/login"] .tooltip {
   display: block;
 }
 
-/* Always show Dashboard tooltip on desktop when logged in */
 .nav-links a[href="/dashboard"] .tooltip {
   display: block;
 }
 
-/* Mobile tooltips */
 @media (max-width: 768px) {
   .mobile-bottom-nav .nav-item .tooltip {
     font-size: 0.7rem;
@@ -1523,27 +1516,33 @@ body .mobile-bottom-nav {
     background: #333;
     text-align: center;
     position: absolute;
-    top: calc(0% - 20px); /* Higher up, just below nav item */
+    top: calc(0% - 8px);
     left: 50%;
     transform: translateX(-50%);
     padding: 4px 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
 
-  /* Always show Login tooltip on mobile when not logged in */
+  .mobile-bottom-nav .nav-item .tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: #333;
+  }
+
+  .mobile-bottom-nav .nav-item .tooltip::after {
+    content: none;
+  }
+
   .mobile-bottom-nav .nav-item[href="/login"] .tooltip {
     display: block;
   }
 
-  /* Always show Dashboard tooltip on mobile when logged in */
   .mobile-bottom-nav .nav-item[href="/dashboard"] .tooltip {
     display: block;
-  }
-
-  /* Disable arrows on mobile tooltips */
-  .mobile-bottom-nav .nav-item .tooltip::before,
-  .mobile-bottom-nav .nav-item .tooltip::after {
-    content: none;
   }
 }
 </style>
@@ -1670,7 +1669,7 @@ body .mobile-bottom-nav {
       tooltips.forEach(tooltip => {
         setTimeout(() => {
           tooltip.style.display = 'none';
-        }, 10000);
+        }, 8000);
       });
     });
   </script>
