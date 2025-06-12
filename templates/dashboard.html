@@ -1822,286 +1822,282 @@ input[type="file"] {
 
 
 
-<section id="create-listing" class="dashboard-section">
-    <div class="listing-container">
-        <h1 class="section-title mt-4">
-            <i class="fas fa-plus-circle"></i> Create New Listing
-        </h1>
-        
-        <form>
-            <!-- Listing Type -->
-            <div class="form-card">
-                <h5 class="form-label mb-3">Listing Type <span class="required-field"></span></h5>
-                <div class="deal-type-container">
-                    <div class="deal-type-card active">
-                        <input type="radio" class="btn-check" name="deal_type" id="deal-swap" value="Swap Deal" checked>
-                        <label class="w-100 h-100" for="deal-swap">
-                            <i class="fas fa-exchange-alt"></i>
-                            <h5>Swap Deal</h5>
-                            <p>Trade items with other users</p>
-                        </label>
-                    </div>
-                    <div class="deal-type-card">
-                        <input type="radio" class="btn-check" name="deal_type" id="deal-sale" value="Outright Sales">
-                        <label class="w-100 h-100" for="deal-sale">
-                            <i class="fas fa-tag"></i>
-                            <h5>Outright Sale</h5>
-                            <p>Sell your item for cash</p>
-                        </label>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Basic Information -->
-            <div class="form-card">
-                <h5 class="section-title">
-                    <i class="fas fa-info-circle"></i> Basic Information
-                </h5>
+        <!-- Create Listing Section -->
+        <section id="create-listing" class="dashboard-section">
+            <div class="listing-container">
+                <h1 class="section-title mt-4">
+                    <i class="fas fa-plus-circle"></i> Create New Listing
+                </h1>
                 
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label required-field">Item Name</label>
-                        <div class="input-group mb-3">
-                            <span class="input-group-text input-icon"><i class="fas fa-heading"></i></span>
-                            <input type="text" name="title" class="form-control" placeholder="e.g., iPhone 12 Pro Max" required>
+                <form method="POST" action="{{ url_for('create_listing') }}" enctype="multipart/form-data" id="create-listing-form">
+                    <!-- Listing Type -->
+                    <div class="form-card">
+                        <h5 class="section-title">
+                            <i class="fas fa-list"></i> Listing Type
+                        </h5>
+                        <div class="deal-type-container">
+                            <div class="deal-type-card active">
+                                <input type="radio" class="btn-check" name="deal_type" id="deal-swap" value="Swap Deal" checked>
+                                <label class="w-100 h-100" for="deal-swap">
+                                    <i class="fas fa-exchange-alt"></i>
+                                    <h5>Swap Deal</h5>
+                                    <p>Trade items with other users</p>
+                                </label>
+                            </div>
+                            <div class="deal-type-card">
+                                <input type="radio" class="btn-check" name="deal_type" id="deal-sale" value="Outright Sales">
+                                <label class="w-100 h-100" for="deal-sale">
+                                    <i class="fas fa-tag"></i>
+                                    <h5>Outright Sale</h5>
+                                    <p>Sell your item for cash</p>
+                                </label>
+                            </div>
                         </div>
-                        <p class="help-text">For swaps: Your main item name. For sales: Item name</p>
                     </div>
                     
-<div class="col-md-3" style="position: relative;">
-  <label class="form-label required-field">Category</label>
-  <div class="input-group mb-3">
-    <span class="input-group-text input-icon">
-      <i class="fas fa-box"></i>
-    </span>
-    <input
-      id="category-input"
-      name="category"
-      class="form-control"
-      placeholder="Select or type to search…"
-      autocomplete="off"
-      required
-      style="position: relative; z-index: 2;"
-    />
-  </div>
-  <!-- Suggestion dropdown -->
-  <ul id="category-suggestions"
-      style="position: absolute; top: 100%; left: 0; right: 0; 
-             background: #fff; border: 1px solid #ccc; border-top: none;
-             max-height: 200px; overflow-y: auto; z-index: 1; list-style: none;
-             margin: 0; padding: 0; display: none;">
-    <!-- JS will populate <li> elements here -->
-  </ul>
-</div>
-                    
-                    <div class="col-md-3">
-                        <label class="form-label required-field">Promotion Plan</label>
-                        <div class="input-group mb-3">
-                            <span class="input-group-text input-icon"><i class="fas fa-crown"></i></span>
-                            <select name="plan" class="form-select" required>
-                                <option value="Free">Free (₵0, No Promo)</option>
-                                <option value="Bronze">Bronze (₵20, 3 Weeks Promo)</option>
-                                <option value="Silver">Silver (₵50, 1 Month Promo)</option>
-                                <option value="Gold">Gold (₵100, 2 Months Promo)</option>
-                                <option value="Diamond">Diamond (₵200, 3 Months Promo)</option>
-                            </select>
-                        </div>
-                        <p class="help-text">Better plans get more visibility</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Swap Section -->
-            <div id="swap-section" class="form-card">
-                <h5 class="section-title">
-                    <i class="fas fa-exchange-alt"></i> Swap Details
-                </h5>
-                
-                <!-- Offered Items -->
-                <div class="mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="form-label">Your Offer Items <span class="text-muted">(1–2 items)</span></h6>
-                    </div>
-                    
-                    <div id="offered-items-container">
-                        <!-- First Item -->
-                        <div class="offered-item" data-clone="false">
-                            <div class="item-number">1</div>
-                            <button type="button" class="remove-item-btn" style="display: none;">
-                                <i class="fas fa-times"></i>
-                            </button>
-                            
-                            <!-- Name field hidden for first item -->
-                            <div class="mb-3 name-field" style="display:none;">
+                    <!-- Basic Information -->
+                    <div class="form-card">
+                        <h5 class="section-title">
+                            <i class="fas fa-info-circle"></i> Basic Information
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
                                 <label class="form-label required-field">Item Name</label>
                                 <div class="input-group mb-3">
-                                    <span class="input-group-text input-icon"><i class="fas fa-tag"></i></span>
-                                    <input type="text" name="offer_title[]" class="form-control" placeholder="e.g., iPhone 12 Pro Max" required>
+                                    <span class="input-group-text input-icon"><i class="fas fa-heading"></i></span>
+                                    <input type="text" name="title" class="form-control" placeholder="e.g., iPhone 12 Pro Max" required>
+                                </div>
+                                <p class="help-text">For swaps: Your main item name. For sales: Item name</p>
+                            </div>
+                            <div class="col-md-3" style="position: relative;">
+                                <label class="form-label required-field">Category</label>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text input-icon"><i class="fas fa-box"></i></span>
+                                    <input id="category-input" name="category" class="form-control" placeholder="Select or type to search…" autocomplete="off" required style="position: relative; z-index: 2;">
+                                </div>
+                                <ul id="category-suggestions" style="position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #ccc; border-top: none; max-height: 200px; overflow-y: auto; z-index: 1; list-style: none; margin: 0; padding: 0; display: none;"></ul>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label required-field">Promotion Plan</label>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text input-icon"><i class="fas fa-crown"></i></span>
+                                    <select name="plan" class="form-select" required>
+                                        <option value="Free">Free (₵0, No Promo)</option>
+                                        <option value="Bronze">Bronze (₵20, 3 Weeks Promo)</option>
+                                        <option value="Silver">Silver (₵50, 1 Month Promo)</option>
+                                        <option value="Gold">Gold (₵100, 2 Months Promo)</option>
+                                        <option value="Diamond">Diamond (₵200, 3 Months Promo)</option>
+                                    </select>
+                                </div>
+                                <p class="help-text">Better plans get more visibility</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Listing Images -->
+                    <div class="form-card">
+                        <h5 class="section-title">
+                            <i class="fas fa-images"></i> Listing Images
+                        </h5>
+                        <div class="mb-3">
+                            <label class="form-label required-field">Upload Images (up to 5)</label>
+                            <div class="file-upload-area" id="main-images-upload">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Click to upload or drag and drop</p>
+                                <small>JPEG, PNG (Max 5MB each)</small>
+                                <input type="file" name="images[]" id="main-images-input" class="d-none" multiple accept="image/*" required>
+                                <div class="file-preview mt-3"></div>
+                            </div>
+                            <p class="help-text">
+                                For sales: Images of the item you're selling.<br>
+                                For swaps: Images representing what you're looking for or your listing.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Swap Section -->
+                    <div id="swap-section" class="form-card">
+                        <h5 class="section-title">
+                            <i class="fas fa-exchange-alt"></i> Swap Details
+                        </h5>
+                        
+                        <!-- Offered Items -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="form-label">Your Offer Items <span class="text-muted">(1–2 items)</span></h6>
+                            </div>
+                            
+                            <div id="offered-items-container">
+                                <!-- First Item -->
+                                <div class="offered-item" data-clone="false">
+                                    <div class="item-number">1</div>
+                                    <button type="button" class="remove-item-btn" style="display: none;">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label required-field">Condition</label>
+                                            <div class="input-group mb-3">
+                                                <span class="input-group-text input-icon"><i class="fas fa-check-circle"></i></span>
+                                                <select name="offer_condition[]" class="form-select" required>
+                                                    <option value="">Select</option>
+                                                    <option>New</option>
+                                                    <option>Used - Like New</option>
+                                                    <option>Used - Good</option>
+                                                    <option>Used - Needs Repair</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label required-field">Description</label>
+                                            <textarea name="offer_description[]" class="form-control" rows="3" required placeholder="Describe your item in detail..."></textarea>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-3">
+                                        <label class="form-label required-field">Item Images (At least 2)</label>
+                                        <div class="file-upload-area" id="item-images-upload-1">
+                                            <i class="fas fa-cloud-upload-alt"></i>
+                                            <p>Click to upload or drag and drop</p>
+                                            <small>JPEG, PNG (Max 5MB each)</small>
+                                            <input type="file" name="offer_image1[]" id="item-images-input-1" class="d-none" multiple accept="image/*" required>
+                                            <div class="file-preview mt-3"></div>
+                                        </div>
+                                        <p class="help-text">Upload clear photos from different angles</p>
+                                    </div>
                                 </div>
                             </div>
                             
+                            <button type="button" id="add-item-btn" class="add-item-btn">
+                                <i class="fas fa-plus"></i> Add Another Item
+                            </button>
+                        </div>
+                        
+                        <!-- Desired Swap -->
+                        <div class="mt-4 pt-3 border-top">
+                            <h6 class="section-title">
+                                <i class="fas fa-search"></i> What You're Looking For
+                            </h6>
+                            
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label required-field">Condition</label>
+                                    <label class="form-label required-field">Desired Item</label>
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text input-icon"><i class="fas fa-gift"></i></span>
+                                        <input type="text" name="desired_swap" class="form-control" placeholder="e.g., MacBook Pro" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label required-field">Desired Condition</label>
                                     <div class="input-group mb-3">
                                         <span class="input-group-text input-icon"><i class="fas fa-check-circle"></i></span>
-                                        <select name="offer_condition[]" class="form-select" required>
+                                        <select name="desired_condition" class="form-select" required>
                                             <option value="">Select</option>
                                             <option>New</option>
                                             <option>Used - Like New</option>
                                             <option>Used - Good</option>
-                                            <option>Used - Needs Repair</option>
+                                            <option>Used - Any Condition</option>
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label required-field">Description</label>
-                                    <textarea name="offer_description[]" class="form-control" rows="3" required placeholder="Describe your item in detail..."></textarea>
+                            </div>
+                            
+                            <div class="cash-adjustment-grid">
+                                <div class="cash-box required-cash">
+                                    <div class="cash-header">
+                                        <i class="fas fa-money-bill-wave currency-icon"></i>
+                                        <label class="form-label">Cash You Need</label>
+                                    </div>
+                                    <div class="input-with-symbol">
+                                        <span class="currency-symbol">₵</span>
+                                        <input type="number" step="0.01" name="required_cash" class="form-control" placeholder="0.00">
+                                    </div>
+                                    <p class="help-text">Amount you'd like to receive in addition</p>
+                                </div>
+                                <div class="cash-box offered-cash">
+                                    <div class="cash-header">
+                                        <i class="fas fa-money-bill-wave currency-icon"></i>
+                                        <label class="form-label">Cash You'll Add</label>
+                                    </div>
+                                    <div class="input-with-symbol">
+                                        <span class="currency-symbol">₵</span>
+                                        <input type="number" step="0.01" name="additional_cash" class="form-control" placeholder="0.00">
+                                    </div>
+                                    <p class="help-text">Amount you're willing to pay extra</p>
                                 </div>
                             </div>
                             
-                            <div class="mt-3">
-                                <label class="form-label required-field">Item Images (At least 2)</label>
-                                <div class="file-upload-area" id="item-images-upload">
-                                    <i class="fas fa-cloud-upload-alt"></i>
-                                    <p>Click to upload or drag and drop</p>
-                                    <small>JPEG, PNG (Max 5MB each)</small>
-                                    <input type="file" name="offer_images[]" class="d-none" multiple accept="image/*" required>
-                                    <div class="file-preview mt-3"></div>
+                            <div class="mb-3">
+                                <label class="form-label">Additional Notes</label>
+                                <textarea name="swap_notes" class="form-control" rows="3" placeholder="Any special requirements or preferences..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sale Section -->
+                    <div id="sale-section" style="display:none;" class="form-card">
+                        <h5 class="section-title">
+                            <i class="fas fa-tag"></i> Sale Details
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label required-field">Price</label>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text">₵</span>
+                                    <input type="number" step="0.01" name="price" class="form-control" placeholder="0.00" required>
                                 </div>
-                                <p class="help-text">Upload clear photos from different angles</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label required-field">Condition</label>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text input-icon"><i class="fas fa-check-circle"></i></span>
+                                    <select name="condition" class="form-select" required>
+                                        <option value="">Select</option>
+                                        <option>New</option>
+                                        <option>Used - Like New</option>
+                                        <option>Used - Good</option>
+                                        <option>Used - Fair</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label required-field">Description</label>
+                                <textarea name="description" class="form-control" rows="4" required placeholder="Describe your item in detail..."></textarea>
                             </div>
                         </div>
                     </div>
                     
-                    <button type="button" id="add-item-btn" class="add-item-btn">
-                        <i class="fas fa-plus"></i> Add Another Item
+                    <!-- Location & Contact -->
+                    <div class="form-card">
+                        <h5 class="section-title">
+                            <i class="fas fa-map-marker-alt"></i> Location & Contact
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label required-field">Location</label>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text input-icon"><i class="fas fa-location-dot"></i></span>
+                                    <input type="text" name="location" class="form-control" placeholder="e.g., Accra, Kumasi" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label required-field">Contact Number</label>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text input-icon"><i class="fas fa-phone"></i></span>
+                                    <input type="text" name="contact" class="form-control" placeholder="e.g., +233 123 456 789" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-paper-plane me-2"></i> Publish Listing
                     </button>
-                </div>
-                
-                <!-- Desired Swap -->
-                <div class="mt-4 pt-3 border-top">
-                    <h6 class="section-title">
-                        <i class="fas fa-search"></i> What You're Looking For
-                    </h6>
-                    
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label required-field">Desired Item</label>
-                            <div class="input-group mb-3">
-                                <span class="input-group-text input-icon"><i class="fas fa-gift"></i></span>
-                                <input type="text" name="desired_swap" class="form-control" placeholder="e.g., MacBook Pro" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label required-field">Desired Condition</label>
-                            <div class="input-group mb-3">
-                                <span class="input-group-text input-icon"><i class="fas fa-check-circle"></i></span>
-                                <select name="desired_condition" class="form-select" required>
-                                    <option value="">Select</option>
-                                    <option>New</option>
-                                    <option>Used - Like New</option>
-                                    <option>Used - Good</option>
-                                    <option>Used - Any Condition</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Cash You Need</label>
-                            <div class="input-group mb-3">
-                                <span class="input-group-text">₵</span>
-                                <input type="number" step="0.01" name="required_cash" class="form-control" placeholder="0.00">
-                            </div>
-                            <p class="help-text">Amount you'd like to receive in addition</p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Cash You'll Add</label>
-                            <div class="input-group mb-3">
-                                <span class="input-group-text">₵</span>
-                                <input type="number" step="0.01" name="additional_cash" class="form-control" placeholder="0.00">
-                            </div>
-                            <p class="help-text">Amount you're willing to pay extra</p>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Additional Notes</label>
-                        <textarea name="swap_notes" class="form-control" rows="3" placeholder="Any special requirements or preferences..."></textarea>
-                    </div>
-                </div>
+                </form>
             </div>
-            
-            <!-- Sale Section -->
-            <!-- Ensure all columns are visible when toggled -->
-            <div id="sale-section" style="display:none;" class="form-card">
-                <h5 class="section-title">
-                    <i class="fas fa-tag"></i> Sale Details
-                </h5>
-                
-                <div class="row g-3">
-                    <!-- Price Column -->
-                    <div class="col-md-6">
-                        <label class="form-label required-field">Price</label>
-                        <div class="input-group mb-3">
-                            <span class="input-group-text">₵</span>
-                            <input type="number" step="0.01" name="price" class="form-control" placeholder="0.00" required>
-                        </div>
-                    </div>
-                    <!-- Condition Column -->
-                    <div class="col-md-6">
-                        <label class="form-label required-field">Condition</label>
-                        <div class="input-group mb-3">
-                            <span class="input-group-text input-icon"><i class="fas fa-check-circle"></i></span>
-                            <select name="condition" class="form-select" required>
-                                <option value="">Select</option>
-                                <option>New</option>
-                                <option>Used - Like New</option>
-                                <option>Used - Good</option>
-                                <option>Used - Fair</option>
-                            </select>
-                        </div>
-                    </div>
-                    <!-- Description Column -->
-                    <div class="col-12">
-                        <label class="form-label required-field">Description</label>
-                        <textarea name="description" class="form-control" rows="4" required placeholder="Describe your item in detail..."></textarea>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Location & Contact -->
-            <div class="form-card">
-                <h5 class="section-title">
-                    <i class="fas fa-map-marker-alt"></i> Location & Contact
-                </h5>
-                
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label required-field">Location</label>
-                        <div class="input-group mb-3">
-                            <span class="input-group-text input-icon"><i class="fas fa-location-dot"></i></span>
-                            <input type="text" name="location" class="form-control" placeholder="e.g., Accra, Kumasi" required>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label required-field">Contact Number</label>
-                        <div class="input-group mb-3">
-                            <span class="input-group-text input-icon"><i class="fas fa-phone"></i></span>
-                            <input type="text" name="contact" class="form-control" placeholder="e.g., +233 123 456 789" required>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <button type="submit" class="submit-btn">
-                <i class="fas fa-paper-plane me-2"></i> Publish Listing
-            </button>
-        </form>
-    </div>
-</section>
+        </section>
+
 
 
 <script>
@@ -2196,260 +2192,177 @@ input[type="file"] {
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// File Upload Handlers
-function handleDragOver(e) {
-    e.preventDefault();
-    const uploadArea = e.currentTarget;
-    uploadArea.style.borderColor = 'var(--primary)';
-    uploadArea.style.backgroundColor = 'rgba(39, 174, 96, 0.05)';
-}
-
-function handleDragLeave(e) {
-    const uploadArea = e.currentTarget;
-    uploadArea.style.borderColor = '#dee2e6';
-    uploadArea.style.backgroundColor = 'var(--light)';
-}
-
-function handleDrop(e) {
-    e.preventDefault();
-    const fileInput = e.currentTarget.querySelector('input[type="file"]');
-    fileInput.files = e.dataTransfer.files;
-    const changeEvent = new Event('change');
-    fileInput.dispatchEvent(changeEvent);
-    const uploadArea = e.currentTarget;
-    uploadArea.style.borderColor = '#dee2e6';
-    uploadArea.style.backgroundColor = 'var(--light)';
-}
-
-function handleFileUpload(e) {
-    const files = e.target.files;
-    const uploadArea = e.target.closest('.file-upload-area');
-    const previewContainer = uploadArea.querySelector('.file-preview');
-    previewContainer.innerHTML = '';
-
-    if (files.length === 0) {
-        previewContainer.innerHTML = '<p class="upload-subtext">No images selected</p>';
-        return;
-    }
-
-    for (let i = 0; i < Math.min(files.length, 4); i++) {
-        const file = files[i];
-        if (!file.type.match('image.*')) continue;
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const previewItem = document.createElement('div');
-            previewItem.className = 'file-preview-item';
-            previewItem.innerHTML = `
-                <img src="${event.target.result}" alt="Preview">
-                <button type="button"><i class="fas fa-times"></i></button>
-            `;
-            previewContainer.appendChild(previewItem);
-            previewItem.querySelector('button').addEventListener('click', () => {
-                previewItem.remove();
-            });
-        };
-        reader.readAsDataURL(file);
-    }
-}
-
 document.addEventListener('DOMContentLoaded', function() {
-    // Deal type radios and sections
-    const swapRadio   = document.getElementById('deal-swap');
-    const saleRadio   = document.getElementById('deal-sale');
-    const swapSection = document.getElementById('swap-section');
-    const saleSection = document.getElementById('sale-section');
-    const dealCards   = document.querySelectorAll('.deal-type-card');
+  // ——— File Upload Helpers ———
+  function handleDragOver(e) {
+    e.preventDefault();
+    const area = e.currentTarget;
+    area.style.borderColor = 'var(--primary)';
+    area.style.backgroundColor = 'rgba(39, 174, 96, 0.05)';
+  }
+  function handleDragLeave(e) {
+    const area = e.currentTarget;
+    area.style.borderColor = '#dee2e6';
+    area.style.backgroundColor = 'var(--light)';
+  }
+  function handleDrop(e) {
+    e.preventDefault();
+    const input = e.currentTarget.querySelector('input[type="file"]');
+    input.files = e.dataTransfer.files;
+    input.dispatchEvent(new Event('change'));
+    e.currentTarget.style.borderColor = '#dee2e6';
+    e.currentTarget.style.backgroundColor = 'var(--light)';
+  }
+  function handleFileUpload(e) {
+    const files = e.target.files;
+    const preview = e.target.closest('.file-upload-area').querySelector('.file-preview');
+    preview.innerHTML = '';
+    if (!files.length) {
+      preview.innerHTML = '<p class="upload-subtext">No images selected</p>';
+      return;
+    }
+    Array.from(files).slice(0,4).forEach(file => {
+      if (!file.type.match('image.*')) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'file-preview-item';
+        wrapper.innerHTML = `
+          <img src="${evt.target.result}" alt="Preview">
+          <button type="button"><i class="fas fa-times"></i></button>
+        `;
+        preview.appendChild(wrapper);
+        wrapper.querySelector('button').addEventListener('click', () => wrapper.remove());
+      };
+      reader.readAsDataURL(file);
+    });
+  }
 
-    // Swap-only required controls
-    const swapControls = Array.from(document.querySelectorAll(
-        'select[name="offer_condition[]"], textarea[name="offer_description[]"], input[name="offer_images[]"], input[name="desired_swap"], select[name="desired_condition"]'
-    ));
+  // ——— Deal-Type Toggle (unchanged) ———
+  const swapRadio   = document.getElementById('deal-swap');
+  const saleRadio   = document.getElementById('deal-sale');
+  const swapSec     = document.getElementById('swap-section');
+  const saleSec     = document.getElementById('sale-section');
+  const dealCards   = document.querySelectorAll('.deal-type-card');
+  const swapCtrls   = Array.from(document.querySelectorAll(
+    'select[name="offer_condition[]"], textarea[name="offer_description[]"], input[name="offer_images[]"], input[name="desired_swap"], select[name="desired_condition"]'
+  ));
+  const saleCtrls   = Array.from(document.querySelectorAll(
+    'input[name="price"], select[name="condition"], textarea[name="description"]'
+  ));
+  function toggleSections() {
+    const isSwap = swapRadio.checked;
+    swapSec.style.display = isSwap ? 'block' : 'none';
+    saleSec.style.display = isSwap ? 'none' : 'block';
+    swapCtrls.forEach(c => {
+      c.disabled = !isSwap;
+      if (isSwap && c.hasAttribute('data-was-required')) c.required = true;
+      if (!isSwap && c.required) { c.setAttribute('data-was-required','true'); c.required = false; }
+    });
+    saleCtrls.forEach(c => {
+      c.disabled = isSwap;
+      if (!isSwap && c.hasAttribute('data-was-required')) c.required = true;
+      if (isSwap && c.required) { c.setAttribute('data-was-required','true'); c.required = false; }
+    });
+    dealCards.forEach(card => {
+      const inp = card.querySelector('input[type="radio"]');
+      card.classList.toggle('active', inp.checked);
+    });
+  }
+  swapRadio.addEventListener('change', toggleSections);
+  saleRadio.addEventListener('change', toggleSections);
+  toggleSections();
 
-    // Sale-only required controls
-    const saleControls = Array.from(document.querySelectorAll(
-        'input[name="price"], select[name="condition"], textarea[name="description"]'
-    ));
+  // ——— Offered-Items Logic ———
+  const container = document.getElementById('offered-items-container');
+  const addBtn    = document.getElementById('add-item-btn');
+  if (!container || !addBtn) return;
 
-    // Toggle Swap vs Sale sections
-    function toggleSections() {
-        if (!swapRadio || !saleRadio || !swapSection || !saleSection) {
-            console.error('Required elements are missing:', {
-                swapRadio,
-                saleRadio,
-                swapSection,
-                saleSection
-            });
-            return;
-        }
+  // 1) Grab the template item and disable its title+image inputs
+  const template = container.querySelector('.offered-item[data-clone="false"]');
+  const tmplTitleInput = template.querySelector('input[name="offer_title[]"]');
+  const tmplImageInput = template.querySelector('input[name="offer_image1[]"]');
+  if (tmplTitleInput) tmplTitleInput.disabled = true;
+  if (tmplImageInput) tmplImageInput.disabled = true;
 
-        const isSwap = swapRadio.checked;
-        console.log('Toggling sections, isSwap:', isSwap);
+  // 2) Update numbering + max-items
+  function updateItemNumbers() {
+    const items = container.querySelectorAll('.offered-item');
+    items.forEach((it, i) => {
+      const num = it.querySelector('.item-number');
+      if (num) num.textContent = i+1;
+    });
+    addBtn.disabled = items.length >= 2;
+  }
 
-        // Toggle section visibility
-        swapSection.style.display = isSwap ? 'block' : 'none';
-        saleSection.style.display = isSwap ? 'none' : 'block';
+  // 3) Clone handler
+  addBtn.addEventListener('click', () => {
+    const items = container.querySelectorAll('.offered-item');
+    if (items.length >= 2) return;
 
-        // Ensure sale section columns are visible
-        if (!isSwap) {
-            saleSection.querySelectorAll('.col-md-6, .col-12').forEach(col => {
-                col.style.display = 'block';
-                console.log('Sale section column display set to block:', col);
-            });
-            saleControls.forEach(ctrl => {
-                ctrl.disabled = false;
-                if (ctrl.hasAttribute('data-was-required')) {
-                    ctrl.setAttribute('required', '');
-                }
-            });
-        } else {
-            saleControls.forEach(ctrl => {
-                if (ctrl.hasAttribute('required')) {
-                    ctrl.setAttribute('data-was-required', 'true');
-                    ctrl.removeAttribute('required');
-                }
-                ctrl.disabled = true;
-            });
-        }
+    // clone + mark
+    const clone = template.cloneNode(true);
+    clone.dataset.clone = 'true';
 
-        // Toggle swap controls
-        swapControls.forEach(ctrl => {
-            if (isSwap) {
-                ctrl.disabled = false;
-                if (ctrl.hasAttribute('data-was-required')) {
-                    ctrl.setAttribute('required', '');
-                }
-            } else {
-                if (ctrl.hasAttribute('required')) {
-                    ctrl.setAttribute('data-was-required', 'true');
-                    ctrl.removeAttribute('required');
-                }
-                ctrl.disabled = true;
-            }
-        });
+    // show & enable title
+    const titleField = clone.querySelector('.name-field');
+    const titleIn    = clone.querySelector('input[name="offer_title[]"]');
+    if (titleField && titleIn) { titleField.style.display = 'block'; titleIn.disabled = false; }
 
-        // Update active class on deal cards
-        dealCards.forEach(card => {
-            const input = card.querySelector('input[type="radio"]');
-            if (input) {
-                card.classList.toggle('active', input.checked);
-            } else {
-                console.warn('Radio input not found in deal-type-card');
-            }
-        });
+    // enable the file input
+    const fileIn = clone.querySelector('input[type="file"]');
+    if (fileIn) {
+      fileIn.disabled = false;
+      fileIn.required = true;
+      const area = fileIn.closest('.file-upload-area');
+      area.addEventListener('click', () => fileIn.click());
+      fileIn.addEventListener('change', handleFileUpload);
+      area.addEventListener('dragover', handleDragOver);
+      area.addEventListener('dragleave', handleDragLeave);
+      area.addEventListener('drop', handleDrop);
     }
 
-    swapRadio.addEventListener('change', toggleSections);
-    saleRadio.addEventListener('change', toggleSections);
-    toggleSections();
-
-    // Offered Items Logic
-    const container = document.getElementById('offered-items-container');
-    const addBtn = document.getElementById('add-item-btn');
-
-    if (!container || !addBtn) {
-        console.error('Container or addBtn is null:', { container, addBtn });
-        return;
+    // hook up remove button
+    const rem = clone.querySelector('.remove-item-btn');
+    if (rem) {
+      rem.style.display = 'block';
+      rem.addEventListener('click', () => { clone.remove(); updateItemNumbers(); });
     }
 
-    function updateItemNumbers() {
-        const items = container.querySelectorAll('.offered-item');
-        items.forEach((item, index) => {
-            const num = item.querySelector('.item-number');
-            if (num) num.textContent = index + 1;
-        });
-        addBtn.disabled = (items.length >= 2);
-    }
-
-    addBtn.addEventListener('click', () => {
-        console.log('Add Item Clicked');
-        const items = container.querySelectorAll('.offered-item');
-        if (items.length >= 2) {
-            console.log('Maximum of 2 items reached');
-            return;
-        }
-
-        const template = container.querySelector('[data-clone="false"]');
-        if (!template) {
-            console.error('Template not found');
-            return;
-        }
-
-        const clone = template.cloneNode(true);
-        clone.dataset.clone = 'true';
-
-        // Show name field
-        const nameField = clone.querySelector('.name-field');
-        if (nameField) nameField.style.display = 'block';
-
-        // Update item number
-        const num = clone.querySelector('.item-number');
-        if (num) num.textContent = items.length + 1;
-
-        // Wire up remove button
-        const removeBtn = clone.querySelector('.remove-item-btn');
-        if (removeBtn) {
-            removeBtn.style.display = 'block';
-            removeBtn.addEventListener('click', () => {
-                clone.remove();
-                updateItemNumbers();
-            });
-        }
-
-        // Clear inputs
-        clone.querySelectorAll('input, textarea, select').forEach(el => {
-            if (el.tagName === 'SELECT') el.selectedIndex = 0;
-            else if (el.type === 'file') {
-                el.value = '';
-                const preview = el.closest('.file-upload-area').querySelector('.file-preview');
-                if (preview) preview.innerHTML = '';
-            } else {
-                el.value = '';
-            }
-        });
-
-        // Initialize file upload
-        const fileInput = clone.querySelector('input[type="file"]');
-        if (fileInput) {
-            const uploadArea = fileInput.closest('.file-upload-area');
-            if (uploadArea) {
-                uploadArea.addEventListener('click', () => fileInput.click());
-                fileInput.addEventListener('change', handleFileUpload);
-                uploadArea.addEventListener('dragover', handleDragOver);
-                uploadArea.addEventListener('dragleave', handleDragLeave);
-                uploadArea.addEventListener('drop', handleDrop);
-            }
-        }
-
-        container.appendChild(clone);
-        updateItemNumbers();
-        console.log('Added new item, total items:', items.length + 1);
+    // reset all other inputs
+    clone.querySelectorAll('input,textarea,select').forEach(el => {
+      if (el.tagName==='SELECT') el.selectedIndex=0;
+      else if (el.type==='file') {
+        el.value='';
+        const p = el.closest('.file-upload-area').querySelector('.file-preview');
+        if (p) p.innerHTML='';
+      } else el.value='';
     });
 
-    // Hide remove button on first item
-    const firstItem = container.querySelector('.offered-item[data-clone="false"]');
-    if (firstItem) {
-        const removeBtn = firstItem.querySelector('.remove-item-btn');
-        if (removeBtn) removeBtn.style.display = 'none';
-    }
-
-    // Initialize file uploads
-    function initFileUploads() {
-        document.querySelectorAll('.file-upload-area').forEach(area => {
-            const fileInput = area.querySelector('input[type="file"]');
-            if (fileInput) {
-                area.addEventListener('click', () => fileInput.click());
-                fileInput.addEventListener('change', handleFileUpload);
-                area.addEventListener('dragover', handleDragOver);
-                area.addEventListener('dragleave', handleDragLeave);
-                area.addEventListener('drop', handleDrop);
-            }
-        });
-    }
-
+    container.appendChild(clone);
     updateItemNumbers();
-    initFileUploads();
+  });
+
+  // hide the template's remove button
+  const firstRem = template.querySelector('.remove-item-btn');
+  if (firstRem) firstRem.style.display = 'none';
+
+  // initial setup
+  updateItemNumbers();
+  // wire file uploads for main & template
+  document.querySelectorAll('.file-upload-area').forEach(area => {
+    const fi = area.querySelector('input[type="file"]');
+    if (!fi.disabled) {
+      area.addEventListener('click', () => fi.click());
+      fi.addEventListener('change', handleFileUpload);
+      area.addEventListener('dragover', handleDragOver);
+      area.addEventListener('dragleave', handleDragLeave);
+      area.addEventListener('drop', handleDrop);
+    }
+  });
 });
 </script>
+
 
 
 
