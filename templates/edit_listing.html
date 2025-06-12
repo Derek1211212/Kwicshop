@@ -111,376 +111,396 @@
         }
 
         /* Image Gallery Styles */
-        .image-gallery-section {
-            position: relative;
-            margin-bottom: 2rem;
-        }
+  .image-gallery-section {
+    position: relative;
+    margin-bottom: 2rem;
+  }
 
-        .gallery-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
+  .gallery-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
 
-        .gallery-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 16px;
-            margin-bottom: 1.5rem;
-        }
+  .gallery-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 1.5rem;
+  }
 
-        .gallery-item {
-            position: relative;
-            border-radius: 8px;
-            overflow: hidden;
-            height: 160px;
-            background: #f8f9fa;
-            border: 2px dashed #dee2e6;
-            cursor: move;
-            transition: var(--transition);
-        }
+  .gallery-item {
+    position: relative;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    height: 160px;
+    background: var(--light-bg);
+    border: 2px dashed #dee2e6;
+    cursor: move;
+    transition: var(--transition);
+  }
 
-        .gallery-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: var(--transition);
-        }
+  .gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: var(--transition);
+  }
 
-        .gallery-item:hover img {
-            transform: scale(1.05);
-        }
+  .gallery-item:hover img {
+    transform: scale(1.05);
+  }
 
-        .gallery-item.active {
-            border-color: var(--primary);
-            border-width: 3px;
-        }
+  .gallery-item.active {
+    border-color: var(--primary);
+    border-width: 3px;
+  }
 
-        .gallery-item .item-label {
-            position: absolute;
-            top: 8px;
-            left: 8px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
+  .gallery-item .item-label {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
 
-        .gallery-item .item-actions {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            display: flex;
-            background: rgba(0,0,0,0.7);
-            transform: translateY(100%);
-            transition: var(--transition);
-            justify-content: center;
-            gap: 8px;
-            padding: 8px;
-        }
+  /* Hide hover-only reveal */
+  /*
+  .gallery-item:hover .item-actions {
+    transform: translateY(0);
+  }
+  */
 
-        .gallery-item:hover .item-actions {
-            transform: translateY(0);
-        }
+  .gallery-item .item-actions {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    background: rgba(0, 0, 0, 0.7);
+    transform: translateY(100%);
+    transition: var(--transition);
+    justify-content: center;
+    gap: 8px;
+    padding: 8px;
+  }
 
-        .gallery-item .btn-action {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            transition: var(--transition);
-        }
+  /* Show actions on single tap */
+  .gallery-item.show-actions .item-actions {
+    transform: translateY(0);
+  }
 
-        .gallery-item .btn-action:hover {
-            background: var(--primary);
-            transform: scale(1.1);
-        }
+  .gallery-item .btn-action {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    transition: var(--transition);
+  }
 
-        .gallery-item .btn-remove:hover {
-            background: var(--accent);
-        }
+  .gallery-item .btn-action:hover {
+    background: var(--primary);
+    transform: scale(1.1);
+  }
 
-        .upload-area {
-            border: 2px dashed #dee2e6;
-            border-radius: var(--border-radius);
-            padding: 24px;
-            text-align: center;
-            background: #fafafa;
-            transition: var(--transition);
-            cursor: pointer;
-            margin-bottom: 1rem;
-        }
+  .gallery-item .btn-remove:hover {
+    background: var(--accent);
+  }
 
-        .upload-area:hover {
-            border-color: var(--primary);
-            background: var(--primary-light);
-        }
+  .upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: var(--border-radius);
+    padding: 24px;
+    text-align: center;
+    background: #fafafa;
+    transition: var(--transition);
+    cursor: pointer;
+    margin-bottom: 1rem;
+  }
 
-        .upload-area i {
-            font-size: 2.5rem;
-            color: var(--primary);
-            margin-bottom: 12px;
-        }
+  .upload-area:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
 
-        .upload-text {
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: var(--secondary);
-            margin-bottom: 8px;
-        }
+  .upload-area i {
+    font-size: 2.5rem;
+    color: var(--primary);
+    margin-bottom: 12px;
+  }
 
-        .upload-subtext {
-            font-size: 0.9rem;
-            color: #6c757d;
-            margin-bottom: 12px;
-        }
+  .upload-text {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--secondary);
+    margin-bottom: 8px;
+  }
 
-        .upload-button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 10px 24px;
-            font-size: 1rem;
-            font-weight: 500;
-            border-radius: var(--btn-radius);
-            transition: var(--transition);
-            min-height: 46px;
-            text-decoration: none;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
+  .upload-subtext {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 12px;
+  }
 
-        .upload-button:hover {
-            background-color: var(--primary-hover);
-            box-shadow: var(--shadow);
-            transform: translateY(-2px);
-        }
+  .upload-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 24px;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: var(--btn-radius);
+    transition: var(--transition);
+    min-height: 46px;
+    text-decoration: none;
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
 
-        .preview-container {
-            position: relative;
-            width: 100%;
-            height: 400px;
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            margin-bottom: 1.5rem;
-            background: #f8f9fa;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+  .upload-button:hover {
+    background-color: var(--primary-hover);
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
+  }
 
-        .preview-image {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            display: block;
-        }
+  .preview-container {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    margin-bottom: 1.5rem;
+    background: var(--light-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-        .preview-placeholder {
-            color: #6c757d;
-            text-align: center;
-            padding: 2rem;
-        }
+  .preview-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+  }
 
-        .preview-placeholder i {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            color: #dee2e6;
-        }
+  .preview-placeholder {
+    color: #6c757d;
+    text-align: center;
+    padding: 2rem;
+  }
 
-        /* Enhanced Button Styles */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px 24px;
-            font-size: 1rem;
-            font-weight: 600;
-            border-radius: var(--btn-radius);
-            transition: var(--transition);
-            min-height: 48px;
-            text-decoration: none;
-            position: relative;
-            overflow: hidden;
-            border: none;
-        }
+  .preview-placeholder i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: #dee2e6;
+  }
 
-        .btn-primary {
-            background-color: var(--primary);
-            color: white;
-        }
+  /* Enhanced Button Styles */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: var(--btn-radius);
+    transition: var(--transition);
+    min-height: 48px;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+    border: none;
+  }
 
-        .btn-primary:hover {
-            background-color: var(--primary-hover);
-            box-shadow: var(--shadow);
-            transform: translateY(-2px);
-        }
+  .btn-primary {
+    background-color: var(--primary);
+    color: white;
+  }
 
-        .btn-outline-secondary {
-            background-color: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--secondary);
-        }
+  .btn-primary:hover {
+    background-color: var(--primary-hover);
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
+  }
 
-        .btn-outline-secondary:hover {
-            background-color: #f8f9fa;
-            border-color: #ced4da;
-        }
+  .btn-outline-secondary {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--secondary);
+  }
 
-        .btn-delete {
-            background-color: #f8f9fa;
-            color: var(--accent);
-            border: 1px solid #f1f3f5;
-        }
+  .btn-outline-secondary:hover {
+    background-color: #f8f9fa;
+    border-color: #ced4da;
+  }
 
-        .btn-delete:hover {
-            background-color: #fff5f5;
-            color: var(--accent-hover);
-            border-color: #ffe2e2;
-        }
+  .btn-delete {
+    background-color: #f8f9fa;
+    color: var(--accent);
+    border: 1px solid #f1f3f5;
+  }
 
-        /* Button Group Layout */
-        .btn-group-mobile {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
+  .btn-delete:hover {
+    background-color: #fff5f5;
+    color: var(--accent-hover);
+    border-color: #ffe2e2;
+  }
 
-        /* Cash Sections */
-        .cash-section {
-            border-left: 4px solid var(--accent);
-            padding: 1.5rem;
-            margin: 2rem 0;
-            background: #fff5f5;
-            border-radius: var(--border-radius);
-            animation: slideIn 0.5s ease-out;
-        }
+  /* Button Group Layout */
+  .btn-group-mobile {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
 
-        .cash-section.offered {
-            border-color: var(--primary);
-            background: var(--primary-light);
-        }
+  /* Cash Sections */
+  .cash-section {
+    border-left: 4px solid var(--accent);
+    padding: 1.5rem;
+    margin: 2rem 0;
+    background: #fff5f5;
+    border-radius: var(--border-radius);
+    animation: slideIn 0.5s ease-out;
+  }
 
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
+  .cash-section.offered {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
 
-        .cash-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
 
-        .cash-icon {
-            font-size: 2rem;
-            transition: transform 0.3s ease;
-        }
+  .cash-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
 
-        .cash-section:hover .cash-icon {
-            transform: rotate(10deg);
-        }
+  .cash-icon {
+    font-size: 2rem;
+    transition: transform 0.3s ease;
+  }
 
-        .required .cash-icon { color: var(--accent); }
-        .offered .cash-icon { color: var(--primary); }
+  .cash-section:hover .cash-icon {
+    transform: rotate(10deg);
+  }
 
-        .currency-input {
-            position: relative;
-        }
+  .required .cash-icon {
+    color: var(--accent);
+  }
 
-        .currency-symbol {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-weight: bold;
-            color: #666;
-        }
+  .offered .cash-icon {
+    color: var(--primary);
+  }
 
-        .currency-input input {
-            padding-left: 35px;
-        }
+  .currency-input {
+    position: relative;
+  }
 
-        /* Responsive Adjustments */
-        @media (max-width: 992px) {
-            .gallery-container {
-                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            }
-            
-            .gallery-item {
-                height: 140px;
-            }
-            
-            .preview-container {
-                height: 350px;
-            }
-        }
+  .currency-symbol {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-weight: bold;
+    color: #666;
+  }
 
-        @media (max-width: 768px) {
-            .edit-container {
-                padding: 0 1rem;
-                margin: 1rem auto;
-            }
-            
-            .gallery-container {
-                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-                gap: 12px;
-            }
-            
-            .gallery-item {
-                height: 120px;
-            }
-            
-            .preview-container {
-                height: 300px;
-            }
-            
-            .card-header, .card-body {
-                padding: 1.25rem;
-            }
-        }
+  .currency-input input {
+    padding-left: 35px;
+  }
 
-        @media (max-width: 576px) {
-            .gallery-container {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .preview-container {
-                height: 250px;
-            }
-            
-            .btn-group-mobile {
-                flex-direction: column;
-            }
-            
-            .btn-delete {
-                align-self: flex-start;
-            }
-            
-            .cash-section {
-                padding: 1rem;
-            }
-        }
+  /* Responsive Adjustments */
+  @media (max-width: 992px) {
+    .gallery-container {
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
 
-        .sortable-ghost {
-            opacity: 0.4;
-            background: #f8f9fa;
-        }
+    .gallery-item {
+      height: 140px;
+    }
+
+    .preview-container {
+      height: 350px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .edit-container {
+      padding: 0 1rem;
+      margin: 1rem auto;
+    }
+
+    .gallery-container {
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+    }
+
+    .gallery-item {
+      height: 120px;
+    }
+
+    .preview-container {
+      height: 300px;
+    }
+
+    .card-header,
+    .card-body {
+      padding: 1.25rem;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .gallery-container {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .preview-container {
+      height: 250px;
+    }
+
+    .btn-group-mobile {
+      flex-direction: column;
+    }
+
+    .btn-delete {
+      align-self: flex-start;
+    }
+
+    .cash-section {
+      padding: 1rem;
+    }
+  }
+
+  .sortable-ghost {
+    opacity: 0.4;
+    background: #f8f9fa;
+  }
         
         .section-divider {
             height: 1px;
@@ -507,53 +527,55 @@
                             
 
                             
-                            <div class="gallery-container" id="gallery-container">
-                                <!-- Main Image -->
-                                <div class="gallery-item active" data-index="0" data-type="main">
-                                    {% if listing.image_url %}
-                                    <img src="{{ url_for('static', filename='images/' + listing.image_url) }}" 
-                                         onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
-                                         alt="Main listing image">
-                                    {% else %}
-                                    <img src="https://via.placeholder.com/300?text=Main+Image" 
-                                         alt="No main image">
-                                    {% endif %}
-                                    <span class="item-label">Main</span>
-                                    <div class="item-actions">
-                                        <button type="button" class="btn-action btn-remove" title="Remove image">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                        <label class="btn-action" title="Replace image">
-                                            <i class="fas fa-sync"></i>
-                                            <input type="file" class="d-none" name="image" accept="image/*">
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                <!-- Additional Images -->
-                                {% for i in range(1,5) %}
-                                <div class="gallery-item" data-index="{{ i }}" data-type="additional">
-                                    {% if listing['image' ~ i] %}
-                                    <img src="{{ url_for('static', filename='images/' + listing['image' ~ i]) }}" 
-                                         onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
-                                         alt="Additional image {{ i }}">
-                                    {% else %}
-                                    <img src="https://via.placeholder.com/300?text=Image+{{ i }}" 
-                                         alt="No additional image">
-                                    {% endif %}
-                                    <span class="item-label">Image {{ i }}</span>
-                                    <div class="item-actions">
-                                        <button type="button" class="btn-action btn-remove" title="Remove image">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                        <label class="btn-action" title="Replace image">
-                                            <i class="fas fa-sync"></i>
-                                            <input type="file" class="d-none" name="image{{ i }}" accept="image/*">
-                                        </label>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
+<div class="gallery-container" id="gallery-container">
+  <!-- Main Image -->
+  <div class="gallery-item active" data-index="0" data-type="main">
+    {% if listing.image_url %}
+    <img src="{{ url_for('static', filename='images/' + listing.image_url) }}"
+         onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
+         alt="Main listing image">
+    {% else %}
+    <img src="https://via.placeholder.com/300?text=Main+Image" alt="No main image">
+    {% endif %}
+    <span class="item-label">Main</span>
+    <div class="item-actions">
+      <button type="button" class="btn-action btn-remove" title="Remove image">
+        <i class="fas fa-trash"></i>
+      </button>
+      <label class="btn-action" title="Replace image">
+        <i class="fas fa-sync"></i>
+        <input type="file" class="d-none" name="image" accept="image/*">
+      </label>
+    </div>
+  </div>
+
+  <!-- Additional Images -->
+  {% for i in range(1,5) %}
+  <div class="gallery-item" data-index="{{ i }}" data-type="additional">
+    {% if listing['image' ~ i] %}
+    <img src="{{ url_for('static', filename='images/' + listing['image' ~ i]) }}"
+         onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
+         alt="Additional image {{ i }}">
+    {% else %}
+    <img src="https://via.placeholder.com/300?text=Image+{{ i }}" alt="No additional image">
+    {% endif %}
+    <span class="item-label">Image {{ i }}</span>
+    <div class="item-actions">
+      <button type="button" class="btn-action btn-remove" title="Remove image">
+        <i class="fas fa-trash"></i>
+      </button>
+      <label class="btn-action" title="Replace image">
+        <i class="fas fa-sync"></i>
+        <input type="file" class="d-none" name="image{{ i }}" accept="image/*">
+      </label>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="section-divider"></div>
+
+
                             
                         
                         <div class="section-divider"></div>
@@ -736,203 +758,153 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    <script>
-        // Initialize gallery sortable
-        const galleryContainer = document.getElementById('gallery-container');
-        const sortable = new Sortable(galleryContainer, {
-            animation: 150,
-            ghostClass: 'sortable-ghost',
-            onEnd: function(evt) {
-                // Update image order logic would go here
-                console.log('New image order:', Array.from(galleryContainer.children).map(el => el.dataset.index));
-            }
-        });
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+  // Initialize Sortable
+  const galleryContainer = document.getElementById('gallery-container');
+  new Sortable(galleryContainer, {
+    animation: 150,
+    ghostClass: 'sortable-ghost',
+    onEnd: evt => {
+      console.log('New image order:', Array.from(galleryContainer.children).map(el => el.dataset.index));
+    }
+  });
 
-        // Image preview functionality
-        const previewContainer = document.getElementById('preview-container');
-        const previewImage = document.getElementById('preview-image');
-        const previewPlaceholder = document.getElementById('preview-placeholder');
-        const galleryItems = document.querySelectorAll('.gallery-item');
-        
-        galleryItems.forEach(item => {
-            item.addEventListener('click', function(e) {
-                // Don't trigger if clicked on action buttons
-                if (e.target.closest('.item-actions')) return;
-                
-                // Update active class
-                galleryItems.forEach(i => i.classList.remove('active'));
-                this.classList.add('active');
-                
-                // Show preview
-                const img = this.querySelector('img');
-                if (img && img.src) {
-                    previewImage.src = img.src;
-                    previewImage.style.display = 'block';
-                    previewPlaceholder.style.display = 'none';
-                }
-            });
-        });
+  // Element references
+  const galleryItems       = document.querySelectorAll('.gallery-item');
+  const previewImage       = document.getElementById('preview-image');
+  const previewPlaceholder = document.getElementById('preview-placeholder');
+  const bulkUpload         = document.getElementById('bulk-upload');
+  const uploadArea         = document.getElementById('upload-area');
 
-        // Set the first image as active by default
-        if (galleryItems.length > 0) {
-            galleryItems[0].click();
+  // 1) Single-tap to show actions & preview
+  galleryItems.forEach(item => {
+    item.addEventListener('click', function(e) {
+      if (e.target.closest('.item-actions')) return; // let action buttons handle themselves
+      galleryItems.forEach(i => i.classList.remove('show-actions','active'));
+      this.classList.add('show-actions','active');
+      const img = this.querySelector('img');
+      if (img && img.src) {
+        previewImage.src = img.src;
+        previewImage.style.display = 'block';
+        previewPlaceholder.style.display = 'none';
+      }
+    });
+  });
+  if (galleryItems.length) galleryItems[0].click();
+
+  // 2) Replace image preview
+  document.querySelectorAll('.gallery-item input[type="file"]').forEach(input => {
+    input.addEventListener('change', function() {
+      const file = this.files[0];
+      if (!file) return;
+      const parent = this.closest('.gallery-item');
+      const img    = parent.querySelector('img');
+      const reader = new FileReader();
+      reader.onload = e => {
+        img.src = e.target.result;
+        if (parent.classList.contains('active')) {
+          previewImage.src = e.target.result;
         }
+      };
+      reader.readAsDataURL(file);
+    });
+  });
 
-        // Image upload preview
-        document.querySelectorAll('input[type="file"]').forEach(input => {
-            input.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const parentItem = this.closest('.gallery-item');
-                    const img = parentItem.querySelector('img');
-                    if (img) {
-                        img.style.opacity = '0.5';
-                        const reader = new FileReader();
-                        reader.onload = function(event) {
-                            img.src = event.target.result;
-                            img.style.opacity = '1';
-                            
-                            // If this is the active image, update preview
-                            if (parentItem.classList.contains('active')) {
-                                previewImage.src = event.target.result;
-                                previewImage.style.display = 'block';
-                                previewPlaceholder.style.display = 'none';
-                            }
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                }
-            });
-        });
+  // 3) Remove image
+  document.querySelectorAll('.btn-remove').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const item  = this.closest('.gallery-item');
+      const idx   = item.dataset.index;
+      const img   = item.querySelector('img');
+      const input = item.querySelector('input[type="file"]');
+      img.src = item.dataset.type === 'main'
+        ? 'https://via.placeholder.com/300?text=Main+Image'
+        : `https://via.placeholder.com/300?text=Image+${idx}`;
+      input.value = '';
+      item.classList.remove('active','show-actions');
+      previewImage.style.display = 'none';
+      previewPlaceholder.style.display = 'block';
+    });
+  });
 
-        // Bulk upload functionality
-        const uploadArea = document.getElementById('upload-area');
-        const bulkUpload = document.getElementById('bulk-upload');
-        
-        uploadArea.addEventListener('click', function() {
-            bulkUpload.click();
-        });
-        
-        bulkUpload.addEventListener('change', function(e) {
-            if (this.files.length > 0) {
-                // Find next available image slot
-                const emptySlots = Array.from(galleryItems).filter(item => {
-                    const img = item.querySelector('img');
-                    return img && img.src.includes('placeholder.com');
-                });
-                
-                if (emptySlots.length > 0) {
-                    // Upload files to available slots
-                    const files = Array.from(this.files);
-                    const slotsToUse = Math.min(emptySlots.length, files.length);
-                    
-                    for (let i = 0; i < slotsToUse; i++) {
-                        const slot = emptySlots[i];
-                        const input = slot.querySelector('input[type="file"]');
-                        const img = slot.querySelector('img');
-                        
-                        // Create a new FileList for the input
-                        const dataTransfer = new DataTransfer();
-                        dataTransfer.items.add(files[i]);
-                        input.files = dataTransfer.files;
-                        
-                        // Update preview
-                        const reader = new FileReader();
-                        reader.onload = function(event) {
-                            img.src = event.target.result;
-                        };
-                        reader.readAsDataURL(files[i]);
-                    }
-                }
-                
-                // Reset bulk upload
-                this.value = '';
-            }
-        });
+  // 4) Bulk upload
+  uploadArea.addEventListener('click', () => bulkUpload.click());
+  bulkUpload.addEventListener('change', function() {
+    const files = Array.from(this.files);
+    const emptySlots = Array.from(galleryItems).filter(it =>
+      it.querySelector('img').src.includes('placeholder.com')
+    );
+    emptySlots.slice(0, files.length).forEach((slot, i) => {
+      const inp = slot.querySelector('input[type="file"]');
+      const dt  = new DataTransfer();
+      dt.items.add(files[i]);
+      inp.files = dt.files;
+      inp.dispatchEvent(new Event('change'));
+    });
+    this.value = '';
+  });
 
-        // Image removal
-        document.querySelectorAll('.btn-remove').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                
-                const galleryItem = this.closest('.gallery-item');
-                const img = galleryItem.querySelector('img');
-                const input = galleryItem.querySelector('input[type="file"]');
-                
-                // Reset to placeholder
-                const isMain = galleryItem.dataset.type === 'main';
-                img.src = isMain ? 
-                    'https://via.placeholder.com/300?text=Main+Image' : 
-                    `https://via.placeholder.com/300?text=Image+${galleryItem.dataset.index}`;
-                
-                // Clear file input
-                input.value = '';
-                
-                // If this was the active image, reset preview
-                if (galleryItem.classList.contains('active')) {
-                    previewImage.style.display = 'none';
-                    previewPlaceholder.style.display = 'block';
-                }
-            });
-        });
+  // 5) Image preview functionality for initial load
+  // (Already handled by single-tap click above and default first click)
 
-        // Auto-resize textareas
-        document.querySelectorAll('textarea').forEach(textarea => {
-            textarea.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = `${this.scrollHeight}px`;
-                this.style.transition = 'height 0.2s ease';
-            });
-            textarea.dispatchEvent(new Event('input'));
-        });
+  // 6) Auto-resize textareas
+  document.querySelectorAll('textarea').forEach(textarea => {
+    textarea.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = `${this.scrollHeight}px`;
+      this.style.transition = 'height 0.2s ease';
+    });
+    textarea.dispatchEvent(new Event('input'));
+  });
 
-        // Form validation feedback
-        document.querySelector('form').addEventListener('submit', function(e) {
-            const requiredInputs = this.querySelectorAll('[required]');
-            let isValid = true;
-            requiredInputs.forEach(input => {
-                if (!input.value.trim()) {
-                    isValid = false;
-                    input.classList.add('is-invalid');
-                    const feedback = document.createElement('div');
-                    feedback.className = 'invalid-feedback';
-                    feedback.textContent = 'This field is required.';
-                    if (!input.nextElementSibling?.classList.contains('invalid-feedback')) {
-                        input.parentNode.appendChild(feedback);
-                    }
-                } else {
-                    input.classList.remove('is-invalid');
-                    const feedback = input.nextElementSibling;
-                    if (feedback?.classList.contains('invalid-feedback')) {
-                        feedback.remove();
-                    }
-                }
-            });
-            if (!isValid) {
-                e.preventDefault();
-                const firstInvalid = this.querySelector('.is-invalid');
-                if (firstInvalid) firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        });
+  // 7) Form validation feedback
+  document.querySelector('form').addEventListener('submit', function(e) {
+    const requiredInputs = this.querySelectorAll('[required]');
+    let isValid = true;
+    requiredInputs.forEach(input => {
+      if (!input.value.trim()) {
+        isValid = false;
+        input.classList.add('is-invalid');
+        const feedback = document.createElement('div');
+        feedback.className = 'invalid-feedback';
+        feedback.textContent = 'This field is required.';
+        if (!input.nextElementSibling?.classList.contains('invalid-feedback')) {
+          input.parentNode.appendChild(feedback);
+        }
+      } else {
+        input.classList.remove('is-invalid');
+        const feedback = input.nextElementSibling;
+        if (feedback?.classList.contains('invalid-feedback')) {
+          feedback.remove();
+        }
+      }
+    });
+    if (!isValid) {
+      e.preventDefault();
+      const firstInvalid = this.querySelector('.is-invalid');
+      if (firstInvalid) firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
 
-        // Button interactions
-        document.querySelectorAll('.btn, .upload-button').forEach(btn => {
-            btn.addEventListener('touchstart', () => {
-                btn.style.transform = 'scale(0.95)';
-            });
-            btn.addEventListener('touchend', () => {
-                btn.style.transform = 'scale(1)';
-            });
-            btn.addEventListener('mouseenter', () => {
-                btn.style.transform = 'translateY(-2px)';
-            });
-            btn.addEventListener('mouseleave', () => {
-                btn.style.transform = 'translateY(0)';
-            });
-        });
-    </script>
+  // 8) Enhanced button interactions
+  document.querySelectorAll('.btn, .upload-button').forEach(btn => {
+    btn.addEventListener('touchstart', () => { btn.style.transform = 'scale(0.95)'; });
+    btn.addEventListener('touchend',   () => { btn.style.transform = 'scale(1)';    });
+    btn.addEventListener('mouseenter', () => { btn.style.transform = 'translateY(-2px)'; });
+    btn.addEventListener('mouseleave', () => { btn.style.transform = 'translateY(0)';     });
+  });
+</script>
+
+
+
+
+
+
+
+
 
     <script>
         // Master categories + synonyms
