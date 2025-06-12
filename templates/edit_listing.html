@@ -683,7 +683,7 @@ document.querySelectorAll('.gallery-item input[type="file"]').forEach(inp => {
 // 3) Remove
 document.querySelectorAll('.btn-remove').forEach(btn => {
     const fn = e => {
-        e.stopPropagation();  // Prevent the event from bubbling up to the gallery item
+        e.stopPropagation();
         const item = btn.closest('.gallery-item');
         const idx = item.dataset.index;
         const img = item.querySelector('img');
@@ -703,7 +703,19 @@ document.querySelectorAll('.btn-remove').forEach(btn => {
     });
 });
 
-// 4) Bulk upload
+// 4) Handle replace button (file input label) for mobile
+document.querySelectorAll('.gallery-item .btn-action:not(.btn-remove)').forEach(label => {
+    if ('ontouchstart' in window) {
+        label.addEventListener('touchend', e => {
+            e.preventDefault();
+            e.stopPropagation();
+            const input = label.querySelector('input[type="file"]');
+            input.click(); // Programmatically trigger the file input
+        });
+    }
+});
+
+// 5) Bulk upload
 uploadArea.addEventListener('click', () => bulkInput.click());
 bulkInput.addEventListener('change', function() {
     const files = Array.from(this.files);
@@ -720,7 +732,7 @@ bulkInput.addEventListener('change', function() {
     this.value = '';
 });
 
-// 5) Auto-resize textareas
+// 6) Auto-resize textareas
 document.querySelectorAll('textarea').forEach(textarea => {
     textarea.addEventListener('input', function() {
         this.style.height = 'auto';
@@ -729,7 +741,7 @@ document.querySelectorAll('textarea').forEach(textarea => {
     textarea.dispatchEvent(new Event('input'));
 });
 
-// 6) Form validation feedback
+// 7) Form validation feedback
 document.querySelector('form').addEventListener('submit', function(e) {
     const requiredInputs = this.querySelectorAll('[required]');
     let isValid = true;
@@ -758,7 +770,7 @@ document.querySelector('form').addEventListener('submit', function(e) {
     }
 });
 
-// 7) Enhanced button interactions
+// 8) Enhanced button interactions
 document.querySelectorAll('.btn').forEach(btn => {
     btn.addEventListener('touchstart', () => { btn.style.transform = 'scale(0.95)'; });
     btn.addEventListener('touchend', () => { btn.style.transform = 'scale(1)'; });
