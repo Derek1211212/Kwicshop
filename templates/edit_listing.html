@@ -627,131 +627,144 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
-        // Sortable
-        const gallery = document.getElementById('gallery-container');
-        new Sortable(gallery, { animation: 150, ghostClass: 'sortable-ghost' });
+// Sortable
+const gallery = document.getElementById('gallery-container');
+new Sortable(gallery, { animation: 150, ghostClass: 'sortable-ghost' });
 
-        // Refs
-        const items = document.querySelectorAll('.gallery-item');
-        const previewImg = document.getElementById('preview-image');
-        const previewPlh = document.getElementById('preview-placeholder');
-        const bulkInput = document.getElementById('bulk-upload');
-        const uploadArea = document.getElementById('upload-area');
+// Refs
+const items = document.querySelectorAll('.gallery-item');
+const previewImg = document.getElementById('preview-image');
+const previewPlh = document.getElementById('preview-placeholder');
+const bulkInput = document.getElementById('bulk-upload');
+const uploadArea = document.getElementById('upload-area');
 
-        // 1) Tap to show actions & preview
-        items.forEach(item => {
-            item.addEventListener('click', e => {
-                if (e.target.closest('.item-actions')) return;
-                items.forEach(i => i.classList.remove('show-actions', 'active'));
-                item.classList.add('show-actions', 'active');
-                const img = item.querySelector('img');
-                if (img && img.src) {
-                    previewImg.src = img.src;
-                    previewImg.style.display = 'block';
-                    previewPlh.style.display = 'none';
-                }
-            });
+// 1) Tap to show actions & preview
+items.forEach(item => {
+    const showActions = e => {
+        if (e.target.closest('.item-actions')) return;
+        items.forEach(i => i.classList.remove('show-actions', 'active'));
+        item.classList.add('show-actions', 'active');
+        const img = item.querySelector('img');
+        if (img && img.src) {
+            previewImg.src = img.src;
+            previewImg.style.display = 'block';
+            previewPlh.style.display = 'none';
+        }
+    };
+    if ('ontouchstart' in window) {
+        // Use touchend for mobile devices
+        item.addEventListener('touchend', e => {
+            e.preventDefault();
+            showActions(e);
         });
-        if (items.length) items[0].click();
+    } else {
+        // Use click for desktop devices
+        item.addEventListener('click', showActions);
+    }
+});
+if (items.length) items[0].click();
 
-        // 2) Replace preview
-        document.querySelectorAll('.gallery-item input[type="file"]').forEach(inp => {
-            inp.addEventListener('change', function() {
-                const file = this.files[0];
-                if (!file) return;
-                const parent = this.closest('.gallery-item');
-                const img = parent.querySelector('img');
-                const reader = new FileReader();
-                reader.onload = e => {
-                    img.src = e.target.result;
-                    if (parent.classList.contains('active')) previewImg.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-        });
+// 2) Replace preview
+document.querySelectorAll('.gallery-item input[type="file"]').forEach(inp => {
+    inp.addEventListener('change', function() {
+        const file = this.files[0];
+        if (!file) return;
+        const parent = this.closest('.gallery-item');
+        const img = parent.querySelector('img');
+        const reader = new FileReader();
+        reader.onload = e => {
+            img.src = e.target.result;
+            if (parent.classList.contains('active')) previewImg.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+});
 
-        // 3) Remove
-        document.querySelectorAll('.btn-remove').forEach(btn => {
-            const fn = e => {
-                e.stopPropagation();
-                const item = btn.closest('.gallery-item');
-                const idx = item.dataset.index;
-                const img = item.querySelector('img');
-                const inp = item.querySelector('input[type="file"]');
-                img.src = item.dataset.type === 'main'
-                    ? 'https://via.placeholder.com/300?text=Main+Image'
-                    : `https://via.placeholder.com/300?text=Image+${idx}`;
-                inp.value = '';
-                item.classList.remove('active', 'show-actions');
-                previewImg.style.display = 'none';
-                previewPlh.style.display = 'block';
-            };
-            btn.addEventListener('click', fn);
-            btn.addEventListener('touchend', e => { e.preventDefault(); fn(e); });
-        });
+// 3) Remove
+document.querySelectorAll('.btn-remove').forEach(btn => {
+    const fn = e => {
+        e.stopPropagation();  // Prevent the event from bubbling up to the gallery item
+        const item = btn.closest('.gallery-item');
+        const idx = item.dataset.index;
+        const img = item.querySelector('img');
+        const inp = item.querySelector('input[type="file"]');
+        img.src = item.dataset.type === 'main'
+            ? 'https://via.placeholder.com/300?text=Main+Image'
+            : `https://via.placeholder.com/300?text=Image+${idx}`;
+        inp.value = '';
+        item.classList.remove('active', 'show-actions');
+        previewImg.style.display = 'none';
+        previewPlh.style.display = 'block';
+    };
+    btn.addEventListener('click', fn);
+    btn.addEventListener('touchend', e => {
+        e.preventDefault();
+        fn(e);
+    });
+});
 
-        // 4) Bulk upload
-        uploadArea.addEventListener('click', () => bulkInput.click());
-        bulkInput.addEventListener('change', function() {
-            const files = Array.from(this.files);
-            const empties = Array.from(items).filter(it =>
-                it.querySelector('img').src.includes('placeholder.com')
-            );
-            empties.slice(0, files.length).forEach((slot, i) => {
-                const dt = new DataTransfer();
-                dt.items.add(files[i]);
-                const inp = slot.querySelector('input[type="file"]');
-                inp.files = dt.files;
-                inp.dispatchEvent(new Event('change'));
-            });
-            this.value = '';
-        });
+// 4) Bulk upload
+uploadArea.addEventListener('click', () => bulkInput.click());
+bulkInput.addEventListener('change', function() {
+    const files = Array.from(this.files);
+    const empties = Array.from(items).filter(it =>
+        it.querySelector('img').src.includes('placeholder.com')
+    );
+    empties.slice(0, files.length).forEach((slot, i) => {
+        const dt = new DataTransfer();
+        dt.items.add(files[i]);
+        const inp = slot.querySelector('input[type="file"]');
+        inp.files = dt.files;
+        inp.dispatchEvent(new Event('change'));
+    });
+    this.value = '';
+});
 
-        // 5) Auto-resize textareas
-        document.querySelectorAll('textarea').forEach(textarea => {
-            textarea.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = `${this.scrollHeight}px`;
-            });
-            textarea.dispatchEvent(new Event('input'));
-        });
+// 5) Auto-resize textareas
+document.querySelectorAll('textarea').forEach(textarea => {
+    textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = `${this.scrollHeight}px`;
+    });
+    textarea.dispatchEvent(new Event('input'));
+});
 
-        // 6) Form validation feedback
-        document.querySelector('form').addEventListener('submit', function(e) {
-            const requiredInputs = this.querySelectorAll('[required]');
-            let isValid = true;
-            requiredInputs.forEach(input => {
-                if (!input.value.trim()) {
-                    isValid = false;
-                    input.classList.add('is-invalid');
-                    const feedback = document.createElement('div');
-                    feedback.className = 'invalid-feedback';
-                    feedback.textContent = 'This field is required.';
-                    if (!input.nextElementSibling?.classList.contains('invalid-feedback')) {
-                        input.parentNode.appendChild(feedback);
-                    }
-                } else {
-                    input.classList.remove('is-invalid');
-                    const feedback = input.nextElementSibling;
-                    if (feedback?.classList.contains('invalid-feedback')) {
-                        feedback.remove();
-                    }
-                }
-            });
-            if (!isValid) {
-                e.preventDefault();
-                const firstInvalid = this.querySelector('.is-invalid');
-                if (firstInvalid) firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+// 6) Form validation feedback
+document.querySelector('form').addEventListener('submit', function(e) {
+    const requiredInputs = this.querySelectorAll('[required]');
+    let isValid = true;
+    requiredInputs.forEach(input => {
+        if (!input.value.trim()) {
+            isValid = false;
+            input.classList.add('is-invalid');
+            const feedback = document.createElement('div');
+            feedback.className = 'invalid-feedback';
+            feedback.textContent = 'This field is required.';
+            if (!input.nextElementSibling?.classList.contains('invalid-feedback')) {
+                input.parentNode.appendChild(feedback);
             }
-        });
+        } else {
+            input.classList.remove('is-invalid');
+            const feedback = input.nextElementSibling;
+            if (feedback?.classList.contains('invalid-feedback')) {
+                feedback.remove();
+            }
+        }
+    });
+    if (!isValid) {
+        e.preventDefault();
+        const firstInvalid = this.querySelector('.is-invalid');
+        if (firstInvalid) firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+});
 
-        // 7) Enhanced button interactions
-        document.querySelectorAll('.btn').forEach(btn => {
-            btn.addEventListener('touchstart', () => { btn.style.transform = 'scale(0.95)'; });
-            btn.addEventListener('touchend', () => { btn.style.transform = 'scale(1)'; });
-            btn.addEventListener('mouseenter', () => { btn.style.transform = 'translateY(-2px)'; });
-            btn.addEventListener('mouseleave', () => { btn.style.transform = 'translateY(0)'; });
-        });
+// 7) Enhanced button interactions
+document.querySelectorAll('.btn').forEach(btn => {
+    btn.addEventListener('touchstart', () => { btn.style.transform = 'scale(0.95)'; });
+    btn.addEventListener('touchend', () => { btn.style.transform = 'scale(1)'; });
+    btn.addEventListener('mouseenter', () => { btn.style.transform = 'translateY(-2px)'; });
+    btn.addEventListener('mouseleave', () => { btn.style.transform = 'translateY(0)'; });
+});
     </script>
     <script>
         // Master categories + synonyms
