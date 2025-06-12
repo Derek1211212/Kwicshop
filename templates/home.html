@@ -1420,8 +1420,8 @@ body .mobile-bottom-nav {
   top: -40px; /* Positions the tooltip above the menu item */
   left: 50%;
   transform: translateX(-50%);
-  background-color: black;
-  color: white;
+  background-color: white;
+  color: black;
   padding: 5px 10px;
   border-radius: 5px;
   white-space: nowrap; /* Keeps the message on one line */
@@ -1462,6 +1462,81 @@ body .mobile-bottom-nav {
     top: -50px; /* Ensures visibility above the bottom nav */
   }
 }
+
+
+
+.nav-links a {
+  position: relative;
+}
+
+.nav-links a .tooltip,
+.mobile-bottom-nav .nav-item .tooltip {
+  position: absolute;
+  background: #333;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.nav-links a .tooltip {
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.nav-links a .tooltip::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #333 !important;
+}
+
+.nav-links a .tooltip::after {
+  content: none !important;
+}
+
+.nav-links a[href="/login"] .tooltip {
+  display: block;
+}
+
+.nav-links a[href="/dashboard"] .tooltip {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-nav .nav-item .tooltip {
+    font-size: 0.7rem;
+    color: #fff;
+    background: #333;
+    margin-top: 5px;
+    text-align: center;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .mobile-bottom-nav .nav-item[href="/login"] .tooltip {
+    display: block;
+  }
+
+  .mobile-bottom-nav .nav-item[href="/dashboard"] .tooltip {
+    display: block;
+  }
+
+  .mobile-bottom-nav .nav-item .tooltip::before,
+  .mobile-bottom-nav .nav-item .tooltip::after {
+    content: none !important;
+  }
+}
 </style>
     <script>
     const USER_LOGGED_IN  = {{ 'true' if user_logged_in else 'false' }};
@@ -1477,24 +1552,24 @@ body .mobile-bottom-nav {
     </svg>
     <span>SwapHub</span>
   </div>
-  
-<div class="nav-links">
-  <a href="/dashboard" class="active">
-    Dashboard
+  <div class="nav-links">
+    <a href="/dashboard" class="active">
+      Dashboard
+      {% if session.get('user_id') %}
+        <span class="tooltip">Click here to upload an item for swap</span>
+      {% endif %}
+    </a>
+    <a href="/my-proposals">My Offers</a>
     {% if session.get('user_id') %}
-      <span class="tooltip">Click here to upload an item for swap</span>
+      <a href="/logout" class="btn btn-outline">Logout</a>
+    {% else %}
+      <a href="/login">
+        Login
+        <span class="tooltip">Login to upload an item for swap or sales</span>
+      </a>
+      <a href="/signup" class="btn btn-primary">Sign Up</a>
     {% endif %}
-  </a>
-  <a href="/my-proposals">My Offers</a>
-  {% if session.get('user_id') %}
-    <a href="/Dash">Account</a>
-    <a href="/logout" class="btn btn-outline">Logout</a>
-  {% else %}
-    <a href="/login">Login</a>
-    <a href="/signup" class="btn btn-primary">Sign Up</a>
-  {% endif %}
-</div>
-  
+  </div>
   <div class="hamburger">
     <div></div>
     <div></div>
@@ -1510,19 +1585,16 @@ body .mobile-bottom-nav {
       <span class="nav-label">Home</span>
       <span class="active-indicator"></span>
     </a>
-    
-    <a href="/my-proposals" class="nav-item">
-      <i class="fas fa-exchange-alt nav-icon"></i>
-      <span class="nav-label">Offers</span>
-    </a>
-    
     {% if session.get('user_id') %}
       <a href="/dashboard" class="nav-item">
         <i class="fas fa-user nav-icon"></i>
         <span class="nav-label">Dashboard</span>
         <span class="tooltip">Click here to upload an item for swap</span>
       </a>
-      
+      <a href="/my-proposals" class="nav-item">
+        <i class="fas fa-exchange-alt nav-icon"></i>
+        <span class="nav-label">Offers</span>
+      </a>
       <a href="/logout" class="nav-item">
         <i class="fas fa-sign-out-alt nav-icon"></i>
         <span class="nav-label">Logout</span>
@@ -1531,8 +1603,8 @@ body .mobile-bottom-nav {
       <a href="/login" class="nav-item">
         <i class="fas fa-sign-in-alt nav-icon"></i>
         <span class="nav-label">Login</span>
+        <span class="tooltip">Login to upload an item for swap or sales</span>
       </a>
-      
       <a href="/signup" class="nav-item">
         <i class="fas fa-user-plus nav-icon"></i>
         <span class="nav-label">Sign Up</span>
@@ -1541,13 +1613,59 @@ body .mobile-bottom-nav {
   </div>
 </div>
 
-<script>
-setTimeout(function() {
-  document.querySelectorAll('.tooltip').forEach(function(tooltip) {
-    tooltip.style.display = 'none';
-  });
-}, 8000); // Hides the tooltip after 5 seconds
-</script>
+
+ <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.matchMedia('(max-width: 768px)').matches) {
+        const navItems = document.querySelectorAll('.mobile-bottom-nav .nav-item');
+        navItems.forEach(item => {
+          item.addEventListener('touchend', e => {
+            e.preventDefault();
+            const tooltip = item.querySelector('.tooltip');
+            const href = item.getAttribute('href');
+            console.log(`Tapped item: ${href}, Tooltip exists: ${!!tooltip}`);
+            if (href === '/login') {
+              console.log('Navigating to login');
+              window.location.href = href;
+              return;
+            }
+            if (tooltip) {
+              navItems.forEach(other => {
+                const otherTooltip = other.querySelector('.tooltip');
+                if (otherTooltip && other !== item) {
+                  otherTooltip.style.display = 'none';
+                }
+              });
+              const isVisible = tooltip.style.display === 'block';
+              tooltip.style.display = isVisible ? 'none' : 'block';
+              console.log(`Toggled ${href} tooltip to: ${tooltip.style.display}`);
+              if (isVisible) {
+                console.log(`Navigating to ${href}`);
+                window.location.href = href;
+              }
+            } else {
+              console.log(`No tooltip, navigating to ${href}`);
+              window.location.href = href;
+            }
+          });
+        });
+      }
+    });
+  </script>
+
+  <body>
+  <!-- Your content -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const tooltips = document.querySelectorAll('.nav-links .tooltip, .mobile-bottom-nav .tooltip');
+      tooltips.forEach(tooltip => {
+        setTimeout(() => {
+          tooltip.style.display = 'none';
+        }, 10000);
+      });
+    });
+  </script>
+</body>
 
 
 <script>
