@@ -639,13 +639,11 @@ items.forEach(item => {
         }
     };
     if ('ontouchstart' in window) {
-        // Use touchend for mobile devices
         item.addEventListener('touchend', e => {
             e.preventDefault();
             showActions(e);
         });
     } else {
-        // Use click for desktop devices
         item.addEventListener('click', showActions);
     }
 });
@@ -670,6 +668,7 @@ document.querySelectorAll('.gallery-item input[type="file"]').forEach(inp => {
 // 3) Remove
 document.querySelectorAll('.btn-remove').forEach(btn => {
     const fn = e => {
+        e.preventDefault();
         e.stopPropagation();
         const item = btn.closest('.gallery-item');
         const idx = item.dataset.index;
@@ -684,22 +683,23 @@ document.querySelectorAll('.btn-remove').forEach(btn => {
         previewPlh.style.display = 'block';
     };
     btn.addEventListener('click', fn);
-    btn.addEventListener('touchend', e => {
-        e.preventDefault();
-        fn(e);
-    });
+    btn.addEventListener('touchend', fn);
 });
 
 // 4) Handle replace button (file input label) for mobile
 document.querySelectorAll('.gallery-item .btn-action:not(.btn-remove)').forEach(label => {
+    const input = label.querySelector('input[type="file"]');
     if ('ontouchstart' in window) {
         label.addEventListener('touchend', e => {
             e.preventDefault();
             e.stopPropagation();
-            const input = label.querySelector('input[type="file"]');
             input.click(); // Programmatically trigger the file input
         });
     }
+    // Ensure the input itself doesn't trigger unexpected behavior
+    input.addEventListener('touchend', e => {
+        e.stopPropagation(); // Prevent touchend on input from bubbling
+    });
 });
 
 // 5) Bulk upload
