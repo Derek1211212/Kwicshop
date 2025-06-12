@@ -33,62 +33,42 @@
         }
 
         .edit-container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 2rem auto;
-            padding: 0;
-            background: transparent;
+            padding: 1.5rem;
+            background: var(--card-bg);
             border-radius: var(--border-radius);
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            box-shadow: var(--shadow);
+            transition: var(--transition);
         }
 
         .card {
             border: none;
             border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            margin-bottom: 24px;
-            transition: var(--transition);
-        }
-
-        .card:hover {
-            box-shadow: var(--shadow-hover);
+            background: var(--card-bg);
         }
 
         .card-header {
-            background-color: var(--card-bg);
-            border-bottom: 1px solid var(--border-color);
+            background-color: var(--primary);
+            color: #fff;
             padding: 1.25rem 1.5rem;
-            border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
         }
 
         .card-title {
-            color: var(--secondary);
-            font-size: 1.5rem;
+            font-size: 1.75rem;
             font-weight: 700;
             margin: 0;
         }
 
         .card-body {
-            padding: 1.5rem;
-        }
-
-        .form-title {
-            color: var(--secondary);
-            border-bottom: 3px solid var(--primary);
-            padding-bottom: 0.75rem;
-            margin-bottom: 2rem;
-            font-size: 1.75rem;
-            font-weight: 700;
+            padding: 2rem;
         }
 
         .form-label {
             font-weight: 600;
             color: var(--secondary);
-            margin-bottom: 8px;
+            margin-bottom: 0.75rem;
         }
 
         .form-label.required::after {
@@ -101,637 +81,524 @@
             border-radius: var(--border-radius);
             border: 1px solid var(--border-color);
             padding: 12px 16px;
-            transition: var(--transition);
             font-size: 1rem;
+            transition: var(--transition);
         }
 
         .form-control:focus, .form-select:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.2);
+            box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.25);
         }
 
         /* Image Gallery Styles */
-  .image-gallery-section {
-    position: relative;
-    margin-bottom: 2rem;
-  }
+        .image-gallery-section {
+            margin-bottom: 2.5rem;
+        }
 
-  .gallery-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
 
-  .gallery-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 16px;
-    margin-bottom: 1.5rem;
-  }
+        .gallery-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
 
-  .gallery-item {
-    position: relative;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    height: 160px;
-    background: var(--light-bg);
-    border: 2px dashed #dee2e6;
-    cursor: move;
-    transition: var(--transition);
-  }
+        .gallery-item {
+            position: relative;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            height: 160px;
+            background: var(--light-bg);
+            border: 2px solid var(--border-color);
+            cursor: move;
+            transition: var(--transition);
+        }
 
-  .gallery-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: var(--transition);
-  }
-  .gallery-item:hover img {
-    transform: scale(1.05);
-  }
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition);
+        }
 
-  .gallery-item.active {
-    border-color: var(--primary);
-    border-width: 3px;
-  }
+        .gallery-item:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-hover);
+        }
 
-  .item-label {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    background: rgba(0,0,0,0.7);
-    color: #fff;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    font-weight: 500;
-  }
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
 
-  .item-actions {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    padding: 8px;
-    background: rgba(0,0,0,0.7);
-    transform: translateY(100%);
-    transition: var(--transition);
-  }
-  .gallery-item.show-actions .item-actions {
-    transform: translateY(0);
-  }
+        .gallery-item.active {
+            border-color: var(--primary);
+            border-width: 3px;
+        }
 
-  .btn-action {
-    position: relative;
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255,255,255,0.2);
-    color: #fff;
-    border: none;
-    transition: var(--transition);
-    z-index: 2;
-  }
-  .btn-remove {
-    padding: 12px;
-    margin: -12px;
-  }
-  .btn-action:hover {
-    background: var(--primary);
-    transform: scale(1.1);
-  }
-  .btn-remove:hover {
-    background: var(--accent);
-  }
-  .btn-action input[type="file"] {
-    position: absolute; top:0; left:0;
-    width:100%; height:100%;
-    opacity:0; cursor:pointer; z-index:3;
-  }
+        .item-label {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
 
+        .item-actions {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            transform: translateY(100%);
+            transition: var(--transition);
+        }
 
+        .gallery-item.show-actions .item-actions {
+            transform: translateY(0);
+        }
 
-/* Preview & bulk upload (unchanged) */
-.upload-area {
-  border: 2px dashed #dee2e6;
-  border-radius: var(--border-radius);
-  padding: 24px;
-  text-align: center;
-  background: #fafafa;
-  transition: var(--transition);
-  cursor: pointer;
-  margin-bottom: 1rem;
-}
-.upload-area:hover {
-  border-color: var(--primary);
-  background: #e6f4f1;
-}
-.upload-area i {
-  font-size: 2.5rem; color: var(--primary);
-  margin-bottom: 12px;
-}
-.upload-text {
-  font-size: 1.1rem; font-weight: 500;
-  color: var(--secondary); margin-bottom: 8px;
-}
-.upload-subtext {
-  font-size: 0.9rem; color: #6c757d;
-  margin-bottom: 12px;
-}
-.d-none { display: none; }
+        .btn-action {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.3);
+            color: #fff;
+            border: none;
+            transition: var(--transition);
+        }
 
-/* Preview container */
-.preview-container {
-  position: relative;
-  width: 100%; height: 400px;
-  border-radius: var(--border-radius);
-  overflow: hidden; box-shadow: var(--shadow);
-  margin-bottom: 1.5rem;
-  background: var(--light-bg);
-  display: flex; align-items: center; justify-content: center;
-}
-.preview-image {
-  max-width: 100%; max-height: 100%; object-fit: contain;
-  display: block;
-}
-.preview-placeholder {
-  color: #6c757d; text-align: center; padding: 2rem;
-}
-.preview-placeholder i {
-  font-size: 4rem; color: #dee2e6; margin-bottom: 1rem;
-}
+        .btn-action:hover {
+            background: var(--primary);
+            transform: scale(1.1);
+        }
 
-/* Responsive tweaks */
-@media (max-width: 768px) {
-  .gallery-container {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 12px;
-  }
-  .gallery-item { height: 120px; }
-  .preview-container { height: 300px; }
-}
-@media (max-width: 576px) {
-  .gallery-container {
-    grid-template-columns: repeat(2,1fr);
-  }
-  .preview-container { height: 250px; }
-}
+        .btn-remove:hover {
+            background: var(--accent);
+        }
 
-  /* Enhanced Button Styles */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px 24px;
-    font-size: 1rem;
-    font-weight: 600;
-    border-radius: var(--btn-radius);
-    transition: var(--transition);
-    min-height: 48px;
-    text-decoration: none;
-    position: relative;
-    overflow: hidden;
-    border: none;
-  }
+        .btn-action input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
 
-  .btn-primary {
-    background-color: var(--primary);
-    color: white;
-  }
+        .preview-container {
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            background: var(--light-bg);
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+        }
 
-  .btn-primary:hover {
-    background-color: var(--primary-hover);
-    box-shadow: var(--shadow);
-    transform: translateY(-2px);
-  }
+        .preview-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
 
-  .btn-outline-secondary {
-    background-color: transparent;
-    border: 1px solid var(--border-color);
-    color: var(--secondary);
-  }
+        .preview-placeholder {
+            color: #6c757d;
+            text-align: center;
+            padding: 2rem;
+        }
 
-  .btn-outline-secondary:hover {
-    background-color: #f8f9fa;
-    border-color: #ced4da;
-  }
+        .preview-placeholder i {
+            font-size: 3.5rem;
+            color: #dee2e6;
+            margin-bottom: 1rem;
+        }
 
-  .btn-delete {
-    background-color: #f8f9fa;
-    color: var(--accent);
-    border: 1px solid #f1f3f5;
-  }
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            text-align: center;
+            background: #fff;
+            transition: var(--transition);
+            cursor: pointer;
+        }
 
-  .btn-delete:hover {
-    background-color: #fff5f5;
-    color: var(--accent-hover);
-    border-color: #ffe2e2;
-  }
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
 
-  /* Button Group Layout */
-  .btn-group-mobile {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
+        .upload-area i {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 0.75rem;
+        }
 
-  /* Cash Sections */
-  .cash-section {
-    border-left: 4px solid var(--accent);
-    padding: 1.5rem;
-    margin: 2rem 0;
-    background: #fff5f5;
-    border-radius: var(--border-radius);
-    animation: slideIn 0.5s ease-out;
-  }
+        .upload-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--secondary);
+        }
 
-  .cash-section.offered {
-    border-color: var(--primary);
-    background: var(--primary-light);
-  }
+        .upload-subtext {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
 
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateX(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
+        .d-none {
+            display: none;
+        }
 
-  .cash-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-  }
+        /* Button Styles */
+        .btn {
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: var(--btn-radius);
+            transition: var(--transition);
+            min-height: 48px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-  .cash-icon {
-    font-size: 2rem;
-    transition: transform 0.3s ease;
-  }
+        .btn-primary {
+            background-color: var(--primary);
+            color: #fff;
+            border: none;
+        }
 
-  .cash-section:hover .cash-icon {
-    transform: rotate(10deg);
-  }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-2px);
+        }
 
-  .required .cash-icon {
-    color: var(--accent);
-  }
+        .btn-outline-secondary {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--secondary);
+        }
 
-  .offered .cash-icon {
-    color: var(--primary);
-  }
+        .btn-outline-secondary:hover {
+            background: #f1f3f5;
+            border-color: var(--primary);
+        }
 
-  .currency-input {
-    position: relative;
-  }
+        .btn-delete {
+            background-color: var(--accent);
+            color: #fff;
+            border: none;
+        }
 
-  .currency-symbol {
-    position: absolute;
-    left: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-weight: bold;
-    color: #666;
-  }
+        .btn-delete:hover {
+            background-color: var(--accent-hover);
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-2px);
+        }
 
-  .currency-input input {
-    padding-left: 35px;
-  }
-
-  /* Responsive Adjustments */
-  @media (max-width: 992px) {
-    .gallery-container {
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    }
-
-    .gallery-item {
-      height: 140px;
-    }
-
-    .preview-container {
-      height: 350px;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .edit-container {
-      padding: 0 1rem;
-      margin: 1rem auto;
-    }
-
-    .gallery-container {
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 12px;
-    }
-
-    .gallery-item {
-      height: 120px;
-    }
-
-    .preview-container {
-      height: 300px;
-    }
-
-    .card-header,
-    .card-body {
-      padding: 1.25rem;
-    }
-  }
-
-  @media (max-width: 576px) {
-    .gallery-container {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    .preview-container {
-      height: 250px;
-    }
-
-    .btn-group-mobile {
-      flex-direction: column;
-    }
-
-    .btn-delete {
-      align-self: flex-start;
-    }
-
-    .cash-section {
-      padding: 1rem;
-    }
-  }
-
-  .sortable-ghost {
-    opacity: 0.4;
-    background: #f8f9fa;
-  }
-        
-        .section-divider {
-            height: 1px;
-            background: var(--border-color);
+        /* Cash Sections */
+        .cash-section {
+            padding: 1.5rem;
             margin: 2rem 0;
+            background: #fff;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .cash-section.required {
+            border-left: 4px solid var(--accent);
+        }
+
+        .cash-section.offered {
+            border-left: 4px solid var(--primary);
+        }
+
+        .cash-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .cash-icon {
+            font-size: 2rem;
+            color: var(--secondary);
+        }
+
+        .currency-input {
+            position: relative;
+        }
+
+        .currency-symbol {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-weight: bold;
+        }
+
+        .currency-input input {
+            padding-left: 35px;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .edit-container {
+                padding: 1rem;
+            }
+            .gallery-container {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 12px;
+            }
+            .gallery-item {
+                height: 120px;
+            }
+            .preview-container {
+                height: 300px;
+            }
+            .btn-group-mobile {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .gallery-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .preview-container {
+                height: 250px;
+            }
+        }
+
+        .sortable-ghost {
+            opacity: 0.5;
+            background: var(--light-bg);
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="edit-container">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Edit Product Listing</h2>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('update_listing', listing_id=listing.listing_id) }}" enctype="multipart/form-data">
-                        <!-- Image Gallery Section -->
-                        <div class="image-gallery-section">
-                            <div class="gallery-header">
-                                <label class="form-label required">Product Images</label>
-                                <small class="text-muted">Tap image to edit/remove | Main image first</small>
-                            </div>
-                            
-
-                            
-<div class="gallery-container" id="gallery-container">
-  <!-- Main Image -->
-  <div class="gallery-item active" data-index="0" data-type="main">
-    {% if listing.image_url %}
-      <img
-        src="{{ url_for('static', filename='images/' + listing.image_url) }}"
-        onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
-        alt="Main listing image"
-      >
-    {% else %}
-      <img
-        src="https://via.placeholder.com/300?text=Main+Image"
-        alt="No main image"
-      >
-    {% endif %}
-    <span class="item-label">Main</span>
-    <div class="item-actions">
-      <button type="button" class="btn-action btn-remove" title="Remove image">
-        <i class="fas fa-trash"></i>
-      </button>
-      <label class="btn-action" title="Replace image">
-        <i class="fas fa-sync"></i>
-        <input type="file" name="image" accept="image/*">
-      </label>
-    </div>
-  </div>
-
-  <!-- Additional Images -->
-  {% for i in range(1,5) %}
-    <div class="gallery-item" data-index="{{ i }}" data-type="additional">
-      {% if listing['image' ~ i] %}
-        <img
-          src="{{ url_for('static', filename='images/' + listing['image' ~ i]) }}"
-          onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
-          alt="Additional image {{ i }}"
-        >
-      {% else %}
-        <img
-          src="https://via.placeholder.com/300?text=Image+{{ i }}"
-          alt="No additional image"
-        >
-      {% endif %}
-      <span class="item-label">Image {{ i }}</span>
-      <div class="item-actions">
-        <button type="button" class="btn-action btn-remove" title="Remove image">
-          <i class="fas fa-trash"></i>
-        </button>
-        <label class="btn-action" title="Replace image">
-          <i class="fas fa-sync"></i>
-          <input type="file" name="image{{ i }}" accept="image/*">
-        </label>
-      </div>
-    </div>
-  {% endfor %}
-</div>
-
-<div class="preview-container" id="preview-container">
-  <img id="preview-image" class="preview-image" style="display:none;">
-  <div id="preview-placeholder" class="preview-placeholder">
-    <i class="fas fa-image"></i><br>Select an image to preview
-  </div>
-</div>
-
-<div id="upload-area" class="upload-area">
-  <i class="fas fa-upload"></i>
-  <div class="upload-text">Bulk Upload</div>
-  <div class="upload-subtext">Click to select multiple files</div>
-</div>
-<input type="file" id="bulk-upload" class="d-none" multiple accept="image/*">
-
-
-<div class="section-divider"></div>
-
-
-                            
-                        
-                        <div class="section-divider"></div>
-
-                        <!-- Basic Information -->
-                        <div class="mb-4">
-                            <div class="mb-3">
-                                <label for="title" class="form-label required">Title</label>
-                                <input type="text" class="form-control" id="title" name="title" 
-                                       value="{{ listing.title }}" required>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="description" class="form-label required">Description</label>
-                                <textarea class="form-control" id="description" name="description" 
-                                          rows="4" required>{{ listing.description }}</textarea>
-                            </div>
-                            
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="condition" class="form-label required">Condition</label>
-                                    <select class="form-select" id="condition" name="condition" required>
-                                        <option value="New" {% if listing.condition == 'New' %}selected{% endif %}>New</option>
-                                        <option value="Like New" {% if listing.condition == 'Like New' %}selected{% endif %}>Like New</option>
-                                        <option value="Good" {% if listing.condition == 'Good' %}selected{% endif %}>Good</option>
-                                        <option value="Fair" {% if listing.condition == 'Fair' %}selected{% endif %}>Fair</option>
-                                        <option value="Poor" {% if listing.condition == 'Poor' %}selected{% endif %}>Poor</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="location" class="form-label required">Location</label>
-                                    <input type="text" class="form-control" id="location" name="location"
-                                           value="{{ listing.location }}" required>
+    <div class="edit-container">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Edit Product Listing</h2>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('update_listing', listing_id=listing.listing_id) }}" enctype="multipart/form-data">
+                    <!-- Image Gallery Section -->
+                    <div class="image-gallery-section">
+                        <div class="gallery-header">
+                            <label class="form-label required">Product Images</label>
+                            <small class="text-muted">Tap image to edit/remove | Main image first</small>
+                        </div>
+                        <div class="gallery-container" id="gallery-container">
+                            <!-- Main Image -->
+                            <div class="gallery-item active" data-index="0" data-type="main">
+                                {% if listing.image_url %}
+                                    <img src="{{ url_for('static', filename='images/' + listing.image_url) }}"
+                                         onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
+                                         alt="Main listing image">
+                                {% else %}
+                                    <img src="https://via.placeholder.com/300?text=Main+Image" alt="No main image">
+                                {% endif %}
+                                <span class="item-label">Main</span>
+                                <div class="item-actions">
+                                    <button type="button" class="btn-action btn-remove" title="Remove image">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <label class="btn-action" title="Replace image">
+                                        <i class="fas fa-sync"></i>
+                                        <input type="file" name="image" accept="image/*">
+                                    </label>
                                 </div>
                             </div>
+                            <!-- Additional Images -->
+                            {% for i in range(1,5) %}
+                                <div class="gallery-item" data-index="{{ i }}" data-type="additional">
+                                    {% if listing['image' ~ i] %}
+                                        <img src="{{ url_for('static', filename='images/' + listing['image' ~ i]) }}"
+                                             onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
+                                             alt="Additional image {{ i }}">
+                                    {% else %}
+                                        <img src="https://via.placeholder.com/300?text=Image+{{ i }}" alt="No additional image">
+                                    {% endif %}
+                                    <span class="item-label">Image {{ i }}</span>
+                                    <div class="item-actions">
+                                        <button type="button" class="btn-action btn-remove" title="Remove image">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <label class="btn-action" title="Replace image">
+                                            <i class="fas fa-sync"></i>
+                                            <input type="file" name="image{{ i }}" accept="image/*">
+                                        </label>
+                                    </div>
+                                </div>
+                            {% endfor %}
                         </div>
-
-                        <div class="col-md-6" style="position: relative;">
-                            <label class="form-label required">Category</label>
-                            <div class="input-group mb-3">
-                                <span class="input-group-text input-icon">
-                                    <i class="fas fa-box"></i>
-                                </span>
-                                <input
-                                    id="category-input"
-                                    name="category"
-                                    type="text"
-                                    class="form-control"
-                                    placeholder="Start typing to search categories…"
-                                    autocomplete="off"
-                                    required
-                                    value="{{ listing.category }}"
-                                    style="position: relative; z-index: 2;"
-                                />
+                        <div class="preview-container" id="preview-container">
+                            <img id="preview-image" class="preview-image" style="display:none;">
+                            <div id="preview-placeholder" class="preview-placeholder">
+                                <i class="fas fa-image"></i><br>Select an image to preview
                             </div>
-                            <ul id="category-suggestions"
-                                style="position: absolute; top: 100%; left: 0; right: 0;
-                                       background: #fff; border: 1px solid #ccc; border-top: none;
-                                       max-height: 200px; overflow-y: auto; z-index: 1; list-style: none;
-                                       margin: 0; padding: 0; display: none;">
-                                <!-- filled by JS -->
-                            </ul>
                         </div>
+                        <div id="upload-area" class="upload-area">
+                            <i class="fas fa-upload"></i>
+                            <div class="upload-text">Bulk Upload</div>
+                            <div class="upload-subtext">Click to select multiple files</div>
+                        </div>
+                        <input type="file" id="bulk-upload" class="d-none" multiple accept="image/*">
+                    </div>
 
-                        <!-- Price Section (Only for Outright Sales) -->
-                        {% if listing.deal_type == 'Outright Sales' %}
-                        <div class="mb-4">
-                            <label for="price" class="form-label required">Price (₵)</label>
+                    <!-- Basic Information -->
+                    <div class="mb-4">
+                        <div class="mb-3">
+                            <label for="title" class="form-label required">Title</label>
+                            <input type="text" class="form-control" id="title" name="title" value="{{ listing.title }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label required">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="4" required>{{ listing.description }}</textarea>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="condition" class="form-label required">Condition</label>
+                                <select class="form-select" id="condition" name="condition" required>
+                                    <option value="New" {% if listing.condition == 'New' %}selected{% endif %}>New</option>
+                                    <option value="Like New" {% if listing.condition == 'Like New' %}selected{% endif %}>Like New</option>
+                                    <option value="Good" {% if listing.condition == 'Good' %}selected{% endif %}>Good</option>
+                                    <option value="Fair" {% if listing.condition == 'Fair' %}selected{% endif %}>Fair</option>
+                                    <option value="Poor" {% if listing.condition == 'Poor' %}selected{% endif %}>Poor</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="location" class="form-label required">Location</label>
+                                <input type="text" class="form-control" id="location" name="location" value="{{ listing.location }}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Section -->
+                    <div class="mb-4">
+                        <label class="form-label required">Category</label>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text"><i class="fas fa-box"></i></span>
+                            <input id="category-input" name="category" type="text" class="form-control" 
+                                   placeholder="Start typing to search categories…" autocomplete="off" 
+                                   required value="{{ listing.category }}">
+                        </div>
+                        <ul id="category-suggestions" class="list-group" style="display: none;"></ul>
+                    </div>
+
+                    <!-- Price Section (Only for Outright Sales) -->
+                    {% if listing.deal_type == 'Outright Sales' %}
+                    <div class="mb-4">
+                        <label for="price" class="form-label required">Price (₵)</label>
+                        <div class="currency-input">
+                            <span class="currency-symbol">₵</span>
+                            <input type="number" class="form-control" id="price" name="price" 
+                                   value="{{ listing.price }}" step="0.01" min="0" required>
+                        </div>
+                        <small class="form-text text-muted">Enter the outright sale price for this item.</small>
+                    </div>
+                    {% endif %}
+
+                    <!-- Swap and Cash Sections (Only for non-Outright Sales) -->
+                    {% if listing.deal_type != 'Outright Sales' %}
+                    <div class="mb-4">
+                        <div class="mb-3">
+                            <label for="desired_swap" class="form-label required">Desired Swap</label>
+                            <input type="text" class="form-control" id="desired_swap" name="desired_swap" 
+                                   value="{{ listing.desired_swap }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="desired_swap_description" class="form-label">Swap Description</label>
+                            <textarea class="form-control" id="desired_swap_description" name="desired_swap_description" 
+                                      rows="3">{{ listing.desired_swap_description }}</textarea>
+                        </div>
+                    </div>
+                    <div class="cash-section required">
+                        <div class="cash-header">
+                            <i class="fas fa-hand-holding-usd cash-icon"></i>
+                            <div>
+                                <h4>Cash You Require from Buyer</h4>
+                                <p class="cash-explanation">This is the cash amount someone needs to add <strong>WITH THEIR ITEM</strong> to get your product.</p>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label required">Additional Cash Required (₵)</label>
                             <div class="currency-input">
                                 <span class="currency-symbol">₵</span>
-                                <input type="number" class="form-control" id="price" name="price"
-                                       value="{{ listing.price }}" step="0.01" min="0" required>
+                                <input type="number" class="form-control" id="required_cash" name="required_cash" 
+                                       value="{{ listing.required_cash }}" step="0.01" min="0">
                             </div>
-                            <small class="form-text text-muted">Enter the outright sale price for this item.</small>
+                            <small class="form-text text-muted">Example: Buyer must add ₵100 with their laptop for your camera.</small>
                         </div>
-                        {% endif %}
-
-                        <!-- Swap and Cash Sections (Only for non-Outright Sales) -->
-                        {% if listing.deal_type != 'Outright Sales' %}
-                        <div class="mb-4">
-                            <div class="mb-3">
-                                <label for="desired_swap" class="form-label required">Desired Swap</label>
-                                <input type="text" class="form-control" id="desired_swap" name="desired_swap"
-                                       value="{{ listing.desired_swap }}" required>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="desired_swap_description" class="form-label">Swap Description</label>
-                                <textarea class="form-control" id="desired_swap_description" name="desired_swap_description"
-                                          rows="3">{{ listing.desired_swap_description }}</textarea>
+                    </div>
+                    <div class="cash-section offered">
+                        <div class="cash-header">
+                            <i class="fas fa-money-bill-wave cash-icon"></i>
+                            <div>
+                                <h4>Cash You're Offering to Add</h4>
+                                <p class="cash-explanation">This is the cash amount you're willing to add <strong>WITH YOUR ITEM</strong> to make the swap attractive.</p>
                             </div>
                         </div>
-
-                        <div class="cash-section required">
-                            <div class="cash-header">
-                                <i class="fas fa-hand-holding-usd cash-icon"></i>
-                                <div>
-                                    <h4>Cash You Require from Buyer</h4>
-                                    <p class="cash-explanation">This is the cash amount someone needs to add <strong>WITH THEIR ITEM</strong> to get your product.</p>
-                                </div>
+                        <div class="mb-3">
+                            <label class="form-label">Additional Cash Offer (₵)</label>
+                            <div class="currency-input">
+                                <span class="currency-symbol">₵</span>
+                                <input type="number" class="form-control" id="additional_cash" name="additional_cash" 
+                                       value="{{ listing.additional_cash }}" step="0.01" min="0">
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label required">Additional Cash Required (₵)</label>
-                                <div class="currency-input">
-                                    <span class="currency-symbol">₵</span>
-                                    <input type="number" class="form-control" 
-                                           id="required_cash" name="required_cash"
-                                           value="{{ listing.required_cash }}" step="0.01" min="0">
-                                </div>
-                                <small class="form-text text-muted">Example: Buyer must add ₵100 with their laptop for your camera.</small>
-                            </div>
+                            <small class="form-text text-muted">Example: You'll add ₵50 with your bicycle for a scooter.</small>
                         </div>
+                    </div>
+                    {% endif %}
 
-                        <div class="cash-section offered">
-                            <div class="cash-header">
-                                <i class="fas fa-money-bill-wave cash-icon"></i>
-                                <div>
-                                    <h4>Cash You're Offering to Add</h4>
-                                    <p class="cash-explanation">This is the cash amount you're willing to add <strong>WITH YOUR ITEM</strong> to make the swap attractive.</p>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Additional Cash Offer (₵)</label>
-                                <div class="currency-input">
-                                    <span class="currency-symbol">₵</span>
-                                    <input type="number" class="form-control" 
-                                           id="additional_cash" name="additional_cash"
-                                           value="{{ listing.additional_cash }}" step="0.01" min="0">
-                                </div>
-                                <small class="form-text text-muted">Example: You'll add ₵50 with your bicycle for a scooter.</small>
-                            </div>
-                        </div>
-                        {% endif %}
+                    <!-- Contact Information -->
+                    <div class="mb-4">
+                        <label for="contact" class="form-label required">Contact Information</label>
+                        <input type="text" class="form-control" id="contact" name="contact" 
+                               value="{{ listing.contact }}" required>
+                    </div>
 
-                        <!-- Contact Information -->
-                        <div class="mb-4">
-                            <label for="contact" class="form-label required">Contact Information</label>
-                            <input type="text" class="form-control" id="contact" name="contact"
-                                   value="{{ listing.contact }}" required>
-                        </div>
-
-                        <!-- Form Actions -->
-                        <div class="d-flex justify-content-between align-items-center mt-5 btn-group-mobile">
-                            <button type="button" class="btn btn-delete" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                                <i class="fas fa-trash-alt me-2"></i> Delete Listing
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between align-items-center mt-5 btn-group-mobile">
+                        <button type="button" class="btn btn-delete" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            <i class="fas fa-trash-alt me-2"></i> Delete Listing
+                        </button>
+                        <div class="d-flex gap-3 btn-group-mobile">
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i> Save Changes
                             </button>
-                            <div class="d-flex gap-3 btn-group-mobile">
-                                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
-                                    <i class="fas fa-times me-2"></i> Cancel
-                                </a>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save me-2"></i> Save Changes
-                                </button>
-                            </div>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -757,197 +624,184 @@
         </div>
     </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-<script>
-  // Sortable
-  const gallery = document.getElementById('gallery-container');
-  new Sortable(gallery, { animation: 150, ghostClass: 'sortable-ghost' });
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script>
+        // Sortable
+        const gallery = document.getElementById('gallery-container');
+        new Sortable(gallery, { animation: 150, ghostClass: 'sortable-ghost' });
 
-  // Refs
-  const items       = document.querySelectorAll('.gallery-item');
-  const previewImg  = document.getElementById('preview-image');
-  const previewPlh  = document.getElementById('preview-placeholder');
-  const bulkInput   = document.getElementById('bulk-upload');
-  const uploadArea  = document.getElementById('upload-area');
+        // Refs
+        const items = document.querySelectorAll('.gallery-item');
+        const previewImg = document.getElementById('preview-image');
+        const previewPlh = document.getElementById('preview-placeholder');
+        const bulkInput = document.getElementById('bulk-upload');
+        const uploadArea = document.getElementById('upload-area');
 
-  // 1) Tap to show actions & preview
-  items.forEach(item => {
-    item.addEventListener('click', e => {
-      if (e.target.closest('.item-actions')) return;
-      items.forEach(i=>i.classList.remove('show-actions','active'));
-      item.classList.add('show-actions','active');
-      const img = item.querySelector('img');
-      if (img && img.src) {
-        previewImg.src = img.src;
-        previewImg.style.display = 'block';
-        previewPlh.style.display = 'none';
-      }
-    });
-  });
-  if (items.length) items[0].click();
+        // 1) Tap to show actions & preview
+        items.forEach(item => {
+            item.addEventListener('click', e => {
+                if (e.target.closest('.item-actions')) return;
+                items.forEach(i => i.classList.remove('show-actions', 'active'));
+                item.classList.add('show-actions', 'active');
+                const img = item.querySelector('img');
+                if (img && img.src) {
+                    previewImg.src = img.src;
+                    previewImg.style.display = 'block';
+                    previewPlh.style.display = 'none';
+                }
+            });
+        });
+        if (items.length) items[0].click();
 
-  // 2) Replace preview
-  document.querySelectorAll('.gallery-item input[type="file"]').forEach(inp=>{
-    inp.addEventListener('change', function(){
-      const file=this.files[0]; if(!file) return;
-      const parent=this.closest('.gallery-item');
-      const img=parent.querySelector('img');
-      const reader=new FileReader();
-      reader.onload=e=> {
-        img.src=e.target.result;
-        if(parent.classList.contains('active')) previewImg.src=e.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
-  });
+        // 2) Replace preview
+        document.querySelectorAll('.gallery-item input[type="file"]').forEach(inp => {
+            inp.addEventListener('change', function() {
+                const file = this.files[0];
+                if (!file) return;
+                const parent = this.closest('.gallery-item');
+                const img = parent.querySelector('img');
+                const reader = new FileReader();
+                reader.onload = e => {
+                    img.src = e.target.result;
+                    if (parent.classList.contains('active')) previewImg.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        });
 
-  // 3) Remove
-  document.querySelectorAll('.btn-remove').forEach(btn=>{
-    const fn=e=>{
-      e.stopPropagation();
-      const item=btn.closest('.gallery-item');
-      const idx=item.dataset.index;
-      const img=item.querySelector('img');
-      const inp=item.querySelector('input[type="file"]');
-      img.src = item.dataset.type==='main'
-        ? 'https://via.placeholder.com/300?text=Main+Image'
-        : `https://via.placeholder.com/300?text=Image+${idx}`;
-      inp.value='';
-      item.classList.remove('active','show-actions');
-      previewImg.style.display='none';
-      previewPlh.style.display='block';
-    };
-    btn.addEventListener('click', fn);
-    btn.addEventListener('touchend', e=>{ e.preventDefault(); fn(e); });
-  });
+        // 3) Remove
+        document.querySelectorAll('.btn-remove').forEach(btn => {
+            const fn = e => {
+                e.stopPropagation();
+                const item = btn.closest('.gallery-item');
+                const idx = item.dataset.index;
+                const img = item.querySelector('img');
+                const inp = item.querySelector('input[type="file"]');
+                img.src = item.dataset.type === 'main'
+                    ? 'https://via.placeholder.com/300?text=Main+Image'
+                    : `https://via.placeholder.com/300?text=Image+${idx}`;
+                inp.value = '';
+                item.classList.remove('active', 'show-actions');
+                previewImg.style.display = 'none';
+                previewPlh.style.display = 'block';
+            };
+            btn.addEventListener('click', fn);
+            btn.addEventListener('touchend', e => { e.preventDefault(); fn(e); });
+        });
 
-  // 4) Bulk upload
-  uploadArea.addEventListener('click', ()=> bulkInput.click());
-  bulkInput.addEventListener('change', function(){
-    const files=Array.from(this.files);
-    const empties=Array.from(items).filter(it =>
-      it.querySelector('img').src.includes('placeholder.com')
-    );
-    empties.slice(0, files.length).forEach((slot,i)=>{
-      const dt=new DataTransfer();
-      dt.items.add(files[i]);
-      const inp=slot.querySelector('input[type="file"]');
-      inp.files=dt.files;
-      inp.dispatchEvent(new Event('change'));
-    });
-    this.value='';
-  });
-  // 5) Image preview functionality for initial load
-  // (Already handled by single-tap click above and default first click)
+        // 4) Bulk upload
+        uploadArea.addEventListener('click', () => bulkInput.click());
+        bulkInput.addEventListener('change', function() {
+            const files = Array.from(this.files);
+            const empties = Array.from(items).filter(it =>
+                it.querySelector('img').src.includes('placeholder.com')
+            );
+            empties.slice(0, files.length).forEach((slot, i) => {
+                const dt = new DataTransfer();
+                dt.items.add(files[i]);
+                const inp = slot.querySelector('input[type="file"]');
+                inp.files = dt.files;
+                inp.dispatchEvent(new Event('change'));
+            });
+            this.value = '';
+        });
 
-  // 6) Auto-resize textareas
-  document.querySelectorAll('textarea').forEach(textarea => {
-    textarea.addEventListener('input', function() {
-      this.style.height = 'auto';
-      this.style.height = `${this.scrollHeight}px`;
-      this.style.transition = 'height 0.2s ease';
-    });
-    textarea.dispatchEvent(new Event('input'));
-  });
+        // 5) Auto-resize textareas
+        document.querySelectorAll('textarea').forEach(textarea => {
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = `${this.scrollHeight}px`;
+            });
+            textarea.dispatchEvent(new Event('input'));
+        });
 
-  // 7) Form validation feedback
-  document.querySelector('form').addEventListener('submit', function(e) {
-    const requiredInputs = this.querySelectorAll('[required]');
-    let isValid = true;
-    requiredInputs.forEach(input => {
-      if (!input.value.trim()) {
-        isValid = false;
-        input.classList.add('is-invalid');
-        const feedback = document.createElement('div');
-        feedback.className = 'invalid-feedback';
-        feedback.textContent = 'This field is required.';
-        if (!input.nextElementSibling?.classList.contains('invalid-feedback')) {
-          input.parentNode.appendChild(feedback);
-        }
-      } else {
-        input.classList.remove('is-invalid');
-        const feedback = input.nextElementSibling;
-        if (feedback?.classList.contains('invalid-feedback')) {
-          feedback.remove();
-        }
-      }
-    });
-    if (!isValid) {
-      e.preventDefault();
-      const firstInvalid = this.querySelector('.is-invalid');
-      if (firstInvalid) firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  });
+        // 6) Form validation feedback
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const requiredInputs = this.querySelectorAll('[required]');
+            let isValid = true;
+            requiredInputs.forEach(input => {
+                if (!input.value.trim()) {
+                    isValid = false;
+                    input.classList.add('is-invalid');
+                    const feedback = document.createElement('div');
+                    feedback.className = 'invalid-feedback';
+                    feedback.textContent = 'This field is required.';
+                    if (!input.nextElementSibling?.classList.contains('invalid-feedback')) {
+                        input.parentNode.appendChild(feedback);
+                    }
+                } else {
+                    input.classList.remove('is-invalid');
+                    const feedback = input.nextElementSibling;
+                    if (feedback?.classList.contains('invalid-feedback')) {
+                        feedback.remove();
+                    }
+                }
+            });
+            if (!isValid) {
+                e.preventDefault();
+                const firstInvalid = this.querySelector('.is-invalid');
+                if (firstInvalid) firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
 
-  // 8) Enhanced button interactions
-  document.querySelectorAll('.btn, .upload-button').forEach(btn => {
-    btn.addEventListener('touchstart', () => { btn.style.transform = 'scale(0.95)'; });
-    btn.addEventListener('touchend',   () => { btn.style.transform = 'scale(1)';    });
-    btn.addEventListener('mouseenter', () => { btn.style.transform = 'translateY(-2px)'; });
-    btn.addEventListener('mouseleave', () => { btn.style.transform = 'translateY(0)';     });
-  });
-</script>
-
-
-
-
-
-
-
-
-
+        // 7) Enhanced button interactions
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('touchstart', () => { btn.style.transform = 'scale(0.95)'; });
+            btn.addEventListener('touchend', () => { btn.style.transform = 'scale(1)'; });
+            btn.addEventListener('mouseenter', () => { btn.style.transform = 'translateY(-2px)'; });
+            btn.addEventListener('mouseleave', () => { btn.style.transform = 'translateY(0)'; });
+        });
+    </script>
     <script>
         // Master categories + synonyms
         const CATEGORY_DEFS = [
-            { name: 'Electronics',            synonyms: ['gadget','device','tech'] },
-            { name: 'Computers & Networking', synonyms: ['pc','laptop','desktop','router','server'] },
-            { name: 'Mobile Phones & Accessories', synonyms: ['phone','mobile','charger','case'] },
-            { name: 'Software & Apps',        synonyms: ['app','program','software'] },
-            { name: 'Health & Beauty',        synonyms: ['skincare','makeup','wellness'] },
-            { name: 'Medical Equipment',      synonyms: ['stethoscope','syringe','hospital'] },
-            { name: 'Sports & Outdoors',      synonyms: ['sport','hiking','camping'] },
-            { name: 'Fashion & Apparel',      synonyms: ['clothes','shirt','dress','jeans'] },
-            { name: 'Jewelry & Watches',      synonyms: ['ring','necklace','watch'] },
-            { name: 'Home & Garden',          synonyms: ['furniture','decor','plants'] },
-            { name: 'Kitchen & Dining',       synonyms: ['cookware','utensils','appliances'] },
-            { name: 'Tools & DIY',            synonyms: ['hammer','drill','screwdriver'] },
-            { name: 'Automotive & Vehicles',  synonyms: ['car','vehicle','truck','motorcycle'] },
-            { name: 'Industrial & Scientific',synonyms: ['lab','industrial','machine'] },
-            { name: 'Agriculture & Farming',  synonyms: ['farm','tractor','crop'] },
-            { name: 'Food & Beverages',       synonyms: ['food','drink','beverage'] },
-            { name: 'Office Supplies',        synonyms: ['pen','paper','stationery'] },
-            { name: 'Books, Music & Movies',  synonyms: ['book','cd','dvd','movie'] },
-            { name: 'Toys & Games',           synonyms: ['toy','game','puzzle'] },
-            { name: 'Baby & Kids',            synonyms: ['baby','child','kids'] },
-            { name: 'Pets & Accessories',     synonyms: ['pet','dog','cat','leash'] },
-            { name: 'Art, Crafts & Sewing',   synonyms: ['art','craft','sewing'] },
-            { name: 'Collectibles & Hobbies', synonyms: ['coin','stamp','hobby'] },
-            { name: 'Travel & Experiences',   synonyms: ['trip','tour','holiday'] },
-            { name: 'Real Estate & Property', synonyms: ['house','apartment','land'] },
-            { name: 'Education & Training',   synonyms: ['course','lesson','training'] },
-            { name: 'Services',               synonyms: ['service','repair','consulting'] },
-            { name: 'Other',                  synonyms: [] }
+            { name: 'Electronics', synonyms: ['gadget', 'device', 'tech'] },
+            { name: 'Computers & Networking', synonyms: ['pc', 'laptop', 'desktop', 'router', 'server'] },
+            { name: 'Mobile Phones & Accessories', synonyms: ['phone', 'mobile', 'charger', 'case'] },
+            { name: 'Software & Apps', synonyms: ['app', 'program', 'software'] },
+            { name: 'Health & Beauty', synonyms: ['skincare', 'makeup', 'wellness'] },
+            { name: 'Medical Equipment', synonyms: ['stethoscope', 'syringe', 'hospital'] },
+            { name: 'Sports & Outdoors', synonyms: ['sport', 'hiking', 'camping'] },
+            { name: 'Fashion & Apparel', synonyms: ['clothes', 'shirt', 'dress', 'jeans'] },
+            { name: 'Jewelry & Watches', synonyms: ['ring', 'necklace', 'watch'] },
+            { name: 'Home & Garden', synonyms: ['furniture', 'decor', 'plants'] },
+            { name: 'Kitchen & Dining', synonyms: ['cookware', 'utensils', 'appliances'] },
+            { name: 'Tools & DIY', synonyms: ['hammer', 'drill', 'screwdriver'] },
+            { name: 'Automotive & Vehicles', synonyms: ['car', 'vehicle', 'truck', 'motorcycle'] },
+            { name: 'Industrial & Scientific', synonyms: ['lab', 'industrial', 'machine'] },
+            { name: 'Agriculture & Farming', synonyms: ['farm', 'tractor', 'crop'] },
+            { name: 'Food & Beverages', synonyms: ['food', 'drink', 'beverage'] },
+            { name: 'Office Supplies', synonyms: ['pen', 'paper', 'stationery'] },
+            { name: 'Books, Music & Movies', synonyms: ['book', 'cd', 'dvd', 'movie'] },
+            { name: 'Toys & Games', synonyms: ['toy', 'game', 'puzzle'] },
+            { name: 'Baby & Kids', synonyms: ['baby', 'child', 'kids'] },
+            { name: 'Pets & Accessories', synonyms: ['pet', 'dog', 'cat', 'leash'] },
+            { name: 'Art, Crafts & Sewing', synonyms: ['art', 'craft', 'sewing'] },
+            { name: 'Collectibles & Hobbies', synonyms: ['coin', 'stamp', 'hobby'] },
+            { name: 'Travel & Experiences', synonyms: ['trip', 'tour', 'holiday'] },
+            { name: 'Real Estate & Property', synonyms: ['house', 'apartment', 'land'] },
+            { name: 'Education & Training', synonyms: ['course', 'lesson', 'training'] },
+            { name: 'Services', synonyms: ['service', 'repair', 'consulting'] },
+            { name: 'Other', synonyms: [] }
         ];
 
         document.addEventListener('DOMContentLoaded', () => {
-            const input       = document.getElementById('category-input');
-            const sugList     = document.getElementById('category-suggestions');
+            const input = document.getElementById('category-input');
+            const sugList = document.getElementById('category-suggestions');
 
-            // render suggestions
             function renderSuggestions(term) {
                 const lower = term.trim().toLowerCase();
                 sugList.innerHTML = '';
                 const matches = CATEGORY_DEFS.filter(cat => {
                     if (!lower) return true;
-                    return cat.name.toLowerCase().includes(lower)
-                        || cat.synonyms.some(s => s.includes(lower));
+                    return cat.name.toLowerCase().includes(lower) || cat.synonyms.some(s => s.includes(lower));
                 });
                 matches.forEach(cat => {
                     const li = document.createElement('li');
                     li.textContent = cat.name;
-                    li.style.padding = '8px';
-                    li.style.cursor  = 'pointer';
+                    li.className = 'list-group-item';
+                    li.style.cursor = 'pointer';
                     li.addEventListener('mousedown', () => {
                         input.value = cat.name;
                         hideSuggestions();
@@ -961,9 +815,7 @@
                 sugList.style.display = 'none';
             }
 
-            input.addEventListener('input', e => {
-                renderSuggestions(e.target.value);
-            });
+            input.addEventListener('input', e => renderSuggestions(e.target.value));
             input.addEventListener('focus', () => renderSuggestions(input.value));
             input.addEventListener('blur', () => setTimeout(hideSuggestions, 100));
         });
