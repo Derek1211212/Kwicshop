@@ -187,6 +187,8 @@ scheduler.start()
 
 
 
+
+
 @app.route('/')
 def home():
     # ───────────────────────────────────────────────────────────
@@ -197,15 +199,16 @@ def home():
     deal_type_filter  = request.args.get('deal_type', 'All')
     location_q        = request.args.get('location', '').strip()
 
-    listings         = []
-    categories       = []
-    user_logged_in   = 'user_id' in session
-    user_subscribed  = False
-    conn             = None
+    # Track login & subscription status
+    user_logged_in  = 'user_id' in session
+    user_subscribed = False
+
+    conn = None
+    cursor = None
 
     try:
         # ───────────────────────────────────────────────────────
-        # 1) Check push subscription if user is logged in
+        # 1) If logged in, check push subscription
         # ───────────────────────────────────────────────────────
         if user_logged_in:
             conn = get_db_connection()
@@ -220,12 +223,36 @@ def home():
             conn = None
 
         # ───────────────────────────────────────────────────────
-        # 2) Fetch listings from the database
+        # 2A) FETCH UNFILTERED LISTINGS FOR CAROUSEL (e.g. top 5)
         # ───────────────────────────────────────────────────────
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT l.listing_id, l.image1, l.title
+              FROM listings AS l
+             ORDER BY l.created_at DESC
+             LIMIT 5
+        """)
+        carousel_listings = cursor.fetchall()
 
-        # -- build base_query with search, filters, ordering --
+        # build full banner_image URLs
+        for c in carousel_listings:
+            if c.get('image1'):
+                c['banner_image'] = url_for(
+                    'static',
+                    filename='images/' + c['image1'],
+                    _external=True
+                )
+            else:
+                c['banner_image'] = url_for(
+                    'static',
+                    filename='images/placeholder.jpg',
+                    _external=True
+                )
+
+        # ───────────────────────────────────────────────────────
+        # 2B) FETCH FILTERED LISTINGS FOR GRID
+        # ───────────────────────────────────────────────────────
         base_query = """SELECT l.*, u.username,
                                IFNULL(m.impressions, 0) AS impressions
                         FROM listings AS l
@@ -250,6 +277,7 @@ def home():
             base_query += " AND l.deal_type = %s"
             params.append(deal_type_filter)
 
+        # ordering logic
         if location_q:
             base_query += """
               ORDER BY
@@ -283,7 +311,7 @@ def home():
         listings = cursor.fetchall()
 
         # ───────────────────────────────────────────────────────
-        # 2.5) Fetch top-6 categories by listing count
+        # 2C) FETCH TOP‑6 CATEGORIES
         # ───────────────────────────────────────────────────────
         cursor.execute("""
             SELECT category, COUNT(*) AS cnt
@@ -292,43 +320,48 @@ def home():
              ORDER BY cnt DESC
              LIMIT 6
         """)
-        top_cats = cursor.fetchall()  # list of dicts
-
+        top_cats = cursor.fetchall()
         categories = []
         for r in top_cats:
             name = r['category']
-            slug = name.lower().replace(' ', '-')
-            icon_url = f"https://api.iconify.design/mdi:{slug}.svg"
             categories.append({
                 'name': name,
-                'icon_url': icon_url
+                'icon_url': f"https://api.iconify.design/mdi:{name.lower().replace(' ', '-')}.svg"
             })
 
         # ───────────────────────────────────────────────────────
-        # 2.6) Build image URLs & load offered_items for Swap Deal
+        # 2D) PROCESS EACH LISTING: image URLs & offered_items
         # ───────────────────────────────────────────────────────
         for l in listings:
             # main image
             if l.get('image_url'):
-                l['image_url'] = url_for('static',
-                                         filename='images/' + l['image_url'],
-                                         _external=True)
+                l['image_url'] = url_for(
+                    'static',
+                    filename='images/' + l['image_url'],
+                    _external=True
+                )
             else:
-                l['image_url'] = url_for('static',
-                                         filename='images/placeholder.jpg',
-                                         _external=True)
+                l['image_url'] = url_for(
+                    'static',
+                    filename='images/placeholder.jpg',
+                    _external=True
+                )
 
-            # banner image
+            # banner image (for cards if needed)
             if l.get('image1'):
-                l['banner_image'] = url_for('static',
-                                            filename='images/' + l['image1'],
-                                            _external=True)
+                l['banner_image'] = url_for(
+                    'static',
+                    filename='images/' + l['image1'],
+                    _external=True
+                )
             else:
-                l['banner_image'] = url_for('static',
-                                            filename='images/placeholder.jpg',
-                                            _external=True)
+                l['banner_image'] = url_for(
+                    'static',
+                    filename='images/placeholder.jpg',
+                    _external=True
+                )
 
-            # offered items
+            # offered items (swap deals)
             if l['deal_type'] == 'Swap Deal':
                 cursor.execute("""
                   SELECT item_id, title, description, image1, `condition`
@@ -339,45 +372,55 @@ def home():
                 offers = cursor.fetchall() or []
                 for o in offers:
                     if o.get('image1'):
-                        o['image1'] = url_for('static',
-                                              filename='images/' + o['image1'],
-                                              _external=True)
+                        o['image1'] = url_for(
+                            'static',
+                            filename='images/' + o['image1'],
+                            _external=True
+                        )
                     else:
-                        o['image1'] = url_for('static',
-                                              filename='images/placeholder.jpg',
-                                              _external=True)
+                        o['image1'] = url_for(
+                            'static',
+                            filename='images/placeholder.jpg',
+                            _external=True
+                        )
                 l['offers'] = offers
             else:
                 l['offers'] = []
 
-        # close cursor before exiting try
+        # clean up
         cursor.close()
+        conn.close()
 
     except Exception as e:
-        logging.error("Error fetching listings: %s", e)
+        logging.error("Error in home(): %s", e)
+        if cursor:
+            cursor.close()
         if conn:
             conn.rollback()
-    finally:
-        if conn:
             conn.close()
+        # fall back to empty data
+        carousel_listings = []
+        listings = []
+        categories = []
 
     # ───────────────────────────────────────────────────────────
-    # 3) Rotate listings by offset
+    # 3) Rotate carousel offset
     # ───────────────────────────────────────────────────────────
-    total_count = len(listings)
-    if total_count > 0:
-        offset = read_offset() % total_count
-        listings = listings[offset:] + listings[:offset]
-        write_offset((offset + 1) % total_count)
+    total = len(carousel_listings)
+    if total > 0:
+        offset = read_offset() % total
+        carousel_listings = (
+            carousel_listings[offset:] + carousel_listings[:offset]
+        )
+        write_offset((offset + 1) % total)
 
     # ───────────────────────────────────────────────────────────
-    # 4) Render template
+    # 4) Render template with both datasets
     # ───────────────────────────────────────────────────────────
-    featured_listing = listings[0] if listings else None
     return render_template(
         'home.html',
+        carousel_listings=carousel_listings,
         listings=listings,
-        featured_listing=featured_listing,
         categories=categories,
         search=search,
         selected_category=selected_category,
@@ -385,8 +428,9 @@ def home():
         location=location_q,
         user_logged_in=user_logged_in,
         user_subscribed=user_subscribed,
-        vapid_public_key=app.config['VAPID_PUBLIC_KEY']
+        vapid_public_key=app.config.get('VAPID_PUBLIC_KEY')
     )
+
 
 
 

@@ -1770,10 +1770,10 @@ body .mobile-bottom-nav {
 </script>
 
 
-   <!-- ===== MULTI-ITEM HERO CAROUSEL ===== -->
-  <div class="multi-carousel-container">
-    <div class="multi-carousel-track">
-      {% for listing in listings %}
+<!-- ===== MULTI-ITEM HERO CAROUSEL ===== -->
+<div class="multi-carousel-container">
+  <div class="multi-carousel-track">
+    {% for listing in carousel_listings %}
       <div class="multi-carousel-item" data-id="{{ listing.listing_id }}">
         <div
           class="multi-carousel-image"
@@ -1792,28 +1792,62 @@ body .mobile-bottom-nav {
           </div>
         </div>
       </div>
-      {% endfor %}
-    </div>
+    {% endfor %}
   </div>
-
-<!-- 2) DEAL‐TYPE FILTERS -->
-<div class="filters-scroll deal-filter-row" style="display: flex; gap: 0.75rem; overflow-x: auto; padding: 0.75rem 2rem; margin-bottom: 0.5rem; background: var(--surface); box-shadow: var(--shadow-sm);">
-  {% set deal_types = ['All', 'Swap Deal', 'Outright Sales'] %}
-  {% for deal in deal_types %}
-    <button
-      type="button"
-      class="filter-button deal-filter{% if deal_type_filter == deal %} active{% endif %}"
-      data-value="{{ deal }}"
-      style="flex: 0 0 auto; background: {% if deal_type_filter == deal %}var(--primary){% else %}#f0f0f0{% endif %}; color: {% if deal_type_filter == deal %}#fff{% else %}#333{% endif %}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
-    >
-      {{ deal }}
-    </button>
-  {% endfor %}
 </div>
 
-<!-- 3) CATEGORY FILTERS -->
-<div class="filters-scroll category-filter-row">
-  <!-- “All” button -->
+
+<form
+  id="search-form"
+  method="get"
+  action="{{ url_for('home') }}"
+  style="margin-bottom: 1rem;"
+>
+  <!-- Hidden fields that your JS will populate -->
+  <input
+    type="hidden"
+    id="selected-deal-type"
+    name="deal_type"
+    value="{{ deal_type_filter }}"
+  />
+  <input
+    type="hidden"
+    id="selected-category"
+    name="category"
+    value="{{ selected_category }}"
+  />
+
+  <!-- 2) DEAL‑TYPE FILTERS -->
+  <div
+    class="filters-scroll deal-filter-row"
+    style="display: flex; gap: 0.75rem; overflow-x: auto; padding: 0.75rem 2rem; margin-bottom: 0.5rem; background: var(--surface); box-shadow: var(--shadow-sm);"
+  >
+    {% set deal_types = ['All', 'Swap Deal', 'Outright Sales'] %}
+    {% for deal in deal_types %}
+      <button
+        type="button"
+        class="filter-button deal-filter{% if deal_type_filter == deal %} active{% endif %}"
+        data-value="{{ deal }}"
+        style="
+          flex: 0 0 auto;
+          background: {% if deal_type_filter == deal %}var(--primary){% else %}#f0f0f0{% endif %};
+          color: {% if deal_type_filter == deal %}#fff{% else %}#333{% endif %};
+          border: none;
+          padding: 0.5rem 1rem;
+          border-radius: 50px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: background 0.3s, color 0.3s;
+        "
+      >
+        {{ deal }}
+      </button>
+    {% endfor %}
+  </div>
+
+  <!-- 3) CATEGORY FILTERS -->
+  <div class="filters-scroll category-filter-row" style="display:flex;gap:0.75rem;overflow-x:auto;padding:0.75rem 2rem;margin-bottom:1rem;">
+    <!-- “All” button -->
   <button
     type="button"
     class="filter-button category-filter{% if selected_category=='All' %} active{% endif %}"
@@ -1828,42 +1862,38 @@ body .mobile-bottom-nav {
     All
   </button>
 
-  {% for cat in categories %}
-    {%- set full_slug = cat.name.lower().replace('&','and').replace(' ', '-') -%}
-    {%- set anchor   = cat.name.split('&')[0].split()[0].lower() -%}
-    <button
-      type="button"
-      class="filter-button category-filter{% if selected_category==cat.name %} active{% endif %}"
-      data-value="{{ cat.name }}"
-    >
-      <img
-        src="https://api.iconify.design/mdi:{{ full_slug }}.svg"
-        alt=""
-        class="category-icon"
-        onerror="
-          if (!this.dataset.fallback) {
-            this.dataset.fallback = '1';
-            this.onerror = function() {
-              this.onerror = null;
-              this.src = '{{ url_for('static', filename='icons/placeholder.svg') }}';
-            };
-            this.src = 'https://api.iconify.design/mdi:{{ anchor }}.svg';
-          }
-        "
+
+    {% for cat in categories %}
+      {%- set full_slug = cat.name.lower().replace('&','and').replace(' ', '-') -%}
+      {%- set anchor   = cat.name.split('&')[0].split()[0].lower() -%}
+      <button
+        type="button"
+        class="filter-button category-filter{% if selected_category==cat.name %} active{% endif %}"
+        data-value="{{ cat.name }}"
       >
-      {{ cat.name }}
-    </button>
-  {% endfor %}
-</div>
+    <img
+      src="https://api.iconify.design/mdi:{{ full_slug }}.svg"
+      alt=""
+      class="category-icon"
+      onerror="
+        if (!this.dataset.fallback) {
+          this.dataset.fallback = '1';
+          this.onerror = function() {
+            this.onerror = null;
+            this.src = '{{ url_for('static', filename='icons/placeholder.svg') }}';
+          };
+          this.src = 'https://api.iconify.design/mdi:{{ anchor }}.svg';
+        }
+      "
+    >
+
+        {{ cat.name }}
+      </button>
+    {% endfor %}
+  </div>
+</form>
 
 <style>
-  .filters-scroll.category-filter-row {
-    display: flex;
-    gap: 0.75rem;
-    overflow-x: auto;
-    padding: 0.75rem 2rem;
-    margin-bottom: 1rem;
-  }
   .category-icon {
     width: 20px;
     height: 20px;
@@ -1871,13 +1901,34 @@ body .mobile-bottom-nav {
     vertical-align: middle;
     margin-right: 6px;
   }
+  .filter-button.active {
+    border: 2px solid var(--primary);
+  }
 </style>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Deal‑type buttons
+  document.querySelectorAll('.deal-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.deal-filter').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('selected-deal-type').value = btn.dataset.value;
+      document.getElementById('search-form').submit();
+    });
+  });
 
-
-
-
-
+  // Category buttons
+  document.querySelectorAll('.category-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.category-filter').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('selected-category').value = btn.dataset.value;
+      document.getElementById('search-form').submit();
+    });
+  });
+});
+</script>
 
   
 
@@ -2311,23 +2362,6 @@ body .mobile-bottom-nav {
     hamburger.classList.toggle('active');
   });
 
-  //======== 4) Category & Deal-Type Filters ========//
-  document.querySelectorAll('.category-filter').forEach(btn => {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('.category-filter').forEach(t => t.classList.remove('active'));
-      this.classList.add('active');
-      document.getElementById('selected-category').value = this.dataset.value;
-      document.getElementById('search-form').submit();
-    });
-  });
-  document.querySelectorAll('.deal-filter').forEach(btn => {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('.deal-filter').forEach(t => t.classList.remove('active'));
-      this.classList.add('active');
-      document.getElementById('selected-deal-type').value = this.dataset.value;
-      document.getElementById('search-form').submit();
-    });
-  });
 
   //======== 5) Lazy Loading Images ========//
   function lazyLoadImages() {

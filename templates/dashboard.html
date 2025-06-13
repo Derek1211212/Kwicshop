@@ -1819,6 +1819,38 @@ input[type="file"] {
     </div>
 </section>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.delete-listing').forEach(button => {
+    button.addEventListener('click', async () => {
+      const listingId = button.dataset.id;
+      if (!confirm('Are you sure you want to delete this listing?')) return;
+
+      try {
+        const resp = await fetch(`/listings/${listingId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        const json = await resp.json();
+        if (resp.ok && json.success) {
+          // Remove the card from the DOM
+          button.closest('.listing-card').remove();
+        } else {
+          alert(json.error || 'Failed to delete listing.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('An error occurred while deleting.');
+      }
+    });
+  });
+});
+</script>
+
+
+
 
 
 
