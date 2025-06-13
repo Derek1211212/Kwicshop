@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SwapSphere – Privacy Policy & Terms</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* Modern Color Palette */
+    :root {
+      --primary: #2c7a7b;
+      --primary-dark: #285e61;
+      --primary-light: #e6fffa;
+      --accent: #e53e3e;
+      --text: #2d3748;
+      --text-light: #718096;
+      --bg: #f7fafc;
+      --card-bg: #ffffff;
+      --header-bg: var(--primary);
+      --header-text: #ffffff;
+      --footer-bg: #edf2f7;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --transition: all 0.3s ease;
+    }
+
+    /* Base Reset & Typography */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+      background-size: 20px 20px;
+      padding-bottom: 60px;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+    }
+
+    /* Header & Navigation */
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--header-text);
+      padding: 1rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .logo i {
+      color: var(--primary-light);
+    }
+
+    nav {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    nav a {
+      color: var(--header-text);
+      text-decoration: none;
+      font-weight: 500;
+      position: relative;
+      padding: 0.5rem 0;
+      transition: var(--transition);
+    }
+
+    nav a:hover {
+      color: var(--primary-light);
+    }
+
+    nav a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background-color: var(--primary-light);
+      transition: var(--transition);
+    }
+
+    nav a:hover::after {
+      width: 100%;
+    }
+
+    /* Main Content Area */
+    main {
+      max-width: 800px;
+      margin: 3rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      animation: fadeInDown 0.8s ease;
+    }
+
+    .page-header h1 {
+      color: var(--primary);
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      position: relative;
+      display: inline-block;
+    }
+
+    .page-header h1::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+
+    .page-header p {
+      color: var(--text-light);
+      font-size: 1.1rem;
+      margin-top: 1rem;
+    }
+
+    /* Section Cards */
+    section {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.8rem;
+      margin-bottom: 1.8rem;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      animation: fadeInUp 0.6s ease forwards;
+      opacity: 0;
+      transform: translateY(20px);
+      border-left: 4px solid var(--primary);
+    }
+
+    section:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    h2 {
+      color: var(--primary);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    h2 i {
+      background: var(--primary-light);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+    }
+
+    h3 {
+      color: var(--primary-dark);
+      margin: 1.2rem 0 0.5rem;
+      padding-left: 0.5rem;
+      border-left: 3px solid var(--primary);
+    }
+
+    ul {
+      margin-left: 1.5rem;
+      list-style-type: none;
+    }
+
+    li {
+      margin-bottom: 0.7rem;
+      position: relative;
+      padding-left: 1.5rem;
+    }
+
+    li::before {
+      content: '•';
+      color: var(--primary);
+      font-weight: bold;
+      position: absolute;
+      left: 0;
+    }
+
+    p {
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    a:hover {
+      color: var(--primary-dark);
+    }
+
+    a::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 1px;
+      background-color: var(--primary);
+      transition: var(--transition);
+    }
+
+    a:hover::after {
+      width: 100%;
+    }
+
+    .address {
+      margin-top: 0.5rem;
+      font-style: normal;
+      background: var(--primary-light);
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 3px solid var(--primary);
+    }
+
+    /* Footer */
+    footer {
+      background-color: var(--footer-bg);
+      text-align: center;
+      padding: 1.5rem 0;
+      margin-top: 3rem;
+      font-size: 0.9rem;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .footer-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .footer-links a {
+      color: var(--text-light);
+      font-weight: 500;
+    }
+
+    .footer-links a:hover {
+      color: var(--primary);
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Back to top button */
+    .back-to-top {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 50px;
+      height: 50px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: var(--transition);
+      box-shadow: var(--shadow);
+      z-index: 99;
+    }
+
+    .back-to-top.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .back-to-top:hover {
+      background: var(--primary-dark);
+      transform: translateY(-3px);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .nav-container {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      
+      nav {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      
+      .page-header h1 {
+        font-size: 2rem;
+      }
+      
+      main {
+        margin: 2rem auto;
+      }
+      
+      section {
+        padding: 1.5rem;
+      }
+      
+      h2 {
+        font-size: 1.4rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      nav {
+        gap: 1rem;
+      }
+      
+      .page-header h1 {
+        font-size: 1.8rem;
+      }
+      
+      section {
+        padding: 1.2rem;
+      }
+    }
+
+    /* Tabs for switching between pages */
+    .tab-container {
+      display: flex;
+      justify-content: center;
+      margin: 2rem auto;
+      max-width: 800px;
+    }
+
+    .tab-btn {
+      padding: 0.8rem 2rem;
+      background: white;
+      border: none;
+      border-bottom: 3px solid transparent;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 500;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text-light);
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom: 3px solid var(--primary);
+    }
+
+    .tab-btn:not(.active):hover {
+      color: var(--primary-dark);
+    }
+
+    .page-content {
+      display: none;
+    }
+
+    .page-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="nav-container">
+      <div class="logo">
+        <i class="fas fa-exchange-alt"></i>
+        SwapSphere
+      </div>
+    </div>
+  </header>
+
+  <!-- Tab Navigation -->
+  <div class="tab-container">
+    <button class="tab-btn active" onclick="showPage('privacy')">Privacy Policy</button>
+    <button class="tab-btn" onclick="showPage('terms')">Terms & Conditions</button>
+  </div>
+
+  <!-- Privacy Policy Page -->
+  <main id="privacy" class="page-content active">
+    <div class="page-header">
+      <h1>Privacy Policy</h1>
+      <p><strong>Effective Date:</strong> June 13, 2025</p>
+      <p>Your privacy is important to us. This policy explains how we handle your information.</p>
+    </div>
+
+    <section style="animation-delay: 0.1s">
+      <h2><i class="fas fa-info-circle"></i> 1. Introduction</h2>
+      <p>Welcome to SwapSphere ("we," "us," or "our"). We respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or use our services.</p>
+    </section>
+
+    <section style="animation-delay: 0.2s">
+      <h2><i class="fas fa-database"></i> 2. Information We Collect</h2>
+      <h3>2.1. Personal Data</h3>
+      <ul>
+        <li>Name, email address, phone number, mailing address, profile photo</li>
+      </ul>
+      <h3>2.2. Account Data</h3>
+      <ul>
+        <li>Username, password, transaction history, listings and swap preferences</li>
+      </ul>
+      <h3>2.3. Technical Data</h3>
+      <ul>
+        <li>IP address, browser type, device identifiers, operating system, cookies, usage statistics</li>
+      </ul>
+      <h3>2.4. Location Data</h3>
+      <ul>
+        <li>Geolocation data (if you grant permission)</li>
+      </ul>
+    </section>
+
+    <section style="animation-delay: 0.3s">
+      <h2><i class="fas fa-cogs"></i> 3. How We Use Your Information</h2>
+      <ul>
+        <li><strong>Service Provision:</strong> To create and manage your account, facilitate swaps and sales, process payments.</li>
+        <li><strong>Communication:</strong> To send confirmations, updates, newsletters, and marketing materials (with consent).</li>
+        <li><strong>Improvements:</strong> To analyze usage patterns, troubleshoot, and enhance our platform.</li>
+        <li><strong>Security:</strong> To detect and prevent fraud, unauthorized access, and other risks.</li>
+      </ul>
+    </section>
+
+    <section style="animation-delay: 0.4s">
+      <h2><i class="fas fa-share-alt"></i> 4. How We Share Your Information</h2>
+      <ul>
+        <li><strong>Service Providers:</strong> Payment processors (e.g., Paystack), hosting providers, email services.</li>
+        <li><strong>Legal Requirements:</strong> To comply with legal obligations or respond to lawful requests.</li>
+        <li><strong>Business Transfers:</strong> In connection with mergers, acquisitions, or asset sales (with notice).</li>
+      </ul>
+    </section>
+
+    <section style="animation-delay: 0.5s">
+      <h2><i class="fas fa-cookie-bite"></i> 5. Cookies and Tracking Technologies</h2>
+      <p>We use cookies, web beacons, and similar technologies to collect information about your browsing behavior. You can disable cookies in your browser settings, but some features of SwapSphere may not function properly without them.</p>
+    </section>
+
+    <section style="animation-delay: 0.6s">
+      <h2><i class="fas fa-lock"></i> 6. Security of Your Data</h2>
+      <p>We implement administrative, technical, and physical measures to protect your personal data. However, no system is completely secure. Please use strong passwords and notify us of any suspicious activity.</p>
+    </section>
+
+    <section style="animation-delay: 0.7s">
+      <h2><i class="fas fa-user-shield"></i> 7. Your Rights</h2>
+      <p>Depending on your jurisdiction, you may have the right to:</p>
+      <ul>
+        <li>Access, correct, or delete your personal data</li>
+        <li>Withdraw consent to processing</li>
+        <li>Object to or restrict certain processing activities</li>
+        <li>Request portability of your data</li>
+      </ul>
+      <p>To exercise these rights, contact us at <a href="mailto:privacy@swapsphere.com">privacy@swapsphere.com</a>.</p>
+    </section>
+
+    <section style="animation-delay: 0.8s">
+      <h2><i class="fas fa-archive"></i> 8. Data Retention</h2>
+      <p>We retain personal data only as long as necessary for the purposes described in this Policy or as required by law.</p>
+    </section>
+
+    <section style="animation-delay: 0.9s">
+      <h2><i class="fas fa-child"></i> 9. Children's Privacy</h2>
+      <p>SwapSphere is not intended for children under 16. We do not knowingly collect personal data from minors.</p>
+    </section>
+
+    <section style="animation-delay: 1.0s">
+      <h2><i class="fas fa-sync-alt"></i> 10. Changes to This Policy</h2>
+      <p>We may update this Privacy Policy from time to time. We will post the revised version with an updated Effective Date.</p>
+    </section>
+
+    <section style="animation-delay: 1.1s">
+      <h2><i class="fas fa-envelope"></i> 11. Contact Us</h2>
+      <p>If you have questions about this Privacy Policy, please email us at <a href="mailto:privacy@swapsphere.com">privacy@swapsphere.com</a> or write to:</p>
+      <address class="address">
+        SwapSphere Ltd.<br/>
+        123 Market Lane<br/>
+        Accra, Ghana
+      </address>
+    </section>
+  </main>
+
+  <!-- Terms & Conditions Page -->
+  <main id="terms" class="page-content">
+    <div class="page-header">
+      <h1>Terms & Conditions</h1>
+      <p><strong>Effective Date:</strong> June 13, 2025</p>
+      <p>Please read these terms carefully before using our services.</p>
+    </div>
+
+    <section style="animation-delay: 0.1s">
+      <h2><i class="fas fa-check-circle"></i> 1. Acceptance of Terms</h2>
+      <p>By accessing or using SwapSphere ("the Service"), you agree to be bound by these Terms & Conditions ("Terms"). If you do not agree, you must not use the Service.</p>
+    </section>
+
+    <section style="animation-delay: 0.2s">
+      <h2><i class="fas fa-user-check"></i> 2. Eligibility</h2>
+      <p>You must be at least 16 years old to register. By creating an account, you represent that you meet the eligibility requirements.</p>
+    </section>
+
+    <section style="animation-delay: 0.3s">
+      <h2><i class="fas fa-user-circle"></i> 3. User Accounts</h2>
+      <ul>
+        <li>You are responsible for maintaining the confidentiality of your login credentials.</li>
+        <li>You accept liability for all activity under your account.</li>
+        <li>We may suspend or terminate accounts that violate these Terms or for inactivity.</li>
+      </ul>
+    </section>
+
+    <section style="animation-delay: 0.4s">
+      <h2><i class="fas fa-list-alt"></i> 4. Listings and Transactions</h2>
+      <ul>
+        <li>All listings must accurately describe the items for swap or sale.</li>
+        <li>You agree to comply with all applicable laws in listing, swapping, or selling.</li>
+        <li>SwapSphere is not a party to transactions. We facilitate introductions only.</li>
+      </ul>
+    </section>
+
+    <section style="animation-delay: 0.5s">
+      <h2><i class="fas fa-credit-card"></i> 5. Fees and Payments</h2>
+      <ul>
+        <li>Certain features (e.g., premium plans) require payment via Paystack.</li>
+        <li>You agree to Paystack's terms and authorize charges to your chosen payment method.</li>
+        <li>Payments are final; no refunds except as required by law.</li>
+      </ul>
+    </section>
+
+    <section style="animation-delay: 0.6s">
+      <h2><i class="fas fa-ban"></i> 6. Prohibited Conduct</h2>
+      <p>You must not:</p>
+      <ul>
+        <li>Use the Service for illegal activities.</li>
+        <li>Harass, abuse, or harm others.</li>
+        <li>Post defamatory, obscene, or infringing content.</li>
+        <li>Attempt to disrupt or tamper with the Service's functionality.</li>
+      </ul>
+    </section>
+
+    <section style="animation-delay: 0.7s">
+      <h2><i class="fas fa-copyright"></i> 7. Intellectual Property</h2>
+      <p>SwapSphere and its content are owned by us or our licensors. You grant us a non‑exclusive license to use, reproduce, and display any content you post. You retain ownership of your user‑generated content.</p>
+    </section>
+
+    <section style="animation-delay: 0.8s">
+      <h2><i class="fas fa-exclamation-triangle"></i> 8. Disclaimers</h2>
+      <p>The Service is provided "as is" without warranties of any kind. We do not guarantee accuracy, reliability, or availability.</p>
+    </section>
+
+    <section style="animation-delay: 0.9s">
+      <h2><i class="fas fa-balance-scale"></i> 9. Limitation of Liability</h2>
+      <p>To the maximum extent permitted by law, SwapSphere DISCLAIMS all liability for any indirect, incidental, special, or consequential damages arising from your use of the Service.</p>
+    </section>
+
+    <section style="animation-delay: 1.0s">
+      <h2><i class="fas fa-handshake"></i> 10. Indemnification</h2>
+      <p>You agree to indemnify and hold harmless SwapSphere, its officers, directors, and employees from any claims arising from your use of the Service or breach of these Terms.</p>
+    </section>
+
+    <section style="animation-delay: 1.1s">
+      <h2><i class="fas fa-power-off"></i> 11. Termination</h2>
+      <p>We may suspend or terminate your access at any time for violations of these Terms or for any other reason without notice.</p>
+    </section>
+
+    <section style="animation-delay: 1.2s">
+      <h2><i class="fas fa-gavel"></i> 12. Governing Law</h2>
+      <p>These Terms are governed by the laws of Ghana. Any disputes will be resolved in the courts of Ghana.</p>
+    </section>
+
+    <section style="animation-delay: 1.3s">
+      <h2><i class="fas fa-edit"></i> 13. Changes to Terms</h2>
+      <p>We may update these Terms by posting revisions on this page. Your continued use after changes constitutes acceptance.</p>
+    </section>
+
+    <section style="animation-delay: 1.4s">
+      <h2><i class="fas fa-headset"></i> 14. Contact Information</h2>
+      <p>For questions about these Terms, contact us at <a href="mailto:support@swapsphere.com">support@swapsphere.com</a>.</p>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-links">
+        <a href="/">Home</a>
+        <a href="/listings">Listings</a>
+        <a href="/privacy-policy.html">Privacy Policy</a>
+        <a href="/terms-and-conditions.html">Terms & Conditions</a>
+      </div>
+      <p>&copy; 2025 SwapSphere. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Back to Top Button -->
+  <div class="back-to-top">
+    <i class="fas fa-arrow-up"></i>
+  </div>
+
+  <script>
+    // Tab switching functionality
+    function showPage(pageId) {
+      // Hide all pages
+      document.querySelectorAll('.page-content').forEach(page => {
+        page.classList.remove('active');
+      });
+      
+      // Show selected page
+      document.getElementById(pageId).classList.add('active');
+      
+      // Update active tab
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.currentTarget.classList.add('active');
+      
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    // Back to top button
+    const backToTopBtn = document.querySelector('.back-to-top');
+    
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 300) {
+        backToTopBtn.classList.add('visible');
+      } else {
+        backToTopBtn.classList.remove('visible');
+      }
+    });
+    
+    backToTopBtn.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+    
+    // Add animation delays to terms sections
+    document.querySelectorAll('#terms section').forEach((section, index) => {
+      section.style.animationDelay = `${0.1 * index}s`;
+    });
+    
+    // Animate sections when they come into view
+    const observerOptions = {
+      threshold: 0.1
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.animationPlayState = 'running';
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+    
+    document.querySelectorAll('section').forEach(section => {
+      section.style.animationPlayState = 'paused';
+      observer.observe(section);
+    });
+  </script>
+</body>
+</html>

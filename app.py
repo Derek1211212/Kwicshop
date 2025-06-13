@@ -2284,6 +2284,28 @@ def subscribe():
 
 
 
+
+@app.route('/privacy-policy')
+def privacy_policy():
+    """
+    Serves the SwapSphere Privacy Policy page.
+    Expects: templates/privacy.html
+    """
+    return render_template('privacy.html')
+
+
+@app.route('/terms-and-conditions')
+def terms_and_conditions():
+    """
+    Serves the SwapSphere Terms & Conditions page.
+    Expects: templates/terms.html
+    """
+    return render_template('terms.html')
+
+
+
+
+
 @app.route('/test-push')
 def test_push():
     # Hardcoded user_id (your current test user)
