@@ -187,8 +187,6 @@ scheduler.start()
 
 
 
-
-
 @app.route('/')
 def home():
     # ───────────────────────────────────────────────────────────
@@ -199,16 +197,18 @@ def home():
     deal_type_filter  = request.args.get('deal_type', 'All')
     location_q        = request.args.get('location', '').strip()
 
-    # Track login & subscription status
-    user_logged_in  = 'user_id' in session
-    user_subscribed = False
-
-    conn = None
-    cursor = None
+    # Initialize
+    listings         = []
+    categories       = []
+    carousel_listings = []
+    user_logged_in   = 'user_id' in session
+    user_subscribed  = False
+    conn             = None
+    cursor           = None
 
     try:
         # ───────────────────────────────────────────────────────
-        # 1) If logged in, check push subscription
+        # 1) Check push subscription if user is logged in
         # ───────────────────────────────────────────────────────
         if user_logged_in:
             conn = get_db_connection()
@@ -228,14 +228,12 @@ def home():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
-            SELECT l.listing_id, l.image1, l.title
-              FROM listings AS l
-             ORDER BY l.created_at DESC
+            SELECT listing_id, image1, title
+              FROM listings
+             ORDER BY created_at DESC
              LIMIT 5
         """)
         carousel_listings = cursor.fetchall()
-
-        # build full banner_image URLs
         for c in carousel_listings:
             if c.get('image1'):
                 c['banner_image'] = url_for(
@@ -264,9 +262,11 @@ def home():
 
         if search:
             like = f'%{search}%'
-            base_query += """ AND (l.title LIKE %s
-                                   OR l.description LIKE %s
-                                   OR l.category LIKE %s)"""
+            base_query += """ AND (
+                                l.title LIKE %s OR
+                                l.description LIKE %s OR
+                                l.category LIKE %s
+                             )"""
             params += [like, like, like]
 
         if selected_category != 'All':
@@ -277,7 +277,6 @@ def home():
             base_query += " AND l.deal_type = %s"
             params.append(deal_type_filter)
 
-        # ordering logic
         if location_q:
             base_query += """
               ORDER BY
@@ -311,7 +310,7 @@ def home():
         listings = cursor.fetchall()
 
         # ───────────────────────────────────────────────────────
-        # 2C) FETCH TOP‑6 CATEGORIES
+        # 2.5) Fetch top‑6 categories by listing count
         # ───────────────────────────────────────────────────────
         cursor.execute("""
             SELECT category, COUNT(*) AS cnt
@@ -321,16 +320,16 @@ def home():
              LIMIT 6
         """)
         top_cats = cursor.fetchall()
-        categories = []
         for r in top_cats:
             name = r['category']
+            slug = name.lower().replace(' ', '-')
             categories.append({
                 'name': name,
-                'icon_url': f"https://api.iconify.design/mdi:{name.lower().replace(' ', '-')}.svg"
+                'icon_url': f"https://api.iconify.design/mdi:{slug}.svg"
             })
 
         # ───────────────────────────────────────────────────────
-        # 2D) PROCESS EACH LISTING: image URLs & offered_items
+        # 2.6) Build image URLs & load offered_items for Swap Deal
         # ───────────────────────────────────────────────────────
         for l in listings:
             # main image
@@ -347,7 +346,7 @@ def home():
                     _external=True
                 )
 
-            # banner image (for cards if needed)
+            # banner image
             if l.get('image1'):
                 l['banner_image'] = url_for(
                     'static',
@@ -361,7 +360,7 @@ def home():
                     _external=True
                 )
 
-            # offered items (swap deals)
+            # offered items
             if l['deal_type'] == 'Swap Deal':
                 cursor.execute("""
                   SELECT item_id, title, description, image1, `condition`
@@ -387,40 +386,35 @@ def home():
             else:
                 l['offers'] = []
 
-        # clean up
         cursor.close()
-        conn.close()
 
     except Exception as e:
-        logging.error("Error in home(): %s", e)
-        if cursor:
-            cursor.close()
+        logging.error("Error fetching listings: %s", e)
         if conn:
             conn.rollback()
+
+    finally:
+        if conn:
             conn.close()
-        # fall back to empty data
-        carousel_listings = []
-        listings = []
-        categories = []
 
     # ───────────────────────────────────────────────────────────
-    # 3) Rotate carousel offset
+    # 3) Rotate listings by offset
     # ───────────────────────────────────────────────────────────
-    total = len(carousel_listings)
-    if total > 0:
-        offset = read_offset() % total
-        carousel_listings = (
-            carousel_listings[offset:] + carousel_listings[:offset]
-        )
-        write_offset((offset + 1) % total)
+    total_count = len(listings)
+    if total_count > 0:
+        offset = read_offset() % total_count
+        listings = listings[offset:] + listings[:offset]
+        write_offset((offset + 1) % total_count)
 
     # ───────────────────────────────────────────────────────────
-    # 4) Render template with both datasets
+    # 4) Render template
     # ───────────────────────────────────────────────────────────
+    featured_listing = listings[0] if listings else None
     return render_template(
         'home.html',
-        carousel_listings=carousel_listings,
-        listings=listings,
+        carousel_listings=carousel_listings,  # unfiltered carousel
+        listings=listings,                    # rotated & filtered grid
+        featured_listing=featured_listing,
         categories=categories,
         search=search,
         selected_category=selected_category,
@@ -428,9 +422,8 @@ def home():
         location=location_q,
         user_logged_in=user_logged_in,
         user_subscribed=user_subscribed,
-        vapid_public_key=app.config.get('VAPID_PUBLIC_KEY')
+        vapid_public_key=app.config['VAPID_PUBLIC_KEY']
     )
-
 
 
 
