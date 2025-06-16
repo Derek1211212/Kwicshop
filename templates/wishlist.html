@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Wishlist – SwapHub</title>
+
+  <!-- FontAwesome for icons -->
+  <script src="https://kit.fontawesome.com/YOUR_KIT.js" crossorigin="anonymous"></script>
+
+  <!-- Inline CSS -->
+  <style>
+    :root {
+      --primary: #4361ee;
+      --dark: #333;
+      --light-bg: #f8f9fa;
+      --border-radius: 8px;
+      --box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      --transition: all .2s ease;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.5;
+      color: var(--dark);
+      background: var(--light-bg);
+    }
+    a { text-decoration: none; color: inherit; }
+    img { display: block; width: 100%; }
+
+    /* Header / Navigation */
+    header {
+      background: white;
+      padding: 1rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+    nav.nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+    nav.nav-links a {
+      position: relative;
+      padding: 0.5rem;
+      color: var(--dark);
+    }
+    .wishlist-link {
+      display: flex;
+      align-items: center;
+    }
+    .wishlist-link i { color: #dc3545; font-size: 1.2rem; }
+    .wishlist-count {
+      position: absolute; top: 2px; right: 2px;
+      background: #dc3545; color: white;
+      font-size: 0.7rem; width: 18px; height: 18px;
+      border-radius: 50%; display: flex;
+      align-items: center; justify-content: center;
+    }
+
+    /* Wishlist Container & Header */
+    .wishlist-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    .wishlist-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+    }
+    .wishlist-header i.fa-heart {
+      color: var(--primary);
+      margin-right: 0.5rem;
+    }
+    .count-badge {
+      background: var(--primary);
+      color: white;
+      font-size: 0.9rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      margin-left: 0.5rem;
+    }
+
+    /* Grid & Cards */
+    .wishlist-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+    .wishlist-card {
+      position: relative;
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    .wishlist-card:hover {
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+    .wishlist-card img {
+      height: 180px;
+      object-fit: cover;
+    }
+    .wishlist-card-content {
+      padding: 0.75rem 1rem;
+    }
+    .wishlist-card-content h3 {
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .wishlist-card-content p {
+      font-size: 0.85rem;
+      color: #555;
+      margin-bottom: 0.4rem;
+    }
+
+    /* Remove button */
+    .remove-wishlist-btn {
+      position: absolute;
+      top: 8px; right: 8px;
+      background: rgba(0,0,0,0.6);
+      color: white; border: none;
+      padding: 6px 8px; /* touch‑friendly */
+      border-radius: 4px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+      z-index: 2;
+    }
+    .remove-wishlist-btn:hover {
+      background: rgba(0,0,0,0.8);
+      transform: scale(1.05);
+    }
+
+    /* Mobile tweaks */
+    @media (max-width: 600px) {
+      header { padding: 0.75rem; }
+      .wishlist-header { font-size: 1.5rem; }
+      .wishlist-grid { grid-template-columns: 1fr; }
+      .wishlist-card img { height: 160px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER / NAV -->
+  <header>
+    <div class="brand">
+      <i class="fas fa-exchange-alt"></i>
+      <span>SwapHub</span>
+    </div>
+    <nav class="nav-links">
+      <a href="{{ url_for('home') }}">Home</a>
+      <a href="{{ url_for('view_wishlist') }}" class="wishlist-link">
+        <i class="fas fa-heart"></i>
+        <div class="wishlist-count">{{ session.get('wishlist_count', 0) }}</div>
+      </a>
+      {% if session.get('user_id') %}
+        <a href="{{ url_for('logout') }}">Logout</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">Login</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <!-- WISHLIST CONTENT -->
+  <main class="wishlist-container">
+    <div class="wishlist-header">
+      <i class="fas fa-heart"></i>
+      <span>My Wishlist</span>
+      <span class="count-badge">{{ listings|length }}</span>
+    </div>
+
+    {% if listings %}
+      <div class="wishlist-grid">
+        {% for l in listings %}
+          <div class="wishlist-card">
+            <!-- Remove from wishlist -->
+            <form method="POST" action="{{ url_for('toggle_wishlist_form') }}">
+              <input type="hidden" name="listing_id" value="{{ l.listing_id }}">
+              <button type="submit" class="remove-wishlist-btn">Remove</button>
+            </form>
+
+            <!-- Image & Link -->
+            <a href="{{ url_for('listing_details', listing_id=l.listing_id) }}">
+              <img
+                src="{{ url_for('static', filename='images/' + (l.image_url or 'placeholder.jpg')) }}"
+                alt="{{ l.title }}"
+              >
+            </a>
+
+            <!-- Details -->
+            <div class="wishlist-card-content">
+              <h3>
+                <a href="{{ url_for('listing_details', listing_id=l.listing_id) }}">
+                  {{ l.title }}
+                </a>
+              </h3>
+              <p class="listing-category">{{ l.category }}</p>
+              <p class="listing-date">
+                Wishlisted on {{ l.wishlisted_at.strftime('%b %d, %Y') }}
+              </p>
+
+              {% if l.deal_type == 'Outright Sales' %}
+                <p class="price-display">
+                  ₵{{ "{:,.2f}".format(l.price|float) }}
+                </p>
+              {% else %}
+                <p class="swap-details">
+                  Wanted: {{ l.desired_swap }}
+                  {% if l.additional_cash|float > 0 %}
+                    + ₵{{ "{:,.2f}".format(l.additional_cash|float) }}
+                  {% endif %}
+                </p>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>
+        You haven’t added any items to your wishlist yet.
+        <a href="{{ url_for('home') }}">Browse listings</a>.
+      </p>
+    {% endif %}
+  </main>
+
+</body>
+</html>

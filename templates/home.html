@@ -1545,6 +1545,132 @@ body .mobile-bottom-nav {
     display: block;
   }
 }
+
+.wishlist-btn {
+  background: none;
+  border: none;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 1.2rem;
+  color: #ccc;
+  cursor: pointer;
+  transition: color .2s;
+}
+
+.wishlist-btn i.wishlisted {
+  color: var(--primary);
+}
+
+.nav-item.wishlist-link {
+  position: relative;
+}
+
+#wishlist-count, #wishlist-count-mobile {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #dc3545;
+  color: #fff;
+  font-size: 0.75rem;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  border-radius: 50%;
+  text-align: center;
+}
+
+
+/* === Listing Container & Grid === */
+.listings-container {
+  width: 100%;
+  max-width: none;
+  padding: 1rem;
+  margin: 0 auto;
+}
+.listings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px,1fr));
+  gap: 1rem;
+}
+.listing-card-wrapper {
+  position: relative;
+}
+
+/* === Cards & Wishlist Button === */
+.listing-card {
+  background: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+  transition: var(--transition);
+  position: relative;
+}
+
+.listing-card:hover {
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+.wishlist-btn {
+  /* make it a white circle button */
+  background: rgba(255,255,255,0.9);
+  border: none;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 1.2rem;
+  color: #ccc;
+  padding: 6px;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: 
+    background .2s ease,
+    transform .1s ease,
+    color .2s ease;
+  z-index: 2;
+}
+
+.wishlist-btn:hover {
+  /* brighten and slightly grow on hover */
+  background: rgba(255,255,255,1);
+  transform: scale(1.1);
+  color: var(--primary);
+}
+
+.wishlist-btn i {
+  pointer-events: none; /* so click always hits the button */
+}
+
+.wishlist-btn i.wishlisted {
+  /* solid red when active */
+  color: #e74c3c;
+}
+
+/* === Nav Wishlist Badge === */
+.nav-links .wishlist-link {
+  position: relative;
+  margin-left: 1rem;
+}
+
+#wishlist-count {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  background: #dc3545;
+  color: white;
+  font-size: 0.7rem;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  text-align: center;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+/* === Deal‑type badge, images, etc… reuse your existing CSS below this line === */
+
+
 </style>
     <script>
     const USER_LOGGED_IN  = {{ 'true' if user_logged_in else 'false' }};
@@ -1567,6 +1693,13 @@ body .mobile-bottom-nav {
         <span class="tooltip">Click here to upload an item for swap</span>
       {% endif %}
     </a>
+
+    {% if session.get('user_id') %}
+      <a href="{{ url_for('view_wishlist') }}" class="nav-item wishlist-link">
+        <i class="fas fa-heart"></i>
+        <span id="wishlist-count">{{ session.get('wishlist_count', 0) }}</span>
+      </a>
+    {% endif %}
     <a href="/my-proposals">My Offers</a>
     {% if session.get('user_id') %}
       <a href="/logout" class="btn btn-outline">Logout</a>
@@ -1602,6 +1735,11 @@ body .mobile-bottom-nav {
       <a href="/my-proposals" class="nav-item">
         <i class="fas fa-exchange-alt nav-icon"></i>
         <span class="nav-label">Offers</span>
+      </a>
+      <a href="{{ url_for('view_wishlist') }}" class="nav-item wishlist-link">
+        <i class="fas fa-heart nav-icon"></i>
+        <span class="nav-label">Wishlist</span>
+        <span id="wishlist-count-mobile">{{ session.get('wishlist_count', 0) }}</span>
       </a>
       <a href="/logout" class="nav-item">
         <i class="fas fa-sign-out-alt nav-icon"></i>
@@ -1954,6 +2092,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <!-- Badge -->
           <div class="deal-type-badge">{{ listing.deal_type }}</div>
+              {% if user_logged_in %}
+                <button
+                  class="wishlist-btn"
+                  data-listing-id="{{ listing.listing_id }}"
+                  aria-pressed="{{ listing.is_wishlisted|lower }}"
+                >
+                  <i class="fas fa-heart {{ listing.is_wishlisted and 'wishlisted' or '' }}"></i>
+                </button>
+              {% endif %}
 
           <!-- Photos for Swap Deals -->
           {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 1 %}
@@ -2488,6 +2635,45 @@ document.addEventListener('DOMContentLoaded', () => {
     setupClickTracking();
   });
 </script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // handle click on any wishlist button
+    document.querySelectorAll('.wishlist-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.preventDefault();
+        const id  = btn.dataset.listingId;
+        const icon = btn.querySelector('i.fas');
+        fetch('/api/wishlist/toggle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ listing_id: id })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (!data.success) return console.error('Wishlist error');
+          // toggle UI state
+          if (data.action === 'added') {
+            icon.classList.add('wishlisted');
+            btn.setAttribute('aria-pressed','true');
+          } else {
+            icon.classList.remove('wishlisted');
+            btn.setAttribute('aria-pressed','false');
+          }
+          // update both desktop & mobile badges
+          document.getElementById('wishlist-count').textContent = data.total;
+          const m = document.getElementById('wishlist-count-mobile');
+          if (m) m.textContent = data.total;
+        })
+        .catch(console.error);
+      });
+    });
+  });
+</script>
+
+
+
+
 
 
 </body>

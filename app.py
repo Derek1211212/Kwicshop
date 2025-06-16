@@ -386,6 +386,18 @@ def home():
             else:
                 l['offers'] = []
 
+        if user_logged_in:
+            cursor.execute(
+                "SELECT listing_id FROM wishlists WHERE user_id=%s",
+                (session['user_id'],)
+            )
+            wish_ids = { r['listing_id'] for r in cursor.fetchall() }
+            for l in listings:
+                l['is_wishlisted'] = l['listing_id'] in wish_ids
+        else:
+            for l in listings:
+                l['is_wishlisted'] = False                
+
         cursor.close()
 
     except Exception as e:
@@ -2339,6 +2351,143 @@ def terms_and_conditions():
     """
     return render_template('terms.html')
 
+
+
+@app.before_request
+def load_wishlist_count():
+    if 'user_id' in session:
+        conn   = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT COUNT(*) FROM wishlists WHERE user_id=%s",
+            (session['user_id'],)
+        )
+        session['wishlist_count'] = cursor.fetchone()[0]
+        cursor.close()
+        conn.close()
+
+
+
+
+@app.route('/api/wishlist/toggle', methods=['POST'])
+@login_required
+def toggle_wishlist():
+    data       = request.get_json() or {}
+    listing_id = data.get('listing_id')
+    user_id    = session['user_id']
+    if not listing_id:
+        return jsonify(success=False, error='Missing listing_id'), 400
+
+    conn   = get_db_connection()
+    # if your default cursor returns tuples, use a normal cursor here:
+    cursor = conn.cursor()
+
+    try:
+        # 1) Check if already wishlisted
+        cursor.execute(
+            "SELECT id FROM wishlists WHERE user_id=%s AND listing_id=%s",
+            (user_id, listing_id)
+        )
+        existing = cursor.fetchone()
+        if existing:
+            wishlist_id = existing[0]  # tuple’s first element
+            cursor.execute(
+                "DELETE FROM wishlists WHERE id=%s",
+                (wishlist_id,)
+            )
+            action = 'removed'
+        else:
+            cursor.execute(
+                "INSERT INTO wishlists (user_id, listing_id) VALUES (%s,%s)",
+                (user_id, listing_id)
+            )
+            action = 'added'
+
+        # 2) Get fresh total count
+        cursor.execute(
+            "SELECT COUNT(*) FROM wishlists WHERE user_id=%s",
+            (user_id,)
+        )
+        count_row = cursor.fetchone()
+        total     = count_row[0]  # again, tuple
+
+        conn.commit()
+        return jsonify(success=True, action=action, total=total)
+
+    except Exception as e:
+        conn.rollback()
+        logging.error("Wishlist toggle error: %s", e)
+        return jsonify(success=False), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+
+@app.route('/wishlist')
+@login_required
+def view_wishlist():
+    user_id = session['user_id']
+    conn   = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT l.*, w.created_at AS wishlisted_at
+          FROM wishlists w
+          JOIN listings l ON l.listing_id = w.listing_id
+         WHERE w.user_id = %s
+         ORDER BY w.created_at DESC
+    """, (user_id,))
+    items = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template('wishlist.html', listings=items)
+
+
+
+@app.route('/toggle_wishlist', methods=['POST'])
+@login_required
+def toggle_wishlist_form():
+    # Grab the listing_id from the submitted form
+    listing_id = request.form.get('listing_id')
+    user_id    = session['user_id']
+    if not listing_id:
+        flash("No listing specified.", "warning")
+        return redirect(url_for('view_wishlist'))
+
+    conn   = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        # Check if already in wishlist
+        cursor.execute(
+            "SELECT id FROM wishlists WHERE user_id=%s AND listing_id=%s",
+            (user_id, listing_id)
+        )
+        existing = cursor.fetchone()
+
+        if existing:
+            # remove
+            cursor.execute(
+                "DELETE FROM wishlists WHERE id=%s",
+                (existing[0],)
+            )
+        else:
+            # add
+            cursor.execute(
+                "INSERT INTO wishlists (user_id, listing_id) VALUES (%s,%s)",
+                (user_id, listing_id)
+            )
+
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        logging.error("Wishlist form-toggle error: %s", e)
+        flash("Something went wrong toggling your wishlist.", "danger")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for('view_wishlist'))
 
 
 
