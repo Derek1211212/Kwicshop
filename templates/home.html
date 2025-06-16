@@ -2383,34 +2383,6 @@ document.addEventListener('DOMContentLoaded', () => {
     images.forEach(img => observer.observe(img));
   }
 
-  //======== 6) Track Impressions & Clicks ========//
-  function trackImpression(id) {
-    fetch('/api/track_impression', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({listing_id: id})
-    }).catch(console.error);
-  }
-  function trackClick(id) {
-    fetch('/api/track_click', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({listing_id: id})
-    }).catch(console.error);
-  }
-  function setupImpressionTracking() {
-    const cards = document.querySelectorAll('.listing-card-link');
-    const obs = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          trackImpression(entry.target.dataset.listingId);
-          obs.unobserve(entry.target);
-        }
-      });
-    }, {threshold: 0.5});
-    cards.forEach(card => obs.observe(card));
-  }
-
   //======== 7) Hero Carousel ========//
   function initCarousel() {
     const items = document.querySelectorAll('.carousel-item');
@@ -2436,6 +2408,87 @@ document.addEventListener('DOMContentLoaded', () => {
     initCarousel();
   });
 </script>
+
+<script>
+  // Make sure links are block‑level so observer can measure them
+  const style = document.createElement('style');
+  style.innerHTML = `
+    .listing-card-link {
+      display: block !important;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // 1) Impression tracker
+  function trackImpression(id) {
+    console.log('💡 [trackImpression] firing for', id);
+    return fetch('/api/track_impression', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({listing_id: id})
+    })
+    .then(res => console.log(`💡 [impression res] ${res.status}`))
+    .catch(err => console.error('💡 [impression error]', err));
+  }
+
+  // 2) Click tracker
+  function trackClick(id) {
+    console.log('🖱️ [trackClick] firing for', id);
+    return fetch('/api/track_click', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({listing_id: id})
+    })
+    .then(res => console.log(`🖱️ [click res] ${res.status}`))
+    .catch(err => console.error('🖱️ [click error]', err));
+  }
+
+  // 3) Set up observer
+  function setupImpressionTracking() {
+    const cards = Array.from(document.querySelectorAll('.listing-card-link'));
+    console.log('🔍 [setupImpressionTracking] found', cards.length, 'cards');
+    if (!cards.length) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const id = entry.target.dataset.listingId;
+        console.log(`🔍 [observer] entry for ${id}: isIntersecting=${entry.isIntersecting}`);
+        if (entry.isIntersecting) {
+          trackImpression(id);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px'
+    });
+
+    cards.forEach(card => {
+      console.log('🔍 [observer] observing card', card.dataset.listingId);
+      observer.observe(card);
+    });
+  }
+
+  // 4) Click listeners
+  function setupClickTracking() {
+    const links = Array.from(document.querySelectorAll('.listing-card-link'));
+    console.log('🔍 [setupClickTracking] found', links.length, 'links');
+    links.forEach(link => {
+      link.addEventListener('click', e => {
+        const id = e.currentTarget.dataset.listingId;
+        trackClick(id);
+      });
+    });
+  }
+
+  // 5) Kick it off
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 DOMContentLoaded — initializing trackers');
+    setupImpressionTracking();
+    setupClickTracking();
+  });
+</script>
+
 
 </body>
 </html>
