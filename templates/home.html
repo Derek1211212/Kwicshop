@@ -1668,6 +1668,18 @@ body .mobile-bottom-nav {
   box-shadow: 0 1px 4px rgba(0,0,0,0.2);
 }
 
+
+
+@keyframes pop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+
+.wishlist-btn.animate {
+  animation: pop 0.3s ease;
+}
+
 /* === Deal‑type badge, images, etc… reuse your existing CSS below this line === */
 
 
@@ -2672,6 +2684,16 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 
+<script>
+  document.querySelectorAll('.wishlist-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    btn.classList.remove('animate'); // reset if already animating
+    void btn.offsetWidth; // trigger reflow to restart animation
+    btn.classList.add('animate');
+  });
+});
+
+</script>
 
 
 

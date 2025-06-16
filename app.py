@@ -203,15 +203,18 @@ def home():
     carousel_listings = []
     user_logged_in   = 'user_id' in session
     user_subscribed  = False
-    conn             = None
-    cursor           = None
+
+    conn   = None
+    cursor = None
 
     try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
         # ───────────────────────────────────────────────────────
         # 1) Check push subscription if user is logged in
         # ───────────────────────────────────────────────────────
         if user_logged_in:
-            conn = get_db_connection()
             cur = conn.cursor()
             cur.execute(
                 "SELECT 1 FROM push_subscriptions WHERE user_id = %s",
@@ -219,45 +222,32 @@ def home():
             )
             user_subscribed = cur.fetchone() is not None
             cur.close()
-            conn.close()
-            conn = None
 
         # ───────────────────────────────────────────────────────
         # 2A) FETCH UNFILTERED LISTINGS FOR CAROUSEL (e.g. top 5)
         # ───────────────────────────────────────────────────────
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
         cursor.execute("""
             SELECT listing_id, image1, title
               FROM listings
              ORDER BY created_at DESC
              LIMIT 5
         """)
+        base_image_url  = url_for('static', filename='images/', _external=True)
+        placeholder_url = base_image_url + 'placeholder.jpg'
         carousel_listings = cursor.fetchall()
         for c in carousel_listings:
-            if c.get('image1'):
-                c['banner_image'] = url_for(
-                    'static',
-                    filename='images/' + c['image1'],
-                    _external=True
-                )
-            else:
-                c['banner_image'] = url_for(
-                    'static',
-                    filename='images/placeholder.jpg',
-                    _external=True
-                )
+            c['banner_image'] = base_image_url + (c['image1'] if c.get('image1') else 'placeholder.jpg')
 
         # ───────────────────────────────────────────────────────
         # 2B) FETCH FILTERED LISTINGS FOR GRID
         # ───────────────────────────────────────────────────────
-        base_query = """SELECT l.*, u.username,
-                               IFNULL(m.impressions, 0) AS impressions
-                        FROM listings AS l
-                        JOIN users AS u ON l.user_id = u.id
-                        LEFT JOIN listing_metrics AS m
-                          ON l.listing_id = m.listing_id
-                        WHERE 1=1"""
+        base_query = """
+            SELECT l.*, u.username, IFNULL(m.impressions, 0) AS impressions
+              FROM listings AS l
+              JOIN users AS u ON l.user_id = u.id
+              LEFT JOIN listing_metrics AS m ON l.listing_id = m.listing_id
+             WHERE 1=1
+        """
         params = []
 
         if search:
@@ -277,35 +267,37 @@ def home():
             base_query += " AND l.deal_type = %s"
             params.append(deal_type_filter)
 
+        # Ordering
         if location_q:
             base_query += """
-              ORDER BY
-                CASE l.plan
-                  WHEN 'Diamond' THEN 5
-                  WHEN 'Gold'    THEN 4
-                  WHEN 'Silver'  THEN 3
-                  WHEN 'Bronze'  THEN 2
-                  ELSE 1
-                END DESC,
-                (l.location = %s) DESC,
-                (SOUNDEX(l.location) = SOUNDEX(%s)) DESC,
-                (l.location LIKE %s) DESC,
-                l.created_at DESC
+                ORDER BY
+                  CASE l.plan
+                    WHEN 'Diamond' THEN 5
+                    WHEN 'Gold'    THEN 4
+                    WHEN 'Silver'  THEN 3
+                    WHEN 'Bronze'  THEN 2
+                    ELSE 1
+                  END DESC,
+                  (l.location = %s) DESC,
+                  (SOUNDEX(l.location) = SOUNDEX(%s)) DESC,
+                  (l.location LIKE %s) DESC,
+                  l.created_at DESC
             """
             params += [location_q, location_q, f'%{location_q}%']
         else:
             base_query += """
-              ORDER BY
-                CASE l.plan
-                  WHEN 'Diamond' THEN 5
-                  WHEN 'Gold'    THEN 4
-                  WHEN 'Silver'  THEN 3
-                  WHEN 'Bronze'  THEN 2
-                  ELSE 1
-                END DESC,
-                l.created_at DESC
+                ORDER BY
+                  CASE l.plan
+                    WHEN 'Diamond' THEN 5
+                    WHEN 'Gold'    THEN 4
+                    WHEN 'Silver'  THEN 3
+                    WHEN 'Bronze'  THEN 2
+                    ELSE 1
+                  END DESC,
+                  l.created_at DESC
             """
 
+        # → Pagination-ready: You can add LIMIT/OFFSET here if needed.
         cursor.execute(base_query, params)
         listings = cursor.fetchall()
 
@@ -329,74 +321,43 @@ def home():
             })
 
         # ───────────────────────────────────────────────────────
-        # 2.6) Build image URLs & load offered_items for Swap Deal
+        # 2.6) Fetch ALL offered items for Swap Deals → Avoid N+1 queries
+        # ───────────────────────────────────────────────────────
+        swap_ids = [l['listing_id'] for l in listings if l['deal_type'] == 'Swap Deal']
+        offers_by_listing = {}
+        if swap_ids:
+            format_strings = ','.join(['%s'] * len(swap_ids))
+            cursor.execute(f"""
+                SELECT listing_id, item_id, title, description, image1, `condition`
+                  FROM offered_items
+                 WHERE listing_id IN ({format_strings})
+                 ORDER BY listing_id, item_id ASC
+            """, tuple(swap_ids))
+            for o in cursor.fetchall():
+                o['image1'] = base_image_url + (o['image1'] if o.get('image1') else 'placeholder.jpg')
+                offers_by_listing.setdefault(o['listing_id'], []).append(o)
+
+        # ───────────────────────────────────────────────────────
+        # 2.7) Finalize listings (attach offers + build image URLs)
         # ───────────────────────────────────────────────────────
         for l in listings:
-            # main image
-            if l.get('image_url'):
-                l['image_url'] = url_for(
-                    'static',
-                    filename='images/' + l['image_url'],
-                    _external=True
-                )
-            else:
-                l['image_url'] = url_for(
-                    'static',
-                    filename='images/placeholder.jpg',
-                    _external=True
-                )
+            l['image_url'] = base_image_url + (l['image_url'] if l.get('image_url') else 'placeholder.jpg')
+            l['banner_image'] = base_image_url + (l['image1'] if l.get('image1') else 'placeholder.jpg')
+            l['offers'] = offers_by_listing.get(l['listing_id'], []) if l['deal_type'] == 'Swap Deal' else []
 
-            # banner image
-            if l.get('image1'):
-                l['banner_image'] = url_for(
-                    'static',
-                    filename='images/' + l['image1'],
-                    _external=True
-                )
-            else:
-                l['banner_image'] = url_for(
-                    'static',
-                    filename='images/placeholder.jpg',
-                    _external=True
-                )
-
-            # offered items
-            if l['deal_type'] == 'Swap Deal':
-                cursor.execute("""
-                  SELECT item_id, title, description, image1, `condition`
-                    FROM offered_items
-                   WHERE listing_id = %s
-                   ORDER BY item_id ASC
-                """, (l['listing_id'],))
-                offers = cursor.fetchall() or []
-                for o in offers:
-                    if o.get('image1'):
-                        o['image1'] = url_for(
-                            'static',
-                            filename='images/' + o['image1'],
-                            _external=True
-                        )
-                    else:
-                        o['image1'] = url_for(
-                            'static',
-                            filename='images/placeholder.jpg',
-                            _external=True
-                        )
-                l['offers'] = offers
-            else:
-                l['offers'] = []
-
+        # ───────────────────────────────────────────────────────
+        # 2.8) Wishlists
+        # ───────────────────────────────────────────────────────
+        wish_ids = set()
         if user_logged_in:
             cursor.execute(
                 "SELECT listing_id FROM wishlists WHERE user_id=%s",
                 (session['user_id'],)
             )
             wish_ids = { r['listing_id'] for r in cursor.fetchall() }
-            for l in listings:
-                l['is_wishlisted'] = l['listing_id'] in wish_ids
-        else:
-            for l in listings:
-                l['is_wishlisted'] = False                
+
+        for l in listings:
+            l['is_wishlisted'] = l['listing_id'] in wish_ids
 
         cursor.close()
 
@@ -424,8 +385,8 @@ def home():
     featured_listing = listings[0] if listings else None
     return render_template(
         'home.html',
-        carousel_listings=carousel_listings,  # unfiltered carousel
-        listings=listings,                    # rotated & filtered grid
+        carousel_listings=carousel_listings,
+        listings=listings,
         featured_listing=featured_listing,
         categories=categories,
         search=search,
@@ -436,6 +397,7 @@ def home():
         user_subscribed=user_subscribed,
         vapid_public_key=app.config['VAPID_PUBLIC_KEY']
     )
+
 
 
 
