@@ -26,6 +26,7 @@ from notifications import send_push
 from config import VAPID_PUBLIC_KEY
 from authlib.integrations.flask_client import OAuth
 from apscheduler.schedulers.background import BackgroundScheduler
+import random
 
 
 
@@ -189,205 +190,176 @@ scheduler.start()
 
 @app.route('/')
 def home():
-    # ───────────────────────────────────────────────────────────
     # 0) Read search & filter parameters
-    # ───────────────────────────────────────────────────────────
     search            = request.args.get('search', '').strip()
     selected_category = request.args.get('category', 'All')
     deal_type_filter  = request.args.get('deal_type', 'All')
     location_q        = request.args.get('location', '').strip()
 
-    # Initialize
-    listings         = []
-    categories       = []
+    listings          = []
+    categories        = []
     carousel_listings = []
-    user_logged_in   = 'user_id' in session
-    user_subscribed  = False
+    user_logged_in    = 'user_id' in session
+    user_subscribed   = False
 
-    conn   = None
-    cursor = None
-
+    conn = None
     try:
-        conn = get_db_connection()
+        conn   = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # ───────────────────────────────────────────────────────
-        # 1) Check push subscription if user is logged in
-        # ───────────────────────────────────────────────────────
+        # 1) Push subscription check
         if user_logged_in:
             cur = conn.cursor()
             cur.execute(
-                "SELECT 1 FROM push_subscriptions WHERE user_id = %s",
+                "SELECT 1 FROM push_subscriptions WHERE user_id=%s",
                 (session['user_id'],)
             )
             user_subscribed = cur.fetchone() is not None
             cur.close()
 
-        # ───────────────────────────────────────────────────────
-        # 2A) FETCH UNFILTERED LISTINGS FOR CAROUSEL (e.g. top 5)
-        # ───────────────────────────────────────────────────────
-        cursor.execute("""
-            SELECT listing_id, image1, title
+        # 2A) FETCH CAROUSEL LISTINGS WITH Plan
+        cursor.execute(
+            """
+            SELECT listing_id, image1, title, `Plan`
               FROM listings
              ORDER BY created_at DESC
-             LIMIT 5
-        """)
-        base_image_url  = url_for('static', filename='images/', _external=True)
-        placeholder_url = base_image_url + 'placeholder.jpg'
-        carousel_listings = cursor.fetchall()
+             LIMIT 20
+            """
+        )
+        base_image_url = url_for('static', filename='images/', _external=True)
+        raw_carousel = cursor.fetchall()  # include Plan
+        # apply weighted rotation to carousel
+        PLAN_WEIGHTS = {'Diamond':5,'Gold':4,'Silver':3,'Bronze':2,'Free':1}
+        weighted_idx = []
+        for idx, rec in enumerate(raw_carousel):
+            w = PLAN_WEIGHTS.get(rec['Plan'], 1)
+            weighted_idx += [idx] * w
+        jitter = random.randrange(len(weighted_idx)) if weighted_idx else 0
+        offset = (read_offset() + jitter) % len(weighted_idx) if weighted_idx else 0
+        write_offset((offset + 1) % len(weighted_idx) if weighted_idx else 0)
+        seen = set()
+        ordered = []
+        for i in weighted_idx[offset:] + weighted_idx[:offset]:
+            if i not in seen:
+                seen.add(i)
+                ordered.append(raw_carousel[i])
+            if len(ordered) >= 5:
+                break
+        carousel_listings = ordered
         for c in carousel_listings:
-            c['banner_image'] = base_image_url + (c['image1'] if c.get('image1') else 'placeholder.jpg')
+            c['banner_image'] = base_image_url + (c.get('image1') or 'placeholder.jpg')
 
-        # ───────────────────────────────────────────────────────
-        # 2B) FETCH FILTERED LISTINGS FOR GRID
-        # ───────────────────────────────────────────────────────
-        base_query = """
-            SELECT l.*, u.username, IFNULL(m.impressions, 0) AS impressions
-              FROM listings AS l
-              JOIN users AS u ON l.user_id = u.id
-              LEFT JOIN listing_metrics AS m ON l.listing_id = m.listing_id
-             WHERE 1=1
-        """
+        # 2B) FETCH FILTERED GRID LISTINGS
+        base_query = (
+            "SELECT l.*, u.username, IFNULL(m.impressions,0) AS impressions "
+            "FROM listings l "
+            "JOIN users u ON l.user_id=u.id "
+            "LEFT JOIN listing_metrics m ON l.listing_id=m.listing_id "
+            "WHERE 1=1"
+        )
         params = []
-
         if search:
-            like = f'%{search}%'
-            base_query += """ AND (
-                                l.title LIKE %s OR
-                                l.description LIKE %s OR
-                                l.category LIKE %s
-                             )"""
+            like = f"%{search}%"
+            base_query += " AND (l.title LIKE %s OR l.description LIKE %s OR l.category LIKE %s)"
             params += [like, like, like]
-
         if selected_category != 'All':
-            base_query += " AND l.category = %s"
+            base_query += " AND l.category=%s"
             params.append(selected_category)
-
         if deal_type_filter != 'All':
-            base_query += " AND l.deal_type = %s"
+            base_query += " AND l.deal_type=%s"
             params.append(deal_type_filter)
-
-        # Ordering
+        order_clause = (
+            "CASE l.`Plan` WHEN 'Diamond' THEN 5 WHEN 'Gold' THEN 4 "
+            "WHEN 'Silver' THEN 3 WHEN 'Bronze' THEN 2 ELSE 1 END DESC, "
+            "l.created_at DESC"
+        )
         if location_q:
-            base_query += """
-                ORDER BY
-                  CASE l.plan
-                    WHEN 'Diamond' THEN 5
-                    WHEN 'Gold'    THEN 4
-                    WHEN 'Silver'  THEN 3
-                    WHEN 'Bronze'  THEN 2
-                    ELSE 1
-                  END DESC,
-                  (l.location = %s) DESC,
-                  (SOUNDEX(l.location) = SOUNDEX(%s)) DESC,
-                  (l.location LIKE %s) DESC,
-                  l.created_at DESC
-            """
-            params += [location_q, location_q, f'%{location_q}%']
-        else:
-            base_query += """
-                ORDER BY
-                  CASE l.plan
-                    WHEN 'Diamond' THEN 5
-                    WHEN 'Gold'    THEN 4
-                    WHEN 'Silver'  THEN 3
-                    WHEN 'Bronze'  THEN 2
-                    ELSE 1
-                  END DESC,
-                  l.created_at DESC
-            """
-
-        # → Pagination-ready: You can add LIMIT/OFFSET here if needed.
-        cursor.execute(base_query, params)
+            order_clause = (
+                "CASE l.`Plan` WHEN 'Diamond' THEN 5 WHEN 'Gold' THEN 4 "
+                "WHEN 'Silver' THEN 3 WHEN 'Bronze' THEN 2 ELSE 1 END DESC, "
+                "(l.location=%s) DESC, (SOUNDEX(l.location)=SOUNDEX(%s)) DESC, "
+                "(l.location LIKE %s) DESC, l.created_at DESC"
+            )
+            params += [location_q, location_q, f"%{location_q}%"]
+        cursor.execute(base_query + " ORDER BY " + order_clause, params)
         listings = cursor.fetchall()
 
-        # ───────────────────────────────────────────────────────
-        # 2.5) Fetch top‑6 categories by listing count
-        # ───────────────────────────────────────────────────────
-        cursor.execute("""
-            SELECT category, COUNT(*) AS cnt
-              FROM listings
-             GROUP BY category
-             ORDER BY cnt DESC
-             LIMIT 6
-        """)
-        top_cats = cursor.fetchall()
-        for r in top_cats:
-            name = r['category']
-            slug = name.lower().replace(' ', '-')
-            categories.append({
-                'name': name,
-                'icon_url': f"https://api.iconify.design/mdi:{slug}.svg"
-            })
+        # 2.5) Top categories
+        cursor.execute(
+            "SELECT category, COUNT(*) AS cnt FROM listings "
+            "GROUP BY category ORDER BY cnt DESC LIMIT 6"
+        )
+        for r in cursor.fetchall():
+            slug = r['category'].lower().replace(' ', '-')
+            categories.append({'name': r['category'], 'icon_url': f"https://api.iconify.design/mdi:{slug}.svg"})
 
-        # ───────────────────────────────────────────────────────
-        # 2.6) Fetch ALL offered items for Swap Deals → Avoid N+1 queries
-        # ───────────────────────────────────────────────────────
-        swap_ids = [l['listing_id'] for l in listings if l['deal_type'] == 'Swap Deal']
+        # 2.6) Bulk fetch offered items
+        swap_ids = [l['listing_id'] for l in listings if l['deal_type']=='Swap Deal']
         offers_by_listing = {}
         if swap_ids:
-            format_strings = ','.join(['%s'] * len(swap_ids))
-            cursor.execute(f"""
-                SELECT listing_id, item_id, title, description, image1, `condition`
-                  FROM offered_items
-                 WHERE listing_id IN ({format_strings})
-                 ORDER BY listing_id, item_id ASC
-            """, tuple(swap_ids))
-            for o in cursor.fetchall():
-                o['image1'] = base_image_url + (o['image1'] if o.get('image1') else 'placeholder.jpg')
-                offers_by_listing.setdefault(o['listing_id'], []).append(o)
-
-        # ───────────────────────────────────────────────────────
-        # 2.7) Finalize listings (attach offers + build image URLs)
-        # ───────────────────────────────────────────────────────
-        for l in listings:
-            l['image_url'] = base_image_url + (l['image_url'] if l.get('image_url') else 'placeholder.jpg')
-            l['banner_image'] = base_image_url + (l['image1'] if l.get('image1') else 'placeholder.jpg')
-            l['offers'] = offers_by_listing.get(l['listing_id'], []) if l['deal_type'] == 'Swap Deal' else []
-
-        # ───────────────────────────────────────────────────────
-        # 2.8) Wishlists
-        # ───────────────────────────────────────────────────────
-        wish_ids = set()
-        if user_logged_in:
+            placeholder = ','.join(['%s']*len(swap_ids))
             cursor.execute(
-                "SELECT listing_id FROM wishlists WHERE user_id=%s",
-                (session['user_id'],)
+                f"SELECT listing_id, item_id, title, description, image1, `condition` "
+                f"FROM offered_items WHERE listing_id IN ({placeholder}) "
+                f"ORDER BY listing_id,item_id ASC",
+                tuple(swap_ids)
             )
-            wish_ids = { r['listing_id'] for r in cursor.fetchall() }
-
+            for o in cursor.fetchall():
+                o['image1'] = base_image_url + (o.get('image1') or 'placeholder.jpg')
+                offers_by_listing.setdefault(o['listing_id'],[]).append(o)
         for l in listings:
-            l['is_wishlisted'] = l['listing_id'] in wish_ids
-
+            l['image_url']    = base_image_url + (l.get('image_url') or 'placeholder.jpg')
+            l['banner_image'] = base_image_url + (l.get('image1') or 'placeholder.jpg')
+            l['offers']       = offers_by_listing.get(l['listing_id'], [])
+        if user_logged_in:
+            cursor.execute("SELECT listing_id FROM wishlists WHERE user_id=%s", (session['user_id'],))
+            wish_ids = {r['listing_id'] for r in cursor.fetchall()}
+            for l in listings:
+                l['is_wishlisted'] = l['listing_id'] in wish_ids
         cursor.close()
-
     except Exception as e:
-        logging.error("Error fetching listings: %s", e)
-        if conn:
-            conn.rollback()
-
+        logging.error("Error: %s", e)
+        if conn: conn.rollback()
     finally:
-        if conn:
-            conn.close()
+        if conn: conn.close()
 
-    # ───────────────────────────────────────────────────────────
-    # 3) Rotate listings by offset
-    # ───────────────────────────────────────────────────────────
-    total_count = len(listings)
-    if total_count > 0:
-        offset = read_offset() % total_count
-        listings = listings[offset:] + listings[:offset]
-        write_offset((offset + 1) % total_count)
+    # 3) Rotate grid via weighted round-robin + jitter
+    PLAN_WEIGHTS = {'Diamond':5,'Gold':4,'Silver':3,'Bronze':2,'Free':1}
+    plan_groups = {p:[l for l in listings if l['Plan']==p] for p in PLAN_WEIGHTS}
+    cycle = []
+    for p,w in PLAN_WEIGHTS.items(): cycle += [p]*w
+    if cycle:
+        jitter = random.randrange(len(cycle))
+        off = (read_offset() + jitter) % len(cycle)
+        rotated = cycle[off:]+cycle[:off]
+        write_offset((off+1)%len(cycle))
+        idx_map = {p:0 for p in PLAN_WEIGHTS}
+        slots=[]
+        for p in rotated:
+            b=plan_groups.get(p,[])
+            if b:
+                slots.append(b[idx_map[p]%len(b)])
+                idx_map[p]+=1
+        seen, final = set(), []
+        for itm in slots:
+            lid=itm['listing_id']
+            if lid not in seen:
+                seen.add(lid)
+                final.append(itm)
+        if len(final)!=len(listings):
+            tot=len(listings)
+            o=read_offset()%tot
+            listings=listings[o:]+listings[:o]
+            write_offset((o+1)%tot)
+        else:
+            listings=final
 
-    # ───────────────────────────────────────────────────────────
-    # 4) Render template
-    # ───────────────────────────────────────────────────────────
-    featured_listing = listings[0] if listings else None
-    return render_template(
-        'home.html',
+    # 4) Render
+    featured = listings[0] if listings else None
+    return render_template('home.html',
         carousel_listings=carousel_listings,
         listings=listings,
-        featured_listing=featured_listing,
+        featured_listing=featured,
         categories=categories,
         search=search,
         selected_category=selected_category,
@@ -395,7 +367,7 @@ def home():
         location=location_q,
         user_logged_in=user_logged_in,
         user_subscribed=user_subscribed,
-        vapid_public_key=app.config['VAPID_PUBLIC_KEY']
+        vapid_public_key=app.config.get('VAPID_PUBLIC_KEY','')
     )
 
 
@@ -973,9 +945,18 @@ def create_proposal(listing_id):
 def dashboard():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    
+
     try:
-        # Get user listings with proposal count and metrics
+        user_id = session.get('user_id')
+        print("Current user_id:", user_id)  # Debug
+
+        # Get current user info
+        cursor.execute("SELECT id, username, email FROM users WHERE id = %s", (user_id,))
+        user = cursor.fetchone()
+        if not user:
+            return "User not found.", 404
+
+        # Get user listings
         cursor.execute("""
             SELECT 
                 l.*, 
@@ -985,43 +966,44 @@ def dashboard():
             FROM listings l
             LEFT JOIN listing_metrics m ON l.listing_id = m.listing_id
             WHERE l.user_id = %s
-        """, (session['user_id'],))
+        """, (user_id,))
         listings = cursor.fetchall()
-        
-        # Get proposals with sender information
+
+        # Deduplicate by listing_id (optional safety)
+        listings = list({listing['listing_id']: listing for listing in listings}.values())
+
+        print(f"Listings found: {len(listings)}")  # Debug
+
+        # Get proposals
         cursor.execute("""
             SELECT p.*, l.title AS listing_title, u.username AS sender_username, u.contact AS sender_contact
             FROM proposals p
             JOIN listings l ON p.listing_id = l.listing_id 
             JOIN users u ON p.user_id = u.id
             WHERE l.user_id = %s
-        """, (session['user_id'],))
+        """, (user_id,))
         proposals = cursor.fetchall()
-        
-        # Get unique listing titles for filter
+
         unique_titles = list({proposal['listing_title'] for proposal in proposals})
-        
-        # Get current user info
-        cursor.execute("SELECT id, username, email FROM users WHERE id = %s", (session['user_id'],))
-        user = cursor.fetchone()
-        
-        # Define promotion plans and prices
+
         plan_prices = {
             'Diamond': 100,
             'Gold': 70,
             'Silver': 40,
             'Bronze': 20
         }
-        
-        return render_template('dashboard.html', 
-                            user=user,
-                            listings=listings,
-                            proposals=proposals,
-                            unique_titles=unique_titles,
-                            plan_prices=plan_prices)  # Added plan_prices here
+
+        return render_template('dashboard.html',
+                               user=user,
+                               listings=listings,
+                               proposals=proposals,
+                               unique_titles=unique_titles,
+                               plan_prices=plan_prices)
+
     finally:
         cursor.close()
         conn.close()
+
 
 
 
@@ -1976,73 +1958,96 @@ def reset_password(token):
 
 
 
+# --- Impression & Click Tracking Endpoints ---
 @app.route('/api/track_impression', methods=['POST'])
+@login_required
 def track_impression():
     data = request.get_json() or {}
-    listing_id = data.get('listing_id')
-    if not listing_id:
-        return jsonify({'success': False, 'error': 'Missing listing_id'}), 400
+    lid = data.get('listing_id')
+    source = data.get('source', 'grid')
+    if not lid:
+        return jsonify(success=False, error='Missing listing_id'), 400
 
-    conn   = get_db_connection()
-    cursor = conn.cursor()
+    conn = get_db_connection()
+    cur = conn.cursor()
     try:
-        cursor.execute(
-            "SELECT * FROM listing_metrics WHERE listing_id = %s",
-            (listing_id,)
-        )
-        existing = cursor.fetchone()
-        if existing:
-            cursor.execute("""
-                UPDATE listing_metrics 
-                   SET impressions = impressions + 1,
-                       updated_at   = NOW()
-                 WHERE listing_id = %s
-            """, (listing_id,))
+        # check if carousel_impressions column exists
+        cur.execute("SHOW COLUMNS FROM listing_metrics LIKE 'carousel_impressions'")
+        has_ci = cur.fetchone() is not None
+
+        if has_ci:
+            # upsert with carousel_impressions
+            sql = (
+                "INSERT INTO listing_metrics (listing_id, impressions, carousel_impressions) "
+                "VALUES (%s,1,CASE WHEN %s='carousel' THEN 1 ELSE 0 END) "
+                "ON DUPLICATE KEY UPDATE impressions = impressions + 1, "
+                "carousel_impressions = carousel_impressions + (CASE WHEN %s='carousel' THEN 1 ELSE 0 END)"
+            )
+            params = (lid, source, source)
         else:
-            cursor.execute("""
-                INSERT INTO listing_metrics
-                    (listing_id, impressions, clicks, updated_at) 
-                VALUES (%s, 1, 0, NOW())
-            """, (listing_id,))
+            # fallback: only track total impressions
+            sql = (
+                "INSERT INTO listing_metrics (listing_id, impressions) VALUES (%s,1) "
+                "ON DUPLICATE KEY UPDATE impressions = impressions + 1"
+            )
+            params = (lid,)
+
+        cur.execute(sql, params)
         conn.commit()
-        return jsonify({'success': True})
-    except Exception as e:
-        logging.error("Error updating impression: %s", e)
-        return jsonify({'success': False}), 500
-    finally:
-        cursor.close()
-        conn.close()
-
-
-@app.route('/api/track_click', methods=['POST'])
-def track_click():
-    data = request.get_json() or {}
-    listing_id = data.get('listing_id')
-    if not listing_id:
-        return jsonify({'success': False, 'error': 'Missing listing_id'}), 400
-
-    conn   = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("""
-            UPDATE listing_metrics
-               SET clicks = clicks + 1
-             WHERE listing_id = %s
-        """, (listing_id,))
-        if cursor.rowcount == 0:
-            cursor.execute("""
-                INSERT INTO listing_metrics (listing_id, clicks, impressions, updated_at)
-                VALUES (%s, 1, 0, NOW())
-            """, (listing_id,))
-        conn.commit()
-        return jsonify({'success': True})
+        return jsonify(success=True)
     except Exception as e:
         conn.rollback()
-        logging.error("Error tracking click: %s", e)
-        return jsonify({'success': False}), 500
+        logging.error("Impression track error: %s", e)
+        return jsonify(success=False), 500
     finally:
-        cursor.close()
+        cur.close()
         conn.close()
+
+@app.route('/api/track_click', methods=['POST'])
+@login_required
+def track_click():
+    data = request.get_json() or {}
+    lid = data.get('listing_id')
+    source = data.get('source', 'grid')
+    if not lid:
+        return jsonify(success=False, error='Missing listing_id'), 400
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        # check if carousel_clicks column exists
+        cur.execute("SHOW COLUMNS FROM listing_metrics LIKE 'carousel_clicks'")
+        has_cc = cur.fetchone() is not None
+
+        if has_cc:
+            # upsert with carousel_clicks
+            sql = (
+                "INSERT INTO listing_metrics (listing_id, clicks, carousel_clicks) "
+                "VALUES (%s,1,CASE WHEN %s='carousel' THEN 1 ELSE 0 END) "
+                "ON DUPLICATE KEY UPDATE clicks = clicks + 1, "
+                "carousel_clicks = carousel_clicks + (CASE WHEN %s='carousel' THEN 1 ELSE 0 END)"
+            )
+            params = (lid, source, source)
+        else:
+            # fallback: only track total clicks
+            sql = (
+                "INSERT INTO listing_metrics (listing_id, clicks) VALUES (%s,1) "
+                "ON DUPLICATE KEY UPDATE clicks = clicks + 1"
+            )
+            params = (lid,)
+
+        cur.execute(sql, params)
+        conn.commit()
+        return jsonify(success=True)
+    except Exception as e:
+        conn.rollback()
+        logging.error("Click track error: %s", e)
+        return jsonify(success=False), 500
+    finally:
+        cur.close()
+        conn.close()
+
+
 
 
 # Add this to your Flask app
