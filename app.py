@@ -1727,8 +1727,9 @@ def paystack_verify():
 
     # ─── Insert each offered item ──────────────────────────────────────────
     if p['deal_type'] == 'Swap Deal':
-        for i, cond in enumerate(off_conds):
-            title_i = off_titles[i].strip() or p['title']
+        offered_count = min(len(off_conds), len(off_titles), len(off_descs))
+        for i in range(offered_count):
+            title_i = (off_titles[i] or p['title']).strip()
             desc_i  = off_descs[i]
             cursor.execute("""
               INSERT INTO offered_items (
@@ -1736,12 +1737,13 @@ def paystack_verify():
                 image1, image2, image3, image4
               ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """, (
-              lid, title_i, desc_i, cond,
+              lid, title_i, desc_i, off_conds[i],
               imgs1[i] if i < len(imgs1) else None,
               imgs2[i] if i < len(imgs2) else None,
               imgs3[i] if i < len(imgs3) else None,
               imgs4[i] if i < len(imgs4) else None
             ))
+
 
     conn.commit()
     cursor.close()
