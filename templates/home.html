@@ -2649,38 +2649,49 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    // handle click on any wishlist button
-    document.querySelectorAll('.wishlist-btn').forEach(btn => {
-      btn.addEventListener('click', e => {
-        e.preventDefault();
-        const id  = btn.dataset.listingId;
-        const icon = btn.querySelector('i.fas');
-        fetch('/api/wishlist/toggle', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ listing_id: id })
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (!data.success) return console.error('Wishlist error');
-          // toggle UI state
-          if (data.action === 'added') {
-            icon.classList.add('wishlisted');
-            btn.setAttribute('aria-pressed','true');
-          } else {
-            icon.classList.remove('wishlisted');
-            btn.setAttribute('aria-pressed','false');
-          }
-          // update both desktop & mobile badges
-          document.getElementById('wishlist-count').textContent = data.total;
-          const m = document.getElementById('wishlist-count-mobile');
-          if (m) m.textContent = data.total;
-        })
-        .catch(console.error);
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.wishlist-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+
+      const id = btn.dataset.listingId;
+      const icon = btn.querySelector('i.fas');
+
+      // ==== 1) OPTIMISTIC Immediate Toggle UI ====
+      const wasWishlisted = icon.classList.contains('wishlisted');
+      icon.classList.toggle('wishlisted');
+      btn.setAttribute('aria-pressed', wasWishlisted ? 'false' : 'true');
+
+      // Animation trigger (reset first to replay)
+      btn.classList.remove('animate');
+      void btn.offsetWidth; // reflow to restart animation
+      btn.classList.add('animate');
+
+      // ==== 2) Perform the API Call ====
+      fetch('/api/wishlist/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listing_id: id })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) throw new Error('Wishlist toggle failed');
+
+        // update wishlist counts in nav
+        document.getElementById('wishlist-count').textContent = data.total;
+        const m = document.getElementById('wishlist-count-mobile');
+        if (m) m.textContent = data.total;
+      })
+      .catch(err => {
+        // ==== 3) Revert UI if error ====
+        console.error(err);
+        icon.classList.toggle('wishlisted', wasWishlisted);
+        btn.setAttribute('aria-pressed', wasWishlisted ? 'true' : 'false');
       });
     });
   });
+});
+
 </script>
 
 
