@@ -7,20 +7,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="apple-touch-icon" href="/static/images/app-icon.png">
-<!-- Open Graph Meta Tags -->
-{% if featured_listing %}
-  <meta property="og:title" content="{{ featured_listing.title }}">
-  <meta property="og:description" content="{{ featured_listing.description[:150] }}{% if featured_listing.description|length > 150 %}...{% endif %}">
-  <meta property="og:image" content="{{ featured_listing.banner_image }}">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="{{ url_for('home', _external=True) }}">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{{ featured_listing.title }}">
-  <meta name="twitter:description" content="{{ featured_listing.description[:150] }}{% if featured_listing.description|length > 150 %}...{% endif %}">
-  <meta name="twitter:image" content="{{ featured_listing.banner_image }}">
-{% endif %}
-
-
+  <!-- Open Graph Meta Tags -->
+  {% if featured_listing %}
+    <meta property="og:title" content="{{ featured_listing.title }}">
+    <meta property="og:description" content="{{ featured_listing.description[:150] }}{% if featured_listing.description|length > 150 %}...{% endif %}">
+    <meta property="og:image" content="{{ featured_listing.banner_image }}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url_for('home', _external=True) }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ featured_listing.title }}">
+    <meta name="twitter:description" content="{{ featured_listing.description[:150] }}{% if featured_listing.description|length > 150 %}...{% endif %}">
+    <meta name="twitter:image" content="{{ featured_listing.banner_image }}">
+  {% endif %}
 
   <style>
     :root {
@@ -415,380 +413,376 @@
       margin-top: 0.5rem;
     }
 
-        /* Modal Styles */
-           .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.7);
-            z-index: 1000;
-            overflow-y: auto;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-        }
-
-        .modal.show {
-            display: block;
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .modal-content {
-            background: white;
-            margin: 5% auto;
-            padding: 2.5rem;
-            border-radius: var(--border-radius);
-            width: 90%;
-            max-width: 600px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
-            position: relative;
-            transform: translateY(-50px);
-            transition: transform 0.4s ease;
-        }
-
-        .modal.show .modal-content {
-            transform: translateY(0);
-        }
-
-        .close-modal {
-            position: absolute;
-            top: 1.5rem;
-            right: 1.5rem;
-            font-size: 1.8rem;
-            cursor: pointer;
-            color: var(--dark);
-            background: none;
-            border: none;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: var(--transition);
-        }
-
-        .close-modal:hover {
-            background: var(--light);
-            color: var(--secondary);
-        }
-
-
-
-  @media (max-width: 768px) {
-    .close-modal {
-      top: 1rem;
-      right: 1rem;
-      width: 50px;
-      height: 50px;
-      font-size: 2.2rem;
-      z-index: 1001;
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+      z-index: 1000;
+      overflow-y: auto;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
     }
-  }
-        .modal-title {
-            text-align: center;
-            margin-bottom: 2rem;
-            color: var(--secondary);
-            position: relative;
-            padding-bottom: 15px;
-        }
 
-        .modal-title:after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            height: 4px;
-            background: var(--primary);
-            border-radius: 2px;
-        }
+    .modal.show {
+      display: block;
+      opacity: 1;
+      pointer-events: auto;
+    }
 
-        .form-group {
-            margin-bottom: 1.5rem;
-            position: relative;
-        }
+    .modal-content {
+      background: white;
+      margin: 5% auto;
+      padding: 2.5rem;
+      border-radius: var(--border-radius);
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+      position: relative;
+      transform: translateY(-50px);
+      transition: transform 0.4s ease;
+    }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 0.6rem;
-            font-weight: 600;
-            color: var(--secondary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+    .modal.show .modal-content {
+      transform: translateY(0);
+    }
 
-        .form-group label i {
-            color: var(--primary);
-            font-size: 0.9rem;
-        }
+    .close-modal {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      font-size: 1.8rem;
+      cursor: pointer;
+      color: var(--dark);
+      background: none;
+      border: none;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: var(--transition);
+    }
 
-        .required {
-            color: var(--error);
-        }
+    .close-modal:hover {
+      background: var(--light);
+      color: var(--secondary);
+    }
 
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 0.9rem 1.2rem;
-            border: 2px solid var(--medium);
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: var(--transition);
-            background: white;
-        }
+    @media (max-width: 768px) {
+      .close-modal {
+        top: 1rem;
+        right: 1rem;
+        width: 50px;
+        height: 50px;
+        font-size: 2.2rem;
+        z-index: 1001;
+      }
+    }
 
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.2);
-        }
+    .modal-title {
+      text-align: center;
+      margin-bottom: 2rem;
+      color: var(--secondary);
+      position: relative;
+      padding-bottom: 15px;
+    }
 
-        .form-group textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
+    .modal-title:after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: var(--primary);
+      border-radius: 2px;
+    }
 
-        .form-group input::placeholder,
-        .form-group textarea::placeholder {
-            color: #bdc3c7;
-        }
+    .form-group {
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
 
-        .form-row {
-            display: flex;
-            gap: 1.2rem;
-            margin-bottom: 1.5rem;
-        }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.6rem;
+      font-weight: 600;
+      color: var(--secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-        .form-row .form-group {
-            flex: 1;
-            margin-bottom: 0;
-        }
+    .form-group label i {
+      color: var(--primary);
+      font-size: 0.9rem;
+    }
 
-        /* Image Upload Area - Fixed and Working */
-        .image-upload-container {
-            border: 3px dashed var(--medium);
-            border-radius: var(--border-radius);
-            padding: 2rem;
-            text-align: center;
-            margin-bottom: 1.5rem;
-            transition: var(--transition);
-            background: rgba(245, 247, 250, 0.5);
-            position: relative;
-        }
+    .required {
+      color: var(--error);
+    }
 
-        .image-upload-container.dragover {
-            border-color: var(--primary);
-            background: rgba(39, 174, 96, 0.05);
-        }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 0.9rem 1.2rem;
+      border: 2px solid var(--medium);
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: var(--transition);
+      background: white;
+    }
 
-        .upload-icon {
-            font-size: 2.5rem;
-            color: var(--primary);
-            margin-bottom: 1rem;
-        }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.2);
+    }
 
-        .upload-text {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 0.8rem;
-            color: var(--secondary);
-        }
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
 
-        .upload-subtext {
-            color: var(--dark);
-            margin-bottom: 1.5rem;
-            font-size: 0.9rem;
-        }
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+      color: #bdc3c7;
+    }
 
-        .upload-btn {
-            background: lightgreen;
-            color: black;
-            padding: 0.8rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-block;
-            transition: var(--transition);
-            border: none;
-            font-size: 1rem;
-        }
+    .form-row {
+      display: flex;
+      gap: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
 
-        .upload-btn:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-        }
+    .form-row .form-group {
+      flex: 1;
+      margin-bottom: 0;
+    }
 
-        .file-input {
-            display: hidden;
-        }
+    /* Image Upload Area */
+    .image-upload-container {
+      border: 3px dashed var(--medium);
+      border-radius: var(--border-radius);
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      transition: var(--transition);
+      background: rgba(245, 247, 250, 0.5);
+      position: relative;
+    }
 
-        .file-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 1.5rem;
-            justify-content: center;
-        }
+    .image-upload-container.dragover {
+      border-color: var(--primary);
+      background: rgba(39, 174, 96, 0.05);
+    }
 
-        .file-item {
-            background: white;
-            border: 1px solid var(--medium);
-            border-radius: 8px;
-            padding: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            max-width: 100%;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
+    .upload-icon {
+      font-size: 2.5rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
 
-        .file-icon {
-            color: var(--primary);
-            font-size: 1.1rem;
-        }
+    .upload-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.8rem;
+      color: var(--secondary);
+    }
 
-        .file-info {
-            flex: 1;
-            min-width: 0;
-        }
+    .upload-subtext {
+      color: var(--dark);
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+    }
 
-        .file-name {
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-size: 0.9rem;
-        }
+    .upload-btn {
+      background: lightgreen;
+      color: black;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-block;
+      transition: var(--transition);
+      border: none;
+      font-size: 1rem;
+    }
 
-        .file-size {
-            font-size: 0.8rem;
-            color: var(--dark);
-        }
+    .upload-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+    }
 
-        .remove-file {
-            color: var(--error);
-            cursor: pointer;
-            transition: var(--transition);
-            padding: 4px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-        }
+    .file-input {
+      display: none;
+    }
 
-        .remove-file:hover {
-            background: rgba(231, 76, 60, 0.1);
-        }
+    .file-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 1.5rem;
+      justify-content: center;
+    }
 
-        .preview-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 15px;
-        }
+    .file-item {
+      background: white;
+      border: 1px solid var(--medium);
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 100%;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
 
-        .image-preview {
-            width: 80px;
-            height: 80px;
-            border-radius: 6px;
-            object-fit: cover;
-            border: 1px solid var(--medium);
-        }
+    .file-icon {
+      color: var(--primary);
+      font-size: 1.1rem;
+    }
 
-        .modal-submit-btn {
-            background: lightgreen;
-            color: black;
-            padding: 1.1rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            transition: var(--transition);
-            margin-top: 0.5rem;
-            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
-        }
+    .file-info {
+      flex: 1;
+      min-width: 0;
+    }
 
-        .modal-submit-btn:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(39, 174, 96, 0.4);
-        }
+    .file-name {
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 0.9rem;
+    }
 
-        .modal-submit-btn:active {
-            transform: translateY(0);
-        }
+    .file-size {
+      font-size: 0.8rem;
+      color: var(--dark);
+    }
 
-        .form-note {
-            text-align: center;
-            margin-top: 1.5rem;
-            color: var(--dark);
-            font-size: 0.9rem;
-            line-height: 1.5;
-        }
+    .remove-file {
+      color: var(--error);
+      cursor: pointer;
+      transition: var(--transition);
+      padding: 4px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
 
-        .form-note a {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 600;
-        }
+    .remove-file:hover {
+      background: rgba(231, 76, 60, 0.1);
+    }
 
-        .form-note a:hover {
-            text-decoration: underline;
-        }
+    .preview-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 15px;
+    }
 
-        @media (max-width: 768px) {
-            .modal-content {
-                padding: 2rem;
-            }
-            
-            .form-row {
-                flex-direction: column;
-                gap: 1.5rem;
-            }
-            
-            .image-upload-container {
-                padding: 1.5rem;
-            }
-        }
+    .image-preview {
+      width: 80px;
+      height: 80px;
+      border-radius: 6px;
+      object-fit: cover;
+      border: 1px solid var(--medium);
+    }
 
-        @media (max-width: 480px) {
-            .modal-content {
-                padding: 1.5rem;
-                margin: 10% auto;
-            }
-            
-            .modal-title {
-                font-size: 1.5rem;
-            }
-            
-            .header h1 {
-                font-size: 1.6rem;
-            }
-        }
+    .modal-submit-btn {
+      background: lightgreen;
+      color: black;
+      padding: 1.1rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: var(--transition);
+      margin-top: 0.5rem;
+      box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+    }
 
-/* Override for larger screens */
-@media (min-width: 992px) {
-  .modal-content {
-    /* 90% of viewport width/height */
-    width: 90vw;
-    max-width: none;       /* remove the 600px cap */
-    height: 90vh;          /* let it grow tall */
-    max-height: 90vh;      /* guard against overflow */
-    margin: 5vh auto;      /* vertical offset to center */
-    overflow-y: auto;      /* scroll inside if content exceeds */
-  }
-}
+    .modal-submit-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(39, 174, 96, 0.4);
+    }
 
+    .modal-submit-btn:active {
+      transform: translateY(0);
+    }
+
+    .form-note {
+      text-align: center;
+      margin-top: 1.5rem;
+      color: var(--dark);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .form-note a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .form-note a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .modal-content {
+        padding: 2rem;
+      }
+      
+      .form-row {
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      
+      .image-upload-container {
+        padding: 1.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .modal-content {
+        padding: 1.5rem;
+        margin: 10% auto;
+      }
+      
+      .modal-title {
+        font-size: 1.5rem;
+      }
+      
+      .header h1 {
+        font-size: 1.6rem;
+      }
+    }
+
+    @media (min-width: 992px) {
+      .modal-content {
+        width: 90vw;
+        max-width: none;
+        height: 90vh;
+        max-height: 90vh;
+        margin: 5vh auto;
+        overflow-y: auto;
+      }
+    }
 
     .flash-messages {
       position: fixed;
@@ -796,15 +790,18 @@
       right: 10px;
       z-index: 2000;
     }
+
     .flash-message {
       padding: 1rem;
       margin-bottom: 0.5rem;
       border-radius: 5px;
       color: #fff;
     }
+
     .flash-success {
       background-color: #2ecc71;
     }
+
     .flash-danger {
       background-color: #e74c3c;
     }
@@ -1020,69 +1017,35 @@
     }
 
     .offered-gallery-block {
-  margin-bottom: 2rem;            /* space between each gallery */
-}
+      margin-bottom: 2rem;
+    }
 
-.offered-item-header {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-bottom: 0.75rem;
-}
+    .offered-item-header {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
 
-.gallery-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--secondary-color);
-  margin-bottom: 0.25rem;
-}
+    .gallery-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--secondary-color);
+      margin-bottom: 0.25rem;
+    }
 
-.offered-item-header .condition-badge {
-  font-size: 0.85rem;
-  padding: 0.25rem 0.6rem;
-  margin-bottom: 0.5rem;
-}
+    .offered-item-header .condition-badge {
+      font-size: 0.85rem;
+      padding: 0.25rem 0.6rem;
+      margin-bottom: 0.5rem;
+    }
 
-.gallery-description {
-  font-size: 0.95rem;
-  color: var(--dark-gray);
-  line-height: 1.4;
-  margin-bottom: 0.5rem;
-}
-
-
-
-.offered-gallery-block {
-  margin-bottom: 2rem;            /* space between each gallery */
-}
-
-.offered-item-header {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-bottom: 0.75rem;
-}
-
-.gallery-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--secondary-color);
-  margin-bottom: 0.25rem;
-}
-
-.offered-item-header .condition-badge {
-  font-size: 0.85rem;
-  padding: 0.25rem 0.6rem;
-  margin-bottom: 0.5rem;
-}
-
-.gallery-description {
-  font-size: 0.95rem;
-  color: var(--dark-gray);
-  line-height: 1.4;
-  margin-bottom: 0.5rem;
-}
-
+    .gallery-description {
+      font-size: 0.95rem;
+      color: var(--dark-gray);
+      line-height: 1.4;
+      margin-bottom: 0.5rem;
+    }
   </style>
 </head>
 <body>
@@ -1127,348 +1090,356 @@
       </div>
     {% endif %}
 
-<div class="details-grid">
-
-  <!-- LEFT COLUMN: either “Outright Sales” images or a separate gallery per offered_item -->
-  <div class="gallery-column">
-
-    {% if listing.deal_type == 'Outright Sales' %}
-      {# — Outright Sales: show the images directly from the listings table — #}
-      <div class="sale-gallery-block">
-
-        <div class="offered-item-header">
-          <h4 class="gallery-title">{{ listing.title }}</h4>
-          <span class="condition-badge">
-            {{ listing.condition }}
-          </span>
-          <p class="gallery-description">{{ listing.description }}</p>
-        </div>
-
-        <div class="image-gallery">
-          <!-- MAIN IMAGE -->
-          <div class="main-image-container">
-            <img
-              id="mainImage-sale"
-              class="main-image"
-              src="{{ url_for('static', filename='images/' ~ (listing.image_url or 'placeholder.jpg')) }}"
-              alt="{{ listing.title }}"
-            />
-            <div class="image-overlay">
-              <div class="listing-meta">
-                <i class="fas fa-images"></i>
-                {# Count how many non-null images exist in the listing #}
-                {% set sale_imgs = [listing.image_url, listing.image1, listing.image2, listing.image3, listing.image4] 
-                                   | select | list %}
-                <span id="image-counter-sale">
-                  1 of {{ sale_imgs | length }}
-                </span>
-              </div>
-              <button
-                class="zoom-button"
-                onclick="toggleZoom('mainImage-sale')"
-                style="background:none;border:none;color:white;cursor:pointer;"
-              >
-                <i class="fas fa-search-plus"></i>
-              </button>
+    <div class="details-grid">
+      <!-- Gallery Column -->
+      <div class="gallery-column">
+        {% if listing.deal_type == 'Outright Sales' %}
+          <!-- Outright Sales: Images from listings table -->
+          <div class="sale-gallery-block">
+            <div class="offered-item-header">
+              <h4 class="gallery-title">{{ listing.title }}</h4>
+              <span class="condition-badge">{{ listing.condition }}</span>
+              <p class="gallery-description">{{ listing.description }}</p>
             </div>
-          </div>
 
-          <!-- THUMBNAILS FOR SALE -->
-          <div class="thumbnail-container" id="thumbnailContainer-sale">
-            {% for img in sale_imgs %}
-              {% set thumb = url_for('static', filename='images/' ~ img) %}
-              <img
-                src="{{ thumb }}"
-                class="thumbnail {% if loop.first %}active{% endif %}"
-                alt="Thumbnail {{ loop.index }} of {{ listing.title }}"
-                onclick="changeMainImage(this, '{{ thumb }}', 'mainImage-sale', 'thumbnailContainer-sale')"
-              />
-            {% endfor %}
-          </div>
-        </div>
-      </div>
-
-    {% else %}
-      {# — Swap Deal: render one gallery‐block per offered_item — #}
-      {% for item in listing.offered_items %}
-        {% set idx = loop.index0 %}
-        <div class="offered-gallery-block">
-          <!-- Item metadata above its gallery -->
-          <div class="offered-item-header">
-            <h4 class="gallery-title">{{ item.title }}</h4>
-            <span class="condition-badge condition-{{ item.condition|lower }}">
-              {{ item.condition }}
-            </span>
-            <p class="gallery-description">{{ item.description }}</p>
-          </div>
-
-          <div class="image-gallery">
-            <div class="main-image-container">
-              <img
-                id="mainImage-{{ idx }}"
-                class="main-image"
-                src="{{ url_for('static', filename='images/' ~ (item.image1 or 'placeholder.jpg')) }}"
-                alt="{{ item.title }}"
-              />
-              <div class="image-overlay">
-                <div class="listing-meta">
-                  <i class="fas fa-images"></i>
-                  <span id="image-counter-{{ idx }}">
-                    1 of {{ [ item.image1, item.image2, item.image3, item.image4 ] 
-                             | select 
-                             | list 
-                             | length }}
-                  </span>
+            <div class="image-gallery">
+              {% set sale_imgs = [listing.image_url, listing.image1, listing.image2, listing.image3, listing.image4] | reject("none") | reject("equalto", "") | list %}
+              <div class="main-image-container">
+                <img
+                  id="mainImage-sale"
+                  class="main-image"
+                  src="{{ url_for('static', filename='images/' ~ (sale_imgs[0] if sale_imgs else 'placeholder.jpg')) }}"
+                  alt="{{ listing.title }}"
+                />
+                <div class="image-overlay">
+                  <div class="listing-meta">
+                    <i class="fas fa-images"></i>
+                    <span id="image-counter-sale">1 of {{ sale_imgs | length }}</span>
+                  </div>
+                  <button
+                    class="zoom-button"
+                    onclick="toggleZoom('mainImage-sale')"
+                    style="background:none;border:none;color:white;cursor:pointer;"
+                  >
+                    <i class="fas fa-search-plus"></i>
+                  </button>
                 </div>
-                <button
-                  class="zoom-button"
-                  onclick="toggleZoom('mainImage-{{ idx }}')"
-                  style="background:none;border:none;color:white;cursor:pointer;"
-                >
-                  <i class="fas fa-search-plus"></i>
-                </button>
               </div>
-            </div>
-            <div class="thumbnail-container" id="thumbnailContainer-{{ idx }}">
-              {% set imgs = [ item.image1, item.image2, item.image3, item.image4 ] %}
-              {% for img in imgs %}
-                {% if img %}
+
+              <div class="thumbnail-container" id="thumbnailContainer-sale">
+                {% for img in sale_imgs %}
                   {% set thumb = url_for('static', filename='images/' ~ img) %}
                   <img
                     src="{{ thumb }}"
                     class="thumbnail {% if loop.first %}active{% endif %}"
-                    alt="Thumbnail {{ loop.index }} of {{ item.title }}"
-                    onclick="changeMainImage(this, '{{ thumb }}', 'mainImage-{{ idx }}', 'thumbnailContainer-{{ idx }}')"
+                    alt="Thumbnail {{ loop.index }} of {{ listing.title }}"
+                    onclick="changeMainImage(this, '{{ thumb }}', 'mainImage-sale', 'thumbnailContainer-sale')"
                   />
-                {% endif %}
-              {% endfor %}
+                {% endfor %}
+              </div>
             </div>
           </div>
-        </div>
-      {% endfor %}
-    {% endif %}
 
-  </div>
-
-{% if listing.deal_type == 'Swap Deal' %}
-<div class="details-section">
-  <div class="detail-header">
-    <i class="fas fa-exchange-alt detail-icon"></i>
-    <h3>Swap Requirements</h3>
-  </div>
-  
-  <!-- Desired Item Name -->
-  <div class="detail-item">
-    <span class="detail-label">Desired Item</span>
-    <p class="detail-content">{{ listing.desired_swap }}</p>
-  </div>
-  
-  <!-- Desired Item Description -->
-  <div class="detail-item">
-    <span class="detail-label">Desired Description</span>
-    <p class="detail-content">{{ listing.desired_swap_description or 'No description provided' }}</p>
-  </div>
-  
-  <!-- Desired Condition -->
-  <div class="detail-item">
-    <span class="detail-label">Desired Condition</span>
-    <span class="condition-badge condition-{{ listing.desired_condition|lower }}">
-      {{ listing.condition or 'Any' }}
-    </span>
-  </div>
-
-  <!-- Cash Adjustment -->
-  {% if listing.additional_cash|float > 0 %}
-  <div class="detail-item">
-    <span class="detail-label">Cash Adjustment</span>
-    <p class="cash-adjustment">
-      <i class="fas fa-coins"></i> + GHS {{ "{:,.2f}".format(listing.additional_cash|float) }}
-    </p>
-  </div>
-  {% endif %}
-</div>
-{% endif %}
-
-
-    <!-- Additional Information -->
-    <div class="details-section">
-      <div class="detail-header">
-        <i class="fas fa-info-circle detail-icon"></i>
-        <h3>Additional Information</h3>
-      </div>
-      <div class="detail-item">
-        <span class="detail-label">Category</span>
-        <p class="detail-content">{{ listing.category }}</p>
-      </div>
-      <div class="detail-item">
-        <span class="detail-label">Listed On</span>
-        <p class="detail-content">
-          {{ listing.created_at.strftime('%d %b %Y at %H:%M') if listing.created_at else 'Not specified' }}
-        </p>
-      </div>
-      <div class="detail-item">
-        <span class="detail-label">Location</span>
-        <p class="detail-content">{{ listing.location or 'Not specified' }}</p>
-      </div>
-    </div>
-
-    <!-- Contact Information -->
-    <div class="details-section">
-      <div class="detail-header">
-        <i class="fas fa-user detail-icon"></i>
-        <h3>Contact Information</h3>
-      </div>
-      <div class="contact-info">
-        <div class="contact-method">
-          <i class="fas fa-user" style="color:var(--primary-color)"></i>
-          <span>{{ listing.username }}</span>
-        </div>
-        {% if listing.contact %}
-        <div class="contact-method">
-          <i class="fas fa-phone" style="color:var(--primary-color)"></i>
-          <span>{{ listing.contact }}</span>
-        </div>
-        {% endif %}
-        {% if listing.email %}
-        <div class="contact-method">
-          <i class="fas fa-envelope" style="color:var(--primary-color)"></i>
-          <span>{{ listing.email }}</span>
-        </div>
-        {% endif %}
-      </div>
-    </div>
-
-    <!-- Action Button -->
-    {% if listing.deal_type == 'Swap Deal' %}
-    <div class="action-section">
-      <button class="offer-button" id="offerButton">
-        <i class="fas fa-handshake"></i> Make Swap Offer
-      </button>
-    </div>
-    {% endif %}
-  </div>
-</div>
-
-
-
-
-
-    <!-- Ratings & Reviews Section -->
-    <div class="details-section">
-      <div class="detail-header">
-        <i class="fas fa-star detail-icon"></i>
-        <h3>Ratings & Reviews</h3>
-      </div>
-
-      <!-- 1) Rating summary -->
-      <div class="rating-summary">
-        {% if listing.rating_count > 0 %}
-          <div class="average-rating">
-            <span class="rating-value">{{ "%.1f"|format(listing.avg_rating) }}</span>
-            <div class="stars">
-              {% for i in range(1,6) %}
-                {% if i <= listing.avg_rating|int %}
-                  <i class="fas fa-star"></i>
-                {% elif i - 0.5 <= listing.avg_rating %}
-                  <i class="fas fa-star-half-alt"></i>
-                {% else %}
-                  <i class="far fa-star"></i>
-                {% endif %}
-              {% endfor %}
-            </div>
-            <span class="rating-count">
-              ({{ listing.rating_count }} review{% if listing.rating_count != 1 %}s{% endif %})
-            </span>
-          </div>
         {% else %}
-          <p>No ratings yet</p>
-        {% endif %}
-      </div>
-
-      <!-- 2) Rating form for logged-in non-owners -->
-      {% if session.get('user_id') and session['user_id'] != listing.user_id %}
-        <form id="ratingForm" class="rating-form">
-          <h4>Rate this listing</h4>
-          <div class="star-rating">
-            {% for i in range(5,0,-1) %}
-              <input
-                type="radio"
-                id="star{{ i }}"
-                name="rating"
-                value="{{ i }}"
-              />
-              <label for="star{{ i }}" title="{{ i }} star{% if i != 1 %}s{% endif %}">
-                <i class="fas fa-star"></i>
-              </label>
-            {% endfor %}
-          </div>
-          <button type="button" id="submitRating" class="submit-rating-btn">
-            Submit Rating
-          </button>
-        </form>
-      {% elif not session.get('user_id') %}
-        <p>
-          <a href="{{ url_for('login', next=url_for('listing_details', listing_id=listing.listing_id)) }}">
-            Log in
-          </a> to rate this listing
-        </p>
-      {% endif %}
-
-      <!-- 3) Reviews list -->
-      <div class="reviews-container">
-        <h4>Reviews</h4>
-        {% if listing.reviews %}
-          <div class="reviews-list">
-            {% for review in listing.reviews %}
-              <div class="review-item">
-                <div class="review-header">
-                  <span class="reviewer-name">{{ review.reviewer }}</span>
-                  <span class="review-date">{{ review.created_at }}</span>
+          <!-- Swap Deal -->
+          {% if listing.offered_items %}
+            <!-- Multi-item Swap: Images from offered_items -->
+            {% for item in listing.offered_items %}
+              {% set idx = loop.index0 %}
+              <div class="offered-gallery-block">
+                <div class="offered-item-header">
+                  <h4 class="gallery-title">{{ item.title }}</h4>
+                  <span class="condition-badge condition-{{ item.condition|lower }}">{{ item.condition }}</span>
+                  <p class="gallery-description">{{ item.description }}</p>
                 </div>
-                <div class="review-content">
-                  <p>{{ review.review_text }}</p>
+
+                <div class="image-gallery">
+                  {% set imgs = [item.image1, item.image2, item.image3, item.image4] | reject("none") | reject("equalto", "") | list %}
+                  <div class="main-image-container">
+                    <img
+                      id="mainImage-{{ idx }}"
+                      class="main-image"
+                      src="{{ url_for('static', filename='images/' ~ (imgs[0] if imgs else 'placeholder.jpg')) }}"
+                      alt="{{ item.title }}"
+                    />
+                    <div class="image-overlay">
+                      <div class="listing-meta">
+                        <i class="fas fa-images"></i>
+                        <span id="image-counter-{{ idx }}">1 of {{ imgs | length }}</span>
+                      </div>
+                      <button
+                        class="zoom-button"
+                        onclick="toggleZoom('mainImage-{{ idx }}')"
+                        style="background:none;border:none;color:white;cursor:pointer;"
+                      >
+                        <i class="fas fa-search-plus"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="thumbnail-container" id="thumbnailContainer-{{ idx }}">
+                    {% for img in imgs %}
+                      {% set thumb = url_for('static', filename='images/' ~ img) %}
+                      <img
+                        src="{{ thumb }}"
+                        class="thumbnail {% if loop.first %}active{% endif %}"
+                        alt="Thumbnail {{ loop.index }} of {{ item.title }}"
+                        onclick="changeMainImage(this, '{{ thumb }}', 'mainImage-{{ idx }}', 'thumbnailContainer-{{ idx }}"
+                      />
+                    {% endfor %}
+                  </div>
                 </div>
               </div>
             {% endfor %}
-          </div>
-        {% else %}
-          <p>No reviews yet</p>
+          {% else %}
+            <!-- Single-item Swap: Images from listings -->
+            <div class="offer-gallery-block">
+              <div class="offered-item-header">
+                <h4 class="gallery-title">{{ listing.title }}</h4>
+                <span class="condition-badge">{{ listing.condition }}</span>
+                <p class="gallery-description">{{ listing.description }}</p>
+              </div>
+
+              <div class="image-gallery">
+                {% set imgs = [listing.image_url, listing.image1, listing.image2, listing.image3, listing.image4] | reject("none") | reject("equalto", "") | list %}
+                <div class="main-image-container">
+                  <img
+                    id="mainImage-swap"
+                    class="main-image"
+                    src="{{ url_for('static', filename='images/' ~ (imgs[0] if imgs else 'placeholder.jpg')) }}"
+                    alt="{{ listing.title }}"
+                  />
+                  <div class="image-overlay">
+                    <div class="listing-meta">
+                      <i class="fas fa-images"></i>
+                      <span id="image-counter-swap">1 of {{ imgs | length }}</span>
+                    </div>
+                    <button
+                      class="zoom-button"
+                      onclick="toggleZoom('mainImage-swap')"
+                      style="background:none;border:none;color:white;cursor:pointer;"
+                    >
+                      <i class="fas fa-search-plus"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="thumbnail-container" id="thumbnailContainer-swap">
+                  {% for img in imgs %}
+                    {% set thumb = url_for('static', filename='images/' ~ img) %}
+                    <img
+                      src="{{ thumb }}"
+                      class="thumbnail {% if loop.first %}active{% endif %}"
+                      alt="Thumbnail {{ loop.index }} of {{ listing.title }}"
+                      onclick="changeMainImage(this, '{{ thumb }}', 'mainImage-swap', 'thumbnailContainer-swap')"
+                    />
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          {% endif %}
         {% endif %}
       </div>
 
-      <!-- 4) Review form for logged-in non-owners -->
-      {% if session.get('user_id') and session['user_id'] != listing.user_id %}
-        <form id="reviewForm" class="review-form">
-          <h4>Write a review</h4>
-          <textarea
-            id="reviewText"
-            name="review_text"
-            placeholder="Share your experience..."
-            rows="4"
-          ></textarea>
-          <button type="button" id="submitReview" class="submit-review-btn">
-            Submit Review
+      {% if listing.deal_type == 'Swap Deal' %}
+        <div class="details-section">
+          <div class="detail-header">
+            <i class="fas fa-exchange-alt detail-icon"></i>
+            <h3>Swap Requirements</h3>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Desired Item</span>
+            <p class="detail-content">{{ listing.desired_swap }}</p>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Desired Description</span>
+            <p class="detail-content">{{ listing.desired_swap_description or 'No description provided' }}</p>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Desired Condition</span>
+            <span class="condition-badge condition-{{ listing.desired_condition|lower }}">{{ listing.condition or 'Any' }}</span>
+          </div>
+
+          {% if listing.additional_cash|float > 0 %}
+            <div class="detail-item">
+              <span class="detail-label">Cash Adjustment</span>
+              <p class="cash-adjustment">
+                <i class="fas fa-coins"></i> + GHS {{ "{:,.2f}".format(listing.additional_cash|float) }}
+              </p>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <!-- Additional Information -->
+      <div class="details-section">
+        <div class="detail-header">
+          <i class="fas fa-info-circle detail-icon"></i>
+          <h3>Additional Information</h3>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Category</span>
+          <p class="detail-content">{{ listing.category }}</p>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Listed On</span>
+          <p class="detail-content">
+            {{ listing.created_at.strftime('%d %b %Y at %H:%M') if listing.created_at else 'Not specified' }}
+          </p>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Location</span>
+          <p class="detail-content">{{ listing.location or 'Not specified' }}</p>
+        </div>
+      </div>
+
+      <!-- Contact Information -->
+      <div class="details-section">
+        <div class="detail-header">
+          <i class="fas fa-user detail-icon"></i>
+          <h3>Contact Information</h3>
+        </div>
+        <div class="contact-info">
+          <div class="contact-method">
+            <i class="fas fa-user" style="color:var(--primary-color)"></i>
+            <span>{{ listing.username }}</span>
+          </div>
+          {% if listing.contact %}
+            <div class="contact-method">
+              <i class="fas fa-phone" style="color:var(--primary-color)"></i>
+              <span>{{ listing.contact }}</span>
+            </div>
+          {% endif %}
+          {% if listing.email %}
+            <div class="contact-method">
+              <i class="fas fa-envelope" style="color:var(--primary-color)"></i>
+              <span>{{ listing.email }}</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      {% if listing.deal_type == 'Swap Deal' %}
+        <div class="action-section">
+          <button class="offer-button" id="offerButton">
+            <i class="fas fa-handshake"></i> Make Swap Offer
           </button>
-        </form>
-      {% elif not session.get('user_id') %}
-        <p>
-          <a href="{{ url_for('login', next=url_for('listing_details', listing_id=listing.listing_id)) }}">
-            Log in
-          </a> to write a review
-        </p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Ratings & Reviews Section -->
+  <div class="details-section">
+    <div class="detail-header">
+      <i class="fas fa-star detail-icon"></i>
+      <h3>Ratings & Reviews</h3>
+    </div>
+
+    <div class="rating-summary">
+      {% if listing.rating_count > 0 %}
+        <div class="average-rating">
+          <span class="rating-value">{{ "%.1f"|format(listing.avg_rating) }}</span>
+          <div class="stars">
+            {% for i in range(1,6) %}
+              {% if i <= listing.avg_rating|int %}
+                <i class="fas fa-star"></i>
+              {% elif i - 0.5 <= listing.avg_rating %}
+                <i class="fas fa-star-half-alt"></i>
+              {% else %}
+                <i class="far fa-star"></i>
+              {% endif %}
+            {% endfor %}
+          </div>
+          <span class="rating-count">
+            ({{ listing.rating_count }} review{% if listing.rating_count != 1 %}s{% endif %})
+          </span>
+        </div>
+      {% else %}
+        <p>No ratings yet</p>
       {% endif %}
     </div>
 
-  <!-- =====================================
-       ENHANCED PROPOSAL MODAL
-       ===================================== -->
+    {% if session.get('user_id') and session['user_id'] != listing.user_id %}
+      <form id="ratingForm" class="rating-form">
+        <h4>Rate this listing</h4>
+        <div class="star-rating">
+          {% for i in range(5,0,-1) %}
+            <input
+              type="radio"
+              id="star{{ i }}"
+              name="rating"
+              value="{{ i }}"
+            />
+            <label for="star{{ i }}" title="{{ i }} star{% if i != 1 %}s{% endif %}">
+              <i class="fas fa-star"></i>
+            </label>
+          {% endfor %}
+        </div>
+        <button type="button" id="submitRating" class="submit-rating-btn">
+          Submit Rating
+        </button>
+      </form>
+    {% elif not session.get('user_id') %}
+      <p>
+        <a href="{{ url_for('login', next=url_for('listing_details', listing_id=listing.listing_id)) }}">
+          Log in
+        </a> to rate this listing
+      </p>
+    {% endif %}
+
+    <div class="reviews-container">
+      <h4>Reviews</h4>
+      {% if listing.reviews %}
+        <div class="reviews-list">
+          {% for review in listing.reviews %}
+            <div class="review-item">
+              <div class="review-header">
+                <span class="reviewer-name">{{ review.reviewer }}</span>
+                <span class="review-date">{{ review.created_at }}</span>
+              </div>
+              <div class="review-content">
+                <p>{{ review.review_text }}</p>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>No reviews yet</p>
+      {% endif %}
+    </div>
+
+    {% if session.get('user_id') and session['user_id'] != listing.user_id %}
+      <form id="reviewForm" class="review-form">
+        <h4>Write a review</h4>
+        <textarea
+          id="reviewText"
+          name="review_text"
+          placeholder="Share your experience..."
+          rows="4"
+        ></textarea>
+        <button type="button" id="submitReview" class="submit-review-btn">
+          Submit Review
+        </button>
+      </form>
+    {% elif not session.get('user_id') %}
+      <p>
+        <a href="{{ url_for('login', next=url_for('listing_details', listing_id=listing.listing_id)) }}">
+          Log in
+        </a> to write a review
+      </p>
+    {% endif %}
+  </div>
+
+  <!-- Proposal Modal -->
   <div id="proposalModal" class="modal">
     <div class="modal-content">
-     <button class="close-modal" id="closeModal" aria-label="Close Modal">&times;</button>
+      <button class="close-modal" id="closeModal" aria-label="Close Modal">×</button>
       <h2 class="modal-title">Make Swap Offer</h2>
 
       <form id="proposalForm" action="#" method="POST" enctype="multipart/form-data" novalidate>
-        <!-- Item & Condition -->
         <div class="form-group">
           <label for="proposed_item">
             <i class="fas fa-gift"></i>Item You’re Offering<span class="required">*</span>
@@ -1511,35 +1482,32 @@
           </div>
         </div>
 
-        <!-- Multi-image Upload Section -->
-<div class="form-group">
-  <label>
-    <i class="fas fa-images"></i> Upload Item Images (Max 4) <span class="required">*</span>
-  </label>
+        <div class="form-group">
+          <label>
+            <i class="fas fa-images"></i> Upload Item Images (Max 4) <span class="required">*</span>
+          </label>
 
-  <div class="image-upload-container" id="uploadContainer">
-    <div class="upload-icon">
-      <i class="fas fa-cloud-upload-alt"></i>
-    </div>
-    <h3 class="upload-text">Drag & Drop your images here</h3>
-    <p class="upload-subtext">or click to browse files</p>
+          <div class="image-upload-container" id="uploadContainer">
+            <div class="upload-icon">
+              <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <h3 class="upload-text">Drag & Drop your images here</h3>
+            <p class="upload-subtext">or click to browse files</p>
 
-    <button type="button" class="upload-btn">
-      <i class="fas fa-folder-open"></i> Select Images
-    </button>
+            <button type="button" class="upload-btn">
+              <i class="fas fa-folder-open"></i> Select Images
+            </button>
 
-    <!-- Hidden file input -->
-    <input type="file" id="fileInput" class="file-input" accept="image/*" multiple hidden />
+            <input type="file" id="fileInput" class="file-input" accept="image/*" multiple hidden />
 
-    <div class="file-list" id="fileList">
-      <p class="upload-subtext">No images selected</p>
-    </div>
+            <div class="file-list" id="fileList">
+              <p class="upload-subtext">No images selected</p>
+            </div>
             
             <div class="preview-container" id="previewContainer"></div>
           </div>
         </div>
 
-        <!-- Detailed Description -->
         <div class="form-group">
           <label for="detailed_description">
             <i class="fas fa-align-left"></i>Detailed Description<span class="required">*</span>
@@ -1553,7 +1521,6 @@
           ></textarea>
         </div>
 
-        <!-- Contact Info -->
         <div class="form-row">
           <div class="form-group">
             <label for="phone_number">
@@ -1582,7 +1549,6 @@
           </div>
         </div>
 
-        <!-- Optional Message -->
         <div class="form-group">
           <label for="message">
             <i class="fas fa-comment"></i>Message to Owner (Optional)
@@ -1595,7 +1561,6 @@
           ></textarea>
         </div>
 
-        <!-- Submit Button -->
         <button type="submit" class="modal-submit-btn">
           <div class="btn-content">
             <i class="fas fa-paper-plane"></i> Submit Offer
@@ -1611,16 +1576,25 @@
     </div>
   </div>
 
-  <!-- =====================================
-       JAVASCRIPT (Modal + Image Upload Logic)
-       ===================================== -->
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="flash-message flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- JavaScript -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const modal = document.getElementById('proposalModal');
-      const openBtn = document.getElementById('openModal');
+      const openBtn = document.getElementById('offerButton');
       const closeBtn = document.getElementById('closeModal');
       const form = document.getElementById('proposalForm');
-      const uploadBtn = document.getElementById('uploadBtn');
+      const uploadBtn = document.querySelector('.upload-btn');
       const fileInput = document.getElementById('fileInput');
       const uploadContainer = document.getElementById('uploadContainer');
       const fileList = document.getElementById('fileList');
@@ -1629,7 +1603,6 @@
       let files = [];
       const maxFiles = 4;
 
-      // -------- Open & Close Modal --------
       openBtn.addEventListener('click', function() {
         modal.classList.add('show');
         document.body.style.overflow = 'hidden';
@@ -1645,15 +1618,12 @@
         }
       });
 
-      // -------- Form Submission --------
       form.addEventListener('submit', function(e) {
         e.preventDefault();
-        // Ensure at least one image
         if (files.length === 0) {
           alert('Please upload at least one image of your item');
           return;
         }
-        // Demo: show success
         const successMsg = `
           Swap offer submitted successfully!
           \nItem: ${document.getElementById('proposed_item').value}
@@ -1661,7 +1631,6 @@
         `;
         alert(successMsg);
 
-        // Reset
         modal.classList.remove('show');
         document.body.style.overflow = '';
         form.reset();
@@ -1670,19 +1639,16 @@
         renderPreviews();
       });
 
-      // -------- File Upload Button --------
       uploadBtn.addEventListener('click', function() {
         fileInput.click();
       });
 
-      // -------- Handle File Selection --------
       fileInput.addEventListener('change', function() {
         if (this.files && this.files.length > 0) {
           handleFiles(this.files);
         }
       });
 
-      // -------- Drag & Drop Functionality --------
       ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         uploadContainer.addEventListener(eventName, preventDefaults, false);
       });
@@ -1709,9 +1675,7 @@
         handleFiles(droppedFiles);
       }
 
-      // -------- Add & Track Files --------
       function handleFiles(selectedFiles) {
-        // Clear if at max capacity
         if (files.length >= maxFiles) {
           files = [];
         }
@@ -1726,7 +1690,6 @@
         renderPreviews();
       }
 
-      // -------- Render File List --------
       function renderFileList() {
         fileList.innerHTML = '';
         if (files.length === 0) {
@@ -1758,7 +1721,6 @@
         });
       }
 
-      // -------- Render Previews --------
       function renderPreviews() {
         previewContainer.innerHTML = '';
         if (files.length === 0) return;
@@ -1781,7 +1743,6 @@
         });
       }
 
-      // -------- Format File Size Utility --------
       function formatFileSize(bytes) {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -1790,49 +1751,28 @@
         return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
       }
 
-      // Initialize
       renderFileList();
     });
   </script>
 
-    {% with messages = get_flashed_messages(with_categories=True) %}
-      {% if messages %}
-        <div class="flash-messages">
-          {% for category, message in messages %}
-            <div class="flash-message flash-{{ category }}">
-              {{ message }}
-            </div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
-  </div>
+  <script>
+    const uploadContainer = document.getElementById('uploadContainer');
+    const fileInput = document.getElementById('fileInput');
 
+    uploadContainer.addEventListener('click', () => {
+      fileInput.click();
+    });
 
-<script>
-  const uploadContainer = document.getElementById('uploadContainer');
-  const fileInput = document.getElementById('fileInput');
-
-  // Trigger file input when container is clicked
-  uploadContainer.addEventListener('click', () => {
-    fileInput.click();
-  });
-
-  // Optional: show selected file names
-  fileInput.addEventListener('change', () => {
-    const fileList = document.getElementById('fileList');
-    const files = fileInput.files;
-    if (files.length === 0) {
-      fileList.innerHTML = '<p class="upload-subtext">No images selected</p>';
-    } else {
-      fileList.innerHTML = '<ul>' + Array.from(files).map(file => `<li>${file.name}</li>`).join('') + '</ul>';
-    }
-  });
-</script>
-
-
-
-
+    fileInput.addEventListener('change', () => {
+      const fileList = document.getElementById('fileList');
+      const files = fileInput.files;
+      if (files.length === 0) {
+        fileList.innerHTML = '<p class="upload-subtext">No images selected</p>';
+      } else {
+        fileList.innerHTML = '<ul>' + Array.from(files).map(file => `<li>${file.name}</li>`).join('') + '</ul>';
+      }
+    });
+  </script>
 
   <script>
     // Mobile Menu Toggle
@@ -1843,7 +1783,6 @@
       navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
     });
 
-    // Close menu when clicking outside
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.navbar') && window.innerWidth < 768) {
         navLinks.style.display = 'none';
@@ -1875,7 +1814,6 @@
       }, 150);
     }
 
-    // Image Zoom Functionality
     function toggleZoom(mainImageId) {
       const img = document.getElementById(mainImageId);
       const isZoomed = img.style.transform === 'scale(2)';
@@ -1884,7 +1822,6 @@
       img.style.transformOrigin = 'center center';
     }
 
-    // Touch Zoom for Mobile
     const mainImages = document.querySelectorAll('.main-image');
     mainImages.forEach(img => {
       let lastTouch = 0;
@@ -1898,7 +1835,6 @@
       });
     });
 
-    // Thumbnail Gallery Touch Scrolling
     const thumbnailContainers = document.querySelectorAll('.thumbnail-container');
     thumbnailContainers.forEach(container => {
       let isDragging = false;
@@ -1924,57 +1860,53 @@
       });
     });
 
-    // Modal Handling
-  const modal = document.getElementById('proposalModal');
-  const offerButton = document.getElementById('offerButton');
-  const closeModalButton = document.getElementById('closeModal');
-  const proposalForm = document.getElementById('proposalForm');
+    const modal = document.getElementById('proposalModal');
+    const offerButton = document.getElementById('offerButton');
+    const closeModalButton = document.getElementById('closeModal');
+    const proposalForm = document.getElementById('proposalForm');
 
-  function openModal() {
-    modal.style.display = 'block';
-    setTimeout(() => {
-      modal.classList.add('show');
-      document.body.style.overflow = 'hidden';
-    }, 10);
-  }
-
-  function closeModal() {
-    modal.classList.remove('show');
-    setTimeout(() => {
-      modal.style.display = 'none';
-      document.body.style.overflow = 'auto';
-    }, 300);
-  }
-
-  offerButton.addEventListener('click', function(e) {
-    e.preventDefault();
-    openModal();
-  });
-
-  // FIX: Add both click and touch events for mobile
-  closeModalButton.addEventListener('click', closeModal);
-  closeModalButton.addEventListener('touchend', closeModal);
-
-  // FIX: Handle backdrop touches
-  modal.addEventListener('touchend', function(e) {
-    if (e.target === modal) {
-      closeModal();
+    function openModal() {
+      modal.style.display = 'block';
+      setTimeout(() => {
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+      }, 10);
     }
-  });
 
-  window.addEventListener('click', function(e) {
-    if (e.target === modal) {
-      closeModal();
+    function closeModal() {
+      modal.classList.remove('show');
+      setTimeout(() => {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+      }, 300);
     }
-  });
 
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && modal.classList.contains('show')) {
-      closeModal();
-    }
-  });
+    offerButton.addEventListener('click', function(e) {
+      e.preventDefault();
+      openModal();
+    });
 
-    // Form submission handling
+    closeModalButton.addEventListener('click', closeModal);
+    closeModalButton.addEventListener('touchend', closeModal);
+
+    modal.addEventListener('touchend', function(e) {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+
+    window.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && modal.classList.contains('show')) {
+        closeModal();
+      }
+    });
+
     proposalForm.addEventListener('submit', function(e) {
       const proposedItem = document.getElementById('proposed_item');
       const detailedDescription = document.getElementById('detailed_description');
@@ -1992,7 +1924,6 @@
       }
     });
 
-    // Initialize on load
     document.addEventListener('DOMContentLoaded', function() {
       if (window.innerWidth < 768) {
         navLinks.style.display = 'none';
@@ -2020,7 +1951,6 @@
       });
     });
 
-    // Handle window resize
     window.addEventListener('resize', function() {
       if (window.innerWidth >= 768) {
         navLinks.style.display = 'flex';
@@ -2034,7 +1964,6 @@
       alert('Message functionality coming soon!');
     }
 
-    // Rating Submission
     document.getElementById('submitRating')?.addEventListener('click', async function() {
       const ratingInput = document.querySelector('input[name="rating"]:checked');
       if (!ratingInput) {
@@ -2065,7 +1994,6 @@
       }
     });
 
-    // Review Submission
     document.getElementById('submitReview')?.addEventListener('click', async function() {
       const reviewText = document.getElementById('reviewText').value.trim();
       if (!reviewText) {
@@ -2117,25 +2045,22 @@
     });
   </script>
   <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    // Ensure this matches your modal’s ID
-    const modal = document.getElementById('proposalModal');
-    const closeBtn = document.getElementById('closeModal');
+    document.addEventListener('DOMContentLoaded', () => {
+      const modal = document.getElementById('proposalModal');
+      const closeBtn = document.getElementById('closeModal');
 
-    // If the close button ID is correct, this will fire on click
-    closeBtn.addEventListener('click', () => {
-      modal.classList.remove('show');
-      document.body.style.overflow = '';
-    });
-
-    // Also allow clicking the backdrop to close
-    modal.addEventListener('click', (event) => {
-      if (event.target === modal) {
+      closeBtn.addEventListener('click', () => {
         modal.classList.remove('show');
         document.body.style.overflow = '';
-      }
+      });
+
+      modal.addEventListener('click', (event) => {
+        if (event.target === modal) {
+          modal.classList.remove('show');
+          document.body.style.overflow = '';
+        }
+      });
     });
-  });
-</script>
+  </script>
 </body>
 </html>
