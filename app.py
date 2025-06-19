@@ -2515,7 +2515,7 @@ scheduler = BackgroundScheduler()
 scheduler.add_job(
     check_ad_performance_alerts,
     'interval',
-    minutes=1,
+    hours=1,
     id='ad_metrics_alerts',
     replace_existing=True
 )
