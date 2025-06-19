@@ -34,7 +34,8 @@ import itertools
 import logging
 
 # Set up logging
-logging.basicConfig(level=logging.DEBUG)
+import logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
