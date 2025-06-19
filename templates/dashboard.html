@@ -3,27 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Open Graph meta tags -->
-<!-- Open Graph Meta Tags -->
-{% if featured_listing %}
-  <meta property="og:title" content="{{ featured_listing.title }}">
-  <meta property="og:description" content="{{ featured_listing.description[:150] }}{% if featured_listing.description|length > 150 %}...{% endif %}">
-  <meta property="og:image" content="{{ featured_listing.banner_image }}">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="{{ url_for('home', _external=True) }}">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{{ featured_listing.title }}">
-  <meta name="twitter:description" content="{{ featured_listing.description[:150] }}{% if featured_listing.description|length > 150 %}...{% endif %}">
-  <meta name="twitter:image" content="{{ featured_listing.banner_image }}">
-{% endif %}
-
-
-
+    <!-- Open Graph Meta Tags -->
+    {% if featured_listing %}
+    <meta property="og:title" content="{{ featured_listing.title }}">
+    <meta property="og:description" content="{{ featured_listing.description[:150] }}{% if featured_listing.description|length > 150 %}...{% endif %}">
+    <meta property="og:image" content="{{ featured_listing.banner_image }}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url_for('home', _external=True) }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ featured_listing.title }}">
+    <meta name="twitter:description" content="{{ featured_listing.description[:150] }}{% if featured_listing.description|length > 150 %}...{% endif %}">
+    <meta name="twitter:image" content="{{ featured_listing.banner_image }}">
+    {% endif %}
     <title>Swap Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Modern CSS Variables */
+        /* === Theme Variables === */
         :root {
             --primary: #4361ee;
             --primary-light: #e0e7ff;
@@ -50,62 +46,78 @@
             --radius-lg: 12px;
             --radius-xl: 16px;
             --transition: all 0.2s ease-in-out;
+            --primary-color: #4caf50;
+            --primary-hover: #43a047;
+            --secondary-bg: #ffffff;
+            --muted-text: #6b6b6b;
+            --box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        
-        /* Base Styles */
+
+        /* === Global Reset === */
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-        
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             line-height: 1.5;
             color: var(--dark);
             background-color: var(--light-gray);
             -webkit-font-smoothing: antialiased;
+            height: 100%;
+            overflow-y: auto !important; /* Ensure page is scrollable */
         }
-        
+
         a {
             text-decoration: none;
             color: inherit;
         }
-        
+
         img {
             max-width: 100%;
             display: block;
         }
-        
-        /* Typography */
+
+        /* === Typography === */
         h1, h2, h3, h4 {
             font-weight: 600;
             line-height: 1.2;
             margin-bottom: 1rem;
         }
-        
+
         h2 {
             font-size: 1.5rem;
             color: var(--dark);
         }
-        
+
         h3 {
             font-size: 1.25rem;
         }
-        
+
         p {
             margin-bottom: 1rem;
             color: var(--dark-gray);
         }
-        
-        /* Layout */
+
+        /* === Layout === */
         .dashboard-container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 1rem;
+            overflow: visible !important;
         }
-        
-        /* Navigation */
+
+        .listing-container {
+            max-width: 1000px;
+            margin: 1rem auto;
+            padding: 0 1rem;
+            overflow: visible !important;
+            height: auto !important;
+        }
+
+        /* === Navigation === */
         .dashboard-nav {
             display: flex;
             gap: 0.5rem;
@@ -115,13 +127,13 @@
             padding: 0.5rem;
             box-shadow: var(--shadow-sm);
             overflow-x: auto;
-            scrollbar-width: none; /* Firefox */
+            scrollbar-width: none;
         }
-        
+
         .dashboard-nav::-webkit-scrollbar {
-            display: none; /* Chrome/Safari */
+            display: none;
         }
-        
+
         .nav-btn {
             display: flex;
             align-items: center;
@@ -137,38 +149,28 @@
             white-space: nowrap;
             color: var(--dark-gray);
         }
-        
+
         .nav-btn i {
             font-size: 1rem;
             width: 1.25rem;
         }
-        
+
         .nav-btn:hover {
             background: var(--light-gray);
             color: var(--dark);
         }
-        
+
         .nav-btn.active {
             background: var(--primary);
             color: var(--white);
             box-shadow: var(--shadow-sm);
         }
-        
+
         .nav-btn.active:hover {
             background: var(--secondary);
         }
-        
-        .logout-btn {
-            margin-right: 200px;
-            background: ;
-            color: grey;
-        }
-        
-        .logout-btn:hover {
-            background: #dc2626;
-        }
-        
-        /* Sections */
+
+        /* === Sections === */
         .dashboard-section {
             display: none;
             background: var(--white);
@@ -176,116 +178,294 @@
             padding: 1.5rem;
             box-shadow: var(--shadow-sm);
             margin-bottom: 1.5rem;
+            overflow: visible !important;
+            height: auto !important;
+            min-height: 100vh;
         }
-        
+
         .dashboard-section.active {
             display: block;
             animation: fadeIn 0.3s ease;
         }
-        
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
-        /* Cards Grid */
-        .listings-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.25rem;
+
+        /* === Form Styling === */
+        #create-listing-form {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: var(--secondary-bg);
+            border-radius: var(--radius-md);
+            box-shadow: var(--box-shadow);
+            overflow: visible !important;
+            height: auto !important;
         }
-        
-        .listing-card {
+
+        .form-card {
             background: var(--white);
             border-radius: var(--radius-md);
-            overflow: hidden;
-            box-shadow: var(--shadow-sm);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
             transition: var(--transition);
-            border: 1px solid var(--medium-gray);
+            border: none;
+            position: relative;
+            overflow: visible !important;
         }
-        
-        .listing-card:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-md);
+
+        .form-card:hover {
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
         }
-        
-        .listing-card img {
-            width: 100%;
-            height: 250px;
-            object-fit: cover;
-            background-color: var(--light-gray);
-            border-bottom: 1px solid var(--medium-gray);
-            padding: 0.5rem;
-        }
-        
-        .listing-content {
-            padding: 1rem;
-        }
-        
-        .listing-content h3 {
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .listing-content p {
-            font-size: 0.875rem;
-            color: var(--dark-gray);
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            margin-bottom: 0.75rem;
-        }
-        
-        .listing-stats-mobile {
-            display: flex;
-            gap: 1rem;
-            margin-top: 0.75rem;
-            padding-top: 0.75rem;
-            border-top: 1px solid var(--medium-gray);
-        }
-        
-        .stat-item-mobile {
+
+        .section-title {
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
             display: flex;
             align-items: center;
-            gap: 0.375rem;
-            font-size: 0.75rem;
-            color: var(--dark-gray);
+            gap: 10px;
         }
-        
-        .stat-count-mobile {
-            font-weight: 500;
+
+        .section-title i {
+            color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
             color: var(--dark);
+            font-size: 0.95rem;
         }
-        
-        .network-bars-mobile {
-            display: inline-flex;
-            align-items: flex-end;
-            height: 14px;
-            gap: 2px;
+
+        .required-field::after {
+            content: "*";
+            color: var(--danger);
+            margin-left: 4px;
         }
-        
-        .network-bars-mobile .bar {
-            width: 2px;
-            background-color: var(--dark-gray);
-            border-radius: 1px;
+
+        .form-control, .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--radius-sm);
+            font-size: 0.9375rem;
             transition: var(--transition);
         }
-        
-        .network-bars-mobile .bar:nth-child(1) { height: 40%; }
-        .network-bars-mobile .bar:nth-child(2) { height: 70%; }
-        .network-bars-mobile .bar:nth-child(3) { height: 100%; }
-        
-        .listing-actions {
-            display: flex;
-            gap: 0.75rem;
-            padding: 0 1rem 1rem;
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
         }
-        
-        /* Buttons */
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 16px 12px;
+            padding-right: 2.5rem;
+        }
+
+        .input-group-text {
+            background-color: var(--light);
+            border-right: none;
+            color: var(--primary);
+        }
+
+        /* === Deal Type Selector === */
+        .deal-type-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .deal-type-card {
+            flex: 1;
+            cursor: pointer;
+            border-radius: var(--radius-md);
+            border: 2px solid var(--medium-gray);
+            padding: 1.5rem;
+            text-align: center;
+            transition: var(--transition);
+            background: var(--white);
+            position: relative;
+        }
+
+        .deal-type-card:hover {
+            transform: scale(1.02);
+        }
+
+        .deal-type-card.active {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .deal-type-card.active::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .deal-type-card i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .deal-type-card.active i {
+            color: var(--secondary);
+        }
+
+        .deal-type-card h5 {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .deal-type-card p {
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+
+        /* === File Upload === */
+        .file-upload-area {
+            border: 2px dashed var(--medium-gray);
+            border-radius: var(--radius-md);
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background-color: var(--light);
+            margin-bottom: 1rem;
+        }
+
+        .file-upload-area:hover {
+            border-color: var(--primary);
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+
+        .file-upload-area i {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .file-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .file-preview-item {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            background-color: var(--light-gray);
+        }
+
+        .file-preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .file-preview-item button {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(0,0,0,0.5);
+            border: none;
+            color: var(--white);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
+        /* === Offered Items === */
+        .offered-item {
+            position: relative;
+            padding: 1.5rem;
+            background: var(--light);
+            border-radius: var(--radius-md);
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--medium-gray);
+        }
+
+        .item-number {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            background: var(--primary);
+            color: var(--white);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .remove-item-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: var(--danger);
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: var(--transition);
+        }
+
+        .remove-item-btn:hover {
+            opacity: 1;
+        }
+
+        /* === Buttons === */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -300,98 +480,202 @@
             transition: var(--transition);
             white-space: nowrap;
         }
-        
-        .btn-sm {
-            padding: 0.375rem 0.75rem;
-            font-size: 0.8125rem;
-        }
-        
+
         .btn-primary {
             background: var(--primary);
             color: var(--white);
         }
-        
+
         .btn-primary:hover {
             background: var(--secondary);
         }
-        
-        .btn-outline-primary {
-            background: transparent;
-            color: var(--primary);
-            border: 1px solid var(--primary);
-        }
-        
-        .btn-outline-primary:hover {
-            background: var(--primary-light);
-        }
-        
+
         .btn-success {
             background: var(--success);
             color: var(--white);
         }
-        
+
         .btn-success:hover {
             background: #059669;
         }
-        
-        .btn-outline-success {
-            background: transparent;
-            color: var(--success);
-            border: 1px solid var(--success);
-        }
-        
-        .btn-outline-success:hover {
-            background: var(--success-light);
-        }
-        
+
         .btn-danger {
             background: var(--danger);
             color: var(--white);
         }
-        
+
         .btn-danger:hover {
             background: #dc2626;
         }
-        
+
         .btn-outline-danger {
             background: transparent;
             color: var(--danger);
             border: 1px solid var(--danger);
         }
-        
+
         .btn-outline-danger:hover {
             background: var(--danger-light);
         }
-        
-        .btn-warning {
-            background: var(--warning);
+
+        .add-item-btn {
+            background-color: var(--primary);
             color: var(--white);
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 1.5rem;
         }
-        
-        .btn-warning:hover {
-            background: #d97706;
+
+        .add-item-btn:hover {
+            background-color: var(--secondary);
+            transform: translateY(-2px);
         }
-        
-        .btn-outline-warning {
-            background: transparent;
-            color: var(--warning);
-            border: 1px solid var(--warning);
+
+        .add-item-btn:disabled {
+            background-color: var(--dark-gray);
+            cursor: not-allowed;
+            transform: none;
         }
-        
-        .btn-outline-warning:hover {
-            background: var(--warning-light);
-        }
-        
-        .btn-info {
-            background: var(--info);
+
+        .submit-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: var(--white);
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+            width: 100%;
+            margin-top: 1rem;
         }
-        
-        .btn-info:hover {
-            background: #2563eb;
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(67, 97, 238, 0.4);
         }
-        
-        /* Proposals Section */
+
+        /* === Cash Adjustments === */
+        .cash-adjustment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .cash-box {
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            background: var(--white);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .cash-box.required-cash {
+            border: 1px solid var(--danger-light);
+            background: var(--danger-light);
+        }
+
+        .cash-box.offered-cash {
+            border: 1px solid var(--success-light);
+            background: var(--success-light);
+        }
+
+        .cash-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .currency-icon {
+            font-size: 1.25rem;
+            margin-right: 0.5rem;
+        }
+
+        .cash-required .currency-icon {
+            color: var(--danger);
+        }
+
+        .cash-offered .currency-icon {
+            color: var(--success);
+        }
+
+        .input-with-symbol {
+            position: relative;
+        }
+
+        .currency-symbol {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 500;
+            color: var(--dark-gray);
+        }
+
+        .form-control[type="number"] {
+            padding-left: 2rem;
+        }
+
+        /* === Listings Grid === */
+        .listings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .listing-card {
+            background: var(--white);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            border: 1px solid var(--medium-gray);
+        }
+
+        .listing-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .listing-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 1px solid var(--medium-gray);
+            padding: 0.5rem;
+        }
+
+        .listing-content {
+            padding: 1rem;
+        }
+
+        .listing-content h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .listing-content p {
+            font-size: 0.875rem;
+            color: var(--dark-gray);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+        }
+
+        .listing-actions {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0 1rem 1rem;
+        }
+
+        /* === Proposals === */
         .proposal-filter {
             display: flex;
             align-items: center;
@@ -399,18 +683,13 @@
             margin-bottom: 1.5rem;
             flex-wrap: wrap;
         }
-        
-        .proposal-filter label {
-            font-weight: 500;
-            color: var(--dark);
-        }
-        
+
         .proposals-list {
             display: flex;
             flex-direction: column;
             gap: 1rem;
         }
-        
+
         .proposal-card {
             background: var(--white);
             border-radius: var(--radius-md);
@@ -418,7 +697,7 @@
             box-shadow: var(--shadow-sm);
             border: 1px solid var(--medium-gray);
         }
-        
+
         .proposal-header {
             display: flex;
             justify-content: space-between;
@@ -427,34 +706,34 @@
             flex-wrap: wrap;
             gap: 0.5rem;
         }
-        
+
         .status-badge {
             padding: 0.25rem 0.75rem;
             border-radius: 1rem;
             font-size: 0.75rem;
             font-weight: 600;
         }
-        
+
         .status-pending {
             background-color: var(--warning-light);
             color: var(--warning);
         }
-        
+
         .status-accepted {
             background-color: var(--success-light);
             color: var(--success);
         }
-        
+
         .status-declined {
             background-color: var(--danger-light);
             color: var(--danger);
         }
-        
+
         .status-negotiated {
             background-color: var(--info-light);
             color: var(--info);
         }
-        
+
         .sender-info {
             background: var(--light-gray);
             padding: 0.75rem;
@@ -462,18 +741,14 @@
             margin: 0.75rem 0;
             font-size: 0.875rem;
         }
-        
-        .sender-info p {
-            margin-bottom: 0.25rem;
-        }
-        
+
         .proposal-images {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
             gap: 0.5rem;
             margin: 1rem 0;
         }
-        
+
         .proposal-image {
             width: 100%;
             height: 80px;
@@ -483,265 +758,20 @@
             cursor: pointer;
             transition: var(--transition);
         }
-        
+
         .proposal-image:hover {
             transform: scale(1.02);
             box-shadow: var(--shadow-sm);
         }
-        
+
         .proposal-actions {
             display: flex;
             gap: 0.75rem;
             margin-top: 1rem;
             flex-wrap: wrap;
         }
-        
-        /* Forms */
-        .form-control {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--medium-gray);
-            border-radius: var(--radius-sm);
-            font-size: 0.9375rem;
-            transition: var(--transition);
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
-        }
-        
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: var(--dark);
-        }
-        
-        .form-row {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-        
-        .form-row > * {
-            flex: 1;
-        }
-        
-        textarea.form-control {
-            min-height: 120px;
-            resize: vertical;
-        }
-        
-        select.form-control {
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 0.75rem center;
-            background-size: 16px 12px;
-            padding-right: 2.5rem;
-        }
-        
-        /* Create Listing Form */
-        .create-listing-form {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
 
-
-        /* Keep your existing styles for larger screens */
-        
-        .cash-section-group {
-            border: 1px solid var(--medium-gray);
-            border-radius: var(--radius-md);
-            padding: 1.25rem;
-            margin: 1rem 0;
-            background: var(--light-gray);
-        }
-        
-        .section-subheading {
-            color: var(--primary);
-            border-bottom: 1px solid var(--medium-gray);
-            padding-bottom: 0.5rem;
-            margin-bottom: 1rem;
-            font-size: 1.125rem;
-        }
-        
-        .cash-input-group {
-            margin: 1rem 0;
-            padding: 1rem;
-            border-radius: var(--radius-sm);
-        }
-        
-        .cash-required {
-            border: 1px solid var(--danger);
-            background: var(--danger-light);
-        }
-        
-        .cash-offered {
-            border: 1px solid var(--success);
-            background: var(--success-light);
-        }
-        
-        .cash-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 0.75rem;
-        }
-        
-        .currency-icon {
-            font-size: 1.25rem;
-            margin-right: 0.5rem;
-        }
-        
-        .cash-required .currency-icon {
-            color: var(--danger);
-        }
-        
-        .cash-offered .currency-icon {
-            color: var(--success);
-        }
-        
-        .cash-explanation {
-            color: var(--dark-gray);
-            font-size: 0.875rem;
-            margin-bottom: 0.75rem;
-            line-height: 1.5;
-        }
-        
-        .input-with-symbol {
-            position: relative;
-        }
-        
-        .currency-symbol {
-            position: absolute;
-            left: 0.75rem;
-            top: 50%;
-            transform: translateY(-50%);
-            font-weight: 500;
-            color: var(--dark-gray);
-            z-index: 1;
-        }
-        
-        .form-control[type="number"] {
-            padding-left: 2rem;
-        }
-        
-        .form-help-text {
-            display: block;
-            margin-top: 0.25rem;
-            color: var(--dark-gray);
-            font-size: 0.8125rem;
-        }
-        
-        /* File Upload */
-        .file-upload {
-            display: block;
-            padding: 1.5rem;
-            border: 2px dashed var(--medium-gray);
-            border-radius: var(--radius-md);
-            text-align: center;
-            cursor: pointer;
-            transition: var(--transition);
-            background: var(--light-gray);
-            margin-bottom: 1rem;
-        }
-        
-        .file-upload:hover {
-            border-color: var(--primary);
-            background: var(--primary-light);
-        }
-        
-        .file-upload.dragover {
-            border-color: var(--primary);
-            background: var(--primary-light);
-        }
-        
-        .file-upload-icon {
-            font-size: 1.5rem;
-            color: var(--primary);
-            margin-bottom: 0.5rem;
-        }
-        
-        .file-upload-text {
-            color: var(--dark-gray);
-        }
-        
-        .file-upload-text small {
-            color: var(--dark-gray);
-            font-size: 0.8125rem;
-        }
-        
-        /* Image Preview */
-        .image-preview-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 0.75rem;
-            margin-top: 1rem;
-        }
-        
-        .preview-item {
-            position: relative;
-        }
-        
-        .preview-image {
-            width: 100%;
-            height: 100px;
-            object-fit: cover;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--medium-gray);
-        }
-        
-        .remove-image {
-            position: absolute;
-            top: 0.25rem;
-            right: 0.25rem;
-            background: var(--danger);
-            color: var(--white);
-            border: none;
-            border-radius: 50%;
-            width: 1.25rem;
-            height: 1.25rem;
-            font-size: 0.75rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0.9;
-            transition: var(--transition);
-        }
-        
-        .remove-image:hover {
-            opacity: 1;
-            transform: scale(1.1);
-        }
-        
-        /* Submit Button */
-        .submit-btn {
-            width: 100%;
-            padding: 0.875rem;
-            font-size: 1rem;
-            font-weight: 500;
-            margin-top: 1rem;
-            background: var(--primary);
-            color: var(--white);
-            border: none;
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            transition: var(--transition);
-        }
-        
-        .submit-btn:hover {
-            background: var(--secondary);
-        }
-        
-        /* Image Modal */
+        /* === Image Modal === */
         .image-modal {
             display: none;
             position: fixed;
@@ -754,7 +784,7 @@
             overflow: hidden;
             touch-action: none;
         }
-        
+
         .modal-content {
             display: block;
             margin: auto;
@@ -766,7 +796,7 @@
             transform: translate(-50%, -50%);
             object-fit: contain;
         }
-        
+
         .close-modal {
             position: absolute;
             top: 1.5rem;
@@ -778,11 +808,11 @@
             opacity: 0.8;
             transition: var(--transition);
         }
-        
+
         .close-modal:hover {
             opacity: 1;
         }
-        
+
         .modal-nav {
             position: absolute;
             top: 50%;
@@ -795,950 +825,334 @@
             transform: translateY(-50%);
             transition: var(--transition);
         }
-        
+
         .modal-nav:hover {
             opacity: 1;
         }
-        
+
         .modal-nav.left {
             left: 1rem;
         }
-        
+
         .modal-nav.right {
             right: 1rem;
         }
-        
-        /* Profile Section */
-        .profile-form {
-            max-width: 500px;
-            margin: 0 auto;
-        }
-        
-        /* Mobile Responsiveness */
-@media (max-width: 768px) {
-    .dashboard-nav {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 0.5rem;
-        padding: 0.75rem;
-        overflow-x: hidden;
-    }
-    
-    .nav-btn {
-        flex: 0 0 calc(50% - 0.25rem);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 0.75rem 0.5rem;
-        font-size: 0.875rem;
-        border-radius: var(--radius-md);
-    }
-    
-    .nav-btn i {
-        font-size: 1.25rem;
-        margin-bottom: 0.25rem;
-    }
-    
-    .logout-btn {
-        margin-left: 0;
-    }
-    
-    .listings-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-row {
-        flex-direction: column;
-        gap: 0;
-    }
-    
-    .deal-type-selector {
-        grid-template-columns: 1fr;
-    }
-    
-    .proposal-images {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    
-    .proposal-image {
-        height: 70px;
-    }
-    
-    .proposal-actions {
-        flex-direction: column;
-    }
-    
-    .proposal-actions .btn {
-        width: 100%;
-    }
-    
-    .modal-content {
-        max-width: 95%;
-        max-height: 70%;
-    }
-    
-    .close-modal {
-        top: 1rem;
-        right: 1.5rem;
-        font-size: 2rem;
-    }
-    
-    .modal-nav {
-        font-size: 1.5rem;
-        padding: 0.75rem;
-    }
-}
 
-
-        
-        @media (max-width: 480px) {
-            .dashboard-section {
-                padding: 1rem;
-            }
-            
-            .proposal-images {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .image-preview-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        
-        /* Utility Classes */
-        .visually-hidden {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
-        }
-        
-        .text-center {
-            text-align: center;
-        }
-        
-        .mb-3 {
-            margin-bottom: 1rem;
-        }
-        
-        .mt-3 {
-            margin-top: 1rem;
-        }
-        
-        .py-3 {
-            padding-top: 1rem;
-            padding-bottom: 1rem;
+        /* === Social Share === */
+        .social-share {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.75rem 0;
+            flex-wrap: wrap;
+            justify-content: flex-start;
         }
 
-
-            /* Add these styles to your existing CSS */
-    /* Add these styles to your existing CSS */
-    .image-container {
-        position: relative;
-    }
-    
-    .plan-badge {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        z-index: 1;
-    }
-    
-    .badge {
-        padding: 0.35rem 0.75rem;
-        border-radius: 6px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        text-transform: capitalize;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-    }
-    
-    .badge-premium {
-        background-color: #10b981;
-        color: white;
-    }
-    
-    .badge-standard {
-        background-color: #10b981;
-        color: white;
-    }
-    
-    .badge-basic {
-        background-color: #10b981;
-        color: white;
-    }
-    
-    .badge-promote {
-        background-color: #10b981;
-        color: white;
-        font-weight: 700;
-        animation: pulse 2s infinite;
-    }
-    
-    .badge-promote i {
-        font-size: 0.8rem;
-    }
-    
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-    }
-    
-    /* Ensure the image has proper dimensions */
-    .listing-card img {
-        width: 100%;
-        height: 200px;
-        object-fit: cover;
-        background-color: var(--light-gray);
-        border-bottom: 1px solid var(--medium-gray);
-        padding: 0.5rem;
-    }
-
-
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-
-
-
-.badge-promote {
-    background-color: red;
-    color: white;
-    font-weight: 800;
-    padding: 0.35rem 0.75rem;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.badge-promote:hover {
-    background-color: red;
-    transform: translateY(-1px);
-}
-
-.badge-promote i {
-    font-size: 0.8rem;
-}
-
-.flash-messages {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 2000;
-  text-align: center;
-  width: 90%;
-  max-width: 500px;
-}
-
-.flash-message {
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border-radius: 5px;
-  color: #fff;
-  font-size: 1.1rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  opacity: 1; /* initial opacity */
-  transition: opacity 1s ease-out;
-}
-
-/* Example flash message type styles */
-.flash-success {
-  background-color: #2ecc71;
-}
-
-.flash-danger {
-  background-color: #e74c3c;
-}
-
-.flash-warning {
-  background-color: #f39c12;
-}
-
-.flash-info {
-  background-color: #3498db;
-}
-
-
-/* For the proposals button specifically */
-.nav-btn[data-section="proposals"] {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    position: relative;
-}
-
-.proposal-btn-content {
-    position: relative;
-    display: inline-flex;
-}
-
-.proposal-count-badge {
-    position: absolute;
-    top: -13px;
-    right: -22px;
-    background: #ff4d4d;
-    color: white;
-    border-radius: 50%;
-    padding: 2px 6px;
-    font-size: 11px;
-    font-weight: bold;
-    min-width: 18px;
-    text-align: center;
-    border: 2px solid #fff; /* Creates a nice border effect */
-}
-
-.btn-text {
-    font-size: 12px;
-}
-
-/* For desktop - show text next to icon */
-@media (min-width: 768px) {
-    .nav-btn[data-section="proposals"] {
-        flex-direction: row;
-        gap: 8px;
-    }
-    
-    .btn-text {
-        font-size: inherit;
-    }
-    
-    .proposal-count-badge {
-        position: static;
-        margin-left: 4px;
-        top: auto;
-        right: auto;
-        align-self: center;
-    }
-}
-
-
-
-/* ===== Theme Variables ===== */
-:root {
-  --primary-color: #4caf50;      /* Light green */
-  --primary-hover: #43a047;
-  --secondary-bg: #ffffff;       /* White */
-  --muted-text: #6b6b6b;
-  --border-radius: 4px;
-  --transition: 0.2s ease-in-out;
-}
-
-/* ===== Global Reset ===== */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-body {
-  font-family: Arial, sans-serif;
-  color: #333;
-  background: #f5f5f5;
-  line-height: 1.5;
-}
-
-/* ===== Form Container ===== */
-#create-listing-form {
-  max-width: 800px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background: var(--secondary-bg);
-  border-radius: var(--border-radius);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* ===== Form Groups & Rows ===== */
-.form-group {
-  margin-bottom: 1.25rem;
-}
-.form-row {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-.form-row .form-group {
-  flex: 1;
-  min-width: 200px;
-}
-
-/* ===== Labels & Inputs ===== */
-label {
-  display: block;
-  margin-bottom: 0.4rem;
-  font-weight: bold;
-}
-input[type="text"],
-input[type="number"],
-select,
-textarea {
-  width: 100%;
-  padding: 0.6rem;
-  border: 1px solid #ccc;
-  border-radius: var(--border-radius);
-  transition: border-color var(--transition);
-}
-input:focus,
-select:focus,
-textarea:focus {
-  outline: none;
-  border-color: var(--primary-color);
-}
-
-/* ===== Textarea ===== */
-textarea {
-  min-height: 100px;
-  resize: vertical;
-}
-
-
-/* ===== Headings within Form ===== */
-#create-listing-form h3 {
-  margin-top: 1.5rem;
-  margin-bottom: 0.8rem;
-  color: var(--primary-color);
-  font-size: 1.1rem;
-  border-bottom: 2px solid var(--primary-color);
-  display: inline-block;
-  padding-bottom: 0.2rem;
-}
-
-/* ===== Buttons ===== */
-button {
-  cursor: pointer;
-  border: none;
-  border-radius: var(--border-radius);
-  padding: 0.75rem 1.25rem;
-  font-size: 1rem;
-  transition: background-color var(--transition);
-}
-.btn-primary {
-  background: var(--primary-color);
-  color: #fff;
-}
-.btn-primary:hover {
-  background: var(--primary-hover);
-}
-.btn-secondary {
-  background: #e0e0e0;
-  color: #333;
-}
-.btn-secondary:hover {
-  background: #d5d5d5;
-}
-
-/* ===== Input with Icon ===== */
-.input-with-icon {
-  position: relative;
-}
-.input-with-icon span {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--muted-text);
-  pointer-events: none;
-}
-.input-with-icon input {
-  padding-left: 2rem;
-}
-
-/* ===== Offered Items Styling ===== */
-.offered-item {
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border: 1px solid #ddd;
-  border-radius: var(--border-radius);
-  background: #fafafa;
-}
-
-/* ===== File Input ===== */
-input[type="file"] {
-  padding: 0.3rem;
-}
-
-/* ===== Responsive ===== */
-@media (max-width: 600px) {
-  .form-row {
-    flex-direction: column;
-  }
-}
-
-
-/* Enhanced CSS */
-.swap-guide {
-    background: #e3f2fd;
-    border-left: 4px solid #2196f3;
-    padding: 1rem;
-    margin: 1rem 0;
-    border-radius: 4px;
-}
-
-.section-header {
-    margin-bottom: 1.5rem;
-}
-.section-header small {
-    display: block;
-    color: #666;
-    font-size: 0.9em;
-    margin-top: 0.25rem;
-}
-
-.cash-adjustment-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1rem;
-}
-
-.cash-box {
-    padding: 1.5rem;
-    border-radius: 8px;
-    background: #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.cash-box.required-cash {
-    border: 1px solid #ffcdd2;
-    background: #ffebee;
-}
-.cash-box.offered-cash {
-    border: 1px solid #c8e6c9;
-    background: #e8f5e9;
-}
-
-.help-text {
-    display: block;
-    margin-top: 0.5rem;
-    color: #666;
-    font-size: 0.85em;
-}
-
-.upload-guide {
-    color: #666;
-    margin: 0.5rem 0;
-    font-size: 0.9em;
-}
-
-.btn-primary i {
-    margin-right: 0.5rem;
-}
-
-@media (max-width: 768px) {
-    .cash-adjustment-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.social-share {
-  display: flex;
-  gap: 0.5rem;
-  padding: 0.75rem 0;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-}
-
-.share-btn {
-  background: #eee;
-  border: none;
-  padding: 0.4rem 0.9rem;
-  border-radius: 30px;
-  font-size: 14px;
-  color: #333;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  transition: background 0.3s;
-  text-decoration: none;
-}
-
-.share-btn:hover {
-  background: #2ecc71;
-  color: white;
-}
-
-
-        .listing-container {
-            max-width: 1000px;
-            margin: 1rem auto;
-            padding: 0 1rem;
-        }
-        
-        .form-card {
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            transition: var(--transition);
+        .share-btn {
+            background: var(--light-gray);
             border: none;
-        }
-        
-        .form-card:hover {
-            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-        }
-        
-        .section-title {
-            font-weight: 700;
+            padding: 0.4rem 0.9rem;
+            border-radius: 30px;
+            font-size: 14px;
             color: var(--dark);
-            margin-bottom: 1.5rem;
-            font-size: 1.5rem;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
         }
-        
-        .section-title i {
-            color: var(--primary);
+
+        .share-btn:hover {
+            background: var(--success);
+            color: var(--white);
         }
-        
-.deal-type-container {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
 
-.deal-type-card {
-    flex: 1;
-    cursor: pointer;
-    border-radius: var(--border-radius);
-    border: 2px solid #e9ecef;
-    padding: 1.5rem;
-    text-align: center;
-    transition: transform 0.2s ease-in-out, border-color 0.2s, background-color 0.2s;
-    background: white;
-    position: relative; /* For positioning the checkmark */
-}
-
-.deal-type-card:hover {
-    transform: scale(1.02); /* Slight enlargement on hover */
-}
-
-.deal-type-card.active {
-    border-color: var(--primary);
-    background-color: var(--primary-light);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Adds depth to the active card */
-}
-
-.deal-type-card.active::after {
-    content: '\f00c'; /* Font Awesome checkmark */
-    font-family: 'Font Awesome 5 Free';
-    font-weight: 900;
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    color: var(--primary);
-    font-size: 1.2rem;
-}
-
-.deal-type-card i {
-    font-size: 2rem;
-    margin-bottom: 1rem;
-    color: var(--primary);
-}
-
-.deal-type-card.active i {
-    color: var(--secondary);
-}
-
-.deal-type-card h5 {
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: var(--dark);
-}
-
-.deal-type-card p {
-    color: #6c757d;
-    font-size: 0.9rem;
-    margin-bottom: 0;
-}
-
-/* Ensure side-by-side layout on all screens */
-@media (max-width: 768px) {
-    .deal-type-container {
-        flex-direction: row; /* Keep horizontal layout */
-        gap: 0.5rem; /* Reduce gap for smaller screens */
-    }
-
-    .deal-type-card {
-        padding: 1rem; /* Slightly reduce padding for mobile */
-        font-size: 0.9rem; /* Slightly smaller text for better fit */
-    }
-
-    .deal-type-card h5 {
-        font-size: 1rem; /* Adjust heading size for mobile */
-    }
-
-    .deal-type-card p {
-        font-size: 0.8rem; /* Adjust description size for mobile */
-    }
-}
-
-/* Responsive design for smaller screens */
-@media (max-width: 768px) {
-    .deal-type-container {
-        flex-direction: column;
-    }
-}
-        
-        .form-label {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: var(--dark);
-            font-size: 0.95rem;
-        }
-        
-        .required-field::after {
-            content: "*";
-            color: #dc3545;
-            margin-left: 4px;
-        }
-        
-        .input-icon {
-            background-color: var(--light);
-            border-right: none;
-            color: var(--primary);
-        }
-        
-        .form-control, .form-select {
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
-            border: 1px solid #e9ecef;
-        }
-        
-        .form-control:focus, .form-select:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
-        }
-        
-        .offered-item {
+        /* === Badges === */
+        .image-container {
             position: relative;
-            padding: 1.5rem;
-            background: var(--light);
-            border-radius: var(--border-radius);
-            margin-bottom: 1.5rem;
         }
-        
-        .item-number {
-            position: absolute;
-            top: -10px;
-            left: -10px;
-            background: var(--primary);
-            color: white;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-        
-        .remove-item-btn {
+
+        .plan-badge {
             position: absolute;
             top: 10px;
-            right: 10px;
-            background: none;
-            border: none;
-            color: #dc3545;
-            font-size: 1.2rem;
-            cursor: pointer;
-            opacity: 0.7;
-            transition: var(--transition);
+            left: 10px;
+            z-index: 1;
         }
-        
-        .remove-item-btn:hover {
-            opacity: 1;
-        }
-        
-        .add-item-btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: var(--transition);
-            margin-bottom: 1.5rem;
-        }
-        
-        .add-item-btn:hover {
-            background-color: var(--secondary);
-            transform: translateY(-2px);
-        }
-        
-        .add-item-btn:disabled {
-            background-color: #adb5bd;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .file-upload-area {
-            border: 2px dashed #dee2e6;
-            border-radius: var(--border-radius);
-            padding: 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: var(--transition);
-            background-color: var(--light);
-            margin-bottom: 1rem;
-        }
-        
-        .file-upload-area:hover {
-            border-color: var(--primary);
-            background-color: rgba(67, 97, 238, 0.05);
-        }
-        
-        .file-upload-area i {
-            font-size: 2rem;
-            color: var(--primary);
-            margin-bottom: 1rem;
-        }
-        
-        .file-upload-area p {
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-        
-        .file-upload-area small {
-            color: #6c757d;
-        }
-        
-        .file-preview {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-        
-        .file-preview-item {
-            position: relative;
-            width: 80px;
-            height: 80px;
-            border-radius: 8px;
-            overflow: hidden;
-            background-color: #e9ecef;
-        }
-        
-        .file-preview-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .file-preview-item button {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            background: rgba(0,0,0,0.5);
-            border: none;
-            color: white;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            cursor: pointer;
-        }
-        
-        .submit-btn {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            padding: 1rem 2rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            border-radius: var(--border-radius);
-            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
-            transition: var(--transition);
-            width: 100%;
-            margin-top: 1rem;
-        }
-        
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(67, 97, 238, 0.4);
-        }
-        
-        .help-text {
+
+        .badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: var(--radius-sm);
             font-size: 0.85rem;
-            color: #6c757d;
-            margin-top: 0.25rem;
+            font-weight: 600;
+            text-transform: capitalize;
+            box-shadow: var(--shadow-sm);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
         }
-        
+
+        .badge-premium, .badge-standard, .badge-basic {
+            background-color: var(--success);
+            color: var(--white);
+        }
+
+        .badge-promote {
+            background-color: var(--danger);
+            color: var(--white);
+            font-weight: 700;
+            animation: pulse 2s infinite;
+        }
+
+        .badge-promote i {
+            font-size: 0.8rem;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* === Flash Messages === */
+        .flash-messages {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2000;
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .flash-message {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: var(--radius-sm);
+            color: var(--white);
+            font-size: 1.1rem;
+            box-shadow: var(--shadow-md);
+            opacity: 1;
+            transition: opacity 1s ease-out;
+        }
+
+        .flash-success {
+            background-color: var(--success);
+        }
+
+        .flash-danger {
+            background-color: var(--danger);
+        }
+
+        .flash-warning {
+            background-color: var(--warning);
+        }
+
+        .flash-info {
+            background-color: var(--info);
+        }
+
+        /* === Proposal Button === */
+        .nav-btn[data-section="proposals"] {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            position: relative;
+        }
+
+        .proposal-btn-content {
+            position: relative;
+            display: inline-flex;
+        }
+
+        .proposal-count-badge {
+            position: absolute;
+            top: -13px;
+            right: -22px;
+            background: var(--danger);
+            color: var(--white);
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 11px;
+            font-weight: bold;
+            min-width: 18px;
+            text-align: center;
+            border: 2px solid var(--white);
+        }
+
+        .btn-text {
+            font-size: 12px;
+        }
+
+        /* === Undo Toast === */
+        #undo-toast {
+            display: none;
+            position: fixed;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--dark);
+            color: var(--white);
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-md);
+            font-size: 0.9rem;
+            z-index: 1001;
+        }
+
+        #undo-toast button {
+            background: transparent;
+            border: none;
+            color: #4FC3F7;
+            margin-left: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* === Proposal Animations === */
+        @keyframes bubblePop {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes slideBounce {
+            0% { transform: translateX(-20px); opacity: 0; }
+            60% { transform: translateX(10px); }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes shakeFade {
+            0% { transform: translateX(0); opacity: 1; }
+            20% { transform: translateX(-10px); }
+            40% { transform: translateX(10px); }
+            60% { transform: translateX(-10px); }
+            80% { transform: translateX(10px); }
+            100% { transform: translateX(0); opacity: 0; }
+        }
+
+        .status-badge.accept-animation {
+            animation: bubblePop 0.6s ease-out;
+            background-color: var(--success) !important;
+        }
+
+        .status-badge.negotiate-animation {
+            animation: slideBounce 0.7s ease-out;
+            background-color: var(--warning) !important;
+            color: var(--dark) !important;
+        }
+
+        .status-badge.decline-animation {
+            animation: shakeFade 0.8s ease-out;
+            background-color: var(--danger) !important;
+        }
+
+        /* === Mobile Responsiveness === */
         @media (max-width: 768px) {
-            .listing-container {
-                padding: 0 0.75rem;
+            .dashboard-nav {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.5rem;
+                padding: 0.75rem;
+                overflow-x: hidden;
             }
-            
+
+            .nav-btn {
+                flex: 0 0 calc(50% - 0.25rem);
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 0.75rem 0.5rem;
+                font-size: 0.875rem;
+            }
+
+            .nav-btn i {
+                font-size: 1.25rem;
+                margin-bottom: 0.25rem;
+            }
+
+            .listings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+
             .deal-type-container {
                 flex-direction: column;
                 gap: 0.75rem;
             }
-            
-            .form-card {
-                padding: 1.25rem;
+
+            .proposal-images {
+                grid-template-columns: repeat(3, 1fr);
             }
-            
+
+            .proposal-image {
+                height: 70px;
+            }
+
+            .proposal-actions {
+                flex-direction: column;
+            }
+
+            .proposal-actions .btn {
+                width: 100%;
+            }
+
+            .modal-content {
+                max-width: 95%;
+                max-height: 70%;
+            }
+
+            .close-modal {
+                top: 1rem;
+                right: 1.5rem;
+                font-size: 2rem;
+            }
+
+            .modal-nav {
+                font-size: 1.5rem;
+                padding: 0.75rem;
+            }
+
+            #create-listing-form {
+                max-width: 100%;
+                margin: 0;
+                padding: 1rem;
+            }
+
+            .listing-container {
+                padding: 0 0.25rem;
+            }
+
+            .form-card {
+                padding: 0.75rem;
+            }
+
             .section-title {
                 font-size: 1.3rem;
             }
         }
 
+        @media (max-width: 480px) {
+            .dashboard-section {
+                padding: 1rem;
+            }
 
-        #create-listing-form {
-    max-width: 100%;
-}
+            .proposal-images {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
 
-
-@media (max-width: 768px) {
-    #create-listing-form {
-        max-width: 100%;
-        margin: 0;
-    }
-    .listing-container {
-        padding: 0 0.25rem;
-    }
-    .form-card {
-        padding: 0.75rem;
-    }
-    .row, .input-group, .form-control, .form-select {
-        width: 100%;
-        margin-left: 0;
-        margin-right: 0;
-    }
-}
+        /* === Debug Styles (Uncomment for testing) === */
+        /*
+        #sale-section {
+            border: 2px solid red;
+        }
+        */
     </style>
 </head>
 <body>
@@ -1746,137 +1160,95 @@ input[type="file"] {
         <!-- Navigation -->
         <nav class="dashboard-nav">
             <button class="nav-btn active" data-section="listings">
-                <i class="fas fa-box-open"></i>
-                My Listings
+                <i class="fas fa-box-open"></i> My Listings
             </button>
             <button class="nav-btn" data-section="create-listing">
-                <i class="fas fa-plus-circle"></i>
-                Create Listing
+                <i class="fas fa-plus-circle"></i> Create Listing
             </button>
-<button class="nav-btn" data-section="proposals">
-    <div class="proposal-btn-content">
-        <i class="fas fa-handshake"></i>
-        <span class="proposal-count-badge">{{ proposals|length }}</span>
-    </div>
-    <span class="btn-text">Proposals</span>
-</button>
+            <button class="nav-btn" data-section="proposals">
+                <div class="proposal-btn-content">
+                    <i class="fas fa-handshake"></i>
+                    <span class="proposal-count-badge">{{ proposals|length }}</span>
+                </div>
+                <span class="btn-text">Proposals</span>
+            </button>
             <button class="nav-btn" data-section="profile">
-                <i class="fas fa-user-cog"></i>
-                Profile
+                <i class="fas fa-user-cog"></i> Profile
             </button>
         </nav>
 
-<!-- Listings Section -->
-<section id="listings" class="dashboard-section active">
-    <h2>My Listings</h2>
-    <div class="listings-grid">
-        {% for listing in listings %}
-        <div class="listing-card" data-listing-id="{{ listing.listing_id }}">
-            <div class="image-container">
-                {% if listing.image_url %}
-                <img src="{{ url_for('static', filename='images/' + listing.image_url.split('/')[-1]) }}" 
-                     alt="{{ listing.title }}"
-                     onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
-                {% else %}
-                <img src="https://via.placeholder.com/300x200?text=No+Image" alt="{{ listing.title }}">
-                {% endif %}
-                <!-- Plan Badge - Positioned top left of image -->
-                <div class="plan-badge">
-                    {% if listing.Plan == 'Free' %}
-                    <a href="{{ url_for('promote_listing', listing_id=listing.listing_id) }}" class="badge badge-promote">
-                        Promote Ad<i class="fas fa-arrow-up"></i>
-                    </a>
-                    {% else %}
-                    <span class="badge {% if listing.plan == 'Premium' %}badge-premium{% elif listing.plan == 'Standard' %}badge-standard{% else %}badge-basic{% endif %}">
-                        {{ listing.Plan }}
-                    </span>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="listing-content">
-                <h3>{{ listing.title }}</h3>
-                <p>{{ listing.description[:100] }}{% if listing.description|length > 100 %}...{% endif %}</p>
-                <div class="mobile-stats-container">
-                    <p><strong>Condition:</strong> {{ listing.condition }}</p>
-                    <div class="listing-stats-mobile">
-                        <div class="stat-item-mobile" data-tooltip="Impressions">
-                            <div class="network-bars-mobile">
-                                <span class="bar"></span>
-                                <span class="bar"></span>
-                                <span class="bar"></span>
-                            </div>
-                            <span class="stat-count-mobile">
-                                {{ listing.impressions|default(0)|humanize_number }}
+        <!-- Listings Section -->
+        <section id="listings" class="dashboard-section active">
+            <h2>My Listings</h2>
+            <div class="listings-grid">
+                {% for listing in listings %}
+                <div class="listing-card" data-listing-id="{{ listing.listing_id }}">
+                    <div class="image-container">
+                        {% if listing.image_url %}
+                        <img src="{{ url_for('static', filename='images/' + listing.image_url.split('/')[-1]) }}" 
+                             alt="{{ listing.title }}"
+                             onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+                        {% else %}
+                        <img src="https://via.placeholder.com/300x200?text=No+Image" alt="{{ listing.title }}">
+                        {% endif %}
+                        <div class="plan-badge">
+                            {% if listing.Plan == 'Free' %}
+                            <a href="{{ url_for('promote_listing', listing_id=listing.listing_id) }}" class="badge badge-promote">
+                                Promote Ad<i class="fas fa-arrow-up"></i>
+                            </a>
+                            {% else %}
+                            <span class="badge {% if listing.plan == 'Premium' %}badge-premium{% elif listing.plan == 'Standard' %}badge-standard{% else %}badge-basic{% endif %}">
+                                {{ listing.Plan }}
                             </span>
-                        </div>
-                        <div class="stat-item-mobile" data-tooltip="Proposals">
-                            <i class="fas fa-handshake"></i>
-                            <span class="stat-count-mobile">{{ listing.proposal_count }}</span>
+                            {% endif %}
                         </div>
                     </div>
+                    <div class="listing-content">
+                        <h3>{{ listing.title }}</h3>
+                        <p>{{ listing.description[:100] }}{% if listing.description|length > 100 %}...{% endif %}</p>
+                        <div class="mobile-stats-container">
+                            <p><strong>Condition:</strong> {{ listing.condition }}</p>
+                            <div class="listing-stats-mobile">
+                                <div class="stat-item-mobile" data-tooltip="Impressions">
+                                    <div class="network-bars-mobile">
+                                        <span class="bar"></span>
+                                        <span class="bar"></span>
+                                        <span class="bar"></span>
+                                    </div>
+                                    <span class="stat-count-mobile">
+                                        {{ listing.impressions|default(0)|humanize_number }}
+                                    </span>
+                                </div>
+                                <div class="stat-item-mobile" data-tooltip="Proposals">
+                                    <i class="fas fa-handshake"></i>
+                                    <span class="stat-count-mobile">{{ listing.proposal_count }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="listing-actions">
+                        <button class="btn btn-primary edit-listing" 
+                                onclick="window.location.href='{{ url_for('edit_listing', listing_id=listing.listing_id) }}'">
+                            Edit
+                        </button>
+                        <button class="btn btn-outline-danger delete-listing" data-id="{{ listing.listing_id }}">Delete</button>
+                    </div>
+                    <div class="social-share">
+                        <button class="share-btn" onclick="shareOnWhatsApp('{{ url_for('listing_details', listing_id=listing.listing_id, _external=True) }}')">
+                            <i class="fab fa-whatsapp"></i> WhatsApp
+                        </button>
+                        <button class="share-btn" onclick="shareOnX('{{ url_for('listing_details', listing_id=listing.listing_id, _external=True) }}', '{{ listing.title }}')">
+                            <i class="fab fa-x-twitter"></i> X
+                        </button>
+                        <a href="{{ url_for('static', filename='images/' + listing.image_url.split('/')[-1]) }}"
+                           download class="share-btn" title="Download to post on Instagram Story">
+                            <i class="fab fa-instagram"></i> IG Story
+                        </a>
+                    </div>
                 </div>
+                {% endfor %}
             </div>
-            <div class="listing-actions">
-                <button class="btn btn-primary edit-listing" 
-                        onclick="window.location.href='{{ url_for('edit_listing', listing_id=listing.listing_id) }}'">
-                    Edit
-                </button>
-                <button class="btn btn-outline-danger delete-listing" data-id="{{ listing.listing_id }}">Delete</button>
-            </div>
-
-            <!-- Social Share Buttons -->
-<div class="social-share">
-    <button class="share-btn" onclick="shareOnWhatsApp('{{ url_for('listing_details', listing_id=listing.listing_id, _external=True) }}')">
-        <i class="fab fa-whatsapp"></i> WhatsApp
-    </button>
-    <button class="share-btn" onclick="shareOnX('{{ url_for('listing_details', listing_id=listing.listing_id, _external=True) }}', '{{ listing.title }}')">
-        <i class="fab fa-x-twitter"></i> X
-    </button>
-    <a href="{{ url_for('static', filename='images/' + listing.image_url.split('/')[-1]) }}"
-       download class="share-btn" title="Download to post on Instagram Story">
-        <i class="fab fa-instagram"></i> IG Story
-    </a>
-</div>
-
-        </div>
-        {% endfor %}
-    </div>
-</section>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.delete-listing').forEach(button => {
-    button.addEventListener('click', async () => {
-      const listingId = button.dataset.id;
-      if (!confirm('Are you sure you want to delete this listing?')) return;
-
-      try {
-        const resp = await fetch(`/listings/${listingId}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        const json = await resp.json();
-        if (resp.ok && json.success) {
-          // Remove the card from the DOM
-          button.closest('.listing-card').remove();
-        } else {
-          alert(json.error || 'Failed to delete listing.');
-        }
-      } catch (err) {
-        console.error(err);
-        alert('An error occurred while deleting.');
-      }
-    });
-  });
-});
-</script>
-
-
-
-
-
+        </section>
 
         <!-- Create Listing Section -->
         <section id="create-listing" class="dashboard-section">
@@ -1884,7 +1256,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h1 class="section-title mt-4">
                     <i class="fas fa-plus-circle"></i> Create New Listing
                 </h1>
-                
                 <form method="POST" action="{{ url_for('create_listing') }}" enctype="multipart/form-data" id="create-listing-form">
                     <!-- Listing Type -->
                     <div class="form-card">
@@ -1910,7 +1281,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
                     </div>
-                    
                     <!-- Basic Information -->
                     <div class="form-card">
                         <h5 class="section-title">
@@ -1949,7 +1319,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
                     </div>
-                    
                     <!-- Listing Images -->
                     <div class="form-card">
                         <h5 class="section-title">
@@ -1970,27 +1339,29 @@ document.addEventListener('DOMContentLoaded', () => {
                             </p>
                         </div>
                     </div>
-                    
                     <!-- Swap Section -->
                     <div id="swap-section" class="form-card">
                         <h5 class="section-title">
                             <i class="fas fa-exchange-alt"></i> Swap Details
                         </h5>
-                        
-                        <!-- Offered Items -->
                         <div class="mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h6 class="form-label">Your Offer Items <span class="text-muted">(1–2 items)</span></h6>
                             </div>
-                            
                             <div id="offered-items-container">
-                                <!-- First Item -->
                                 <div class="offered-item" data-clone="false">
                                     <div class="item-number">1</div>
                                     <button type="button" class="remove-item-btn" style="display: none;">
                                         <i class="fas fa-times"></i>
                                     </button>
-                                    
+                                    <input type="hidden" name="offer_title[]" value="">
+                                    <div class="col-md-6 name-field" style="display: none;">
+                                        <label class="form-label required-field">Item Name</label>
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text input-icon"><i class="fas fa-heading"></i></span>
+                                            <input type="text" name="offer_title[]" class="form-control" placeholder="e.g., Samsung Galaxy S21" disabled>
+                                        </div>
+                                    </div>
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label class="form-label required-field">Condition</label>
@@ -2010,32 +1381,27 @@ document.addEventListener('DOMContentLoaded', () => {
                                             <textarea name="offer_description[]" class="form-control" rows="3" required placeholder="Describe your item in detail..."></textarea>
                                         </div>
                                     </div>
-                                    
                                     <div class="mt-3">
-                                        <label class="form-label required-field">Item Images (At least 2)</label>
+                                        <label class="form-label required-field">Item Images (At least 1, Up to 4)</label>
                                         <div class="file-upload-area" id="item-images-upload-1">
                                             <i class="fas fa-cloud-upload-alt"></i>
                                             <p>Click to upload or drag and drop</p>
                                             <small>JPEG, PNG (Max 5MB each)</small>
-                                            <input type="file" name="offer_image1[]" id="item-images-input-1" class="d-none" multiple accept="image/*" required>
+                                            <input type="file" name="offer_images_1[]" id="item-images-input-1" class="d-none" multiple accept="image/*" required>
                                             <div class="file-preview mt-3"></div>
                                         </div>
-                                        <p class="help-text">Upload clear photos from different angles</p>
+                                        <p class="help-text">Upload up to 4 clear photos from different angles</p>
                                     </div>
                                 </div>
                             </div>
-                            
                             <button type="button" id="add-item-btn" class="add-item-btn">
                                 <i class="fas fa-plus"></i> Add Another Item
                             </button>
                         </div>
-                        
-                        <!-- Desired Swap -->
                         <div class="mt-4 pt-3 border-top">
                             <h6 class="section-title">
                                 <i class="fas fa-search"></i> What You're Looking For
                             </h6>
-                            
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label required-field">Desired Item</label>
@@ -2058,7 +1424,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </div>
                                 </div>
                             </div>
-                            
                             <div class="cash-adjustment-grid">
                                 <div class="cash-box required-cash">
                                     <div class="cash-header">
@@ -2083,14 +1448,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <p class="help-text">Amount you're willing to pay extra</p>
                                 </div>
                             </div>
-                            
                             <div class="mb-3">
                                 <label class="form-label">Additional Notes</label>
                                 <textarea name="swap_notes" class="form-control" rows="3" placeholder="Any special requirements or preferences..."></textarea>
                             </div>
                         </div>
                     </div>
-                    
                     <!-- Sale Section -->
                     <div id="sale-section" style="display:none;" class="form-card">
                         <h5 class="section-title">
@@ -2123,7 +1486,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
                     </div>
-                    
                     <!-- Location & Contact -->
                     <div class="form-card">
                         <h5 class="section-title">
@@ -2146,7 +1508,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>
                     </div>
-                    
                     <button type="submit" class="submit-btn">
                         <i class="fas fa-paper-plane me-2"></i> Publish Listing
                     </button>
@@ -2154,1135 +1515,611 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         </section>
 
+        <!-- Proposals Section -->
+        <section id="proposals" class="dashboard-section">
+            <h2>Received Proposals</h2>
+            <div class="proposal-filter">
+                <label for="proposal-filter-select">Filter by Item:</label>
+                <select id="proposal-filter-select" class="form-control">
+                    <option value="all">All</option>
+                    {% for title in unique_titles %}
+                    <option value="{{ title }}">{{ title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="proposals-list">
+                {% for proposal in proposals %}
+                <div class="proposal-card" data-id="{{ proposal.id }}">
+                    <div class="proposal-header">
+                        <h3>For: {{ proposal.listing_title }}</h3>
+                        <span class="status-badge status-{{ proposal.status }}" data-status="{{ proposal.status }}">
+                            {{ proposal.status }}
+                        </span>
+                    </div>
+                    <div class="sender-info">
+                        <p><strong>From:</strong> {{ proposal.sender_username }}</p>
+                        <p><strong>Contact:</strong> {{ proposal.sender_contact }}</p>
+                    </div>
+                    <div class="proposal-images">
+                        {% for i in range(1,5) %}
+                        {% set img = proposal['image' ~ i] %}
+                        {% if img %}
+                        <img src="{{ url_for('static', filename='images/' + img.split('/')[-1]) }}"
+                             class="proposal-image"
+                             alt="Image {{ i }}"
+                             onclick="openModal(this)"
+                             onerror="this.style.display='none'">
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    <p><strong>Proposed Item:</strong> {{ proposal.proposed_item }}</p>
+                    <p>{{ proposal.message }}</p>
+                    {% if proposal.additional_cash and proposal.additional_cash > 0 %}
+                    <p><strong>Additional Cash:</strong> ₵{{ "%.2f"|format(proposal.additional_cash) }}</p>
+                    {% else %}
+                    <p><strong>Additional Cash:</strong> None</p>
+                    {% endif %}
+                    <div class="proposal-actions">
+                        {% if proposal.status in ['pending','declined'] %}
+                        <button class="btn btn-success accept-proposal">Accept</button>
+                        <button class="btn btn-outline-warning negotiate-proposal">Negotiate</button>
+                        <button class="btn btn-outline-danger decline-proposal">Decline</button>
+                        {% elif proposal.status == 'negotiated' %}
+                        <button class="btn btn-success accept-proposal">Accept</button>
+                        <button class="btn btn-outline-danger decline-proposal">Decline</button>
+                        {% elif proposal.status == 'accepted' %}
+                        <span class="status-badge status-accepted">{{ proposal.status.capitalize() }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
 
+        <!-- Profile Section -->
+        <section id="profile" class="dashboard-section">
+            <h2>Profile Settings</h2>
+            <form id="profile-form" class="profile-form">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" class="form-control" value="{{ user.username }}">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" class="form-control" value="{{ user.email }}">
+                </div>
+                <button type="submit" class="btn btn-primary">Update Profile</button>
+            </form>
+            <h3 style="margin-top: 30px;">Change Password</h3>
+            <form id="password-form" class="profile-form">
+                <div class="form-group">
+                    <label for="oldPassword">Current Password:</label>
+                    <input type="password" id="oldPassword" name="oldPassword" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">New Password:</label>
+                    <input type="password" id="newPassword" name="newPassword" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Change Password</button>
+            </form>
+        </section>
 
-<script>
-  // 1. Define master categories + synonyms
-  const CATEGORY_DEFS = [
-    { name: 'Electronics',            synonyms: ['gadget','device','tech', 'HeadPhone'] },
-    { name: 'Computers & Networking', synonyms: ['pc','laptop','desktop','router','server'] },
-    { name: 'Mobile Phones & Accessories', synonyms: ['phone','mobile','charger','case', 'HeadPhone', 'Android', 'iphone', 'MacBook'] },
-    { name: 'Software & Apps',        synonyms: ['app','program','software'] },
-    { name: 'Health & Beauty',        synonyms: ['skincare','makeup','wellness'] },
-    { name: 'Medical Equipment',      synonyms: ['stethoscope','syringe','hospital'] },
-    { name: 'Sports & Outdoors',      synonyms: ['sport','hiking','camping'] },
-    { name: 'Fashion & Apparel',      synonyms: ['clothes','shirt','dress','jeans'] },
-    { name: 'Jewelry & Watches',      synonyms: ['ring','necklace','watch'] },
-    { name: 'Home & Garden',          synonyms: ['furniture','decor','plants'] },
-    { name: 'Kitchen & Dining',       synonyms: ['cookware','utensils','appliances'] },
-    { name: 'Tools & DIY',            synonyms: ['hammer','drill','screwdriver'] },
-    { name: 'Automobile & Vehicles',  synonyms: ['car','vehicle','truck','motorcycle'] },
-    { name: 'Industrial & Scientific',synonyms: ['lab','industrial','machine'] },
-    { name: 'Agriculture & Farming',  synonyms: ['farm','tractor','crop'] },
-    { name: 'Food & Beverages',       synonyms: ['food','drink','beverage'] },
-    { name: 'Office Supplies',        synonyms: ['pen','paper','stationery'] },
-    { name: 'Books, Music & Movies',  synonyms: ['book','cd','dvd','movie'] },
-    { name: 'Toys & Games',           synonyms: ['toy','game','puzzle'] },
-    { name: 'Baby & Kids',            synonyms: ['baby','child','kids'] },
-    { name: 'Pets & Accessories',     synonyms: ['pet','dog','cat','leash'] },
-    { name: 'Art, Crafts & Sewing',   synonyms: ['art','craft','sewing'] },
-    { name: 'Collectibles & Hobbies', synonyms: ['coin','stamp','hobby'] },
-    { name: 'Travel & Experiences',   synonyms: ['trip','tour','holiday'] },
-    { name: 'House and  Property', synonyms: ['house','apartment','land'] },
-    { name: 'Education & Training',   synonyms: ['course','lesson','training'] },
-    { name: 'Services',               synonyms: ['service','repair','consulting'] },
-    { name: 'Other',                  synonyms: [] }
-  ];
+        <!-- Image Modal -->
+        <div id="imageModal" class="image-modal">
+            <span class="close-modal" id="closeModal" onclick="closeModal()">×</span>
+            <div class="modal-nav left" id="modalPrev" onclick="changeModalImage(-1)">←</div>
+            <img class="modal-content" id="modalImage">
+            <div class="modal-nav right" id="modalNext" onclick="changeModalImage(1)">→</div>
+        </div>
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const input        = document.getElementById('category-input');
-    const suggestions  = document.getElementById('category-suggestions');
+        <!-- Undo Toast -->
+        <div id="undo-toast">
+            <span id="undo-message"></span>
+            <button id="undo-btn">Undo</button>
+        </div>
 
-    // Filter and display suggestions
-    function updateSuggestions(value) {
-      const term = value.trim().toLowerCase();
-      suggestions.innerHTML = '';
-
-      // find matching categories
-      const matches = CATEGORY_DEFS.filter(cat => {
-        if (!term) return true; // show all on empty
-        const inName = cat.name.toLowerCase().includes(term);
-        const inSyn  = cat.synonyms.some(s => s.includes(term));
-        return inName || inSyn;
-      });
-
-      // build suggestion items
-      matches.forEach(cat => {
-        const li = document.createElement('li');
-        li.textContent = cat.name;
-        li.style.padding = '8px';
-        li.style.cursor = 'pointer';
-        li.addEventListener('mousedown', () => {
-          // fill input on click
-          input.value = cat.name;
-          hideSuggestions();
-        });
-        suggestions.appendChild(li);
-      });
-
-      suggestions.style.display = matches.length ? 'block' : 'none';
-    }
-
-    function hideSuggestions() {
-      suggestions.style.display = 'none';
-    }
-
-    input.addEventListener('input', e => {
-      updateSuggestions(e.target.value);
-    });
-
-    // hide on blur (with small delay to allow click)
-    input.addEventListener('blur', () => {
-      setTimeout(hideSuggestions, 100);
-    });
-
-    // show full list on focus
-    input.addEventListener('focus', () => {
-      updateSuggestions(input.value);
-    });
-  });
-</script>
-
-
-
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // ——— File Upload Helpers ———
-  function handleDragOver(e) {
-    e.preventDefault();
-    const area = e.currentTarget;
-    area.style.borderColor = 'var(--primary)';
-    area.style.backgroundColor = 'rgba(39, 174, 96, 0.05)';
-  }
-  function handleDragLeave(e) {
-    const area = e.currentTarget;
-    area.style.borderColor = '#dee2e6';
-    area.style.backgroundColor = 'var(--light)';
-  }
-  function handleDrop(e) {
-    e.preventDefault();
-    const input = e.currentTarget.querySelector('input[type="file"]');
-    input.files = e.dataTransfer.files;
-    input.dispatchEvent(new Event('change'));
-    e.currentTarget.style.borderColor = '#dee2e6';
-    e.currentTarget.style.backgroundColor = 'var(--light)';
-  }
-  function handleFileUpload(e) {
-    const files = e.target.files;
-    const preview = e.target.closest('.file-upload-area').querySelector('.file-preview');
-    preview.innerHTML = '';
-    if (!files.length) {
-      preview.innerHTML = '<p class="upload-subtext">No images selected</p>';
-      return;
-    }
-    Array.from(files).slice(0,4).forEach(file => {
-      if (!file.type.match('image.*')) return;
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'file-preview-item';
-        wrapper.innerHTML = `
-          <img src="${evt.target.result}" alt="Preview">
-          <button type="button"><i class="fas fa-times"></i></button>
-        `;
-        preview.appendChild(wrapper);
-        wrapper.querySelector('button').addEventListener('click', () => wrapper.remove());
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
-  // ——— Deal-Type Toggle (unchanged) ———
-  const swapRadio   = document.getElementById('deal-swap');
-  const saleRadio   = document.getElementById('deal-sale');
-  const swapSec     = document.getElementById('swap-section');
-  const saleSec     = document.getElementById('sale-section');
-  const dealCards   = document.querySelectorAll('.deal-type-card');
-  const swapCtrls   = Array.from(document.querySelectorAll(
-    'select[name="offer_condition[]"], textarea[name="offer_description[]"], input[name="offer_images[]"], input[name="desired_swap"], select[name="desired_condition"]'
-  ));
-  const saleCtrls   = Array.from(document.querySelectorAll(
-    'input[name="price"], select[name="condition"], textarea[name="description"]'
-  ));
-  function toggleSections() {
-    const isSwap = swapRadio.checked;
-    swapSec.style.display = isSwap ? 'block' : 'none';
-    saleSec.style.display = isSwap ? 'none' : 'block';
-    swapCtrls.forEach(c => {
-      c.disabled = !isSwap;
-      if (isSwap && c.hasAttribute('data-was-required')) c.required = true;
-      if (!isSwap && c.required) { c.setAttribute('data-was-required','true'); c.required = false; }
-    });
-    saleCtrls.forEach(c => {
-      c.disabled = isSwap;
-      if (!isSwap && c.hasAttribute('data-was-required')) c.required = true;
-      if (isSwap && c.required) { c.setAttribute('data-was-required','true'); c.required = false; }
-    });
-    dealCards.forEach(card => {
-      const inp = card.querySelector('input[type="radio"]');
-      card.classList.toggle('active', inp.checked);
-    });
-  }
-  swapRadio.addEventListener('change', toggleSections);
-  saleRadio.addEventListener('change', toggleSections);
-  toggleSections();
-
-  // ——— Offered-Items Logic ———
-  const container = document.getElementById('offered-items-container');
-  const addBtn    = document.getElementById('add-item-btn');
-  if (!container || !addBtn) return;
-
-  // 1) Grab the template item and disable its title+image inputs
-  const template = container.querySelector('.offered-item[data-clone="false"]');
-  const tmplTitleInput = template.querySelector('input[name="offer_title[]"]');
-  const tmplImageInput = template.querySelector('input[name="offer_image1[]"]');
-  if (tmplTitleInput) tmplTitleInput.disabled = true;
-  if (tmplImageInput) tmplImageInput.disabled = true;
-
-  // 2) Update numbering + max-items
-  function updateItemNumbers() {
-    const items = container.querySelectorAll('.offered-item');
-    items.forEach((it, i) => {
-      const num = it.querySelector('.item-number');
-      if (num) num.textContent = i+1;
-    });
-    addBtn.disabled = items.length >= 2;
-  }
-
-  // 3) Clone handler
-  addBtn.addEventListener('click', () => {
-    const items = container.querySelectorAll('.offered-item');
-    if (items.length >= 2) return;
-
-    // clone + mark
-    const clone = template.cloneNode(true);
-    clone.dataset.clone = 'true';
-
-    // show & enable title
-    const titleField = clone.querySelector('.name-field');
-    const titleIn    = clone.querySelector('input[name="offer_title[]"]');
-    if (titleField && titleIn) { titleField.style.display = 'block'; titleIn.disabled = false; }
-
-    // enable the file input
-    const fileIn = clone.querySelector('input[type="file"]');
-    if (fileIn) {
-      fileIn.disabled = false;
-      fileIn.required = true;
-      const area = fileIn.closest('.file-upload-area');
-      area.addEventListener('click', () => fileIn.click());
-      fileIn.addEventListener('change', handleFileUpload);
-      area.addEventListener('dragover', handleDragOver);
-      area.addEventListener('dragleave', handleDragLeave);
-      area.addEventListener('drop', handleDrop);
-    }
-
-    // hook up remove button
-    const rem = clone.querySelector('.remove-item-btn');
-    if (rem) {
-      rem.style.display = 'block';
-      rem.addEventListener('click', () => { clone.remove(); updateItemNumbers(); });
-    }
-
-    // reset all other inputs
-    clone.querySelectorAll('input,textarea,select').forEach(el => {
-      if (el.tagName==='SELECT') el.selectedIndex=0;
-      else if (el.type==='file') {
-        el.value='';
-        const p = el.closest('.file-upload-area').querySelector('.file-preview');
-        if (p) p.innerHTML='';
-      } else el.value='';
-    });
-
-    container.appendChild(clone);
-    updateItemNumbers();
-  });
-
-  // hide the template's remove button
-  const firstRem = template.querySelector('.remove-item-btn');
-  if (firstRem) firstRem.style.display = 'none';
-
-  // initial setup
-  updateItemNumbers();
-  // wire file uploads for main & template
-  document.querySelectorAll('.file-upload-area').forEach(area => {
-    const fi = area.querySelector('input[type="file"]');
-    if (!fi.disabled) {
-      area.addEventListener('click', () => fi.click());
-      fi.addEventListener('change', handleFileUpload);
-      area.addEventListener('dragover', handleDragOver);
-      area.addEventListener('dragleave', handleDragLeave);
-      area.addEventListener('drop', handleDrop);
-    }
-  });
-});
-</script>
-
-
-
-
-<div id="undo-toast">
-  <span id="undo-message"></span>
-  <button id="undo-btn">Undo</button>
-</div>
-
-
-<!-- Proposals Section -->
-<section id="proposals" class="dashboard-section">
-  <style>
-    /* Animation styles */
-    @keyframes bubblePop {
-      0% {
-        transform: scale(0);
-        opacity: 0;
-      }
-      50% {
-        transform: scale(1.2);
-        opacity: 1;
-      }
-      100% {
-        transform: scale(1);
-        opacity: 1;
-      }
-    }
-    
-    @keyframes slideBounce {
-      0% {
-        transform: translateX(-20px);
-        opacity: 0;
-      }
-      60% {
-        transform: translateX(10px);
-      }
-      100% {
-        transform: translateX(0);
-        opacity: 1;
-      }
-    }
-    
-    @keyframes shakeFade {
-      0% {
-        transform: translateX(0);
-        opacity: 1;
-      }
-      20% {
-        transform: translateX(-10px);
-      }
-      40% {
-        transform: translateX(10px);
-      }
-      60% {
-        transform: translateX(-10px);
-      }
-      80% {
-        transform: translateX(10px);
-      }
-      100% {
-        transform: translateX(0);
-        opacity: 0;
-      }
-    }
-    
-    .status-badge.accept-animation {
-      animation: bubblePop 0.6s ease-out;
-      background-color: #28a745 !important;
-    }
-    
-    .status-badge.negotiate-animation {
-      animation: slideBounce 0.7s ease-out;
-      background-color: #ffc107 !important;
-      color: #212529 !important;
-    }
-    
-    .status-badge.decline-animation {
-      animation: shakeFade 0.8s ease-out;
-      background-color: #dc3545 !important;
-    }
-    
-    .action-icon {
-      display: inline-block;
-      font-size: 1.2em;
-      font-weight: bold;
-    }
-    
-    .negotiate-icon {
-      display: inline-block;
-      font-size: 1.1em;
-      margin-right: 3px;
-    }
-  </style>
-  
-  <h2>Received Proposals</h2>
-  
-  <!-- Filter Dropdown -->
-  <div class="proposal-filter">
-    <label for="proposal-filter-select">Filter by Item:</label>
-    <select id="proposal-filter-select" class="form-control">
-      <option value="all">All</option>
-      {% for title in unique_titles %}
-      <option value="{{ title }}">{{ title }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  
-  <div class="proposals-list">
-    {% for proposal in proposals %}
-    <div class="proposal-card" data-id="{{ proposal.id }}">
-      <div class="proposal-header">
-        <h3>For: {{ proposal.listing_title }}</h3>
-        <span class="status-badge status-{{ proposal.status }}" 
-              data-status="{{ proposal.status }}">
-          {{ proposal.status }}
-        </span>
-      </div>
-      
-      <!-- Sender Information -->
-      <div class="sender-info">
-        <p><strong>From:</strong> {{ proposal.sender_username }}</p>
-        <p><strong>Contact:</strong> {{ proposal.sender_contact }}</p>
-      </div>
-      
-      <!-- Images -->
-      <div class="proposal-images">
-        {% for i in range(1,5) %}
-          {% set img = proposal['image' ~ i] %}
-          {% if img %}
-          <img src="{{ url_for('static', filename='images/' + img.split('/')[-1]) }}"
-               class="proposal-image"
-               alt="Image {{ i }}"
-               onclick="openModal(this)"
-               onerror="this.style.display='none'">
-          {% endif %}
-        {% endfor %}
-      </div>
-      
-      <p><strong>Proposed Item:</strong> {{ proposal.proposed_item }}</p>
-      <p>{{ proposal.message }}</p>
-      {% if proposal.additional_cash and proposal.additional_cash > 0 %}
-      <p><strong>Additional Cash:</strong> ₵{{ "%.2f"|format(proposal.additional_cash) }}</p>
-      {% else %}
-      <p><strong>Additional Cash:</strong> None</p>
-      {% endif %}
-      
-      <div class="proposal-actions">
-        {% if proposal.status in ['pending','declined'] %}
-        <button class="btn btn-success accept-proposal">Accept</button>
-        <button class="btn btn-outline-warning negotiate-proposal">Negotiate</button>
-        <button class="btn btn-outline-danger decline-proposal">Decline</button>
-        {% elif proposal.status == 'negotiated' %}
-        <button class="btn btn-success accept-proposal">Accept</button>
-        <button class="btn btn-outline-danger decline-proposal">Decline</button>
-        {% elif proposal.status == 'accepted' %}
-        <span class="status-badge status-accepted">{{ proposal.status.capitalize() }}</span>
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
         {% endif %}
-      </div>
+        {% endwith %}
     </div>
-    {% endfor %}
-  </div>
-  
-  <script>
-    // Handle Accept button
-    document.querySelectorAll('.accept-proposal').forEach(button => {
-      button.addEventListener('click', function() {
-        const card = this.closest('.proposal-card');
-        const badge = card.querySelector('.status-badge');
-        const originalStatus = badge.dataset.status;
-        const proposalId = card.dataset.id;
 
-        // Store original content and status
-        const originalHTML = badge.innerHTML;
-        const originalClass = badge.className;
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Category Autocomplete
+        const CATEGORY_DEFS = [
+            { name: 'Electronics', synonyms: ['gadget','device','tech', 'HeadPhone'] },
+            { name: 'Computers & Networking', synonyms: ['pc','laptop','desktop','router','server'] },
+            { name: 'Mobile Phones & Accessories', synonyms: ['phone','mobile','charger','case', 'HeadPhone', 'Android', 'iphone', 'MacBook'] },
+            { name: 'Software & Apps', synonyms: ['app','program','software'] },
+            { name: 'Health & Beauty', synonyms: ['skincare','makeup','wellness'] },
+            { name: 'Medical Equipment', synonyms: ['stethoscope','syringe','hospital'] },
+            { name: 'Sports & Outdoors', synonyms: ['sport','hiking','camping'] },
+            { name: 'Fashion & Apparel', synonyms: ['clothes','shirt','dress','jeans'] },
+            { name: 'Jewelry & Watches', synonyms: ['ring','necklace','watch'] },
+            { name: 'Home & Garden', synonyms: ['furniture','decor','plants'] },
+            { name: 'Kitchen & Dining', synonyms: ['cookware','utensils','appliances'] },
+            { name: 'Tools & DIY', synonyms: ['hammer','drill','screwdriver'] },
+            { name: 'Automobile & Vehicles', synonyms: ['car','vehicle','truck','motorcycle'] },
+            { name: 'Industrial & Scientific', synonyms: ['lab','industrial','machine'] },
+            { name: 'Agriculture & Farming', synonyms: ['farm','tractor','crop'] },
+            { name: 'Food & Beverages', synonyms: ['food','drink','beverage'] },
+            { name: 'Office Supplies', synonyms: ['pen','paper','stationery'] },
+            { name: 'Books, Music & Movies', synonyms: ['book','cd','dvd','movie'] },
+            { name: 'Toys & Games', synonyms: ['toy','game','puzzle'] },
+            { name: 'Baby & Kids', synonyms: ['baby','child','kids'] },
+            { name: 'Pets & Accessories', synonyms: ['pet','dog','cat','leash'] },
+            { name: 'Art, Crafts & Sewing', synonyms: ['art','craft','sewing'] },
+            { name: 'Collectibles & Hobbies', synonyms: ['coin','stamp','hobby'] },
+            { name: 'Travel & Experiences', synonyms: ['trip','tour','holiday'] },
+            { name: 'House and Property', synonyms: ['house','apartment','land'] },
+            { name: 'Education & Training', synonyms: ['course','lesson','training'] },
+            { name: 'Services', synonyms: ['service','repair','consulting'] },
+            { name: 'Other', synonyms: [] }
+        ];
 
-        // Show checkmark animation
-        badge.innerHTML = '<span class="action-icon">✓</span>';
-        badge.className = 'status-badge accept-animation';
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.getElementById('category-input');
+            const suggestions = document.getElementById('category-suggestions');
 
-        // Simulate API call
-        setTimeout(() => {
-          // Update to active status
-          badge.innerHTML = 'Active';
-          badge.className = 'status-badge status-active';
-          badge.dataset.status = 'active';
-          
-          // Hide action buttons
-          card.querySelector('.proposal-actions').innerHTML = 
-            '<span class="status-badge status-accepted">Active</span>';
-        }, 1000);
-      });
-    });
-
-    // Handle Negotiate button
-    document.querySelectorAll('.negotiate-proposal').forEach(button => {
-      button.addEventListener('click', function() {
-        const card = this.closest('.proposal-card');
-        const badge = card.querySelector('.status-badge');
-        const originalStatus = badge.dataset.status;
-        const proposalId = card.dataset.id;
-
-        // Store original content
-        const originalHTML = badge.innerHTML;
-        const originalClass = badge.className;
-
-        // Show negotiate animation
-        badge.innerHTML = '<span class="negotiate-icon">↔</span> Negotiating';
-        badge.className = 'status-badge negotiate-animation';
-
-        // Simulate API call
-        setTimeout(() => {
-          // Update to negotiated status
-          badge.innerHTML = 'Negotiated';
-          badge.className = 'status-badge status-negotiated';
-          badge.dataset.status = 'negotiated';
-          
-          // Update action buttons
-          const actionsDiv = card.querySelector('.proposal-actions');
-          actionsDiv.innerHTML = `
-            <button class="btn btn-success accept-proposal">Accept</button>
-            <button class="btn btn-outline-danger decline-proposal">Decline</button>
-          `;
-          
-          // Reattach event listeners to new buttons
-          attachEventListeners(card);
-        }, 1000);
-      });
-    });
-
-    // Handle Decline button
-    document.querySelectorAll('.decline-proposal').forEach(button => {
-      button.addEventListener('click', function() {
-        const card = this.closest('.proposal-card');
-        const badge = card.querySelector('.status-badge');
-        const originalStatus = badge.dataset.status;
-        const proposalId = card.dataset.id;
-
-        // Store original content
-        const originalHTML = badge.innerHTML;
-        const originalClass = badge.className;
-
-        // Show decline animation
-        badge.innerHTML = '<span class="action-icon">✕</span>';
-        badge.className = 'status-badge decline-animation';
-
-        // Simulate API call
-        setTimeout(() => {
-          // Update to declined status
-          badge.innerHTML = 'Declined';
-          badge.className = 'status-badge status-declined';
-          badge.dataset.status = 'declined';
-          
-          // Hide action buttons (or show different options if needed)
-          card.querySelector('.proposal-actions').innerHTML = 
-            '<span class="status-badge status-declined">Declined</span>';
-        }, 800);
-      });
-    });
-
-    // Helper function to reattach event listeners after DOM updates
-    function attachEventListeners(card) {
-      card.querySelector('.accept-proposal')?.addEventListener('click', function() {
-        // Same accept handler as above
-        const badge = card.querySelector('.status-badge');
-        badge.innerHTML = '<span class="action-icon">✓</span>';
-        badge.className = 'status-badge accept-animation';
-
-        setTimeout(() => {
-          badge.innerHTML = 'Active';
-          badge.className = 'status-badge status-active';
-          badge.dataset.status = 'active';
-          card.querySelector('.proposal-actions').innerHTML = 
-            '<span class="status-badge status-accepted">Active</span>';
-        }, 1000);
-      });
-
-      card.querySelector('.decline-proposal')?.addEventListener('click', function() {
-        // Same decline handler as above
-        const badge = card.querySelector('.status-badge');
-        badge.innerHTML = '<span class="action-icon">✕</span>';
-        badge.className = 'status-badge decline-animation';
-
-        setTimeout(() => {
-          badge.innerHTML = 'Declined';
-          badge.className = 'status-badge status-declined';
-          badge.dataset.status = 'declined';
-          card.querySelector('.proposal-actions').innerHTML = 
-            '<span class="status-badge status-declined">Declined</span>';
-        }, 800);
-      });
-    }
-  </script>
-</section>
-
-<!-- Undo Toast Styles & Markup -->
-<style>
-  #undo-toast {
-    display: none;
-    position: fixed; bottom: 1rem; left: 50%;
-    transform: translateX(-50%);
-    background: #333; color: #fff;
-    padding: 0.75rem 1.5rem; border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    font-size: 0.9rem; z-index: 1001;
-  }
-  #undo-toast button {
-    background: transparent; border: none;
-    color: #4FC3F7; margin-left: 1rem;
-    cursor: pointer; font-weight: bold;
-  }
-</style>
-<div id="undo-toast">
-  <span id="undo-message"></span>
-  <button id="undo-btn">Undo</button>
-</div>
-
-<script>
-  let lastAction = null;
-
-  async function updateProposalStatus(card, newStatus) {
-    const id = card.getAttribute('data-id');
-    try {
-      const res  = await fetch(`/proposals/${id}`, {
-        method: 'PUT',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({status: newStatus})
-      });
-      const data = await res.json();
-      if (!data.success) return console.error('Update failed:', data.error);
-
-      // Inline badge update
-      const badge = card.querySelector('.status-badge');
-      const prev  = badge.textContent;
-      badge.textContent = newStatus;
-      badge.className   = `status-badge status-${newStatus}`;
-
-      // Disable action buttons
-      card.querySelectorAll('.proposal-actions button')
-          .forEach(b => b.disabled = true);
-
-      // Show undo toast
-      lastAction = {card, prev};
-      showToast(`Marked "${newStatus}"`, true);
-    } catch (err) {
-      console.error('Network error:', err);
-      showToast('Network error', false);
-    }
-  }
-
-  function showToast(message, canUndo) {
-    const toast = document.getElementById('undo-toast');
-    document.getElementById('undo-message').textContent = message;
-    document.getElementById('undo-btn').style.display = canUndo ? 'inline' : 'none';
-    toast.style.display = 'block';
-    clearTimeout(toast._hideTimer);
-    toast._hideTimer = setTimeout(() => toast.style.display = 'none', 5000);
-  }
-
-  document.getElementById('undo-btn').addEventListener('click', () => {
-    if (lastAction) {
-      updateProposalStatus(lastAction.card, lastAction.prev);
-      lastAction = null;
-    }
-    document.getElementById('undo-toast').style.display = 'none';
-  });
-
-  document.addEventListener('DOMContentLoaded', () => {
-    // Attach direct button handlers
-    document.querySelectorAll('.proposal-card').forEach(card => {
-      card.querySelector('.accept-proposal')?.addEventListener('click', () =>
-        updateProposalStatus(card, 'accepted'));
-      card.querySelector('.decline-proposal')?.addEventListener('click', () =>
-        updateProposalStatus(card, 'declined'));
-      card.querySelector('.negotiate-proposal')?.addEventListener('click', () =>
-        updateProposalStatus(card, 'negotiated'));
-    });
-  });
-</script>
-
-
-
-
-
-
-<!-- Profile Section -->
-<section id="profile" class="dashboard-section">
-    <h2>Profile Settings</h2>
-    <form id="profile-form" class="profile-form">
-        <div class="form-group">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" class="form-control" value="{{ user.username }}">
-        </div>
-        <div class="form-group">
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" class="form-control" value="{{ user.email }}">
-        </div>
-        <button type="submit" class="btn btn-primary">Update Profile</button>
-    </form>
-
-    <h3 style="margin-top: 30px;">Change Password</h3>
-    <form id="password-form" class="profile-form">
-        <div class="form-group">
-            <label for="oldPassword">Current Password:</label>
-            <input type="password" id="oldPassword" name="oldPassword" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label for="newPassword">New Password:</label>
-            <input type="password" id="newPassword" name="newPassword" class="form-control" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Change Password</button>
-    </form>
-</section>
-
-<!-- Image Modal -->
-<div id="imageModal" class="image-modal">
-    <span class="close-modal" id="closeModal" onclick="closeModal()">&times;</span>
-    <div class="modal-nav left" id="modalPrev" onclick="changeModalImage(-1)">&larr;</div>
-    <img class="modal-content" id="modalImage">
-    <div class="modal-nav right" id="modalNext" onclick="changeModalImage(1)">&rarr;</div>
-</div>
-</div>
-
-
-{% with messages = get_flashed_messages(with_categories=True) %}
-  {% if messages %}
-    <div class="flash-messages">
-      {% for category, message in messages %}
-        <div class="flash-message flash-{{ category }}">
-          {{ message }}
-        </div>
-      {% endfor %}
-    </div>
-  {% endif %}
-{% endwith %}
-
-
-
-<script>
-// JavaScript
-document.addEventListener('DOMContentLoaded', function() {
-    // Navigation handling
-    document.querySelectorAll('.nav-btn').forEach(button => {
-        if (button.id !== 'logout-btn') {
-            button.addEventListener('click', function() {
-                // Update active button
-                document.querySelectorAll('.nav-btn').forEach(btn => {
-                    btn.classList.remove('active');
+            function updateSuggestions(value) {
+                const term = value.trim().toLowerCase();
+                suggestions.innerHTML = '';
+                const matches = CATEGORY_DEFS.filter(cat => {
+                    if (!term) return true;
+                    const inName = cat.name.toLowerCase().includes(term);
+                    const inSyn = cat.synonyms.some(s => s.toLowerCase().includes(term));
+                    return inName || inSyn;
                 });
-                this.classList.add('active');
-                
-                // Show corresponding section
-                const sectionId = this.dataset.section;
-                document.querySelectorAll('.dashboard-section').forEach(section => {
-                    section.classList.remove('active');
+                matches.forEach(cat => {
+                    const li = document.createElement('li');
+                    li.textContent = cat.name;
+                    li.style.padding = '8px';
+                    li.style.cursor = 'pointer';
+                    li.addEventListener('mousedown', () => {
+                        input.value = cat.name;
+                        suggestions.style.display = 'none';
+                    });
+                    suggestions.appendChild(li);
                 });
-                document.getElementById(sectionId).classList.add('active');
-            });
-        }
-    });
-
-    // Logout button
-    document.getElementById('logout-btn').addEventListener('click', function() {
-        fetch('/logout', {
-            method: 'POST'
-        }).then(response => {
-            if (response.ok) {
-                window.location.href = '/login';
+                suggestions.style.display = matches.length ? 'block' : 'none';
             }
-        });
-    });
 
-    // Delete listing
-    document.querySelectorAll('.delete-listing').forEach(button => {
-        button.addEventListener('click', function() {
-            if (confirm('Are you sure you want to delete this listing?')) {
-                const listingId = this.dataset.id;
-                fetch(`/listings/${listingId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        this.closest('.listing-card').remove();
+            input.addEventListener('input', e => updateSuggestions(e.target.value));
+            input.addEventListener('blur', () => setTimeout(() => suggestions.style.display = 'none', 100));
+            input.addEventListener('focus', () => updateSuggestions(input.value));
+        });
+
+        // Form Handling
+        document.addEventListener('DOMContentLoaded', function() {
+            // File Upload Helpers
+            function handleDragOver(e) {
+                e.preventDefault();
+                const area = e.currentTarget;
+                area.style.borderColor = 'var(--primary)';
+                area.style.backgroundColor = 'rgba(39, 174, 96, 0.05)';
+            }
+            function handleDragLeave(e) {
+                const area = e.currentTarget;
+                area.style.borderColor = '#dee2e6';
+                area.style.backgroundColor = 'var(--light)';
+            }
+            function handleDrop(e) {
+                e.preventDefault();
+                const input = e.currentTarget.querySelector('input[type="file"]');
+                input.files = e.dataTransfer.files;
+                input.dispatchEvent(new Event('change'));
+                e.currentTarget.style.borderColor = '#dee2e6';
+                e.currentTarget.style.backgroundColor = 'var(--light)';
+            }
+            function handleFileUpload(e) {
+                const files = e.target.files;
+                const preview = e.target.closest('.file-upload-area').querySelector('.file-preview');
+                preview.innerHTML = '';
+                if (!files.length) {
+                    preview.innerHTML = '<p class="upload-subtext">No images selected</p>';
+                    return;
+                }
+                console.log(`Files selected for ${e.target.name}:`, Array.from(files).map(f => f.name));
+                Array.from(files).slice(0, 4).forEach(file => {
+                    if (!file.type.match('image.*')) return;
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'file-preview-item';
+                        wrapper.innerHTML = `
+                            <img src="${evt.target.result}" alt="Preview">
+                            <button type="button"><i class="fas fa-times"></i></button>
+                        `;
+                        preview.appendChild(wrapper);
+                        wrapper.querySelector('button').addEventListener('click', () => {
+                            wrapper.remove();
+                            const input = preview.closest('.file-upload-area').querySelector('input[type="file"]');
+                            input.files = new DataTransfer().files;
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            // Deal-Type Toggle
+            const swapRadio = document.getElementById('deal-swap');
+            const saleRadio = document.getElementById('deal-sale');
+            const swapSec = document.getElementById('swap-section');
+            const saleSec = document.getElementById('sale-section');
+            const dealCards = document.querySelectorAll('.deal-type-card');
+            const swapCtrls = Array.from(document.querySelectorAll(
+                'select[name="offer_condition[]"], textarea[name="offer_description[]"], input[name^="offer_images"], input[name="desired_swap"], select[name="desired_condition"], input[name="required_cash"], input[name="additional_cash"], textarea[name="swap_notes"]'
+            ));
+            const saleCtrls = Array.from(document.querySelectorAll(
+                'input[name="price"], select[name="condition"], textarea[name="description"]'
+            ));
+
+            function toggleSections() {
+                const isSwap = swapRadio.checked;
+                console.log(`Toggling sections: isSwap=${isSwap}`);
+                swapSec.style.display = isSwap ? 'block' : 'none';
+                saleSec.style.display = isSwap ? 'none' : 'block';
+                swapCtrls.forEach(c => {
+                    c.disabled = !isSwap;
+                    if (isSwap && c.hasAttribute('data-was-required')) c.required = true;
+                    if (!isSwap && c.required) { c.setAttribute('data-was-required', 'true'); c.required = false; }
+                });
+                saleCtrls.forEach(c => {
+                    c.disabled = isSwap;
+                    if (!isSwap && c.hasAttribute('data-was-required')) c.required = true;
+                    if (isSwap && c.required) { c.setAttribute('data-was-required', 'true'); c.required = false; }
+                });
+                dealCards.forEach(card => {
+                    const inp = card.querySelector('input[type="radio"]');
+                    card.classList.toggle('active', inp.checked);
+                });
+                const form = document.querySelector('#create-listing-form');
+                form.style.height = 'auto';
+                form.parentElement.style.height = 'auto';
+                form.parentElement.style.overflow = 'visible';
+                if (!isSwap) {
+                    setTimeout(() => {
+                        saleSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        window.scrollTo({
+                            top: form.offsetTop + form.offsetHeight,
+                            behavior: 'smooth'
+                        });
+                    }, 100);
+                }
+            }
+
+            swapRadio.addEventListener('change', toggleSections);
+            saleRadio.addEventListener('change', toggleSections);
+            toggleSections();
+
+            // Offered-Items Logic
+            const container = document.getElementById('offered-items-container');
+            const addBtn = document.getElementById('add-item-btn');
+            if (container && addBtn) {
+                const template = container.querySelector('.offered-item[data-clone="false"]');
+                function updateItemNumbers() {
+                    const items = container.querySelectorAll('.offered-item');
+                    items.forEach((it, i) => {
+                        const num = it.querySelector('.item-number');
+                        if (num) num.textContent = i + 1;
+                    });
+                    addBtn.disabled = items.length >= 2;
+                }
+                addBtn.addEventListener('click', () => {
+                    const items = container.querySelectorAll('.offered-item');
+                    if (items.length >= 2) return;
+                    const clone = template.cloneNode(true);
+                    clone.dataset.clone = 'true';
+                    const titleField = clone.querySelector('.name-field');
+                    const titleIn = clone.querySelector('input[name="offer_title[]"]:not([type="hidden"])');
+                    if (titleField && titleIn) {
+                        titleField.style.display = 'block';
+                        titleIn.disabled = false;
+                        titleIn.required = true;
+                        const hiddenTitle = clone.querySelector('input[type="hidden"][name="offer_title[]"]');
+                        if (hiddenTitle) hiddenTitle.remove();
                     }
-                })
-                .catch(error => console.error('Error:', error));
+                    const fileIn = clone.querySelector('input[type="file"]');
+                    if (fileIn) {
+                        fileIn.disabled = false;
+                        fileIn.required = true;
+                        fileIn.name = `offer_images_2[]`;
+                        const area = fileIn.closest('.file-upload-area');
+                        area.id = `item-images-upload-${items.length + 1}`;
+                        area.addEventListener('click', () => fileIn.click());
+                        fileIn.addEventListener('change', handleFileUpload);
+                        area.addEventListener('dragover', handleDragOver);
+                        area.addEventListener('dragleave', handleDragLeave);
+                        area.addEventListener('drop', handleDrop);
+                    }
+                    const rem = clone.querySelector('.remove-item-btn');
+                    if (rem) {
+                        rem.style.display = 'block';
+                        rem.addEventListener('click', () => { clone.remove(); updateItemNumbers(); });
+                    }
+                    clone.querySelectorAll('input,textarea,select').forEach(el => {
+                        if (el.tagName === 'SELECT') el.selectedIndex = 0;
+                        else if (el.type === 'file') {
+                            el.value = '';
+                            const p = el.closest('.file-upload-area').querySelector('.file-preview');
+                            if (p) p.innerHTML = '';
+                        } else if (el.name !== 'offer_title[]') el.value = '';
+                    });
+                    container.appendChild(clone);
+                    updateItemNumbers();
+                });
+                const firstRem = template.querySelector('.remove-item-btn');
+                if (firstRem) firstRem.style.display = 'none';
+                updateItemNumbers();
             }
-        });
-    });
 
-    // Proposal filtering
-    const filterSelect = document.getElementById('proposal-filter-select');
-    if (filterSelect) {
-        filterSelect.addEventListener('change', function() {
-            const selectedValue = this.value;
-            const proposalCards = document.querySelectorAll('.proposal-card');
-            
-            proposalCards.forEach(card => {
-                if (selectedValue === 'all' || card.dataset.listingTitle === selectedValue) {
-                    card.style.display = 'block';
+            // Wire File Uploads
+            document.querySelectorAll('.file-upload-area').forEach(area => {
+                const fi = area.querySelector('input[type="file"]');
+                if (!fi.disabled) {
+                    area.addEventListener('click', () => fi.click());
+                    fi.addEventListener('change', handleFileUpload);
+                    area.addEventListener('dragover', handleDragOver);
+                    area.addEventListener('dragleave', handleDragLeave);
+                    area.addEventListener('drop', handleDrop);
+                }
+            });
+
+            // Form Submission Validation
+            document.getElementById('create-listing-form').addEventListener('submit', (e) => {
+                if (swapRadio.checked) {
+                    const items = container.querySelectorAll('.offered-item');
+                    for (let i = 0; i < items.length; i++) {
+                        const fileInput = items[i].querySelector('input[type="file"]');
+                        if (!fileInput.files.length) {
+                            e.preventDefault();
+                            alert(`Item ${i + 1} must have at least one image.`);
+                            return;
+                        }
+                        const condition = items[i].querySelector('select[name="offer_condition[]"]').value;
+                        const description = items[i].querySelector('textarea[name="offer_description[]"]').value;
+                        if (!condition || !description.trim()) {
+                            e.preventDefault();
+                            alert(`Item ${i + 1} must have a condition and description.`);
+                            return;
+                        }
+                        if (i > 0) {
+                            const titleIn = items[i].querySelector('input[name="offer_title[]"]:not([type="hidden"])');
+                            if (!titleIn || !titleIn.value.trim()) {
+                                e.preventDefault();
+                                alert(`Item ${i + 1} must have a title.`);
+                                return;
+                            }
+                        }
+                    }
                 } else {
-                    card.style.display = 'none';
+                    const price = document.querySelector('input[name="price"]').value;
+                    const condition = document.querySelector('select[name="condition"]').value;
+                    const description = document.querySelector('textarea[name="description"]').value;
+                    if (!price || !condition || !description.trim()) {
+                        e.preventDefault();
+                        alert('Price, condition, and description are required for sales.');
+                        return;
+                    }
                 }
             });
-        });
-    }
 
-    // Update proposal status for Accept, Negotiate, or Decline
-    document.querySelectorAll('.accept-proposal, .negotiate-proposal, .decline-proposal').forEach(button => {
-        button.addEventListener('click', function() {
-            let status;
-            if (this.classList.contains('accept-proposal')) {
-                status = 'accepted';
-            } else if (this.classList.contains('decline-proposal')) {
-                status = 'declined';
-            } else if (this.classList.contains('negotiate-proposal')) {
-                status = 'negotiated';
+            // Navigation Handling
+            document.querySelectorAll('.nav-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    const sectionId = this.dataset.section;
+                    document.querySelectorAll('.dashboard-section').forEach(section => section.classList.remove('active'));
+                    document.getElementById(sectionId).classList.add('active');
+                });
+            });
+
+            // Delete Listing
+            document.querySelectorAll('.delete-listing').forEach(button => {
+                button.addEventListener('click', async () => {
+                    if (!confirm('Are you sure you want to delete this listing?')) return;
+                    const listingId = button.dataset.id;
+                    try {
+                        const resp = await fetch(`/listings/${listingId}`, {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        const json = await resp.json();
+                        if (resp.ok && json.success) {
+                            button.closest('.listing-card').remove();
+                        } else {
+                            alert(json.error || 'Failed to delete listing.');
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        alert('An error occurred while deleting.');
+                    }
+                });
+            });
+
+            // Proposal Filtering
+            const filterSelect = document.getElementById('proposal-filter-select');
+            if (filterSelect) {
+                filterSelect.addEventListener('change', function() {
+                    const selectedValue = this.value;
+                    document.querySelectorAll('.proposal-card').forEach(card => {
+                        card.style.display = (selectedValue === 'all' || card.querySelector('h3').textContent.includes(selectedValue)) ? 'block' : 'none';
+                    });
+                });
             }
-            const proposalId = this.dataset.id;
-            
-            fetch(`/proposals/${proposalId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ status }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
+
+            // Proposal Status Updates
+            let lastAction = null;
+            async function updateProposalStatus(card, newStatus) {
+                const id = card.getAttribute('data-id');
+                try {
+                    const res = await fetch(`/proposals/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: newStatus })
+                    });
+                    const data = await res.json();
+                    if (!data.success) throw new Error(data.error);
+                    const badge = card.querySelector('.status-badge');
+                    const prev = badge.textContent;
+                    badge.textContent = newStatus;
+                    badge.className = `status-badge status-${newStatus}`;
+                    card.querySelectorAll('.proposal-actions button').forEach(b => b.disabled = true);
+                    lastAction = { card, prev };
+                    showToast(`Marked "${newStatus}"`,                        () => {
+                            updateProposalStatus(card, prev);
+                            lastAction = null;
+                        });
+                    return data;
+                } catch (err) {
+                    console.error('Proposal update error:', err);
+                    alert('Failed to update proposal status.');
                 }
-            })
-            .catch(error => console.error('Error:', error));
-        });
-    });
-
-    // Profile form submission
-    document.getElementById('profile-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        
-        fetch('/profile', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(Object.fromEntries(formData)),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Profile updated successfully');
             }
-        })
-        .catch(error => console.error('Error:', error));
-    });
 
-    // Password change form
-    document.getElementById('password-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        
-        fetch('/change-password', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(Object.fromEntries(formData)),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Password changed successfully');
-                this.reset();
-            } else if (data.error) {
-                alert(data.error);
+            // Toast Notification
+            function showToast(message, undoCallback) {
+                const toast = document.getElementById('undo-toast');
+                const msg = document.getElementById('undo-message');
+                const undoBtn = document.getElementById('undo-btn');
+                msg.textContent = message;
+                toast.style.display = 'flex';
+                undoBtn.onclick = () => {
+                    if (undoCallback) undoCallback();
+                    toast.style.display = 'none';
+                };
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 5000);
             }
-        })
-        .catch(error => console.error('Error:', error));
-    });
 
-// Update the IDs to match the HTML
-const swapRadio = document.getElementById('deal-swap');
-const saleRadio = document.getElementById('deal-sale');
-const swapFields = document.getElementById('swap-section');  // Changed from 'swap-fields'
-const saleFields = document.getElementById('sale-section');  // Changed from 'sale-fields'
+            // Proposal Action Buttons
+            document.querySelectorAll('.accept-proposal').forEach(button => {
+                button.addEventListener('click', () => {
+                    const card = button.closest('.proposal-card');
+                    updateProposalStatus(card, 'accepted').then(() => {
+                        card.querySelector('.status-badge').classList.add('accept-animation');
+                        setTimeout(() => card.querySelector('.status-badge').classList.remove('accept-animation'), 600);
+                    });
+                });
+            });
 
-function toggleDealFields() {
-  if (saleRadio.checked) {
-    swapFields.style.display = 'none';
-    saleFields.style.display = 'block';
-  } else {
-    swapFields.style.display = 'block';
-    saleFields.style.display = 'none';
-  }
-}
+            document.querySelectorAll('.negotiate-proposal').forEach(button => {
+                button.addEventListener('click', () => {
+                    const card = button.closest('.proposal-card');
+                    updateProposalStatus(card, 'negotiated').then(() => {
+                        card.querySelector('.status-badge').classList.add('negotiate-animation');
+                        setTimeout(() => card.querySelector('.status-badge').classList.remove('negotiate-animation'), 700);
+                    });
+                });
+            });
 
-swapRadio.addEventListener('change', toggleDealFields);
-saleRadio.addEventListener('change', toggleDealFields);
-document.addEventListener('DOMContentLoaded', toggleDealFields);
+            document.querySelectorAll('.decline-proposal').forEach(button => {
+                button.addEventListener('click', () => {
+                    const card = button.closest('.proposal-card');
+                    updateProposalStatus(card, 'declined').then(() => {
+                        card.querySelector('.status-badge').classList.add('decline-animation');
+                        setTimeout(() => card.querySelector('.status-badge').classList.remove('decline-animation'), 800);
+                    });
+                });
+            });
 
+            // Image Modal
+            let currentImages = [];
+            let currentIndex = 0;
 
-    // Add touch support for mobile navigation
-    let touchStartX = 0;
-    document.addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches[0].screenX;
-    });
-
-    document.addEventListener('touchend', e => {
-        const touchEndX = e.changedTouches[0].screenX;
-        const diffX = touchStartX - touchEndX;
-        
-        if (Math.abs(diffX) > 50) { // Minimum swipe distance
-            const sections = ['listings', 'proposals', 'profile'];
-            const currentSection = document.querySelector('.dashboard-section.active').id;
-            const currentIndex = sections.indexOf(currentSection);
-            
-            if (diffX > 0 && currentIndex < sections.length - 1) {
-                // Swipe left - next section
-                document.querySelector(`[data-section="${sections[currentIndex + 1]}"]`).click();
-            } else if (diffX < 0 && currentIndex > 0) {
-                // Swipe right - previous section
-                document.querySelector(`[data-section="${sections[currentIndex - 1]}"]`).click();
-            }
-        }
-    });
-});
-
-// Image Modal Functions
-let currentProposalImages = [];
-let currentImageIndex = 0;
-
-function openModal(imgElement) {
-    const proposalImagesContainer = imgElement.parentElement;
-    currentProposalImages = Array.from(proposalImagesContainer.querySelectorAll('img')).map(img => img.src);
-    currentImageIndex = currentProposalImages.indexOf(imgElement.src);
-    const modal = document.getElementById('imageModal');
-    const modalImage = document.getElementById('modalImage');
-    modalImage.src = imgElement.src;
-    modal.style.display = 'block';
-    document.body.style.overflow = 'hidden';
-}
-
-function closeModal() {
-    document.getElementById('imageModal').style.display = 'none';
-    document.body.style.overflow = 'auto';
-}
-
-function changeModalImage(direction) {
-    if (currentProposalImages.length === 0) return;
-    currentImageIndex = (currentImageIndex + direction + currentProposalImages.length) % currentProposalImages.length;
-    document.getElementById('modalImage').src = currentProposalImages[currentImageIndex];
-}
-
-// Close modal when clicking outside image
-window.onclick = function(event) {
-    const modal = document.getElementById('imageModal');
-    if (event.target == modal) {
-        closeModal();
-    }
-}
-
-// Close modal with Escape key
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        closeModal();
-    }
-});
-
-// Swipe functionality for mobile
-let startX = null;
-
-document.getElementById('imageModal').addEventListener('touchstart', function(e) {
-    startX = e.touches[0].clientX;
-});
-
-document.getElementById('imageModal').addEventListener('touchmove', function(e) {
-    if (!startX) return;
-    let diffX = e.touches[0].clientX - startX;
-    // When swipe distance is greater than threshold, change image
-    if (Math.abs(diffX) > 50) {
-        changeModalImage(diffX > 0 ? -1 : 1);
-        startX = null; // reset startX to avoid multiple triggers
-    }
-});
-
-// Image preview functionality
-function previewImages(event) {
-    const preview = document.getElementById('image-preview');
-    preview.innerHTML = '';
-    const files = event.target.files;
-    
-    if (files.length > 5) {
-        alert('You can only upload a maximum of 5 images');
-        event.target.value = '';
-        return;
-    }
-    
-    for (let i = 0; i < Math.min(files.length, 5); i++) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const previewItem = document.createElement('div');
-            previewItem.className = 'preview-item';
-            
-            const img = document.createElement('img');
-            img.src = e.target.result;
-            img.classList.add('preview-image');
-            
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'remove-image';
-            removeBtn.innerHTML = '×';
-            removeBtn.onclick = function() {
-                removeImage(i, previewItem);
+            window.openModal = function(img) {
+                const modal = document.getElementById('imageModal');
+                const modalImg = document.getElementById('modalImage');
+                const card = img.closest('.proposal-card');
+                currentImages = Array.from(card.querySelectorAll('.proposal-image')).map(i => i.src);
+                currentIndex = currentImages.indexOf(img.src);
+                modalImg.src = img.src;
+                modal.style.display = 'block';
+                document.body.style.overflow = 'hidden';
             };
-            
-            previewItem.appendChild(img);
-            previewItem.appendChild(removeBtn);
-            preview.appendChild(previewItem);
-        }
-        reader.readAsDataURL(files[i]);
-    }
-}
 
-function removeImage(index, element) {
-    const input = document.getElementById('images');
-    const files = Array.from(input.files);
-    files.splice(index, 1);
-    
-    // Create new DataTransfer to update files
-    const dataTransfer = new DataTransfer();
-    files.forEach(file => dataTransfer.items.add(file));
-    input.files = dataTransfer.files;
-    
-    // Remove preview
-    element.remove();
-    
-    // Re-preview remaining images
-    const event = new Event('change');
-    input.dispatchEvent(event);
-}
+            window.closeModal = function() {
+                const modal = document.getElementById('imageModal');
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            };
 
-// Drag and drop functionality
-const fileUpload = document.querySelector('.file-upload');
-if (fileUpload) {
-    fileUpload.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        fileUpload.classList.add('dragover');
-    });
+            window.changeModalImage = function(direction) {
+                currentIndex = (currentIndex + direction + currentImages.length) % currentImages.length;
+                document.getElementById('modalImage').src = currentImages[currentIndex];
+            };
 
-    fileUpload.addEventListener('dragleave', () => {
-        fileUpload.classList.remove('dragover');
-    });
+            // Social Sharing
+            window.shareOnWhatsApp = function(url) {
+                const text = `Check out this listing: ${url}`;
+                const encodedText = encodeURIComponent(text);
+                window.open(`https://api.whatsapp.com/send?text=${encodedText}`, '_blank');
+            };
 
-    fileUpload.addEventListener('drop', (e) => {
-        e.preventDefault();
-        fileUpload.classList.remove('dragover');
-        
-        const input = document.getElementById('images');
-        input.files = e.dataTransfer.files;
-        
-        // Trigger change event
-        const event = new Event('change');
-        input.dispatchEvent(event);
-    });
-}
-</script>
+            window.shareOnX = function(url, title) {
+                const text = `Check out this listing: ${title} ${url}`;
+                const encodedText = encodeURIComponent(text);
+                window.open(`https://x.com/intent/tweet?text=${encodedText}`, '_blank');
+            };
 
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const promoteButtons = document.querySelectorAll('.badge-promote');
-    const modal = document.getElementById('promotionModal');
-    const closeModal = document.querySelector('.close-modal');
-    let currentListingId = null;
-
-    promoteButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.stopPropagation();
-            currentListingId = this.closest('.listing-card').getAttribute('data-listing-id');
-            modal.style.display = 'block';
-        });
-    });
-
-    // ... rest of your modal handling code ...
-
-document.querySelectorAll('.plan-option').forEach(option => {
-    option.addEventListener('click', async function() {
-        const plan = this.dataset.plan;
-        const price = this.dataset.price;
-        
-        console.log('Initiating payment for plan:', plan, 'price:', price); // Debug logging
-
-        try {
-            const response = await fetch('/initiate_payment', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    plan: plan,
-                    price: price,
-                    listing_id: currentListingId
-                })
+            // Flash Messages Auto-Dismiss
+            document.querySelectorAll('.flash-message').forEach(msg => {
+                setTimeout(() => {
+                    msg.style.opacity = '0';
+                    setTimeout(() => msg.remove(), 1000);
+                }, 5000);
             });
 
-            const data = await response.json();
-            console.log('Payment response:', data); // Debug logging
-            
-            if(!response.ok) {
-                throw new Error(data.error || 'Payment failed');
+            // Profile Form Submission
+            const profileForm = document.getElementById('profile-form');
+            if (profileForm) {
+                profileForm.addEventListener('submit', async e => {
+                    e.preventDefault();
+                    const formData = new FormData(profileForm);
+                    try {
+                        const resp = await fetch('/profile', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const json = await resp.json();
+                        alert(json.success ? 'Profile updated!' : json.error || 'Failed to update profile.');
+                    } catch (err) {
+                        console.error(err);
+                        alert('An error occurred.');
+                    }
+                });
             }
-            
-            if(data.authorization_url) {
-                window.location.href = data.authorization_url;
-            } else {
-                throw new Error('No payment URL received');
+
+            // Password Form Submission
+            const passwordForm = document.getElementById('password-form');
+            if (passwordForm) {
+                passwordForm.addEventListener('submit', async e => {
+                    e.preventDefault();
+                    const formData = new FormData(passwordForm);
+                    try {
+                        const resp = await fetch('/change-password', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const json = await resp.json();
+                        alert(json.success ? 'Password changed!' : json.error || 'Failed to change password.');
+                    } catch (err) {
+                        console.error(err);
+                        alert('An error occurred.');
+                    }
+                });
             }
-        } catch (error) {
-            console.error('Payment error:', error);
-            alert(`Payment Error: ${error.message}`);
-        }
-    });
-});
-});
-</script>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
-      const flashMessages = document.querySelectorAll('.flash-messages .flash-message');
-      flashMessages.forEach(function(msg) {
-        // Set opacity to 0 to trigger the CSS transition.
-        msg.style.opacity = '0';
-        // Remove the element after the fade-out transition (1s)
-        setTimeout(function() {
-          msg.remove();
-        }, 1000);
-      });
-    }, 3000); // 4000 ms = 4 seconds delay before fade out
-  });
-</script>
-
-
-<script>
-  function shareOnWhatsApp(url) {
-    const text = `Check out my listing on SwapSphere: ${url}`;
-    const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(waUrl, '_blank');
-  }
-
-  function shareOnX(url, title) {
-    const text = `${title} on SwapSphere\n${url}`;
-    const xUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
-    window.open(xUrl, '_blank');
-  }
-</script>
-
-
-
-
-
+        });
+    </script>
 </body>
 </html>

@@ -4,7 +4,7 @@ flask.Markup = markupsafe.Markup
 
 # Now import the rest of your modules
 import os
-import logging
+
 from dotenv import load_dotenv
 from flask import Flask, render_template, url_for, abort, request, session, redirect, flash, jsonify
 import mysql.connector
@@ -27,8 +27,15 @@ from config import VAPID_PUBLIC_KEY
 from authlib.integrations.flask_client import OAuth
 from apscheduler.schedulers.background import BackgroundScheduler
 import random
+import itertools
 
 
+
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 # Load environment variables from .env file
@@ -1441,172 +1448,189 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
 @app.route('/listings', methods=['POST'])
 @login_required
 def create_listing():
+    logger.debug(f"Processing listing for user_id: {session['user_id']}")
+    
     # 1) Common data
-    dt         = request.form.get('deal_type', 'Swap Deal')
-    deal_type  = dt if dt == 'Swap Deal' else 'Outright Sales'
-    title      = request.form['title']
-    description= request.form.get('description','')
-    category   = request.form['category']
-    location   = request.form['location']
-    contact    = request.form['contact']
-    plan       = request.form.get('plan','Free')
+    dt = request.form.get('deal_type', 'Swap Deal')
+    deal_type = dt if dt == 'Swap Deal' else 'Outright Sales'
+    title = request.form['title'].strip()
+    description = request.form.get('description', '').strip()
+    category = request.form['category'].strip()
+    location = request.form['location'].strip()
+    contact = request.form['contact'].strip()
+    plan = request.form.get('plan', 'Free')
+    logger.debug(f"Common data: deal_type={deal_type}, title={title}, category={category}, plan={plan}")
 
     # 2) Gather main images
     main_images = []
     for f in request.files.getlist('images[]'):
         if f and allowed_file(f.filename):
             fn = secure_filename(f.filename)
-            u  = f"{uuid.uuid4().hex}_{fn}"
+            u = f"{uuid.uuid4().hex}_{fn}"
             f.save(os.path.join(app.config['UPLOAD_FOLDER'], u))
             main_images.append(u)
             if len(main_images) >= 5:
                 break
+    if not main_images:
+        flash("At least one main image is required.", "error")
+        logger.error("No main images uploaded")
+        return redirect(url_for('dashboard'))
+    logger.debug(f"Main images: {main_images}")
 
     # 3) Swap-offer fields
     off_titles = request.form.getlist('offer_title[]')
-    off_conds  = request.form.getlist('offer_condition[]')
-    off_descs  = request.form.getlist('offer_description[]')
-    files1     = request.files.getlist('offer_image1[]')
-    files2     = request.files.getlist('offer_image2[]')
-    files3     = request.files.getlist('offer_image3[]')
-    files4     = request.files.getlist('offer_image4[]')
+    off_conds = request.form.getlist('offer_condition[]')
+    off_descs = request.form.getlist('offer_description[]')
+    logger.debug(f"Offer data: titles={off_titles}, conditions={off_conds}, descriptions={off_descs}")
 
-    def save_files(file_list):
-        out = []
-        for f in file_list:
-            if f and allowed_file(f.filename):
-                fn = secure_filename(f.filename)
-                u  = f"{uuid.uuid4().hex}_{fn}"
-                f.save(os.path.join(app.config['UPLOAD_FOLDER'], u))
-                out.append(u)
-        return out
-
-    imgs1 = save_files(files1)
-    imgs2 = save_files(files2)
-    imgs3 = save_files(files3)
-    imgs4 = save_files(files4)
-
-    # 4) Deal-type specifics
-    desired_swap             = None
-    desired_swap_description = None
-    additional_cash          = None
-    required_cash            = None
-    price                    = None
-
+    # Process offered items
+    offered_items = []
     if deal_type == 'Swap Deal':
-        if not (1 <= len(off_conds) <= 3):
-            flash("Offer between 1 and 3 items.", "error")
+        if not (1 <= len(off_conds) <= 2):
+            flash("Offer between 1 and 2 items.", "error")
+            logger.error(f"Invalid number of offered items: {len(off_conds)}")
             return redirect(url_for('dashboard'))
 
-        desired_swap             = request.form.get('desired_swap')
-        desired_swap_description = request.form.get('desired_swap_description')
-        additional_cash          = request.form.get('additional_cash') or None
-        required_cash            = request.form.get('required_cash') or None
-    else:
-        price     = request.form.get('price') or None
-        off_conds = [request.form.get('condition')]
-        off_descs = [request.form.get('description')]
-        imgs1     = [None]; imgs2 = [None]; imgs3 = [None]; imgs4 = [None]
-        off_titles= ['']  # fallback
-    # ────────────────────────────────────────────────────────────
+        # Group images by item
+        images_per_item = []
+        offer_image_files_1 = request.files.getlist('offer_images_1[]') or request.files.getlist('offer_images[]')  # Fallback
+        offer_image_files_2 = request.files.getlist('offer_images_2[]')
+        image_lists = [offer_image_files_1, offer_image_files_2][:len(off_conds)]
+        logger.debug(f"Image lists: {[[f.filename for f in lst] for lst in image_lists]}")
 
-    # 5) PAYSTACK REDIRECT if plan != Free
+        def save_files(file_list):
+            out = []
+            for f in file_list:
+                if f and allowed_file(f.filename):
+                    fn = secure_filename(f.filename)
+                    u = f"{uuid.uuid4().hex}_{fn}"
+                    f.save(os.path.join(app.config['UPLOAD_FOLDER'], u))
+                    out.append(u)
+            return out
+
+        for i in range(len(off_conds)):
+            if not off_conds[i].strip() or not off_descs[i].strip():
+                flash(f"Item {i+1} must have a condition and description.", "error")
+                logger.error(f"Item {i+1} missing condition or description")
+                return redirect(url_for('dashboard'))
+
+            item_title = off_titles[i].strip() if i < len(off_titles) and off_titles[i].strip() else title
+            item_images = save_files(image_lists[i][:4]) if i < len(image_lists) else []
+            if not item_images:
+                flash(f"Item {i+1} must have at least one image.", "error")
+                logger.error(f"Item {i+1} has no images: {image_lists[i] if i < len(image_lists) else []}")
+                return redirect(url_for('dashboard'))
+
+            offered_items.append({
+                'title': item_title,
+                'condition': off_conds[i],
+                'description': off_descs[i],
+                'images': item_images + [None] * (4 - len(item_images))
+            })
+            logger.debug(f"Item {i+1}: title={item_title}, images={item_images}")
+
+    # 4) Deal-type specifics
+    desired_swap = None
+    desired_swap_description = request.form.get('swap_notes', '').strip()  # Updated to use swap_notes
+    additional_cash = None
+    required_cash = None
+    price = None
+
+    if deal_type == 'Swap Deal':
+        desired_swap = request.form.get('desired_swap').strip()
+        additional_cash = request.form.get('additional_cash') or None
+        required_cash = request.form.get('required_cash') or None
+        if not desired_swap:
+            flash("Desired item is required for swap.", "error")
+            logger.error("Missing desired swap item")
+            return redirect(url_for('dashboard'))
+    else:
+        price = request.form.get('price') or None
+        off_conds = [request.form.get('condition')]
+        off_descs = [description]
+        offered_items = []
+    logger.debug(f"Deal specifics: desired_swap={desired_swap}, price={price}")
+
+    # 5) Combine description
+    if deal_type == 'Swap Deal':
+        joined_offers = "\n\n".join([item['description'] for item in offered_items])
+        combined_description = f"{description}\n\n{joined_offers}" if joined_offers else description
+    else:
+        combined_description = description
+    logger.debug(f"Combined description: {combined_description}")
+
+    # 6) PAYSTACK flow
     if plan != 'Free':
-        # store everything in session
         session['pending_listing'] = {
             'user_id': session['user_id'],
-            'deal_type': deal_type,
             'title': title,
-            'description': description,
+            'description': combined_description,
             'category': category,
-            'location': location,
-            'contact': contact,
-            'plan': plan,
-            'main_images': main_images,
             'desired_swap': desired_swap,
             'desired_swap_description': desired_swap_description,
             'additional_cash': additional_cash,
             'required_cash': required_cash,
+            'location': location,
+            'contact': contact,
+            'main_images': main_images,
+            'plan': plan,
+            'deal_type': deal_type,
             'price': price,
-            'off_titles': off_titles,
-            'off_conds': off_conds,
-            'off_descs': off_descs,
-            'imgs1': imgs1,
-            'imgs2': imgs2,
-            'imgs3': imgs3,
-            'imgs4': imgs4
+            'offered_items': offered_items
         }
-        # decide amount based on plan (example: map plan → amount)
-        plan_fees = {
-            'Bronze': 20,
-            'Silver': 50,
-            'Gold': 100,
-            'Diamond': 200
-        }
-        amount = plan_fees.get(plan, 0)
-        # redirect to your Paystack initializer
-        return redirect(url_for('paystack_payment', plan=plan, amount=amount))
-    # ←──── end PAYSTACK REDIRECT
+        logger.debug(f"Stored pending listing for payment: {session['pending_listing']}")
+        plan_fees = {'Bronze': 20, 'Silver': 50, 'Gold': 100, 'Diamond': 200}
+        return redirect(url_for('paystack_payment', plan=plan, amount=plan_fees.get(plan, 0)))
 
-    # 6) INSERT INTO LISTINGS (Free path)
-    conn   = get_db_connection()
+    # 7) INSERT INTO listings
+    conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("""
-      INSERT INTO listings (
-        user_id, title, description, category,
+    listing_params = [
+        session['user_id'], title, combined_description, category,
         desired_swap, desired_swap_description,
         additional_cash, required_cash,
-        `condition`, location, contact,
-        image_url, image1, image2, image3, image4,
-        plan, deal_type, price
-      ) VALUES (
-        %s, %s, %s, %s,
-        %s, %s, %s, %s,
-        %s, %s, %s,
-        %s, %s, %s, %s, %s,
-        %s, %s, %s
-      )
-    """, (
-      session['user_id'], title, description, category,
-      desired_swap, desired_swap_description,
-      additional_cash, required_cash,
-      off_conds[0] if off_conds else None,
-      location, contact,
-      *main_images,
-      *([None] * (5 - len(main_images))),
-      plan, deal_type, price
-    ))
+        (off_conds[0] if off_conds else None),
+        location, contact
+    ] + main_images + ([None] * (5 - len(main_images))) + [plan, deal_type, price]
+    logger.debug(f"Listing params: {listing_params}")
+    cursor.execute("""
+        INSERT INTO listings (
+            user_id, title, description, category,
+            desired_swap, desired_swap_description,
+            additional_cash, required_cash,
+            `condition`, location, contact,
+            image_url, image1, image2, image3, image4,
+            plan, deal_type, price
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """, listing_params)
     lid = cursor.lastrowid
+    logger.debug(f"Inserted listing with ID: {lid}")
 
-    # If Swap, insert offered items
+    # 8) Insert offered items
     if deal_type == 'Swap Deal':
-        for i in range(len(off_conds)):
-            name = off_titles[i].strip() or title
+        for item in offered_items:
             cursor.execute("""
-              INSERT INTO offered_items (
-                listing_id, title, description, `condition`,
-                image1, image2, image3, image4
-              ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO offered_items (
+                    listing_id, title, description, `condition`,
+                    image1, image2, image3, image4
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """, (
-              lid, name, off_descs[i], off_conds[i],
-              imgs1[i] if i < len(imgs1) else None,
-              imgs2[i] if i < len(imgs2) else None,
-              imgs3[i] if i < len(imgs3) else None,
-              imgs4[i] if i < len(imgs4) else None
+                lid, item['title'], item['description'], item['condition'],
+                item['images'][0], item['images'][1], item['images'][2], item['images'][3]
             ))
+            logger.debug(f"Inserted offered item: {item}")
 
     conn.commit()
     cursor.close()
     conn.close()
 
     flash("Listing created successfully!", "success")
+    logger.debug("Listing creation completed successfully")
     return redirect(url_for('dashboard'))
-
-
-
 
 
 
@@ -1656,9 +1680,11 @@ def paystack_payment():
 @app.route('/paystack_verify')
 @login_required
 def paystack_verify():
+    logger.debug("Verifying Paystack payment")
     ref = request.args.get('reference')
     if not ref:
         flash("Payment reference missing.", "error")
+        logger.error("Missing payment reference")
         return redirect(url_for('home'))
 
     # Verify with Paystack
@@ -1667,93 +1693,97 @@ def paystack_verify():
     result = resp.json()
     if not (result.get('status') and result['data']['status'] == 'success'):
         flash("Payment verification failed.", "error")
+        logger.error(f"Payment verification failed: {result}")
         return redirect(url_for('home'))
 
-    # Pull pending listing from metadata or session
+    # Pull pending listing
     p = result['data']['metadata'].get('pending_listing') or session.pop('pending_listing', None)
     if not p:
         flash("No pending listing.", "error")
+        logger.error("No pending listing found")
         return redirect(url_for('home'))
+    logger.debug(f"Pending listing: {p}")
 
-    # ─── Clean up numeric fields ────────────────────────────────────────────
+    # Clean up numeric fields
     raw_additional = str(p.get('additional_cash', '')).strip()
-    raw_required   = str(p.get('required_cash', '')).strip()
-    raw_price      = str(p.get('price', '')).strip()
-
+    raw_required = str(p.get('required_cash', '')).strip()
+    raw_price = str(p.get('price', '')).strip()
     additional_cash = int(float(raw_additional)) if raw_additional else None
-    required_cash   = int(float(raw_required))   if raw_required   else None
-    price           = int(float(raw_price))      if raw_price      else None
+    required_cash = int(float(raw_required)) if raw_required else None
+    price = int(float(raw_price)) if raw_price else None
 
-    # ─── Unpack arrays (with correct keys) ─────────────────────────────────
-    off_conds  = p.get('off_conds', [])
-    off_titles = p.get('off_titles', [])
-    off_descs  = p.get('off_descs', [])
-    imgs1      = p.get('imgs1', [])
-    imgs2      = p.get('imgs2', [])
-    imgs3      = p.get('imgs3', [])
-    imgs4      = p.get('imgs4', [])
-
-    # ─── Insert into listings ──────────────────────────────────────────────
-    conn   = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-      INSERT INTO listings (
-        user_id, title, description, category,
-        desired_swap, desired_swap_description,
-        additional_cash, required_cash,
-        `condition`, location, contact,
-        image_url, image1, image2, image3, image4,
-        plan, deal_type, price
-      ) VALUES (
-        %s, %s, %s, %s,
-        %s, %s, %s, %s,
-        %s, %s, %s,
-        %s, %s, %s, %s, %s,
-        %s, %s, %s
-      )
-    """, (
-      p['user_id'], p['title'], p['description'], p['category'],
-      p.get('desired_swap'), p.get('desired_swap_description'),
-      additional_cash, required_cash,
-      # first offered-item condition (or None)
-      off_conds[0] if off_conds else None,
-      p['location'], p['contact'],
-      # main_images list plus padding to 5
-      *p.get('main_images', []),
-      *([None] * (5 - len(p.get('main_images', [])))),
-      p['plan'], p['deal_type'], price
-    ))
-    lid = cursor.lastrowid
-
-    # ─── Insert each offered item ──────────────────────────────────────────
+    # Validate offered items for Swap Deal
+    offered_items = p.get('offered_items', [])
     if p['deal_type'] == 'Swap Deal':
-        offered_count = min(len(off_conds), len(off_titles), len(off_descs))
-        for i in range(offered_count):
-            title_i = (off_titles[i] or p['title']).strip()
-            desc_i  = off_descs[i]
-            cursor.execute("""
-              INSERT INTO offered_items (
-                listing_id, title, description, `condition`,
-                image1, image2, image3, image4
-              ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-              lid, title_i, desc_i, off_conds[i],
-              imgs1[i] if i < len(imgs1) else None,
-              imgs2[i] if i < len(imgs2) else None,
-              imgs3[i] if i < len(imgs3) else None,
-              imgs4[i] if i < len(imgs4) else None
-            ))
+        if not (1 <= len(offered_items) <= 2):
+            flash("Invalid number of offered items.", "error")
+            logger.error(f"Invalid number of offered items: {len(offered_items)}")
+            return redirect(url_for('home'))
+        for i, item in enumerate(offered_items, 1):
+            if not (item.get('condition') and item.get('description') and item['images'][0]):
+                flash(f"Item {i} is incomplete.", "error")
+                logger.error(f"Item {i} incomplete: {item}")
+                return redirect(url_for('home'))
 
+    # Insert into listings
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    listing_params = [
+        p['user_id'], p['title'], p['description'], p['category'],
+        p.get('desired_swap'), p.get('desired_swap_description'),
+        additional_cash, required_cash,
+        (offered_items[0]['condition'] if offered_items else None),
+        p['location'], p['contact'],
+        *p.get('main_images', []), *([None] * (5 - len(p.get('main_images', [])))),
+        p['plan'], p['deal_type'], price
+    ]
+    logger.debug(f"Listing params for verification: {listing_params}")
+    cursor.execute("""
+        INSERT INTO listings (
+            user_id, title, description, category,
+            desired_swap, desired_swap_description,
+            additional_cash, required_cash,
+            `condition`, location, contact,
+            image_url, image1, image2, image3, image4,
+            plan, deal_type, price
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """, listing_params)
+    lid = cursor.lastrowid
+    logger.debug(f"Inserted listing with ID: {lid}")
+
+    # Insert offered items
+    if p['deal_type'] == 'Swap Deal':
+        for item in offered_items:
+            cursor.execute("""
+                INSERT INTO offered_items (
+                    listing_id, title, description, `condition`,
+                    image1, image2, image3, image4
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                lid, item['title'], item['description'], item['condition'],
+                item['images'][0], item['images'][1], item['images'][2], item['images'][3]
+            ))
+            logger.debug(f"Inserted offered item: {item}")
 
     conn.commit()
     cursor.close()
     conn.close()
 
-    # Clean up session
     session.pop('pending_listing', None)
-
     flash("Your product has been listed!", "success")
+    logger.debug("Payment verified and listing created")
     return redirect(url_for('dashboard'))
+
+
+
+
+@app.route('/debug_form')
+@login_required
+def debug_form():
+    return {
+        'form_data': {k: v for k, v in request.form.items()},
+        'files': {k: [f.filename for f in request.files.getlist(k)] for k in request.files}
+    }
 
 
 
