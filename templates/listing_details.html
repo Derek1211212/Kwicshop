@@ -1183,8 +1183,8 @@
                         src="{{ thumb }}"
                         class="thumbnail {% if loop.first %}active{% endif %}"
                         alt="Thumbnail {{ loop.index }} of {{ item.title }}"
-                        onclick="changeMainImage(this, '{{ thumb }}', 'mainImage-{{ idx }}', 'thumbnailContainer-{{ idx }}"
-                      />
+  onclick="changeMainImage(this, '{{ thumb }}', 'mainImage-{{ idx }}', 'thumbnailContainer-{{ idx }}')"
+  />
                     {% endfor %}
                   </div>
                 </div>
@@ -2062,5 +2062,38 @@
       });
     });
   </script>
+
+  <script>
+  function changeMainImage(el, src, mainImageId, thumbnailContainerId) {
+    // 1) Update the big image
+    const mainImg = document.getElementById(mainImageId);
+    mainImg.src = src;
+
+    // 2) Toggle the “active” class on thumbnails
+    const thumbs = document
+      .getElementById(thumbnailContainerId)
+      .querySelectorAll('.thumbnail');
+    thumbs.forEach(img => img.classList.remove('active'));
+    el.classList.add('active');
+
+    // 3) Update the counter (“1 of N”)
+    //    We assume your counter <span> has id="image-counter-<suffix>"
+    const counterId = mainImageId.replace('mainImage', 'image-counter');
+    const currentIndex = Array.from(thumbs).indexOf(el) + 1;
+    document.getElementById(counterId).textContent = 
+      `${currentIndex} of ${thumbs.length}`;
+  }
+
+  // Example helper for your zoom button
+  function toggleZoom(imageId) {
+    const img = document.getElementById(imageId);
+    if (img.classList.contains('zoomed')) {
+      img.classList.remove('zoomed');
+    } else {
+      img.classList.add('zoomed');
+    }
+  }
+</script>
+
 </body>
 </html>
