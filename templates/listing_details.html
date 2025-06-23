@@ -784,27 +784,37 @@
       }
     }
 
-    .flash-messages {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      z-index: 2000;
-    }
+.flash-messages {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 2000;
+}
 
-    .flash-message {
-      padding: 1rem;
-      margin-bottom: 0.5rem;
-      border-radius: 5px;
-      color: #fff;
-    }
+.flash-message {
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 5px;
+  color: #fff;
 
-    .flash-success {
-      background-color: #2ecc71;
-    }
+  /* NEW: enable fade/slide transition */
+  opacity: 1;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
 
-    .flash-danger {
-      background-color: #e74c3c;
-    }
+/* NEW: what “fade-out” looks like */
+.flash-message.fade-out {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.flash-success {
+  background-color: #2ecc71;
+}
+
+.flash-danger {
+  background-color: #e74c3c;
+}
 
     .required-cash {
       color: var(--primary-color);
@@ -1432,242 +1442,304 @@
       </p>
     {% endif %}
   </div>
-
-  <!-- Proposal Modal -->
-  <div id="proposalModal" class="modal">
-    <div class="modal-content">
-      <button class="close-modal" id="closeModal" aria-label="Close Modal">×</button>
-      <h2 class="modal-title">Make Swap Offer</h2>
-
-      <form id="proposalForm" action="#" method="POST" enctype="multipart/form-data" novalidate>
+<!-- Proposal Modal -->
+<div id="proposalModal" class="modal">
+  <div class="modal-content">
+    <button class="close-modal" id="closeModal" aria-label="Close Modal">×</button>
+    <h2 class="modal-title">Make Swap Offer</h2>
+    <form id="proposalForm" action="{{ url_for('create_proposal', listing_id=listing_id) }}" method="POST" enctype="multipart/form-data" novalidate>
+      <div class="form-group">
+        <label for="proposed_item">
+          <i class="fas fa-gift"></i> Item You’re Offering <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          id="proposed_item"
+          name="proposed_item"
+          required
+          placeholder="Enter the item you’re offering for swap"
+        />
+      </div>
+      <div class="form-row">
+        <label for="additional_cash">
+          <i class="fas fa-money-bill-wave"></i> Additional Cash (GHS)
+        </label>
+        <input
+          type="number"
+          id="additional_cash"
+          name="additional_cash"
+          step="0.01"
+          min="0"
+          placeholder="0.00"
+        </div>
         <div class="form-group">
-          <label for="proposed_item">
-            <i class="fas fa-gift"></i>Item You’re Offering<span class="required">*</span>
+          <label for="condition">
+            <i class="fas fa-star"></i> Condition <span class="required">*</span>
+          </label>
+          <select id="condition" name="condition" required>
+            <option value="" disabled selected>Select Condition</option>
+            <option value="new">New</option>
+            <option value="like_new">Like New</option>
+            <option value="used">Used</option>
+            <option value="refurbished">Refurbished</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>
+          <i class="fas fa-images"></i> Upload Item Images (Max 4)
+        </label>
+        <div class="image-upload-container" id="uploadContainer">
+          <div class="upload-icon">
+            <i class="fas fa-cloud-upload-alt"></i>
+          </div>
+          <h3 class="upload-text">Drag & Drop your images here</h3>
+          <p class="upload-subtext">or click to browse files</p>
+          <button type="button" class="upload-btn">
+            <i class="fas fa-folder-open"></i> Select Images
+          </button>
+  <input type="file" id="image1" name="image1" class="file-input" accept="image/*" multiple hidden />
+  <input type="file" id="image2" name="image2" class="file-input" accept="image/*" hidden />
+  <input type="file" id="image3" name="image3" class="file-input" accept="image/*" hidden />
+  <input type="file" id="image4" name="image4" class="file-input" accept="image/*" hidden />
+          <div class="file-list" id="fileList">
+            <p class="upload-subtext">No images selected</p>
+          </div>
+          <div class="preview-container" id="previewContainer"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="detailed_description">
+          <i class="fas fa-align-left"></i> Detailed Description <span class="required">*</span>
+        </label>
+        <textarea
+          id="detailed_description"
+          name="detailed_description"
+          rows="4"
+          required
+          placeholder="Describe your item including any flaws, special features, etc."
+        ></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="phone_number">
+            <i class="fas fa-phone"></i> Phone Number <span class="required">*</span>
           </label>
           <input
             type="text"
-            id="proposed_item"
-            name="proposed_item"
+            id="phone_number"
+            name="phone_number"
             required
-            placeholder="Enter the item you’re offering for swap"
+            placeholder="e.g., 0241234567"
           />
         </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="additional_cash">
-              <i class="fas fa-money-bill-wave"></i>Additional Cash (GHS)
-            </label>
-            <input
-              type="number"
-              id="additional_cash"
-              name="additional_cash"
-              step="0.01"
-              min="0"
-              placeholder="0.00"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="condition">
-              <i class="fas fa-star"></i>Condition<span class="required">*</span>
-            </label>
-            <select id="condition" name="condition" required>
-              <option value="" disabled selected>Select Condition</option>
-              <option value="new">New</option>
-              <option value="like_new">Like New</option>
-              <option value="used">Used</option>
-              <option value="refurbished">Refurbished</option>
-            </select>
-          </div>
-        </div>
-
         <div class="form-group">
-          <label>
-            <i class="fas fa-images"></i> Upload Item Images (Max 4) <span class="required">*</span>
+          <label for="email_address">
+            <i class="fas fa-envelope"></i> Email Address <span class="required">*</span>
           </label>
-
-          <div class="image-upload-container" id="uploadContainer">
-            <div class="upload-icon">
-              <i class="fas fa-cloud-upload-alt"></i>
-            </div>
-            <h3 class="upload-text">Drag & Drop your images here</h3>
-            <p class="upload-subtext">or click to browse files</p>
-
-            <button type="button" class="upload-btn">
-              <i class="fas fa-folder-open"></i> Select Images
-            </button>
-
-            <input type="file" id="fileInput" class="file-input" accept="image/*" multiple hidden />
-
-            <div class="file-list" id="fileList">
-              <p class="upload-subtext">No images selected</p>
-            </div>
-            
-            <div class="preview-container" id="previewContainer"></div>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="detailed_description">
-            <i class="fas fa-align-left"></i>Detailed Description<span class="required">*</span>
-          </label>
-          <textarea
-            id="detailed_description"
-            name="detailed_description"
-            rows="4"
+          <input
+            type="email"
+            id="email_address"
+            name="email_address"
             required
-            placeholder="Describe your item including any flaws, special features, etc."
-          ></textarea>
+            placeholder="e.g., yourname@example.com"
+          />
         </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="phone_number">
-              <i class="fas fa-phone"></i>Phone Number<span class="required">*</span>
-            </label>
-            <input
-              type="text"
-              id="phone_number"
-              name="phone_number"
-              required
-              placeholder="e.g., 0241234567"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="email_address">
-              <i class="fas fa-envelope"></i>Email Address<span class="required">*</span>
-            </label>
-            <input
-              type="email"
-              id="email_address"
-              name="email_address"
-              required
-              placeholder="e.g., yourname@example.com"
-            />
-          </div>
+      </div>
+      <div class="form-group">
+        <label for="message">
+          <i class="fas fa-comment"></i> Message to Owner (Optional)
+        </label>
+        <textarea
+          id="message"
+          name="message"
+          rows="3"
+          placeholder="Add a personal message to the owner of the item"
+        ></textarea>
+      </div>
+      <button type="submit" class="modal-submit-btn">
+        <div class="btn-content">
+          <i class="fas fa-paper-plane"></i> Submit Offer
         </div>
-
-        <div class="form-group">
-          <label for="message">
-            <i class="fas fa-comment"></i>Message to Owner (Optional)
-          </label>
-          <textarea
-            id="message"
-            name="message"
-            rows="3"
-            placeholder="Add a personal message to the owner of the item"
-          ></textarea>
-        </div>
-
-        <button type="submit" class="modal-submit-btn">
-          <div class="btn-content">
-            <i class="fas fa-paper-plane"></i> Submit Offer
-          </div>
-        </button>
-
-        <p class="form-note">
-          By submitting this offer, you agree to our
-          <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
-          Required fields are marked with <span class="required">*</span>.
-        </p>
-      </form>
-    </div>
+      </button>
+      <p class="form-note">
+        By submitting this offer, you agree to our
+        <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+        Required fields are marked with <span class="required">*</span>.
+      </p>
+    </form>
   </div>
+</div>
 
   <!-- Flash Messages -->
-  {% with messages = get_flashed_messages(with_categories=True) %}
-    {% if messages %}
-      <div class="flash-messages">
-        {% for category, message in messages %}
-          <div class="flash-message flash-{{ category }}">{{ message }}</div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
+{% with messages = get_flashed_messages(with_categories=True) %}
+  {% if messages %}
+    <div class="flash-messages">
+      {% for category, message in messages %}
+        <div class="flash-message flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
 
-  <!-- JavaScript -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const modal = document.getElementById('proposalModal');
-      const openBtn = document.getElementById('offerButton');
-      const closeBtn = document.getElementById('closeModal');
-      const form = document.getElementById('proposalForm');
-      const uploadBtn = document.querySelector('.upload-btn');
-      const fileInput = document.getElementById('fileInput');
-      const uploadContainer = document.getElementById('uploadContainer');
-      const fileList = document.getElementById('fileList');
-      const previewContainer = document.getElementById('previewContainer');
 
-      let files = [];
-      const maxFiles = 4;
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Modal Controls
+  const modal = document.getElementById('proposalModal');
+  const offerButton = document.getElementById('offerButton');
+  const closeModalButton = document.getElementById('closeModal');
+  const proposalForm = document.getElementById('proposalForm');
 
-      openBtn.addEventListener('click', function() {
-        modal.classList.add('show');
-        document.body.style.overflow = 'hidden';
-      });
-      closeBtn.addEventListener('click', function() {
-        modal.classList.remove('show');
-        document.body.style.overflow = '';
-      });
-      window.addEventListener('click', function(event) {
-        if (event.target === modal) {
-          modal.classList.remove('show');
-          document.body.style.overflow = '';
-        }
-      });
+  function openModal() {
+    modal.style.display = 'block';
+    setTimeout(() => {
+      modal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }, 10);
+  }
 
-      form.addEventListener('submit', function(e) {
+  function closeModal() {
+    modal.classList.remove('show');
+    setTimeout(() => {
+      modal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }, 300);
+  }
+
+  if (offerButton) {
+    offerButton.addEventListener('click', function(e) {
+      e.preventDefault();
+      openModal();
+    });
+  }
+
+  if (closeModalButton) {
+    closeModalButton.addEventListener('click', closeModal);
+    closeModalButton.addEventListener('touchend', closeModal);
+  }
+
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+    modal.addEventListener('touchend', function(e) {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal.classList.contains('show')) {
+      closeModal();
+    }
+  });
+
+  // Proposal Form Submission
+  const uploadBtn = document.querySelector('.upload-btn');
+  const fileInput = document.getElementById('image1');
+  const uploadContainer = document.getElementById('uploadContainer');
+  const fileList = document.getElementById('fileList');
+  const previewContainer = document.getElementById('previewContainer');
+
+  let files = [];
+  const maxFiles = 4;
+
+  if (proposalForm) {
+    proposalForm.addEventListener('submit', function(e) {
+      const proposedItem = document.getElementById('proposed_item');
+      const detailedDescription = document.getElementById('detailed_description');
+      const condition = document.getElementById('condition');
+      const phoneNumber = document.getElementById('phone_number');
+      const emailAddress = document.getElementById('email_address');
+
+      // Client-side validation
+      if (proposedItem.value.trim() === '') {
         e.preventDefault();
-        if (files.length === 0) {
-          alert('Please upload at least one image of your item');
-          return;
+        alert('Please enter the item you are offering');
+        return;
+      }
+      if (detailedDescription.value.trim() === '') {
+        e.preventDefault();
+        alert('Please provide a detailed description');
+        return;
+      }
+      if (!condition.value) {
+        e.preventDefault();
+        alert('Please select a condition');
+        return;
+      }
+      if (phoneNumber.value.trim() === '') {
+        e.preventDefault();
+        alert('Please enter a phone number');
+        return;
+      }
+      if (emailAddress.value.trim() === '') {
+        e.preventDefault();
+        alert('Please enter an email address');
+        return;
+      }
+
+      // Log form data for debugging
+      const formData = new FormData(this);
+      console.log('Form action URL:', this.action);
+      console.log('Form data:', Object.fromEntries(formData));
+      for (let [key, value] of formData.entries()) {
+        if (value instanceof File && value.name) {
+          console.log(`File ${key}:`, value.name, value.size);
         }
-        const successMsg = `
-          Swap offer submitted successfully!
-          \nItem: ${document.getElementById('proposed_item').value}
-          \nImages uploaded: ${files.length}
-        `;
-        alert(successMsg);
+      }
 
-        modal.classList.remove('show');
-        document.body.style.overflow = '';
-        form.reset();
-        files = [];
-        renderFileList();
-        renderPreviews();
-      });
+      // Show loading state
+      const submitBtn = this.querySelector('.modal-submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.querySelector('.btn-content').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    });
 
+    // File upload handling
+    if (uploadBtn) {
       uploadBtn.addEventListener('click', function() {
         fileInput.click();
       });
+    }
 
+    if (fileInput) {
       fileInput.addEventListener('change', function() {
         if (this.files && this.files.length > 0) {
           handleFiles(this.files);
         }
       });
+    }
 
+    if (uploadContainer) {
       ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         uploadContainer.addEventListener(eventName, preventDefaults, false);
       });
+
       function preventDefaults(e) {
         e.preventDefault();
         e.stopPropagation();
       }
+
       ['dragenter', 'dragover'].forEach(eventName => {
         uploadContainer.addEventListener(eventName, highlight, false);
       });
+
       ['dragleave', 'drop'].forEach(eventName => {
         uploadContainer.addEventListener(eventName, unhighlight, false);
       });
+
       function highlight() {
         uploadContainer.classList.add('dragover');
       }
+
       function unhighlight() {
         uploadContainer.classList.remove('dragover');
       }
+
       uploadContainer.addEventListener('drop', handleDrop, false);
       function handleDrop(e) {
         const dt = e.dataTransfer;
@@ -1675,110 +1747,114 @@
         handleFiles(droppedFiles);
       }
 
-      function handleFiles(selectedFiles) {
-        if (files.length >= maxFiles) {
-          files = [];
+      uploadContainer.addEventListener('click', () => {
+        fileInput.click();
+      });
+    }
+
+    function handleFiles(selectedFiles) {
+      files = [];
+      // Filter and limit to 4 image files
+      for (let i = 0; i < selectedFiles.length && files.length < maxFiles; i++) {
+        const file = selectedFiles[i];
+        if (file.type.match('image.*')) {
+          files.push(file);
         }
-        for (let i = 0; i < selectedFiles.length; i++) {
-          if (files.length >= maxFiles) break;
-          const file = selectedFiles[i];
-          if (file.type.match('image.*')) {
-            files.push(file);
-          }
-        }
-        renderFileList();
-        renderPreviews();
+      }
+      if (selectedFiles.length > maxFiles) {
+        alert(`Maximum ${maxFiles} images allowed. Only the first ${maxFiles} will be used.`);
       }
 
-      function renderFileList() {
-        fileList.innerHTML = '';
-        if (files.length === 0) {
-          fileList.innerHTML = '<p class="upload-subtext">No images selected</p>';
-          return;
+      // Clear existing files in all inputs
+      for (let i = 1; i <= maxFiles; i++) {
+        const targetInput = document.getElementById(`image${i}`);
+        if (targetInput) {
+          targetInput.files = new DataTransfer().files; // Clear files
         }
-        files.forEach((file, index) => {
-          const fileItem = document.createElement('div');
-          fileItem.className = 'file-item';
-          fileItem.innerHTML = `
-            <div class="file-icon"><i class="fas fa-file-image"></i></div>
-            <div class="file-info">
-              <div class="file-name">${file.name}</div>
-              <div class="file-size">${formatFileSize(file.size)}</div>
-            </div>
-            <div class="remove-file" data-index="${index}">
-              <i class="fas fa-times"></i>
-            </div>
-          `;
-          fileList.appendChild(fileItem);
-        });
-        document.querySelectorAll('.remove-file').forEach(button => {
-          button.addEventListener('click', function() {
-            const index = parseInt(this.getAttribute('data-index'));
-            files.splice(index, 1);
-            renderFileList();
-            renderPreviews();
-          });
-        });
       }
 
-      function renderPreviews() {
-        previewContainer.innerHTML = '';
-        if (files.length === 0) return;
-        files.forEach((file, index) => {
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            const preview = document.createElement('img');
-            preview.className = 'image-preview';
-            preview.src = e.target.result;
-            preview.alt = `Preview ${index + 1}`;
-            preview.title = file.name;
-            preview.style.width = '80px';
-            preview.style.height = '80px';
-            preview.style.objectFit = 'cover';
-            preview.style.borderRadius = '6px';
-            preview.style.margin = '0 5px 5px 0';
-            previewContainer.appendChild(preview);
-          };
-          reader.readAsDataURL(file);
-        });
-      }
-
-      function formatFileSize(bytes) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-      }
+      // Assign files to input fields (image1, image2, etc.)
+      files.forEach((file, index) => {
+        const targetInput = document.getElementById(`image${index + 1}`);
+        if (targetInput) {
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(file);
+          targetInput.files = dataTransfer.files;
+        }
+      });
 
       renderFileList();
-    });
-  </script>
+      renderPreviews();
+    }
 
-  <script>
-    const uploadContainer = document.getElementById('uploadContainer');
-    const fileInput = document.getElementById('fileInput');
-
-    uploadContainer.addEventListener('click', () => {
-      fileInput.click();
-    });
-
-    fileInput.addEventListener('change', () => {
-      const fileList = document.getElementById('fileList');
-      const files = fileInput.files;
+    function renderFileList() {
+      fileList.innerHTML = '';
       if (files.length === 0) {
         fileList.innerHTML = '<p class="upload-subtext">No images selected</p>';
-      } else {
-        fileList.innerHTML = '<ul>' + Array.from(files).map(file => `<li>${file.name}</li>`).join('') + '</ul>';
+        return;
       }
-    });
-  </script>
+      files.forEach((file, index) => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-item';
+        fileItem.innerHTML = `
+          <div class="file-icon"><i class="fas fa-file-image"></i></div>
+          <div class="file-info">
+            <div class="file-name">${file.name}</div>
+            <div class="file-size">${formatFileSize(file.size)}</div>
+          </div>
+          <div class="remove-file" data-index="${index}">
+            <i class="fas fa-times"></i>
+          </div>
+        `;
+        fileList.appendChild(fileItem);
+      });
+      document.querySelectorAll('.remove-file').forEach(button => {
+        button.addEventListener('click', function() {
+          const index = parseInt(this.getAttribute('data-index'));
+          files.splice(index, 1);
+          handleFiles(files); // Reassign files to inputs
+        });
+      });
+    }
 
-  <script>
-    // Mobile Menu Toggle
-    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-    const navLinks = document.getElementById('navLinks');
+    function renderPreviews() {
+      previewContainer.innerHTML = '';
+      if (files.length === 0) return;
+      files.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const preview = document.createElement('img');
+          preview.className = 'image-preview';
+          preview.src = e.target.result;
+          preview.alt = `Preview ${index + 1}`;
+          preview.title = file.name;
+          preview.style.width = '80px';
+          preview.style.height = '80px';
+          preview.style.objectFit = 'cover';
+          preview.style.borderRadius = '6px';
+          preview.style.margin = '0 5px 5px 0';
+          previewContainer.appendChild(preview);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
 
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    renderFileList();
+  }
+
+  // Mobile Menu Toggle
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const navLinks = document.getElementById('navLinks');
+
+  if (mobileMenuBtn && navLinks) {
     mobileMenuBtn.addEventListener('click', () => {
       navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
     });
@@ -1788,183 +1864,122 @@
         navLinks.style.display = 'none';
       }
     });
+  }
 
-    // Image Gallery Functionality
-    function changeMainImage(thumbnail, imageUrl, mainImageId, thumbnailContainerId) {
-      const mainImage = document.getElementById(mainImageId);
-      const thumbnailContainer = document.getElementById(thumbnailContainerId);
-      const thumbnails = thumbnailContainer.querySelectorAll('.thumbnail');
-      
-      mainImage.classList.add('image-changing');
-      thumbnails.forEach(thumb => thumb.classList.remove('active'));
-      thumbnail.classList.add('active');
-      
-      const currentIndex = Array.from(thumbnails).indexOf(thumbnail) + 1;
-      const imageCounter = document.getElementById(`image-counter${mainImageId.includes('-') ? '-' + mainImageId.split('-')[1] : ''}`);
+  // Image Gallery Functionality
+  function changeMainImage(thumbnail, imageUrl, mainImageId, thumbnailContainerId) {
+    const mainImage = document.getElementById(mainImageId);
+    const thumbnailContainer = document.getElementById(thumbnailContainerId);
+    const thumbnails = thumbnailContainer.querySelectorAll('.thumbnail');
+    
+    mainImage.classList.add('image-changing');
+    thumbnails.forEach(thumb => thumb.classList.remove('active'));
+    thumbnail.classList.add('active');
+    
+    const currentIndex = Array.from(thumbnails).indexOf(thumbnail) + 1;
+    const counterId = mainImageId.replace('mainImage', 'image-counter');
+    const imageCounter = document.getElementById(counterId);
+    if (imageCounter) {
       imageCounter.textContent = `${currentIndex} of ${thumbnails.length}`;
-      
+    }
+    
+    setTimeout(() => {
+      mainImage.src = imageUrl;
+      mainImage.classList.remove('image-changing');
+      thumbnail.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    }, 150);
+  }
+
+  function toggleZoom(mainImageId) {
+    const img = document.getElementById(mainImageId);
+    const isZoomed = img.style.transform === 'scale(2)';
+    img.style.transform = isZoomed ? 'scale(1)' : 'scale(2)';
+    img.style.cursor = isZoomed ? 'zoom-in' : 'zoom-out';
+    img.style.transformOrigin = 'center center';
+  }
+
+  const mainImages = document.querySelectorAll('.main-image');
+  mainImages.forEach(img => {
+    let lastTouch = 0;
+    img.addEventListener('touchend', (e) => {
+      const now = Date.now();
+      if (now - lastTouch <= 300) {
+        toggleZoom(img.id);
+        e.preventDefault();
+      }
+      lastTouch = now;
+    });
+  });
+
+  const thumbnailContainers = document.querySelectorAll('.thumbnail-container');
+  thumbnailContainers.forEach(container => {
+    let isDragging = false;
+    let startX = 0;
+    let scrollLeft = 0;
+
+    container.addEventListener('touchstart', (e) => {
+      isDragging = true;
+      startX = e.touches[0].pageX - container.offsetLeft;
+      scrollLeft = container.scrollLeft;
+    });
+
+    container.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      e.preventDefault();
+      const x = e.touches[0].pageX - container.offsetLeft;
+      const walk = (x - startX) * 2;
+      container.scrollLeft = scrollLeft - walk;
+    });
+
+    container.addEventListener('touchend', () => {
+      isDragging = false;
+    });
+  });
+
+  // Responsive Adjustments
+  if (window.innerWidth < 768) {
+    if (navLinks) navLinks.style.display = 'none';
+    if (mobileMenuBtn) mobileMenuBtn.style.display = 'block';
+    
+    const firstThumbnail = document.querySelector('#thumbnailContainer .thumbnail');
+    if (firstThumbnail) {
       setTimeout(() => {
-        mainImage.src = imageUrl;
-        mainImage.classList.remove('image-changing');
-        thumbnail.scrollIntoView({
-          behavior: 'smooth',
+        firstThumbnail.scrollIntoView({
           block: 'nearest',
           inline: 'center'
         });
-      }, 150);
+      }, 100);
     }
+  } else {
+    if (mobileMenuBtn) mobileMenuBtn.style.display = 'none';
+  }
 
-    function toggleZoom(mainImageId) {
-      const img = document.getElementById(mainImageId);
-      const isZoomed = img.style.transform === 'scale(2)';
-      img.style.transform = isZoomed ? 'scale(1)' : 'scale(2)';
-      img.style.cursor = isZoomed ? 'zoom-in' : 'zoom-out';
-      img.style.transformOrigin = 'center center';
+  window.addEventListener('resize', function() {
+    if (window.innerWidth >= 768) {
+      if (navLinks) navLinks.style.display = 'flex';
+      if (mobileMenuBtn) mobileMenuBtn.style.display = 'none';
+    } else {
+      if (mobileMenuBtn) mobileMenuBtn.style.display = 'block';
     }
+  });
 
-    const mainImages = document.querySelectorAll('.main-image');
-    mainImages.forEach(img => {
-      let lastTouch = 0;
-      img.addEventListener('touchend', (e) => {
-        const now = Date.now();
-        if (now - lastTouch <= 300) {
-          toggleZoom(img.id);
-          e.preventDefault();
-        }
-        lastTouch = now;
-      });
-    });
+  // Preload Thumbnails
+  const thumbnails = document.querySelectorAll('.thumbnail');
+  const images = [];
+  thumbnails.forEach(thumb => {
+    const img = new Image();
+    img.src = thumb.src;
+    images.push(img);
+  });
 
-    const thumbnailContainers = document.querySelectorAll('.thumbnail-container');
-    thumbnailContainers.forEach(container => {
-      let isDragging = false;
-      let startX = 0;
-      let scrollLeft = 0;
-
-      container.addEventListener('touchstart', (e) => {
-        isDragging = true;
-        startX = e.touches[0].pageX - container.offsetLeft;
-        scrollLeft = container.scrollLeft;
-      });
-
-      container.addEventListener('touchmove', (e) => {
-        if (!isDragging) return;
-        e.preventDefault();
-        const x = e.touches[0].pageX - container.offsetLeft;
-        const walk = (x - startX) * 2;
-        container.scrollLeft = scrollLeft - walk;
-      });
-
-      container.addEventListener('touchend', () => {
-        isDragging = false;
-      });
-    });
-
-    const modal = document.getElementById('proposalModal');
-    const offerButton = document.getElementById('offerButton');
-    const closeModalButton = document.getElementById('closeModal');
-    const proposalForm = document.getElementById('proposalForm');
-
-    function openModal() {
-      modal.style.display = 'block';
-      setTimeout(() => {
-        modal.classList.add('show');
-        document.body.style.overflow = 'hidden';
-      }, 10);
-    }
-
-    function closeModal() {
-      modal.classList.remove('show');
-      setTimeout(() => {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-      }, 300);
-    }
-
-    offerButton.addEventListener('click', function(e) {
-      e.preventDefault();
-      openModal();
-    });
-
-    closeModalButton.addEventListener('click', closeModal);
-    closeModalButton.addEventListener('touchend', closeModal);
-
-    modal.addEventListener('touchend', function(e) {
-      if (e.target === modal) {
-        closeModal();
-      }
-    });
-
-    window.addEventListener('click', function(e) {
-      if (e.target === modal) {
-        closeModal();
-      }
-    });
-
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && modal.classList.contains('show')) {
-        closeModal();
-      }
-    });
-
-    proposalForm.addEventListener('submit', function(e) {
-      const proposedItem = document.getElementById('proposed_item');
-      const detailedDescription = document.getElementById('detailed_description');
-      
-      if (proposedItem.value.trim() === '') {
-        e.preventDefault();
-        alert('Please enter the item you are offering');
-        return;
-      }
-      
-      if (detailedDescription.value.trim() === '') {
-        e.preventDefault();
-        alert('Please provide a detailed description');
-        return;
-      }
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-      if (window.innerWidth < 768) {
-        navLinks.style.display = 'none';
-        mobileMenuBtn.style.display = 'block';
-        
-        const firstThumbnail = document.querySelector('#thumbnailContainer .thumbnail');
-        if (firstThumbnail) {
-          setTimeout(() => {
-            firstThumbnail.scrollIntoView({
-              block: 'nearest',
-              inline: 'center'
-            });
-          }, 100);
-        }
-      } else {
-        mobileMenuBtn.style.display = 'none';
-      }
-
-      const thumbnails = document.querySelectorAll('.thumbnail');
-      const images = [];
-      thumbnails.forEach(thumb => {
-        const img = new Image();
-        img.src = thumb.src;
-        images.push(img);
-      });
-    });
-
-    window.addEventListener('resize', function() {
-      if (window.innerWidth >= 768) {
-        navLinks.style.display = 'flex';
-        mobileMenuBtn.style.display = 'none';
-      } else {
-        mobileMenuBtn.style.display = 'block';
-      }
-    });
-
-    function showMessageModal() {
-      alert('Message functionality coming soon!');
-    }
-
-    document.getElementById('submitRating')?.addEventListener('click', async function() {
+  // Rating Submission
+  const submitRating = document.getElementById('submitRating');
+  if (submitRating) {
+    submitRating.addEventListener('click', async function() {
       const ratingInput = document.querySelector('input[name="rating"]:checked');
       if (!ratingInput) {
         alert('Please select a rating');
@@ -1993,8 +2008,12 @@
         alert('An error occurred while submitting your rating');
       }
     });
+  }
 
-    document.getElementById('submitReview')?.addEventListener('click', async function() {
+  // Review Submission
+  const submitReview = document.getElementById('submitReview');
+  if (submitReview) {
+    submitReview.addEventListener('click', async function() {
       const reviewText = document.getElementById('reviewText').value.trim();
       if (!reviewText) {
         alert('Please write a review before submitting');
@@ -2011,6 +2030,7 @@
         });
         
         const data = await response.json();
+        console.log('Review submission response:', data); // Debug log
         
         if (data.success) {
           const reviewsList = document.querySelector('.reviews-list') || document.createElement('div');
@@ -2024,7 +2044,7 @@
           reviewItem.className = 'review-item';
           reviewItem.innerHTML = `
             <div class="review-header">
-              <span class="reviewer-name">${data.review.reviewer}</span>
+              <span class="reviewer-name">${data.review.reviewer || 'Anonymous'}</span>
               <span class="review-date">${data.review.created_at}</span>
             </div>
             <div class="review-content">
@@ -2043,57 +2063,51 @@
         alert('An error occurred while submitting your review');
       }
     });
-  </script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const modal = document.getElementById('proposalModal');
-      const closeBtn = document.getElementById('closeModal');
-
-      closeBtn.addEventListener('click', () => {
-        modal.classList.remove('show');
-        document.body.style.overflow = '';
-      });
-
-      modal.addEventListener('click', (event) => {
-        if (event.target === modal) {
-          modal.classList.remove('show');
-          document.body.style.overflow = '';
-        }
-      });
-    });
-  </script>
-
-  <script>
-  function changeMainImage(el, src, mainImageId, thumbnailContainerId) {
-    // 1) Update the big image
-    const mainImg = document.getElementById(mainImageId);
-    mainImg.src = src;
-
-    // 2) Toggle the “active” class on thumbnails
-    const thumbs = document
-      .getElementById(thumbnailContainerId)
-      .querySelectorAll('.thumbnail');
-    thumbs.forEach(img => img.classList.remove('active'));
-    el.classList.add('active');
-
-    // 3) Update the counter (“1 of N”)
-    //    We assume your counter <span> has id="image-counter-<suffix>"
-    const counterId = mainImageId.replace('mainImage', 'image-counter');
-    const currentIndex = Array.from(thumbs).indexOf(el) + 1;
-    document.getElementById(counterId).textContent = 
-      `${currentIndex} of ${thumbs.length}`;
   }
+});
 
-  // Example helper for your zoom button
-  function toggleZoom(imageId) {
-    const img = document.getElementById(imageId);
-    if (img.classList.contains('zoomed')) {
-      img.classList.remove('zoomed');
-    } else {
-      img.classList.add('zoomed');
-    }
+// Image Gallery Helper
+function changeMainImage(el, src, mainImageId, thumbnailContainerId) {
+  const mainImg = document.getElementById(mainImageId);
+  mainImg.src = src;
+
+  const thumbs = document.getElementById(thumbnailContainerId).querySelectorAll('.thumbnail');
+  thumbs.forEach(img => img.classList.remove('active'));
+  el.classList.add('active');
+
+  const counterId = mainImageId.replace('mainImage', 'image-counter');
+  const currentIndex = Array.from(thumbs).indexOf(el) + 1;
+  const counter = document.getElementById(counterId);
+  if (counter) {
+    counter.textContent = `${currentIndex} of ${thumbs.length}`;
   }
+}
+
+function toggleZoom(imageId) {
+  const img = document.getElementById(imageId);
+  if (img.classList.contains('zoomed')) {
+    img.classList.remove('zoomed');
+  } else {
+    img.classList.add('zoomed');
+  }
+}
 </script>
+
+<script>
+  window.addEventListener('load', function() {
+    document.querySelectorAll('.flash-message').forEach(function(msg) {
+      // after 3 seconds, start fade
+      setTimeout(function() {
+        msg.classList.add('fade-out');
+        // when transition ends, remove from DOM
+        msg.addEventListener('transitionend', function() {
+          msg.remove();
+        });
+      }, 2000);
+    });
+  });
+</script>
+
 
 </body>
 </html>

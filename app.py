@@ -387,11 +387,19 @@ def home():
 
 
 
-@app.route('/listing/<int:listing_id>')
+@app.route('/listing/<int:listing_id>', methods=['GET', 'POST'])
 def listing_details(listing_id):
     conn = None
     cursor = None
     listing = None
+    app.logger.debug(f"Accessing listing_details for listing_id: {listing_id}, method: {request.method}")
+    
+    # Handle unexpected POST requests
+    if request.method == 'POST':
+        app.logger.debug(f"Unexpected POST to listing_details: {request.form.to_dict()}")
+        flash('Error: Invalid form submission. Please use the proposal form.', 'danger')
+        return redirect(url_for('listing_details', listing_id=listing_id))
+    
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -465,8 +473,11 @@ def listing_details(listing_id):
         if conn:
             conn.close()
     
-    return render_template('listing_details.html', listing=listing)
-
+    return render_template(
+        'listing_details.html',
+        listing=listing,
+        listing_id=listing_id  # Add listing_id to template context
+    )
 
 
 
@@ -840,34 +851,65 @@ def send_text_notification(recipient_contact, body):
 @login_required
 def create_proposal(listing_id):
     if request.method == 'POST':
-        conn   = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        conn = None
+        cursor = None
         try:
-            # 1) Gather form data
-            proposer_id          = session['user_id']
-            proposed_item        = request.form['proposed_item']
+            # Initialize database connection
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+
+            # Verify proposals table exists
+            cursor.execute("SHOW TABLES LIKE 'proposals'")
+            if not cursor.fetchone():
+                app.logger.error("Proposals table does not exist")
+                flash('Server error: Proposals table missing.', 'danger')
+                return redirect(url_for('listing_details', listing_id=listing_id))
+
+            # Validate listing exists
+            cursor.execute(
+                "SELECT user_id, title FROM listings WHERE listing_id = %s",
+                (listing_id,)
+            )
+            listing = cursor.fetchone()
+            if not listing:
+                app.logger.error(f"Listing ID {listing_id} does not exist")
+                flash('Invalid listing ID.', 'danger')
+                return redirect(url_for('listing_details', listing_id=listing_id))
+
+            owner_id = listing['user_id']
+            listing_title = listing['title']
+
+            # Gather form data
+            proposer_id = session['user_id']
+            proposed_item = request.form.get('proposed_item', '').strip()
             additional_cash_raw = request.form.get('additional_cash', '').strip()
             additional_cash = float(additional_cash_raw) if additional_cash_raw else None
-            message              = request.form.get('message', '').strip()
-            detailed_description = request.form['detailed_description']
-            condition            = request.form['condition']
-            phone_number         = request.form['phone_number']
-            email_address        = request.form['email_address']
+            message = request.form.get('message', '').strip()
+            detailed_description = request.form.get('detailed_description', '').strip()
+            condition = request.form.get('condition', '').strip()
+            phone_number = request.form.get('phone_number', '').strip()
+            email_address = request.form.get('email_address', '').strip()
 
-            # 2) Handle up to 4 image uploads
+            # Validate required fields
+            if not all([proposed_item, detailed_description, condition, phone_number, email_address]):
+                flash('All required fields must be filled.', 'danger')
+                return redirect(url_for('listing_details', listing_id=listing_id))
+
+            # Handle image uploads
+            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
             image_filenames = []
             for i in range(1, 5):
                 file = request.files.get(f'image{i}')
                 if file and allowed_file(file.filename):
                     filename = secure_filename(file.filename)
-                    path     = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                     file.save(path)
                     image_filenames.append(filename)
                 else:
                     image_filenames.append(None)
 
-            # 3) Insert the proposal
-            cursor.execute("""
+            # Insert the proposal
+            insert_query = '''
                 INSERT INTO proposals (
                     listing_id, user_id, proposed_item,
                     additional_cash, message, status,
@@ -875,76 +917,67 @@ def create_proposal(listing_id):
                     phone_number, Email_address,
                     image1, image2, image3, image4
                 ) VALUES (%s, %s, %s, %s, %s, 'pending', %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                listing_id,
-                proposer_id,
-                proposed_item,
-                additional_cash,
-                message,
-                detailed_description,
-                condition,
-                phone_number,
-                email_address,
+            '''
+            params = (
+                listing_id, proposer_id, proposed_item,
+                additional_cash, message,
+                detailed_description, condition,
+                phone_number, email_address,
                 *image_filenames
-            ))
+            )
+            cursor.execute(insert_query, params)
             conn.commit()
 
-            # 4) Lookup listing owner
-            cursor.execute(
-                "SELECT user_id, title FROM listings WHERE listing_id = %s",
-                (listing_id,)
-            )
-            listing = cursor.fetchone()
-            if listing:
-                owner_id      = listing['user_id']
-                listing_title = listing['title']
-
-                # 5a) Send email + SMS
-                cursor.execute("SELECT email, contact FROM users WHERE id = %s", (owner_id,))
-                user = cursor.fetchone()
-                if user:
-                    try:
-                        send_email_notification(
-                            user['email'],
-                            "New Proposal Received",
-                            f"Someone just sent you a swap proposal for your listing: {listing_title}."
-                        )
-                        send_text_notification(
-                            user['contact'],
-                            f"New proposal for {listing_title}. Check your dashboard."
-                        )
-                    except Exception as notify_err:
-                        app.logger.error("Email/SMS error: %s", notify_err)
-
-                # 5b) Send web-push notification
+            # Send email + SMS notifications
+            cursor.execute("SELECT email, contact FROM users WHERE id = %s", (owner_id,))
+            owner = cursor.fetchone()
+            if owner:
                 try:
-                    send_push(
-                        owner_id,
-                        "New proposal received",
-                        f"Someone just sent you a swap proposal for your listing: {listing_title}.",
-                        url_for('listing_details', listing_id=listing_id)
+                    send_email_notification(
+                        owner['email'],
+                        "New Proposal Received",
+                        f"Someone just sent you a swap proposal for your listing: {listing_title}."
                     )
-                    app.logger.info(
-                        "Push notification sent to user %s for listing %s", 
-                        owner_id, listing_id
+                    send_text_notification(
+                        owner['contact'],
+                        f"New proposal for {listing_title}. Check your dashboard."
                     )
-                except Exception as push_err:
-                    app.logger.error("Push notification error: %s", push_err)
+                except Exception as notify_err:
+                    app.logger.error("Email/SMS error: %s", notify_err)
+
+            # Send web-push notification
+            try:
+                send_push(
+                    owner_id,
+                    "New proposal received",
+                    f"Someone just sent you a swap proposal for your listing: {listing_title}.",
+                    url_for('listing_details', listing_id=listing_id)
+                )
+                app.logger.info(
+                    "Push notification sent to user %s for listing %s",
+                    owner_id, listing_id
+                )
+            except Exception as push_err:
+                app.logger.error("Push notification error: %s", push_err)
 
             flash('Your swap proposal has been submitted successfully!', 'success')
             return redirect(url_for('listing_details', listing_id=listing_id))
 
         except Exception as e:
-            conn.rollback()
-            app.logger.error("Error creating proposal: %s", e)
+            if conn:
+                conn.rollback()
+            app.logger.error(f"Error creating proposal: {e}", exc_info=True)
             flash('Error submitting proposal. Please try again.', 'danger')
+            return redirect(url_for('listing_details', listing_id=listing_id))
+
         finally:
-            cursor.close()
-            conn.close()
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
 
-    # For GET or any other method, just redirect back
+    # GET or other methods
     return redirect(url_for('listing_details', listing_id=listing_id))
-
 
 
 
@@ -1863,54 +1896,71 @@ def submit_rating(listing_id):
 @app.route('/submit_review/<int:listing_id>', methods=['POST'])
 def submit_review(listing_id):
     if 'user_id' not in session:
+        app.logger.warning(f"Unauthorized review attempt for listing_id: {listing_id}")
         return jsonify({'success': False, 'message': 'Please log in to review this listing'}), 401
     
     try:
         review_text = request.form.get('review_text', '').strip()
         if not review_text:
-            raise ValueError("Review text cannot be empty")
-            
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)  # Ensure dictionary=True for named columns
+            app.logger.warning(f"Empty review text for listing_id: {listing_id}, user_id: {session['user_id']}")
+            return jsonify({'success': False, 'message': 'Review text cannot be empty'}), 400
         
-        # Get listing owner ID
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Verify listing exists and get owner ID
         cursor.execute("SELECT user_id FROM listings WHERE listing_id = %s", (listing_id,))
-        listing_owner_id = cursor.fetchone()['user_id']  # Access as dictionary
+        listing = cursor.fetchone()
+        if not listing:
+            app.logger.error(f"Listing not found for listing_id: {listing_id}")
+            cursor.close()
+            conn.close()
+            return jsonify({'success': False, 'message': 'Listing not found'}), 404
+        listing_owner_id = listing['user_id']
         
         # Insert review
         cursor.execute("""
-            INSERT INTO reviews (listing_id, user_id, owner_id, review_text)
-            VALUES (%s, %s, %s, %s)
-        """, (listing_id, session['user_id'], listing_owner_id, review_text))
-        
+            INSERT INTO reviews (listing_id, user_id, owner_id, review_text, created_at)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (listing_id, session['user_id'], listing_owner_id, review_text, datetime.utcnow()))
         conn.commit()
         
-        # Get the new review with username to return
+        # Get the new review with username
         cursor.execute("""
-            SELECT reviews.*, users.username 
-            FROM reviews 
-            JOIN users ON reviews.user_id = users.id 
-            WHERE reviews.review_id = LAST_INSERT_ID()
+            SELECT r.review_id, r.review_text, r.created_at, u.username AS reviewer
+            FROM reviews r
+            JOIN users u ON r.user_id = u.id
+            WHERE r.review_id = LAST_INSERT_ID()
         """)
         new_review = cursor.fetchone()
         
         cursor.close()
         conn.close()
         
+        app.logger.debug(f"Submitted review for listing_id: {listing_id}, review: {new_review}")
         return jsonify({
             'success': True,
             'message': 'Review submitted successfully',
             'review': {
-                'username': new_review['username'],
+                'review_id': new_review['review_id'],
                 'review_text': new_review['review_text'],
-                'created_at': new_review['created_at'].strftime('%B %d, %Y')
+                'created_at': new_review['created_at'].strftime('%B %d, %Y'),
+                'reviewer': new_review['reviewer']
             }
         })
         
+    except mysql.connector.Error as e:
+        app.logger.error(f"Database error submitting review for listing_id: {listing_id}: {str(e)}", exc_info=True)
+        if 'conn' in locals() and conn:
+            conn.rollback()
+            conn.close()
+        return jsonify({'success': False, 'message': f'Database error: {str(e)}'}), 500
     except Exception as e:
-        logging.error("Error submitting review: %s", e)
-        return jsonify({'success': False, 'message': str(e)}), 400
-
+        app.logger.error(f"Unexpected error submitting review for listing_id: {listing_id}: {str(e)}", exc_info=True)
+        if 'conn' in locals() and conn:
+            conn.rollback()
+            conn.close()
+        return jsonify({'success': False, 'message': f'Unexpected error: {str(e)}'}), 500
 
 
 
