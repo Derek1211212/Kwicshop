@@ -407,185 +407,255 @@
                 <h2 class="card-title">Edit Product Listing</h2>
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ url_for('update_listing', listing_id=listing.listing_id) }}" enctype="multipart/form-data">
-                    <!-- Image Gallery Section -->
-                    <div class="image-gallery-section">
-                        <div class="gallery-header">
-                            <label class="form-label required">Product Images</label>
-                            <small class="text-muted">Tap image to edit/remove | Main image first</small>
-                        </div>
-                        <div class="gallery-container" id="gallery-container">
-                            <!-- Main Image -->
-                            <div class="gallery-item active" data-index="0" data-type="main">
-                                {% if listing.image_url %}
-                                    <img src="{{ url_for('static', filename='images/' + listing.image_url) }}"
-                                         onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
-                                         alt="Main listing image">
-                                {% else %}
-                                    <img src="https://via.placeholder.com/300?text=Main+Image" alt="No main image">
-                                {% endif %}
-                                <span class="item-label">Main</span>
-                                <div class="item-actions">
-                                    <button type="button" class="btn-action btn-remove" title="Remove image">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                    <label class="btn-action" title="Replace image">
-                                        <i class="fas fa-sync"></i>
-                                        <input type="file" name="image" accept="image/*">
-                                    </label>
-                                </div>
-                            </div>
-                            <!-- Additional Images -->
-                            {% for i in range(1,5) %}
-                                <div class="gallery-item" data-index="{{ i }}" data-type="additional">
-                                    {% if listing['image' ~ i] %}
-                                        <img src="{{ url_for('static', filename='images/' + listing['image' ~ i]) }}"
-                                             onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
-                                             alt="Additional image {{ i }}">
-                                    {% else %}
-                                        <img src="https://via.placeholder.com/300?text=Image+{{ i }}" alt="No additional image">
-                                    {% endif %}
-                                    <span class="item-label">Image {{ i }}</span>
-                                    <div class="item-actions">
-                                        <button type="button" class="btn-action btn-remove" title="Remove image">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                        <label class="btn-action" title="Replace image">
-                                            <i class="fas fa-sync"></i>
-                                            <input type="file" name="image{{ i }}" accept="image/*">
-                                        </label>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-
-                    <!-- Basic Information -->
-                    <div class="mb-4">
-                        <div class="mb-3">
-                            <label for="title" class="form-label required">Title</label>
-                            <input type="text" class="form-control" id="title" name="title" value="{{ listing.title }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="description" class="form-label required">Description</label>
-                            <textarea class="form-control" id="description" name="description" rows="4" required>{{ listing.description }}</textarea>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="condition" class="form-label required">Condition</label>
-                                <select class="form-select" id="condition" name="condition" required>
-                                    <option value="New" {% if listing.condition == 'New' %}selected{% endif %}>New</option>
-                                    <option value="Like New" {% if listing.condition == 'Like New' %}selected{% endif %}>Like New</option>
-                                    <option value="Good" {% if listing.condition == 'Good' %}selected{% endif %}>Good</option>
-                                    <option value="Fair" {% if listing.condition == 'Fair' %}selected{% endif %}>Fair</option>
-                                    <option value="Poor" {% if listing.condition == 'Poor' %}selected{% endif %}>Poor</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="location" class="form-label required">Location</label>
-                                <input type="text" class="form-control" id="location" name="location" value="{{ listing.location }}" required>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Category Section -->
-                    <div class="mb-4">
-                        <label class="form-label required">Category</label>
-                        <div class="input-group mb-3">
-                            <span class="input-group-text"><i class="fas fa-box"></i></span>
-                            <input id="category-input" name="category" type="text" class="form-control" 
-                                   placeholder="Start typing to search categories…" autocomplete="off" 
-                                   required value="{{ listing.category }}">
-                        </div>
-                        <ul id="category-suggestions" class="list-group" style="display: none;"></ul>
-                    </div>
-
-                    <!-- Price Section (Only for Outright Sales) -->
-                    {% if listing.deal_type == 'Outright Sales' %}
-                    <div class="mb-4">
-                        <label for="price" class="form-label required">Price (₵)</label>
-                        <div class="currency-input">
-                            <span class="currency-symbol">₵</span>
-                            <input type="number" class="form-control" id="price" name="price" 
-                                   value="{{ listing.price }}" step="0.01" min="0" required>
-                        </div>
-                        <small class="form-text text-muted">Enter the outright sale price for this item.</small>
-                    </div>
-                    {% endif %}
-
-                    <!-- Swap and Cash Sections (Only for non-Outright Sales) -->
-                    {% if listing.deal_type != 'Outright Sales' %}
-                    <div class="mb-4">
-                        <div class="mb-3">
-                            <label for="desired_swap" class="form-label required">Desired Swap</label>
-                            <input type="text" class="form-control" id="desired_swap" name="desired_swap" 
-                                   value="{{ listing.desired_swap }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="desired_swap_description" class="form-label">Swap Description</label>
-                            <textarea class="form-control" id="desired_swap_description" name="desired_swap_description" 
-                                      rows="3">{{ listing.desired_swap_description }}</textarea>
-                        </div>
-                    </div>
-                    <div class="cash-section required">
-                        <div class="cash-header">
-                            <i class="fas fa-hand-holding-usd cash-icon"></i>
-                            <div>
-                                <h4>Cash You Require from Buyer</h4>
-                                <p class="cash-explanation">This is the cash amount someone needs to add <strong>WITH THEIR ITEM</strong> to get your product.</p>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label required">Additional Cash Required (₵)</label>
-                            <div class="currency-input">
-                                <span class="currency-symbol">₵</span>
-                                <input type="number" class="form-control" id="required_cash" name="required_cash" 
-                                       value="{{ listing.required_cash }}" step="0.01" min="0">
-                            </div>
-                            <small class="form-text text-muted">Example: Buyer must add ₵100 with their laptop for your camera.</small>
-                        </div>
-                    </div>
-                    <div class="cash-section offered">
-                        <div class="cash-header">
-                            <i class="fas fa-money-bill-wave cash-icon"></i>
-                            <div>
-                                <h4>Cash You're Offering to Add</h4>
-                                <p class="cash-explanation">This is the cash amount you're willing to add <strong>WITH YOUR ITEM</strong> to make the swap attractive.</p>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Additional Cash Offer (₵)</label>
-                            <div class="currency-input">
-                                <span class="currency-symbol">₵</span>
-                                <input type="number" class="form-control" id="additional_cash" name="additional_cash" 
-                                       value="{{ listing.additional_cash }}" step="0.01" min="0">
-                            </div>
-                            <small class="form-text text-muted">Example: You'll add ₵50 with your bicycle for a scooter.</small>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <!-- Contact Information -->
-                    <div class="mb-4">
-                        <label for="contact" class="form-label required">Contact Information</label>
-                        <input type="text" class="form-control" id="contact" name="contact" 
-                               value="{{ listing.contact }}" required>
-                    </div>
-
-                    <!-- Form Actions -->
-                    <div class="d-flex justify-content-between align-items-center mt-5 btn-group-mobile">
-                        <button type="button" class="btn btn-delete" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                            <i class="fas fa-trash-alt me-2"></i> Delete Listing
-                        </button>
-                        <div class="d-flex gap-3 btn-group-mobile">
-                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
-                                <i class="fas fa-times me-2"></i> Cancel
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i> Save Changes
+<form method="POST" action="{{ url_for('update_listing', listing_id=listing.listing_id) }}" enctype="multipart/form-data">
+    <!-- Offered Items Section (Only for Swap Deals, Displayed First) -->
+    {% if listing.deal_type == 'Swap Deal' %}
+    <div class="mb-4 image-gallery-section">
+        <div class="gallery-header">
+            <h3 class="form-label required">Items Offered for Swap</h3>
+            <small class="text-muted">Edit details and images for each offered item | Max 2 items</small>
+        </div>
+        <input type="hidden" name="offered_items_count" id="offered_items_count" value="{{ offered_items|length }}">
+        {% for item in offered_items %}
+        <div class="card mb-3 offered-item" data-index="{{ loop.index }}">
+            <div class="card-body">
+                <h4>Item {{ loop.index }}</h4>
+                <!-- Offered Item Images -->
+                <div class="gallery-container" id="offered-gallery-{{ loop.index }}">
+                    {% for i in range(1, 5) %}
+                    <div class="gallery-item" data-index="{{ i }}" data-type="offered">
+                        {% if item['image' ~ i] %}
+                            <img src="{{ url_for('static', filename='images/' + item['image' ~ i]) }}"
+                                 onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
+                                 alt="Offered item {{ loop.index }} image {{ i }}">
+                        {% else %}
+                            <img src="https://via.placeholder.com/300?text=Image+{{ i }}" alt="No image">
+                        {% endif %}
+                        <span class="item-label">Image {{ i }}</span>
+                        <div class="item-actions">
+                            <button type="button" class="btn-action btn-remove" title="Remove image">
+                                <i class="fas fa-trash"></i>
                             </button>
+                            <label class="btn-action" title="Replace image">
+                                <i class="fas fa-sync"></i>
+                                <input type="file" name="offered_image_{{ loop.index }}_{{ i }}" accept="image/*">
+                            </label>
                         </div>
                     </div>
-                </form>
+                    {% endfor %}
+                </div>
+                <!-- Offered Item Details -->
+                <div class="mb-3">
+                    <label for="offered_title_{{ loop.index }}" class="form-label required">Title</label>
+                    <input type="text" class="form-control" id="offered_title_{{ loop.index }}" name="offered_title_{{ loop.index }}"
+                           value="{{ item.title }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="offered_description_{{ loop.index }}" class="form-label required">Description</label>
+                    <textarea class="form-control" id="offered_description_{{ loop.index }}" name="offered_description_{{ loop.index }}"
+                              rows="3" required>{{ item.description }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="offered_condition_{{ loop.index }}" class="form-label required">Condition</label>
+                    <select class="form-select" id="offered_condition_{{ loop.index }}" name="offered_condition_{{ loop.index }}" required>
+                        <option value="New" {% if item.condition == 'New' %}selected{% endif %}>New</option>
+                        <option value="Like New" {% if item.condition == 'Like New' %}selected{% endif %}>Like New</option>
+                        <option value="Good" {% if item.condition == 'Good' %}selected{% endif %}>Good</option>
+                        <option value="Fair" {% if item.condition == 'Fair' %}selected{% endif %}>Fair</option>
+                        <option value="Poor" {% if item.condition == 'Poor' %}selected{% endif %}>Poor</option>
+                    </select>
+                </div>
+                {% if loop.index == 2 %}
+                <button type="button" class="btn btn-outline-danger btn-remove-item" title="Remove this item">
+                    <i class="fas fa-trash me-2"></i> Remove Item
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        {% if offered_items|length < 2 %}
+        <button type="button" class="btn btn-outline-secondary" id="add-offered-item">
+            <i class="fas fa-plus me-2"></i> Add Another Item
+        </button>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Swap and Cash Sections (Only for Swap Deals) -->
+    {% if listing.deal_type == 'Swap Deal' %}
+    <div class="mb-4">
+        <h3 class="form-label">Swap Preferences</h3>
+        <div class="mb-3">
+            <label for="desired_swap" class="form-label required">Desired Swap</label>
+            <input type="text" class="form-control" id="desired_swap" name="desired_swap" 
+                   value="{{ listing.desired_swap }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="desired_swap_description" class="form-label">Swap Description</label>
+            <textarea class="form-control" id="desired_swap_description" name="desired_swap_description" 
+                      rows="3">{{ listing.desired_swap_description }}</textarea>
+        </div>
+    </div>
+    <div class="cash-section required">
+        <div class="cash-header">
+            <i class="fas fa-hand-holding-usd cash-icon"></i>
+            <div>
+                <h4>Cash You Require from Buyer</h4>
+                <p class="cash-explanation">This is the cash amount someone needs to add <strong>WITH THEIR ITEM</strong> to get your product.</p>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Additional Cash Required (₵)</label>
+            <div class="currency-input">
+                <span class="currency-symbol">₵</span>
+                <input type="number" class="form-control" id="required_cash" name="required_cash" 
+                       value="{{ listing.required_cash if listing.required_cash is not none }}" step="0.01" min="0">
+            </div>
+            <small class="form-text text-muted">Example: Buyer must add ₵100 with their laptop for your camera.</small>
+        </div>
+    </div>
+    <div class="cash-section offered">
+        <div class="cash-header">
+            <i class="fas fa-money-bill-wave cash-icon"></i>
+            <div>
+                <h4>Cash You're Offering to Add</h4>
+                <p class="cash-explanation">This is the cash amount you're willing to add <strong>WITH YOUR ITEM</strong> to make the swap attractive.</p>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Additional Cash Offer (₵)</label>
+            <div class="currency-input">
+                <span class="currency-symbol">₵</span>
+                <input type="number" class="form-control" id="additional_cash" name="additional_cash" 
+                       value="{{ listing.additional_cash if listing.additional_cash is not none }}" step="0.01" min="0">
+            </div>
+            <small class="form-text text-muted">Example: You'll add ₵50 with your bicycle for a scooter.</small>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Item Details Section (Only for Outright Sales) -->
+    {% if listing.deal_type == 'Outright Sales' %}
+    <div class="mb-4 image-gallery-section">
+        <div class="gallery-header">
+            <label class="form-label required">Product Images</label>
+            <small class="text-muted">Tap image to edit/remove | Main image first</small>
+        </div>
+        <div class="gallery-container" id="gallery-container">
+            <!-- Main Image -->
+            <div class="gallery-item active" data-index="0" data-type="main">
+                {% if listing.image_url %}
+                    <img src="{{ url_for('static', filename='images/' + listing.image_url) }}"
+                         onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
+                         alt="Main listing image">
+                {% else %}
+                    <img src="https://via.placeholder.com/300?text=Main+Image" alt="No main image">
+                {% endif %}
+                <span class="item-label">Main</span>
+                <div class="item-actions">
+                    <button type="button" class="btn-action btn-remove" title="Remove image">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <label class="btn-action" title="Replace image">
+                        <i class="fas fa-sync"></i>
+                        <input type="file" name="image" accept="image/*">
+                    </label>
+                </div>
+            </div>
+            <!-- Additional Images -->
+            {% for i in range(1, 5) %}
+            <div class="gallery-item" data-index="{{ i }}" data-type="additional">
+                {% if listing['image' ~ i] %}
+                    <img src="{{ url_for('static', filename='images/' + listing['image' ~ i]) }}"
+                         onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
+                         alt="Additional image {{ i }}">
+                {% else %}
+                    <img src="https://via.placeholder.com/300?text=Image+{{ i }}" alt="No additional image">
+                {% endif %}
+                <span class="item-label">Image {{ i }}</span>
+                <div class="item-actions">
+                    <button type="button" class="btn-action btn-remove" title="Remove image">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <label class="btn-action" title="Replace image">
+                        <i class="fas fa-sync"></i>
+                        <input type="file" name="image{{ i }}" accept="image/*">
+                    </label>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="mb-4">
+        <h3 class="form-label">Item Details</h3>
+        <div class="mb-3">
+            <label for="title" class="form-label required">Title</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ listing.title }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="description" class="form-label required">Description</label>
+            <textarea class="form-control" id="description" name="description" rows="4" required>{{ listing.description }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="condition" class="form-label required">Condition</label>
+            <select class="form-select" id="condition" name="condition" required>
+                <option value="New" {% if listing.condition == 'New' %}selected{% endif %}>New</option>
+                <option value="Like New" {% if listing.condition == 'Like New' %}selected{% endif %}>Like New</option>
+                <option value="Good" {% if listing.condition == 'Good' %}selected{% endif %}>Good</option>
+                <option value="Fair" {% if listing.condition == 'Fair' %}selected{% endif %}>Fair</option>
+                <option value="Poor" {% if listing.condition == 'Poor' %}selected{% endif %}>Poor</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="price" class="form-label required">Price (₵)</label>
+            <div class="currency-input">
+                <span class="currency-symbol">₵</span>
+                <input type="number" class="form-control" id="price" name="price" 
+                       value="{{ listing.price }}" step="0.01" min="0" required>
+            </div>
+            <small class="form-text text-muted">Enter the outright sale price for this item.</small>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- General Information (Category, Location, Contact) -->
+    <div class="mb-4">
+        <h3 class="form-label">General Information</h3>
+        <div class="mb-3">
+            <label class="form-label required">Category</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-box"></i></span>
+                <input id="category-input" name="category" type="text" class="form-control" 
+                       placeholder="Start typing to search categories…" autocomplete="off" 
+                       required value="{{ listing.category }}">
+            </div>
+            <ul id="category-suggestions" class="list-group" style="display: none;"></ul>
+        </div>
+        <div class="mb-3">
+            <label for="location" class="form-label required">Location</label>
+            <input type="text" class="form-control" id="location" name="location" value="{{ listing.location }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="contact" class="form-label required">Contact Information</label>
+            <input type="text" class="form-control" id="contact" name="contact" value="{{ listing.contact }}" required>
+        </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="d-flex justify-content-between align-items-center mt-5 btn-group-mobile">
+        <button type="button" class="btn btn-delete" data-bs-toggle="modal" data-bs-target="#deleteModal">
+            <i class="fas fa-trash-alt me-2"></i> Delete Listing
+        </button>
+        <div class="d-flex gap-3 btn-group-mobile">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-times me-2"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-2"></i> Save Changes
+            </button>
+        </div>
+    </div>
+</form>
             </div>
         </div>
     </div>
@@ -611,115 +681,197 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    <script>
-// Sortable
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+// Initialize Sortable for main gallery (Outright Sales)
 const gallery = document.getElementById('gallery-container');
-new Sortable(gallery, { animation: 150, ghostClass: 'sortable-ghost' });
+if (gallery) {
+    new Sortable(gallery, { animation: 150, ghostClass: 'sortable-ghost' });
+}
 
-// Refs
-const items = document.querySelectorAll('.gallery-item');
-const previewImg = document.getElementById('preview-image');
-const previewPlh = document.getElementById('preview-placeholder');
-const bulkInput = document.getElementById('bulk-upload');
-const uploadArea = document.getElementById('upload-area');
-
-// 1) Tap to show actions & preview
-items.forEach(item => {
-    const showActions = e => {
-        if (e.target.closest('.item-actions')) return;
-        items.forEach(i => i.classList.remove('show-actions', 'active'));
-        item.classList.add('show-actions', 'active');
-        const img = item.querySelector('img');
-        if (img && img.src) {
-            previewImg.src = img.src;
-            previewImg.style.display = 'block';
-            previewPlh.style.display = 'none';
-        }
-    };
-    if ('ontouchstart' in window) {
-        item.addEventListener('touchend', e => {
-            e.preventDefault();
-            showActions(e);
-        });
-    } else {
-        item.addEventListener('click', showActions);
-    }
-});
-if (items.length) items[0].click();
-
-// 2) Replace preview
-document.querySelectorAll('.gallery-item input[type="file"]').forEach(inp => {
-    inp.addEventListener('change', function() {
-        const file = this.files[0];
-        if (!file) return;
-        const parent = this.closest('.gallery-item');
-        const img = parent.querySelector('img');
-        const reader = new FileReader();
-        reader.onload = e => {
-            img.src = e.target.result;
-            if (parent.classList.contains('active')) previewImg.src = e.target.result;
+// Handle main gallery interactions (Outright Sales)
+function attachMainGalleryListeners() {
+    const items = document.querySelectorAll('#gallery-container .gallery-item');
+    items.forEach(item => {
+        const showActions = e => {
+            if (e.target.closest('.item-actions')) return;
+            items.forEach(i => i.classList.remove('show-actions', 'active'));
+            item.classList.add('show-actions', 'active');
         };
+        item.removeEventListener('click', showActions);
+        item.addEventListener('click', showActions);
+        if ('ontouchstart' in window) {
+            item.removeEventListener('touchend', showActions);
+            item.addEventListener('touchend', e => {
+                e.preventDefault();
+                showActions(e);
+            });
+        }
+
+        const input = item.querySelector('input[type="file"]');
+        input.removeEventListener('change', updateImage);
+        input.addEventListener('change', updateImage);
+
+        const removeBtn = item.querySelector('.btn-remove');
+        removeBtn.removeEventListener('click', removeImage);
+        removeBtn.addEventListener('click', removeImage);
+        if ('ontouchstart' in window) {
+            removeBtn.removeEventListener('touchend', removeImage);
+            removeBtn.addEventListener('touchend', e => {
+                e.preventDefault();
+                removeImage(e);
+            });
+        }
+    });
+    if (items.length) items[0].click();
+}
+
+// Handle offered items interactions (Swap Deals)
+function attachOfferedItemListeners() {
+    document.querySelectorAll('.offered-item .gallery-item').forEach(item => {
+        const showActions = e => {
+            if (e.target.closest('.item-actions')) return;
+            item.parentNode.querySelectorAll('.gallery-item').forEach(i => i.classList.remove('show-actions', 'active'));
+            item.classList.add('show-actions', 'active');
+        };
+        item.removeEventListener('click', showActions);
+        item.addEventListener('click', showActions);
+        if ('ontouchstart' in window) {
+            item.removeEventListener('touchend', showActions);
+            item.addEventListener('touchend', e => {
+                e.preventDefault();
+                showActions(e);
+            });
+        }
+
+        const input = item.querySelector('input[type="file"]');
+        input.removeEventListener('change', updateImage);
+        input.addEventListener('change', updateImage);
+
+        const removeBtn = item.querySelector('.btn-remove');
+        removeBtn.removeEventListener('click', removeImage);
+        removeBtn.addEventListener('click', removeImage);
+        if ('ontouchstart' in window) {
+            removeBtn.removeEventListener('touchend', removeImage);
+            removeBtn.addEventListener('touchend', e => {
+                e.preventDefault();
+                removeImage(e);
+            });
+        }
+    });
+
+    // Remove entire offered item
+    document.querySelectorAll('.btn-remove-item').forEach(btn => {
+        btn.removeEventListener('click', removeOfferedItem);
+        btn.addEventListener('click', removeOfferedItem);
+    });
+
+    // Initialize Sortable for each offered item gallery
+    document.querySelectorAll('.offered-item .gallery-container').forEach(gallery => {
+        new Sortable(gallery, { animation: 150, ghostClass: 'sortable-ghost' });
+    });
+}
+
+function updateImage() {
+    const file = this.files[0];
+    if (file) {
+        const img = this.closest('.gallery-item').querySelector('img');
+        const reader = new FileReader();
+        reader.onload = e => img.src = e.target.result;
         reader.readAsDataURL(file);
-    });
-});
-
-// 3) Remove
-document.querySelectorAll('.btn-remove').forEach(btn => {
-    const fn = e => {
-        e.preventDefault();
-        e.stopPropagation();
-        const item = btn.closest('.gallery-item');
-        const idx = item.dataset.index;
-        const img = item.querySelector('img');
-        const inp = item.querySelector('input[type="file"]');
-        img.src = item.dataset.type === 'main'
-            ? 'https://via.placeholder.com/300?text=Main+Image'
-            : `https://via.placeholder.com/300?text=Image+${idx}`;
-        inp.value = '';
-        item.classList.remove('active', 'show-actions');
-        previewImg.style.display = 'none';
-        previewPlh.style.display = 'block';
-    };
-    btn.addEventListener('click', fn);
-    btn.addEventListener('touchend', fn);
-});
-
-// 4) Handle replace button (file input label) for mobile
-document.querySelectorAll('.gallery-item .btn-action:not(.btn-remove)').forEach(label => {
-    const input = label.querySelector('input[type="file"]');
-    if ('ontouchstart' in window) {
-        label.addEventListener('touchend', e => {
-            e.preventDefault();
-            e.stopPropagation();
-            input.click(); // Programmatically trigger the file input
-        });
     }
-    // Ensure the input itself doesn't trigger unexpected behavior
-    input.addEventListener('touchend', e => {
-        e.stopPropagation(); // Prevent touchend on input from bubbling
+}
+
+function removeImage(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const item = this.closest('.gallery-item');
+    const img = item.querySelector('img');
+    const input = item.querySelector('input[type="file"]');
+    img.src = `https://via.placeholder.com/300?text=Image+${item.dataset.index}`;
+    input.value = '';
+    item.classList.remove('active', 'show-actions');
+}
+
+function removeOfferedItem(e) {
+    e.preventDefault();
+    const item = this.closest('.offered-item');
+    item.remove();
+    const count = parseInt(document.getElementById('offered_items_count').value) - 1;
+    document.getElementById('offered_items_count').value = count;
+    document.getElementById('add-offered-item').style.display = 'block';
+}
+
+// Add new offered item
+document.getElementById('add-offered-item')?.addEventListener('click', function() {
+    const count = parseInt(document.getElementById('offered_items_count').value) + 1;
+    if (count > 2) return;
+
+    const template = `
+        <div class="card mb-3 offered-item" data-index="${count}">
+            <div class="card-body">
+                <h4>Item ${count}</h4>
+                <div class="gallery-container" id="offered-gallery-${count}">
+                    ${[1,2,3,4].map(i => `
+                        <div class="gallery-item" data-index="${i}" data-type="offered">
+                            <img src="https://via.placeholder.com/300?text=Image+${i}" alt="No image">
+                            <span class="item-label">Image ${i}</span>
+                            <div class="item-actions">
+                                <button type="button" class="btn-action btn-remove" title="Remove image">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                <label class="btn-action" title="Replace image">
+                                    <i class="fas fa-sync"></i>
+                                    <input type="file" name="offered_image_${count}_${i}" accept="image/*">
+                                </label>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="mb-3">
+                    <label for="offered_title_${count}" class="form-label required">Title</label>
+                    <input type="text" class="form-control" id="offered_title_${count}" name="offered_title_${count}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="offered_description_${count}" class="form-label required">Description</label>
+                    <textarea class="form-control" id="offered_description_${count}" name="offered_description_${count}" rows="3" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="offered_condition_${count}" class="form-label required">Condition</label>
+                    <select class="form-select" id="offered_condition_${count}" name="offered_condition_${count}" required>
+                        <option value="New">New</option>
+                        <option value="Like New">Like New</option>
+                        <option value="Good">Good</option>
+                        <option value="Fair">Fair</option>
+                        <option value="Poor">Poor</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-outline-danger btn-remove-item" title="Remove this item">
+                    <i class="fas fa-trash me-2"></i> Remove Item
+                </button>
+            </div>
+        </div>
+    `;
+    this.insertAdjacentHTML('beforebegin', template);
+    document.getElementById('offered_items_count').value = count;
+    if (count === 2) this.style.display = 'none';
+    attachOfferedItemListeners();
+
+    // Auto-resize new textarea
+    const newTextarea = document.querySelector(`#offered_description_${count}`);
+    newTextarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = `${this.scrollHeight}px`;
     });
+    newTextarea.dispatchEvent(new Event('input'));
 });
 
-// 5) Bulk upload
-uploadArea.addEventListener('click', () => bulkInput.click());
-bulkInput.addEventListener('change', function() {
-    const files = Array.from(this.files);
-    const empties = Array.from(items).filter(it =>
-        it.querySelector('img').src.includes('placeholder.com')
-    );
-    empties.slice(0, files.length).forEach((slot, i) => {
-        const dt = new DataTransfer();
-        dt.items.add(files[i]);
-        const inp = slot.querySelector('input[type="file"]');
-        inp.files = dt.files;
-        inp.dispatchEvent(new Event('change'));
-    });
-    this.value = '';
-});
+// Initialize listeners
+attachMainGalleryListeners();
+attachOfferedItemListeners();
 
-// 6) Auto-resize textareas
+// Auto-resize textareas
 document.querySelectorAll('textarea').forEach(textarea => {
     textarea.addEventListener('input', function() {
         this.style.height = 'auto';
@@ -728,7 +880,7 @@ document.querySelectorAll('textarea').forEach(textarea => {
     textarea.dispatchEvent(new Event('input'));
 });
 
-// 7) Form validation feedback
+// Form validation feedback
 document.querySelector('form').addEventListener('submit', function(e) {
     const requiredInputs = this.querySelectorAll('[required]');
     let isValid = true;
@@ -757,80 +909,79 @@ document.querySelector('form').addEventListener('submit', function(e) {
     }
 });
 
-// 8) Enhanced button interactions
+// Enhanced button interactions
 document.querySelectorAll('.btn').forEach(btn => {
     btn.addEventListener('touchstart', () => { btn.style.transform = 'scale(0.95)'; });
     btn.addEventListener('touchend', () => { btn.style.transform = 'scale(1)'; });
     btn.addEventListener('mouseenter', () => { btn.style.transform = 'translateY(-2px)'; });
     btn.addEventListener('mouseleave', () => { btn.style.transform = 'translateY(0)'; });
 });
-    </script>
-    <script>
-        // Master categories + synonyms
-        const CATEGORY_DEFS = [
-            { name: 'Electronics', synonyms: ['gadget', 'device', 'tech'] },
-            { name: 'Computers & Networking', synonyms: ['pc', 'laptop', 'desktop', 'router', 'server'] },
-            { name: 'Mobile Phones & Accessories', synonyms: ['phone', 'mobile', 'charger', 'case'] },
-            { name: 'Software & Apps', synonyms: ['app', 'program', 'software'] },
-            { name: 'Health & Beauty', synonyms: ['skincare', 'makeup', 'wellness'] },
-            { name: 'Medical Equipment', synonyms: ['stethoscope', 'syringe', 'hospital'] },
-            { name: 'Sports & Outdoors', synonyms: ['sport', 'hiking', 'camping'] },
-            { name: 'Fashion & Apparel', synonyms: ['clothes', 'shirt', 'dress', 'jeans'] },
-            { name: 'Jewelry & Watches', synonyms: ['ring', 'necklace', 'watch'] },
-            { name: 'Home & Garden', synonyms: ['furniture', 'decor', 'plants'] },
-            { name: 'Kitchen & Dining', synonyms: ['cookware', 'utensils', 'appliances'] },
-            { name: 'Tools & DIY', synonyms: ['hammer', 'drill', 'screwdriver'] },
-            { name: 'Automotive & Vehicles', synonyms: ['car', 'vehicle', 'truck', 'motorcycle'] },
-            { name: 'Industrial & Scientific', synonyms: ['lab', 'industrial', 'machine'] },
-            { name: 'Agriculture & Farming', synonyms: ['farm', 'tractor', 'crop'] },
-            { name: 'Food & Beverages', synonyms: ['food', 'drink', 'beverage'] },
-            { name: 'Office Supplies', synonyms: ['pen', 'paper', 'stationery'] },
-            { name: 'Books, Music & Movies', synonyms: ['book', 'cd', 'dvd', 'movie'] },
-            { name: 'Toys & Games', synonyms: ['toy', 'game', 'puzzle'] },
-            { name: 'Baby & Kids', synonyms: ['baby', 'child', 'kids'] },
-            { name: 'Pets & Accessories', synonyms: ['pet', 'dog', 'cat', 'leash'] },
-            { name: 'Art, Crafts & Sewing', synonyms: ['art', 'craft', 'sewing'] },
-            { name: 'Collectibles & Hobbies', synonyms: ['coin', 'stamp', 'hobby'] },
-            { name: 'Travel & Experiences', synonyms: ['trip', 'tour', 'holiday'] },
-            { name: 'Real Estate & Property', synonyms: ['house', 'apartment', 'land'] },
-            { name: 'Education & Training', synonyms: ['course', 'lesson', 'training'] },
-            { name: 'Services', synonyms: ['service', 'repair', 'consulting'] },
-            { name: 'Other', synonyms: [] }
-        ];
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const input = document.getElementById('category-input');
-            const sugList = document.getElementById('category-suggestions');
+// Category suggestions
+const CATEGORY_DEFS = [
+    { name: 'Electronics', synonyms: ['gadget', 'device', 'tech'] },
+    { name: 'Computers & Networking', synonyms: ['pc', 'laptop', 'desktop', 'router', 'server'] },
+    { name: 'Mobile Phones & Accessories', synonyms: ['phone', 'mobile', 'charger', 'case'] },
+    { name: 'Software & Apps', synonyms: ['app', 'program', 'software'] },
+    { name: 'Health & Beauty', synonyms: ['skincare', 'makeup', 'wellness'] },
+    { name: 'Medical Equipment', synonyms: ['stethoscope', 'syringe', 'hospital'] },
+    { name: 'Sports & Outdoors', synonyms: ['sport', 'hiking', 'camping'] },
+    { name: 'Fashion & Apparel', synonyms: ['clothes', 'shirt', 'dress', 'jeans'] },
+    { name: 'Jewelry & Watches', synonyms: ['ring', 'necklace', 'watch'] },
+    { name: 'Home & Garden', synonyms: ['furniture', 'decor', 'plants'] },
+    { name: 'Kitchen & Dining', synonyms: ['cookware', 'utensils', 'appliances'] },
+    { name: 'Tools & DIY', synonyms: ['hammer', 'drill', 'screwdriver'] },
+    { name: 'Automotive & Vehicles', synonyms: ['car', 'vehicle', 'truck', 'motorcycle'] },
+    { name: 'Industrial & Scientific', synonyms: ['lab', 'industrial', 'machine'] },
+    { name: 'Agriculture & Farming', synonyms: ['farm', 'tractor', 'crop'] },
+    { name: 'Food & Beverages', synonyms: ['food', 'drink', 'beverage'] },
+    { name: 'Office Supplies', synonyms: ['pen', 'paper', 'stationery'] },
+    { name: 'Books, Music & Movies', synonyms: ['book', 'cd', 'dvd', 'movie'] },
+    { name: 'Toys & Games', synonyms: ['toy', 'game', 'puzzle'] },
+    { name: 'Baby & Kids', synonyms: ['baby', 'child', 'kids'] },
+    { name: 'Pets & Accessories', synonyms: ['pet', 'dog', 'cat', 'leash'] },
+    { name: 'Art, Crafts & Sewing', synonyms: ['art', 'craft', 'sewing'] },
+    { name: 'Collectibles & Hobbies', synonyms: ['coin', 'stamp', 'hobby'] },
+    { name: 'Travel & Experiences', synonyms: ['trip', 'tour', 'holiday'] },
+    { name: 'Real Estate & Property', synonyms: ['house', 'apartment', 'land'] },
+    { name: 'Education & Training', synonyms: ['course', 'lesson', 'training'] },
+    { name: 'Services', synonyms: ['service', 'repair', 'consulting'] },
+    { name: 'Other', synonyms: [] }
+];
 
-            function renderSuggestions(term) {
-                const lower = term.trim().toLowerCase();
-                sugList.innerHTML = '';
-                const matches = CATEGORY_DEFS.filter(cat => {
-                    if (!lower) return true;
-                    return cat.name.toLowerCase().includes(lower) || cat.synonyms.some(s => s.includes(lower));
-                });
-                matches.forEach(cat => {
-                    const li = document.createElement('li');
-                    li.textContent = cat.name;
-                    li.className = 'list-group-item';
-                    li.style.cursor = 'pointer';
-                    li.addEventListener('mousedown', () => {
-                        input.value = cat.name;
-                        hideSuggestions();
-                    });
-                    sugList.appendChild(li);
-                });
-                sugList.style.display = matches.length ? 'block' : 'none';
-            }
+document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('category-input');
+    const sugList = document.getElementById('category-suggestions');
 
-            function hideSuggestions() {
-                sugList.style.display = 'none';
-            }
-
-            input.addEventListener('input', e => renderSuggestions(e.target.value));
-            input.addEventListener('focus', () => renderSuggestions(input.value));
-            input.addEventListener('blur', () => setTimeout(hideSuggestions, 100));
+    function renderSuggestions(term) {
+        const lower = term.trim().toLowerCase();
+        sugList.innerHTML = '';
+        const matches = CATEGORY_DEFS.filter(cat => {
+            if (!lower) return true;
+            return cat.name.toLowerCase().includes(lower) || cat.synonyms.some(s => s.includes(lower));
         });
-    </script>
+        matches.forEach(cat => {
+            const li = document.createElement('li');
+            li.textContent = cat.name;
+            li.className = 'list-group-item';
+            li.style.cursor = 'pointer';
+            li.addEventListener('mousedown', () => {
+                input.value = cat.name;
+                hideSuggestions();
+            });
+            sugList.appendChild(li);
+        });
+        sugList.style.display = matches.length ? 'block' : 'none';
+    }
+
+    function hideSuggestions() {
+        sugList.style.display = 'none';
+    }
+
+    input.addEventListener('input', e => renderSuggestions(e.target.value));
+    input.addEventListener('focus', () => renderSuggestions(input.value));
+    input.addEventListener('blur', () => setTimeout(hideSuggestions, 100));
+});
+</script>
 </body>
 </html>

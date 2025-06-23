@@ -956,12 +956,13 @@ def dashboard():
 
     try:
         user_id = session.get('user_id')
-        print("Current user_id:", user_id)  # Debug
+        logger.debug(f"Current user_id: {user_id}")
 
         # Get current user info
         cursor.execute("SELECT id, username, email FROM users WHERE id = %s", (user_id,))
         user = cursor.fetchone()
         if not user:
+            logger.error("User not found")
             return "User not found.", 404
 
         # Get user listings
@@ -980,7 +981,22 @@ def dashboard():
         # Deduplicate by listing_id (optional safety)
         listings = list({listing['listing_id']: listing for listing in listings}.values())
 
-        print(f"Listings found: {len(listings)}")  # Debug
+        logger.debug(f"Listings found: {len(listings)}")
+
+        # Fetch offered items for each listing
+        for listing in listings:
+            if listing['deal_type'] == 'Swap Deal':
+                cursor.execute("""
+                    SELECT 
+                        listing_id, title, description, `condition`,
+                        image1, image2, image3, image4
+                    FROM offered_items
+                    WHERE listing_id = %s
+                """, (listing['listing_id'],))
+                listing['offered_items'] = cursor.fetchall()
+                logger.debug(f"Offered items for listing {listing['listing_id']}: {listing['offered_items']}")
+            else:
+                listing['offered_items'] = []
 
         # Get proposals
         cursor.execute("""
@@ -1195,18 +1211,38 @@ def edit_listing(listing_id):
     cursor = conn.cursor(dictionary=True)
     
     try:
-        # Get the listing to edit
+        # Fetch the listing to determine deal_type and verify ownership
         cursor.execute("""
-            SELECT * FROM listings 
+            SELECT listing_id, user_id, deal_type, title, description, 
+                   category, location, contact, desired_swap, 
+                   desired_swap_description, required_cash, additional_cash
+            FROM listings 
             WHERE listing_id = %s AND user_id = %s
         """, (listing_id, session['user_id']))
         listing = cursor.fetchone()
         
         if not listing:
-            flash('Listing not found or you dont have permission to edit it', 'danger')
+            flash('Listing not found or you don’t have permission to edit it', 'danger')
             return redirect(url_for('dashboard'))
-            
-        return render_template('edit_listing.html', listing=listing)
+        
+        # Initialize variables
+        offered_items = []
+        
+        # For Swap Deals, fetch items from offered_items table
+        if listing['deal_type'] == 'Swap Deal':
+            cursor.execute("""
+                SELECT item_id, listing_id, title, description, `condition`,
+                       image1, image2, image3, image4
+                FROM offered_items 
+                WHERE listing_id = %s
+            """, (listing_id,))
+            offered_items = cursor.fetchall()  # Could return multiple items
+        
+        # For Outright Sales, item details are already in the listing
+        # No additional fetch needed, as data is in the listings table
+        
+        return render_template('edit_listing.html', listing=listing, offered_items=offered_items)
+    
     finally:
         cursor.close()
         conn.close()
@@ -1217,12 +1253,11 @@ def edit_listing(listing_id):
 @app.route('/listings/<int:listing_id>/update', methods=['POST'])
 @login_required
 def update_listing(listing_id):
-    conn = None
-    cursor = None
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
     try:
-        # 1) Verify ownership and fetch deal_type
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        # Verify ownership and fetch deal_type
         cursor.execute(
             "SELECT user_id, deal_type FROM listings WHERE listing_id = %s",
             (listing_id,)
@@ -1234,106 +1269,92 @@ def update_listing(listing_id):
 
         deal_type = row['deal_type']
 
-        # 2) Collect common form fields
-        title       = request.form.get('title')
+        # Common fields
+        title = request.form.get('title')
         description = request.form.get('description')
-        condition   = request.form.get('condition')
-        location    = request.form.get('location')
-        contact     = request.form.get('contact')
-        category    = request.form.get('category')                  # <<< added
+        category = request.form.get('category')
+        location = request.form.get('location')
+        contact = request.form.get('contact')
 
-        # Initialize conditional fields
-        price                    = None
-        desired_swap             = None
-        desired_swap_description = None
-        required_cash            = None
-        additional_cash          = None
-
-        # Process fields based on deal_type
-        if deal_type == 'Outright Sales':
-            price = request.form.get('price') or None
-        else:
-            desired_swap             = request.form.get('desired_swap')
+        # Update listings table
+        if deal_type == 'Swap Deal':
+            desired_swap = request.form.get('desired_swap')
             desired_swap_description = request.form.get('desired_swap_description')
-            required_cash            = request.form.get('required_cash') or None
-            additional_cash          = request.form.get('additional_cash') or None
-
-        # 3) Handle file uploads for images (unchanged)...
-        upload_dir = os.path.join(app.root_path, 'static', 'images')
-        os.makedirs(upload_dir, exist_ok=True)
-
-        img_fields = {
-            'image_url': request.files.get('image'),
-            'image1':    request.files.get('image1'),
-            'image2':    request.files.get('image2'),
-            'image3':    request.files.get('image3'),
-            'image4':    request.files.get('image4')
-        }
-
-        # Build dynamic SET clauses for SQL UPDATE
-        set_clauses = [
-            "title=%s",
-            "description=%s",
-            "`condition`=%s",
-            "category=%s",                                       # <<< added
-            "price=%s",
-            "desired_swap=%s",
-            "desired_swap_description=%s",
-            "required_cash=%s",
-            "additional_cash=%s",
-            "location=%s",
-            "contact=%s"
-        ]
-        params = [
-            title,
-            description,
-            condition,
-            category,                                           # <<< added
-            price,
-            desired_swap,
-            desired_swap_description,
-            required_cash,
-            additional_cash,
-            location,
-            contact
-        ]
-
-        # Process image uploads (unchanged)…
-        for field, file in img_fields.items():
-            if file and file.filename and allowed_file(file.filename):
-                filename    = secure_filename(file.filename)
-                unique_name = f"{uuid.uuid4().hex}_{filename}"
-                dest        = os.path.join(upload_dir, unique_name)
-                file.save(dest)
-
-                set_clauses.append(f"{field}=%s")
-                params.append(unique_name)
-
-        # 4) Execute UPDATE query
-        params.append(listing_id)
-        query = f"""
-            UPDATE listings
-            SET {', '.join(set_clauses)}
-            WHERE listing_id=%s
-        """
-        cursor.execute(query, params)
+            required_cash = request.form.get('required_cash') or None
+            additional_cash = request.form.get('additional_cash') or None
+            
+            cursor.execute("""
+                UPDATE listings
+                SET title=%s, description=%s, category=%s, location=%s, contact=%s,
+                    desired_swap=%s, desired_swap_description=%s, required_cash=%s, additional_cash=%s
+                WHERE listing_id=%s
+            """, (title, description, category, location, contact, 
+                  desired_swap, desired_swap_description, required_cash, additional_cash, listing_id))
+            
+            # Handle offered items
+            offered_items_count = min(int(request.form.get('offered_items_count', 0)), 2)
+            cursor.execute("DELETE FROM offered_items WHERE listing_id = %s", (listing_id,))  # Clear existing items
+            
+            upload_dir = os.path.join(app.root_path, 'static', 'images')
+            os.makedirs(upload_dir, exist_ok=True)
+            
+            for i in range(1, offered_items_count + 1):
+                offered_title = request.form.get(f'offered_title_{i}')
+                offered_description = request.form.get(f'offered_description_{i}')
+                offered_condition = request.form.get(f'offered_condition_{i}')
+                offered_images = [None] * 4
+                
+                for j in range(1, 5):
+                    file = request.files.get(f'offered_image_{i}_{j}')
+                    if file and allowed_file(file.filename):
+                        filename = secure_filename(file.filename)
+                        unique_name = f"{uuid.uuid4().hex}_{filename}"
+                        file.save(os.path.join(upload_dir, unique_name))
+                        offered_images[j-1] = unique_name
+                
+                cursor.execute("""
+                    INSERT INTO offered_items (listing_id, title, description, `condition`, image1, image2, image3, image4)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """, (listing_id, offered_title, offered_description, offered_condition, 
+                      offered_images[0], offered_images[1], offered_images[2], offered_images[3]))
+        
+        else:  # Outright Sales
+            condition = request.form.get('condition')
+            price = request.form.get('price')
+            upload_dir = os.path.join(app.root_path, 'static', 'images')
+            os.makedirs(upload_dir, exist_ok=True)
+            
+            image_fields = ['image_url', 'image1', 'image2', 'image3', 'image4']
+            images = [None] * 5
+            for idx, field in enumerate(image_fields):
+                file = request.files.get(field if idx > 0 else 'image')
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    unique_name = f"{uuid.uuid4().hex}_{filename}"
+                    file.save(os.path.join(upload_dir, unique_name))
+                    images[idx] = unique_name
+            
+            cursor.execute("""
+                UPDATE listings
+                SET title=%s, description=%s, category=%s, location=%s, contact=%s,
+                    `condition`=%s, price=%s, image_url=%s, image1=%s, image2=%s, image3=%s, image4=%s
+                WHERE listing_id=%s
+            """, (title, description, category, location, contact, condition, price, 
+                  images[0], images[1], images[2], images[3], images[4], listing_id))
+        
         conn.commit()
-
         flash('Listing updated successfully!', 'success')
         return redirect(url_for('dashboard'))
-
+    
     except Exception as e:
-        if conn:
-            conn.rollback()
-        app.logger.error(f"Error in update_listing: {e}")
+        conn.rollback()
+        app.logger.error(f"Error updating listing: {e}")
         flash('An error occurred while updating your listing', 'danger')
         return redirect(url_for('edit_listing', listing_id=listing_id))
-
+    
     finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
+        cursor.close()
+        conn.close()
 
 
 
@@ -1450,6 +1471,7 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+
 @app.route('/listings', methods=['POST'])
 @login_required
 def create_listing():
@@ -1466,20 +1488,21 @@ def create_listing():
     plan = request.form.get('plan', 'Free')
     logger.debug(f"Common data: deal_type={deal_type}, title={title}, category={category}, plan={plan}")
 
-    # 2) Gather main images
+    # 2) Gather main images (only for Outright Sales)
     main_images = []
-    for f in request.files.getlist('images[]'):
-        if f and allowed_file(f.filename):
-            fn = secure_filename(f.filename)
-            u = f"{uuid.uuid4().hex}_{fn}"
-            f.save(os.path.join(app.config['UPLOAD_FOLDER'], u))
-            main_images.append(u)
-            if len(main_images) >= 5:
-                break
-    if not main_images:
-        flash("At least one main image is required.", "error")
-        logger.error("No main images uploaded")
-        return redirect(url_for('dashboard'))
+    if deal_type == 'Outright Sales':
+        for f in request.files.getlist('images[]'):
+            if f and allowed_file(f.filename):
+                fn = secure_filename(f.filename)
+                u = f"{uuid.uuid4().hex}_{fn}"
+                f.save(os.path.join(app.config['UPLOAD_FOLDER'], u))
+                main_images.append(u)
+                if len(main_images) >= 5:
+                    break
+        if not main_images:
+            flash("At least one image is required for sales.", "error")
+            logger.error("No images uploaded for sale")
+            return redirect(url_for('dashboard'))
     logger.debug(f"Main images: {main_images}")
 
     # 3) Swap-offer fields
@@ -1488,7 +1511,7 @@ def create_listing():
     off_descs = request.form.getlist('offer_description[]')
     logger.debug(f"Offer data: titles={off_titles}, conditions={off_conds}, descriptions={off_descs}")
 
-    # Process offered items
+    # Process offered items (only for Swap Deal)
     offered_items = []
     if deal_type == 'Swap Deal':
         if not (1 <= len(off_conds) <= 2):
@@ -1498,7 +1521,7 @@ def create_listing():
 
         # Group images by item
         images_per_item = []
-        offer_image_files_1 = request.files.getlist('offer_images_1[]') or request.files.getlist('offer_images[]')  # Fallback
+        offer_image_files_1 = request.files.getlist('offer_images_1[]')
         offer_image_files_2 = request.files.getlist('offer_images_2[]')
         image_lists = [offer_image_files_1, offer_image_files_2][:len(off_conds)]
         logger.debug(f"Image lists: {[[f.filename for f in lst] for lst in image_lists]}")
@@ -1536,7 +1559,7 @@ def create_listing():
 
     # 4) Deal-type specifics
     desired_swap = None
-    desired_swap_description = request.form.get('swap_notes', '').strip()  # Updated to use swap_notes
+    desired_swap_description = request.form.get('swap_notes', '').strip()
     additional_cash = None
     required_cash = None
     price = None
@@ -1577,7 +1600,7 @@ def create_listing():
             'required_cash': required_cash,
             'location': location,
             'contact': contact,
-            'main_images': main_images,
+            'main_images': main_images if deal_type == 'Outright Sales' else (offered_items[0]['images'][:4] if offered_items else []),
             'plan': plan,
             'deal_type': deal_type,
             'price': price,
@@ -1594,9 +1617,16 @@ def create_listing():
         session['user_id'], title, combined_description, category,
         desired_swap, desired_swap_description,
         additional_cash, required_cash,
-        (off_conds[0] if off_conds else None),
+        (offered_items[0]['condition'] if offered_items else None),
         location, contact
-    ] + main_images + ([None] * (5 - len(main_images))) + [plan, deal_type, price]
+    ]
+    if deal_type == 'Outright Sales':
+        listing_params += main_images + [None] * (5 - len(main_images))
+    else:
+        # Use first offered item's images for Swap Deal
+        swap_images = offered_items[0]['images'][:4] if offered_items else []
+        listing_params += swap_images + [None] * (5 - len(swap_images))
+    listing_params += [plan, deal_type, price]
     logger.debug(f"Listing params: {listing_params}")
     cursor.execute("""
         INSERT INTO listings (
@@ -1611,7 +1641,7 @@ def create_listing():
     lid = cursor.lastrowid
     logger.debug(f"Inserted listing with ID: {lid}")
 
-    # 8) Insert offered items
+    # 8) Insert offered items (only for Swap Deal)
     if deal_type == 'Swap Deal':
         for item in offered_items:
             cursor.execute("""
@@ -1638,39 +1668,44 @@ def create_listing():
 @app.route('/paystack_payment')
 @login_required
 def paystack_payment():
-    plan   = request.args.get('plan')
-    amount = request.args.get('amount',type=float)
+    plan = request.args.get('plan')
+    amount = request.args.get('amount', type=float)
     if amount is None or not plan:
         flash("Invalid payment parameters.", "error")
+        logger.error(f"Invalid payment parameters: plan={plan}, amount={amount}")
         return redirect(url_for('home'))
 
-    amount_kobo = int(amount*100)
-    conn   = get_db_connection()
+    amount_kobo = int(amount * 100)
+    conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT email FROM users WHERE id=%s",(session['user_id'],))
-    user=cursor.fetchone()
+    cursor.execute("SELECT email FROM users WHERE id=%s", (session['user_id'],))
+    user = cursor.fetchone()
     cursor.close()
     conn.close()
     if not user:
         flash("User not found.", "error")
+        logger.error(f"User not found for id: {session['user_id']}")
         return redirect(url_for('home'))
 
-    payload={
-      "email":user['email'],
-      "amount":amount_kobo,
-      "metadata":{"pending_listing":session.get('pending_listing')},
-      "callback_url":url_for('paystack_verify',_external=True)
+    payload = {
+        "email": user['email'],
+        "amount": amount_kobo,
+        "metadata": {"pending_listing": session.get('pending_listing')},
+        "callback_url": url_for('paystack_verify', _external=True)
     }
-    headers={
-      "Authorization":"Bearer sk_test_38d38a400d7c1a34c826930691e8c23fce8dde98",
-      "Content-Type":"application/json"
+    headers = {
+        "Authorization": "Bearer sk_test_38d38a400d7c1a34c826930691e8c23fce8dde98",
+        "Content-Type": "application/json"
     }
+    logger.debug(f"Initiating Paystack payment: plan={plan}, amount_kobo={amount_kobo}, user_email={user['email']}")
     resp = requests.post("https://api.paystack.co/transaction/initialize",
-                         json=payload,headers=headers)
-    data=resp.json()
+                         json=payload, headers=headers)
+    data = resp.json()
     if data.get('status'):
-      return redirect(data['data']['authorization_url'])
+        logger.debug(f"Payment initialized, redirecting to: {data['data']['authorization_url']}")
+        return redirect(data['data']['authorization_url'])
     flash("Payment initialization failed.", "error")
+    logger.error(f"Payment initialization failed: {data}")
     return redirect(url_for('home'))
 
 
@@ -1734,10 +1769,11 @@ def paystack_verify():
         p.get('desired_swap'), p.get('desired_swap_description'),
         additional_cash, required_cash,
         (offered_items[0]['condition'] if offered_items else None),
-        p['location'], p['contact'],
-        *p.get('main_images', []), *([None] * (5 - len(p.get('main_images', [])))),
-        p['plan'], p['deal_type'], price
+        p['location'], p['contact']
     ]
+    main_images = p.get('main_images', [])[:4]  # Use up to 4 images
+    listing_params += main_images + [None] * (5 - len(main_images))
+    listing_params += [p['plan'], p['deal_type'], price]
     logger.debug(f"Listing params for verification: {listing_params}")
     cursor.execute("""
         INSERT INTO listings (
@@ -1752,7 +1788,7 @@ def paystack_verify():
     lid = cursor.lastrowid
     logger.debug(f"Inserted listing with ID: {lid}")
 
-    # Insert offered items
+    # Insert offered items (only for Swap Deal)
     if p['deal_type'] == 'Swap Deal':
         for item in offered_items:
             cursor.execute("""
@@ -1774,6 +1810,7 @@ def paystack_verify():
     flash("Your product has been listed!", "success")
     logger.debug("Payment verified and listing created")
     return redirect(url_for('dashboard'))
+
 
 
 
@@ -2528,4 +2565,4 @@ import atexit
 atexit.register(lambda: scheduler.shutdown())
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5000)
