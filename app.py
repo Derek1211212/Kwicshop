@@ -951,7 +951,7 @@ def create_proposal(listing_id):
                     owner_id,
                     "New proposal received",
                     f"Someone just sent you a swap proposal for your listing: {listing_title}.",
-                    url_for('listing_details', listing_id=listing_id)
+                    url_for('dashboard')
                 )
                 app.logger.info(
                     "Push notification sent to user %s for listing %s",
@@ -978,6 +978,17 @@ def create_proposal(listing_id):
 
     # GET or other methods
     return redirect(url_for('listing_details', listing_id=listing_id))
+
+
+
+@app.route('/check_login', methods=['GET'])
+def check_login():
+    if 'user_id' in session:
+        return jsonify({'logged_in': True})
+    else:
+        return jsonify({'logged_in': False})
+
+
 
 
 
