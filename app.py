@@ -28,6 +28,8 @@ from authlib.integrations.flask_client import OAuth
 from apscheduler.schedulers.background import BackgroundScheduler
 import random
 import itertools
+from mysql.connector import pooling
+from flask_caching import Cache
 
 
 
@@ -77,28 +79,38 @@ def allowed_file(filename):
 
 
 
+cache = Cache(config={
+    'CACHE_TYPE': 'SimpleCache',
+    'CACHE_DEFAULT_TIMEOUT': 300
+})
+cache.init_app(app)
+
 
 
 # Database connection function
+dbconfig = {
+    "host":       os.getenv('DB_HOST'),
+    "user":       os.getenv('DB_USER'),
+    "password":   os.getenv('DB_PASSWORD'),
+    "database":   os.getenv('DB_DATABASE'),
+    "port":       int(os.getenv('DB_PORT')),
+    "charset":    'utf8mb4',
+    "collation":  'utf8mb4_unicode_ci',
+    "use_unicode": True
+}
+
+cnxpool = pooling.MySQLConnectionPool(
+    pool_name="mypool",
+    pool_size=20,
+    **dbconfig
+)
+
 def get_db_connection():
-    # Fetch database credentials from environment variables
-    db_host = os.getenv('DB_HOST')
-    db_user = os.getenv('DB_USER')
-    db_password = os.getenv('DB_PASSWORD')
-    db_database = os.getenv('DB_DATABASE')
-    db_port = int(os.getenv('DB_PORT'))
-    
-    # Connect to the database using the credentials
-    return mysql.connector.connect(
-        host=db_host,
-        user=db_user,
-        password=db_password,
-        database=db_database,
-        port=db_port,
-        charset='utf8mb4',
-        collation='utf8mb4_unicode_ci',
-        use_unicode=True
-    )
+    # returns a connection from the pool
+    return cnxpool.get_connection()
+
+
+
 
 oauth = OAuth(app)
 google = oauth.register(
@@ -196,175 +208,206 @@ scheduler.start()
 
 
 
+@cache.cached(timeout=3600, key_prefix='top_categories')
+def get_categories():
+    conn = get_db_connection()
+    cur  = conn.cursor(dictionary=True)
+    cur.execute("""
+        SELECT category, COUNT(*) AS cnt 
+          FROM listings 
+         GROUP BY category 
+         ORDER BY cnt DESC 
+         LIMIT 6
+    """)
+    cats = []
+    for r in cur.fetchall():
+        slug = r['category'].lower().replace(' ', '-')
+        cats.append({
+            'name': r['category'],
+            'icon_url': f"https://api.iconify.design/mdi:{slug}.svg"
+        })
+    cur.close()
+    conn.close()
+    return cats
+
+# 3) The home route
 @app.route('/')
 def home():
-    # 0) Read search & filter parameters
+    # 0) Read search & pagination params
     search            = request.args.get('search', '').strip()
     selected_category = request.args.get('category', 'All')
     deal_type_filter  = request.args.get('deal_type', 'All')
     location_q        = request.args.get('location', '').strip()
+    page              = request.args.get('page', 1, type=int)
+    per_page          = 12
+    offset            = (page - 1) * per_page
 
-    listings          = []
-    categories        = []
+    user_logged_in  = 'user_id' in session
+    user_subscribed = False
+
+    # Preload categories from cache
+    categories = get_categories()
+
     carousel_listings = []
-    user_logged_in    = 'user_id' in session
-    user_subscribed   = False
+    listings          = []
 
-    conn = None
+    conn   = None
+    cursor = None
     try:
         conn   = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
         # 1) Push subscription check
         if user_logged_in:
-            cur = conn.cursor()
-            cur.execute(
+            cursor.execute(
                 "SELECT 1 FROM push_subscriptions WHERE user_id=%s",
                 (session['user_id'],)
             )
-            user_subscribed = cur.fetchone() is not None
-            cur.close()
+            user_subscribed = cursor.fetchone() is not None
 
-        # 2A) FETCH CAROUSEL LISTINGS WITH Plan
-        cursor.execute(
-            """
+        # 2A) Carousel (same as before)
+        cursor.execute("""
             SELECT listing_id, image1, title, `Plan`
               FROM listings
              ORDER BY created_at DESC
              LIMIT 20
-            """
-        )
-        base_image_url = url_for('static', filename='images/', _external=True)
-        raw_carousel = cursor.fetchall()  # include Plan
-        # apply weighted rotation to carousel
+        """)
+        raw = cursor.fetchall()
         PLAN_WEIGHTS = {'Diamond':5,'Gold':4,'Silver':3,'Bronze':2,'Free':1}
-        weighted_idx = []
-        for idx, rec in enumerate(raw_carousel):
-            w = PLAN_WEIGHTS.get(rec['Plan'], 1)
-            weighted_idx += [idx] * w
-        jitter = random.randrange(len(weighted_idx)) if weighted_idx else 0
-        offset = (read_offset() + jitter) % len(weighted_idx) if weighted_idx else 0
-        write_offset((offset + 1) % len(weighted_idx) if weighted_idx else 0)
-        seen = set()
-        ordered = []
-        for i in weighted_idx[offset:] + weighted_idx[:offset]:
-            if i not in seen:
-                seen.add(i)
-                ordered.append(raw_carousel[i])
-            if len(ordered) >= 5:
-                break
-        carousel_listings = ordered
-        for c in carousel_listings:
-            c['banner_image'] = base_image_url + (c.get('image1') or 'placeholder.jpg')
+        weighted = [
+            idx for idx, rec in enumerate(raw)
+            for _ in range(PLAN_WEIGHTS.get(rec['Plan'],1))
+        ]
+        if weighted:
+            jitter = random.randrange(len(weighted))
+            carousel_offset = (read_offset() + jitter) % len(weighted)
+            write_offset((carousel_offset + 1) % len(weighted))
+            seen, ordered = set(), []
+            for idx in weighted[carousel_offset:] + weighted[:carousel_offset]:
+                if idx not in seen:
+                    seen.add(idx)
+                    ordered.append(raw[idx])
+                if len(ordered) == 5:
+                    break
+            base_img = url_for('static', filename='images/', _external=True)
+            for c in ordered:
+                c['banner_image'] = base_img + (c.get('image1') or 'placeholder.jpg')
+            carousel_listings = ordered
 
-        # 2B) FETCH FILTERED GRID LISTINGS
-        base_query = (
-            "SELECT l.*, u.username, IFNULL(m.impressions,0) AS impressions "
-            "FROM listings l "
-            "JOIN users u ON l.user_id=u.id "
-            "LEFT JOIN listing_metrics m ON l.listing_id=m.listing_id "
-            "WHERE 1=1"
-        )
+        # 2B) Grid listings + metrics + pagination
+        base_q = """
+            SELECT 
+              l.listing_id, l.title, l.description, l.category,
+              l.deal_type, l.`Plan`, l.image1, l.price, l.location, l.contact,
+              u.username,
+              IFNULL(m.impressions,0) AS impressions
+            FROM listings l
+            JOIN users u ON l.user_id = u.id
+            LEFT JOIN listing_metrics m ON l.listing_id = m.listing_id
+            WHERE 1=1
+        """
         params = []
         if search:
             like = f"%{search}%"
-            base_query += " AND (l.title LIKE %s OR l.description LIKE %s OR l.category LIKE %s)"
+            base_q += " AND (l.title LIKE %s OR l.description LIKE %s OR l.category LIKE %s)"
             params += [like, like, like]
         if selected_category != 'All':
-            base_query += " AND l.category=%s"
+            base_q += " AND l.category=%s"
             params.append(selected_category)
         if deal_type_filter != 'All':
-            base_query += " AND l.deal_type=%s"
+            base_q += " AND l.deal_type=%s"
             params.append(deal_type_filter)
-        order_clause = (
+
+        plan_case = (
             "CASE l.`Plan` WHEN 'Diamond' THEN 5 WHEN 'Gold' THEN 4 "
-            "WHEN 'Silver' THEN 3 WHEN 'Bronze' THEN 2 ELSE 1 END DESC, "
-            "l.created_at DESC"
+            "WHEN 'Silver' THEN 3 WHEN 'Bronze' THEN 2 ELSE 1 END"
         )
         if location_q:
-            order_clause = (
-                "CASE l.`Plan` WHEN 'Diamond' THEN 5 WHEN 'Gold' THEN 4 "
-                "WHEN 'Silver' THEN 3 WHEN 'Bronze' THEN 2 ELSE 1 END DESC, "
-                "(l.location=%s) DESC, (SOUNDEX(l.location)=SOUNDEX(%s)) DESC, "
-                "(l.location LIKE %s) DESC, l.created_at DESC"
+            base_q += " AND l.location IS NOT NULL"
+            plan_case += (
+                ", (l.location=%s) DESC, "
+                "(SOUNDEX(l.location)=SOUNDEX(%s)) DESC, "
+                "(l.location LIKE %s) DESC"
             )
             params += [location_q, location_q, f"%{location_q}%"]
-        cursor.execute(base_query + " ORDER BY " + order_clause, params)
+
+        cursor.execute(
+            base_q
+            + " ORDER BY " + plan_case + " DESC, l.created_at DESC"
+            + " LIMIT %s OFFSET %s",
+            tuple(params + [per_page, offset])
+        )
         listings = cursor.fetchall()
 
-        # 2.5) Top categories
-        cursor.execute(
-            "SELECT category, COUNT(*) AS cnt FROM listings "
-            "GROUP BY category ORDER BY cnt DESC LIMIT 6"
-        )
-        for r in cursor.fetchall():
-            slug = r['category'].lower().replace(' ', '-')
-            categories.append({'name': r['category'], 'icon_url': f"https://api.iconify.design/mdi:{slug}.svg"})
-
-        # 2.6) Bulk fetch offered items
+        # 2C) Bulk fetch offered_items for Swap Deals
         swap_ids = [l['listing_id'] for l in listings if l['deal_type']=='Swap Deal']
-        offers_by_listing = {}
+        offers   = {}
         if swap_ids:
-            placeholder = ','.join(['%s']*len(swap_ids))
+            ph = ','.join(['%s']*len(swap_ids))
             cursor.execute(
-                f"SELECT listing_id, item_id, title, description, image1, `condition` "
-                f"FROM offered_items WHERE listing_id IN ({placeholder}) "
-                f"ORDER BY listing_id,item_id ASC",
-                tuple(swap_ids)
+                f"""
+                SELECT listing_id, item_id, title, description, image1, `condition`
+                  FROM offered_items
+                 WHERE listing_id IN ({ph})
+                 ORDER BY listing_id, item_id
+                """, tuple(swap_ids)
             )
+            base_img = url_for('static', filename='images/', _external=True)
             for o in cursor.fetchall():
-                o['image1'] = base_image_url + (o.get('image1') or 'placeholder.jpg')
-                offers_by_listing.setdefault(o['listing_id'],[]).append(o)
+                o['image1'] = base_img + (o['image1'] or 'placeholder.jpg')
+                offers.setdefault(o['listing_id'], []).append(o)
+
+        # 2D) Merge images, offers, wishlist
+        base_img = url_for('static', filename='images/', _external=True)
         for l in listings:
-            l['image_url']    = base_image_url + (l.get('image_url') or 'placeholder.jpg')
-            l['banner_image'] = base_image_url + (l.get('image1') or 'placeholder.jpg')
-            l['offers']       = offers_by_listing.get(l['listing_id'], [])
+            l['image_url']      = base_img + (l.get('image1') or 'placeholder.jpg')
+            l['banner_image']   = l['image_url']
+            l['offers']         = offers.get(l['listing_id'], [])
+            # ensure template keys
+            l.setdefault('additional_cash', None)
+            l.setdefault('required_cash', None)
+            l.setdefault('price', l.get('price'))
+            l.setdefault('location', l.get('location',''))
+            l.setdefault('contact', l.get('contact',''))
+
         if user_logged_in:
-            cursor.execute("SELECT listing_id FROM wishlists WHERE user_id=%s", (session['user_id'],))
+            cursor.execute(
+                "SELECT listing_id FROM wishlists WHERE user_id=%s",
+                (session['user_id'],)
+            )
             wish_ids = {r['listing_id'] for r in cursor.fetchall()}
             for l in listings:
-                l['is_wishlisted'] = l['listing_id'] in wish_ids
-        cursor.close()
-    except Exception as e:
-        logging.error("Error: %s", e)
-        if conn: conn.rollback()
-    finally:
-        if conn: conn.close()
+                l['is_wishlisted'] = (l['listing_id'] in wish_ids)
 
-    # 3) Rotate grid via weighted round-robin + jitter
-    PLAN_WEIGHTS = {'Diamond':5,'Gold':4,'Silver':3,'Bronze':2,'Free':1}
-    plan_groups = {p:[l for l in listings if l['Plan']==p] for p in PLAN_WEIGHTS}
-    cycle = []
-    for p,w in PLAN_WEIGHTS.items(): cycle += [p]*w
-    if cycle:
-        jitter = random.randrange(len(cycle))
-        off = (read_offset() + jitter) % len(cycle)
-        rotated = cycle[off:]+cycle[:off]
-        write_offset((off+1)%len(cycle))
-        idx_map = {p:0 for p in PLAN_WEIGHTS}
-        slots=[]
-        for p in rotated:
-            b=plan_groups.get(p,[])
-            if b:
-                slots.append(b[idx_map[p]%len(b)])
-                idx_map[p]+=1
-        seen, final = set(), []
-        for itm in slots:
-            lid=itm['listing_id']
-            if lid not in seen:
-                seen.add(lid)
-                final.append(itm)
-        if len(final)!=len(listings):
-            tot=len(listings)
-            o=read_offset()%tot
-            listings=listings[o:]+listings[:o]
-            write_offset((o+1)%tot)
-        else:
-            listings=final
+        # 2E) Total for pagination
+        count_q = "SELECT COUNT(*) AS total FROM listings WHERE 1=1"
+        count_p = []
+        if search:
+            like = f"%{search}%"
+            count_q += " AND (title LIKE %s OR description LIKE %s OR category LIKE %s)"
+            count_p += [like, like, like]
+        if selected_category != 'All':
+            count_q += " AND category=%s"; count_p.append(selected_category)
+        if deal_type_filter != 'All':
+            count_q += " AND deal_type=%s"; count_p.append(deal_type_filter)
+        cursor.execute(count_q, tuple(count_p))
+        total_listings = cursor.fetchone()['total']
+        total_pages    = (total_listings + per_page - 1) // per_page
+
+    except Exception as e:
+        logging.error("Error in home(): %s", e, exc_info=True)
+        if conn:
+            conn.rollback()
+    finally:
+        if cursor: cursor.close()
+        if conn:    conn.close()
+
+    # 3) (Optional) rotate grid listing order…
 
     # 4) Render
     featured = listings[0] if listings else None
-    return render_template('home.html',
+    return render_template(
+        'home.html',
         carousel_listings=carousel_listings,
         listings=listings,
         featured_listing=featured,
@@ -375,7 +418,9 @@ def home():
         location=location_q,
         user_logged_in=user_logged_in,
         user_subscribed=user_subscribed,
-        vapid_public_key=app.config.get('VAPID_PUBLIC_KEY','')
+        vapid_public_key=app.config.get('VAPID_PUBLIC_KEY',''),
+        page=page,
+        total_pages=total_pages
     )
 
 
