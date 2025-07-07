@@ -791,30 +791,47 @@
 .card-content {
   padding: 1rem;
 }
+
 .listing-title {
   font-size: 1.1rem;
   margin-bottom: .5rem;
 }
+
 .price-display {
   font-size: 1.5rem;
   color: #E74C3C;
   font-weight: 700;
 }
+
+/* Swap details container: vertical stack, left‑aligned */
 .swap-details {
   display: flex;
   flex-direction: column;
   gap: .4rem;
+  align-items: flex-start;      /* ← ensure children start at left edge */
+  text-align: left;             /* ← fallback for text */
 }
+
+/* Each detail line: inline flex so label/value sit side by side */
 .detail-item {
+  display: flex;
+  align-items: center;
+  gap: .25rem;                  /* optional spacing between label & value */
   font-size: .9rem;
+  width: 100%;                  /* take full width so text-align works */
 }
+
+/* Label/value styling stays the same */
 .detail-label {
   font-weight: 500;
-  margin-right: .3rem;
+  /* margin-left removed so it truly hugs left */
+  margin-left: 0;
 }
+
 .detail-value {
   font-weight: 600;
 }
+
 .cash-adjustment {
   color: #2ECC71;
 }
@@ -822,6 +839,7 @@
 .hero-search-filters {
   font-family: Poppins, sans-serif;
 }
+
 
 
 

@@ -1295,6 +1295,211 @@
                 width: 100%;
             }
         }
+
+
+        .image-container {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.offered-items-images {
+    display: flex;
+    height: 100%;
+}
+
+.offered-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.offered-item img {
+    width: 100%;
+    height: 80%;
+    object-fit: cover;
+}
+
+.offered-item p {
+    height: 20%;
+    font-size: 0.8rem;
+    text-align: center;
+    color: #333;
+    margin: 0;
+    padding: 0 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.listing-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.plan-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
+
+.deal-type-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+}
+
+/* Listing Content */
+.listing-content {
+    padding: 1.25rem;
+}
+
+/* Offered Items Descriptions (for two items) */
+.offered-items-descriptions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.offered-item-description {
+    flex: 1;
+    min-width: 150px;
+}
+
+.offered-item-description h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--secondary, #333);
+    margin-bottom: 0.5rem;
+}
+
+.description-text {
+    font-size: 0.9rem;
+    color: var(--text-light, #666);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.read-more {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--primary, #28a745);
+    text-decoration: underline;
+    cursor: pointer;
+    margin-top: 0.25rem;
+}
+
+.offered-item-description.expanded .description-text {
+    -webkit-line-clamp: unset;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .offered-items-descriptions {
+        flex-direction: column;
+    }
+}
+
+/* Existing Image and Stats Container Styles */
+.image-container {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.offered-items-images {
+    display: flex;
+    height: 100%;
+}
+
+.offered-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.offered-item img {
+    width: 100%;
+    height: 80%;
+    object-fit: cover;
+}
+
+.offered-item p {
+    height: 20%;
+    font-size: 0.8rem;
+    text-align: center;
+    color: #333;
+    margin: 0;
+    padding: 0 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.listing-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.plan-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
+
+.deal-type-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+}
+
+.mobile-stats-container {
+    margin-top: 1rem;
+}
+
+.listing-stats-mobile {
+    display: flex;
+    gap: 1rem;
+}
+
+.stat-item-mobile {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.network-bars-mobile {
+    display: flex;
+    gap: 2px;
+}
+
+.network-bars-mobile .bar {
+    width: 4px;
+    height: 10px;
+    background-color: var(--primary, #28a745);
+}
+
+.stat-count-mobile {
+    font-size: 0.9rem;
+    color: var(--text, #333);
+}
+
+.fas.fa-handshake {
+    font-size: 1rem;
+    color: var(--primary, #28a745);
+}
     </style>
 </head>
 <body>
@@ -1319,94 +1524,124 @@
             </button>
         </nav>
 
-        <!-- Listings Section -->
-        <section id="listings" class="dashboard-section active">
-            <h2>My Listings</h2>
-            <div class="listings-grid">
-                {% for listing in listings %}
-                <div class="listing-card" data-listing-id="{{ listing.listing_id }}">
-                    <div class="image-container">
-                        {% set display_image = listing.image_url %}
-                        {% if not display_image and listing.deal_type == 'Swap Deal' and listing.offered_items %}
-                            {% set display_image = listing.offered_items[0].image1 %}
-                        {% endif %}
-                        {% if display_image %}
-                            <img src="{{ url_for('static', filename='images/' + display_image.split('/')[-1]) }}" 
-                                 alt="{{ listing.title }}"
-                                 onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
-                        {% else %}
-                            <img src="https://via.placeholder.com/300x200?text=No+Image" alt="{{ listing.title }}">
-                        {% endif %}
-                        <div class="plan-badge">
-                            {% if listing.plan == 'Free' %}
-                            <a href="{{ url_for('promote_listing', listing_id=listing.listing_id) }}" class="badge badge-promote">
-                                Promote Ad<i class="fas fa-arrow-up"></i>
-                            </a>
-                            {% else %}
-                            <span class="badge {% if listing.plan == 'Premium' %}badge-premium{% elif listing.plan == 'Standard' %}badge-standard{% else %}badge-basic{% endif %}">
-                                {{ listing.plan }}
-                            </span>
-                            {% endif %}
-                        </div>
-                        <div class="deal-type-badge">
-                            <span class="badge {% if listing.deal_type == 'Swap Deal' %}badge-swap{% else %}badge-sale{% endif %}">
-                                {{ listing.deal_type }}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="listing-content">
-                        <h3>{{ listing.title }}</h3>
-                        <p>{{ listing.description[:100] }}{% if listing.description|length > 100 %}...{% endif %}</p>
-                        <div class="mobile-stats-container">
-                            <p><strong>Condition:</strong> {{ listing.condition }}</p>
-                            <div class="listing-stats-mobile">
-                                <div class="stat-item-mobile" data-tooltip="Impressions">
-                                    <div class="network-bars-mobile">
-                                        <span class="bar"></span>
-                                        <span class="bar"></span>
-                                        <span class="bar"></span>
-                                    </div>
-                                    <span class="stat-count-mobile">
-                                        {{ listing.impressions|default(0)|humanize_number }}
-                                    </span>
-                                </div>
-                                <div class="stat-item-mobile" data-tooltip="Proposals">
-                                    <i class="fas fa-handshake"></i>
-                                    <span class="stat-count-mobile">{{ listing.proposal_count }}</span>
-                                </div>
+<!-- Listings Section -->
+<section id="listings" class="dashboard-section active">
+    <h2>My Listings</h2>
+    <div class="listings-grid">
+        {% for listing in listings %}
+        <div class="listing-card" data-listing-id="{{ listing.listing_id }}">
+            <div class="image-container">
+                {% if listing.deal_type == 'Swap Deal' and listing.offered_items|length == 2 %}
+                    <div class="offered-items-images">
+                        {% for item in listing.offered_items[:2] %}
+                            <div class="offered-item">
+                                <img src="{{ url_for('static', filename='images/' + item.image1.split('/')[-1]) }}"
+                                     alt="{{ item.title }}"
+                                     onerror="this.src='https://via.placeholder.com/150x120?text=No+Image'">
+                                <p>{{ item.title }}</p>
                             </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {% set display_image = listing.image_url %}
+                    {% if listing.deal_type == 'Swap Deal' and listing.offered_items and listing.offered_items|length == 1 %}
+                        {% set display_image = listing.offered_items[0].image1 %}
+                    {% endif %}
+                    {% if display_image %}
+                        <img src="{{ url_for('static', filename='images/' + display_image.split('/')[-1]) }}"
+                             alt="{{ listing.title }}"
+                             class="listing-image"
+                             onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+                    {% else %}
+                        <img src="https://via.placeholder.com/300x200?text=No+Image"
+                             alt="No Image"
+                             class="listing-image">
+                    {% endif %}
+                {% endif %}
+                <div class="plan-badge">
+                    {% if listing.plan == 'Free' %}
+                    <a href="{{ url_for('promote_listing', listing_id=listing.listing_id) }}" class="badge badge-promote">
+                        Promote Ad<i class="fas fa-arrow-up"></i>
+                    </a>
+                    {% else %}
+                    <span class="badge {% if listing.plan == 'Premium' %}badge-premium{% elif listing.plan == 'Standard' %}badge-standard{% else %}badge-basic{% endif %}">
+                        {{ listing.plan }}
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="deal-type-badge">
+                    <span class="badge {% if listing.deal_type == 'Swap Deal' %}badge-swap{% else %}badge-sale{% endif %}">
+                        {{ listing.deal_type }}
+                    </span>
+                </div>
+            </div>
+            <div class="listing-content">
+                {% if listing.deal_type == 'Swap Deal' and listing.offered_items|length == 2 %}
+                    <div class="offered-items-descriptions">
+                        {% for item in listing.offered_items[:2] %}
+                            <div class="offered-item-description">
+                                <h3>{{ item.title }}</h3>
+                                <p class="description-text" data-full-text="{{ item.description }}">{{ item.description[:50] }}{% if item.description|length > 50 %}...{% endif %}</p>
+                                {% if item.description|length > 50 %}
+                                    <a href="#" class="read-more">Read more</a>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <h3>{{ listing.title }}</h3>
+                    <p>{{ listing.description[:100] }}{% if listing.description|length > 100 %}...{% endif %}</p>
+                {% endif %}
+                <div class="mobile-stats-container">
+                    <p><strong>Condition:</strong> {{ listing.condition }}</p>
+                    <div class="listing-stats-mobile">
+                        <div class="stat-item-mobile" data-tooltip="Impressions">
+                            <div class="network-bars-mobile">
+                                <span class="bar"></span>
+                                <span class="bar"></span>
+                                <span class="bar"></span>
+                            </div>
+                            <span class="stat-count-mobile">
+                                {{ listing.impressions|default(0)|humanize_number }}
+                            </span>
                         </div>
-                    </div>
-                    <div class="listing-actions">
-                        <button class="btn btn-primary edit-listing" 
-                                onclick="window.location.href='{{ url_for('edit_listing', listing_id=listing.listing_id) }}'">
-                            Edit
-                        </button>
-                        <button class="btn btn-outline-danger delete-listing" data-id="{{ listing.listing_id }}">Delete</button>
-                    </div>
-                    <div class="social-share">
-                        <button class="share-btn" onclick="shareOnWhatsApp('{{ url_for('listing_details', listing_id=listing.listing_id, _external=True) }}')">
-                            <i class="fab fa-whatsapp"></i> WhatsApp
-                        </button>
-                        <button class="share-btn" onclick="shareOnX('{{ url_for('listing_details', listing_id=listing.listing_id, _external=True) }}', '{{ listing.title }}')">
-                            <i class="fab fa-x-twitter"></i> X
-                        </button>
-                        {% if display_image %}
-                            <a href="{{ url_for('static', filename='images/' + display_image.split('/')[-1]) }}"
-                               download class="share-btn" title="Download to post on Instagram Story">
-                                <i class="fab fa-instagram"></i> IG Story
-                            </a>
-                        {% else %}
-                            <a href="https://via.placeholder.com/300x200?text=No+Image"
-                               download class="share-btn" title="Download placeholder for Instagram Story">
-                                <i class="fab fa-instagram"></i> IG Story
-                            </a>
-                        {% endif %}
+                        <div class="stat-item-mobile" data-tooltip="Proposals">
+                            <i class="fas fa-handshake"></i>
+                            <span class="stat-count-mobile">{{ listing.proposal_count }}</span>
+                        </div>
                     </div>
                 </div>
-                {% endfor %}
             </div>
-        </section>
+            <div class="listing-actions">
+                <button class="btn btn-primary edit-listing"
+                        onclick="window.location.href='{{ url_for('edit_listing', listing_id=listing.listing_id) }}'">
+                    Edit
+                </button>
+                <button class="btn btn-outline-danger delete-listing" data-id="{{ listing.listing_id }}">Delete</button>
+            </div>
+            <div class="social-share">
+                <button class="share-btn" onclick="shareOnWhatsApp('{{ url_for('listing_details', listing_id=listing.listing_id, _external=True) }}')">
+                    <i class="fab fa-whatsapp"></i> WhatsApp
+                </button>
+                <button class="share-btn" onclick="shareOnX('{{ url_for('listing_details', listing_id=listing.listing_id, _external=True) }}', '{{ listing.title }}')">
+                    <i class="fab fa-x-twitter"></i> X
+                </button>
+                {% if listing.image_url %}
+                    <a href="{{ url_for('static', filename='images/' + listing.image_url.split('/')[-1]) }}"
+                       download class="share-btn" title="Download to post on Instagram Story">
+                        <i class="fab fa-instagram"></i> IG Story
+                    </a>
+                {% else %}
+                    <a href="https://via.placeholder.com/300x200?text=No+Image"
+                       download class="share-btn" title="Download placeholder for Instagram Story">
+                        <i class="fab fa-instagram"></i> IG Story
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
 
         <!-- Create Listing Section -->
         <section id="create-listing" class="dashboard-section">
@@ -2287,5 +2522,25 @@ function toggleSections() {
             }
         });
     </script>
+
+    <script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Read More Functionality for Descriptions
+    document.querySelectorAll('.read-more').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const parent = link.closest('.offered-item-description');
+            const description = parent.querySelector('.description-text');
+            parent.classList.toggle('expanded');
+            link.textContent = parent.classList.contains('expanded') ? 'Read less' : 'Read more';
+            if (parent.classList.contains('expanded')) {
+                description.textContent = description.dataset.fullText;
+            } else {
+                description.textContent = description.dataset.fullText.slice(0, 50) + (description.dataset.fullText.length > 50 ? '...' : '');
+            }
+        });
+    });
+});
+</script>
 </body>
 </html>

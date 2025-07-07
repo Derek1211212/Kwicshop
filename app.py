@@ -245,7 +245,7 @@ def home():
     user_logged_in  = 'user_id' in session
     user_subscribed = False
 
-    # Preload categories from cache
+    # Preload categories
     categories = get_categories()
 
     carousel_listings = []
@@ -265,7 +265,7 @@ def home():
             )
             user_subscribed = cursor.fetchone() is not None
 
-        # 2A) Carousel (same as before)
+        # 2A) Carousel (unchanged)
         cursor.execute("""
             SELECT listing_id, image1, title, `Plan`
               FROM listings
@@ -282,6 +282,7 @@ def home():
             jitter = random.randrange(len(weighted))
             carousel_offset = (read_offset() + jitter) % len(weighted)
             write_offset((carousel_offset + 1) % len(weighted))
+
             seen, ordered = set(), []
             for idx in weighted[carousel_offset:] + weighted[:carousel_offset]:
                 if idx not in seen:
@@ -289,6 +290,7 @@ def home():
                     ordered.append(raw[idx])
                 if len(ordered) == 5:
                     break
+
             base_img = url_for('static', filename='images/', _external=True)
             for c in ordered:
                 c['banner_image'] = base_img + (c.get('image1') or 'placeholder.jpg')
@@ -297,8 +299,19 @@ def home():
         # 2B) Grid listings + metrics + pagination
         base_q = """
             SELECT 
-              l.listing_id, l.title, l.description, l.category,
-              l.deal_type, l.`Plan`, l.image1, l.price, l.location, l.contact,
+              l.listing_id,
+              l.title,
+              l.description,
+              l.category,
+              l.deal_type,
+              l.`Plan`,
+              l.image1,
+              l.price,
+              l.required_cash,
+              l.additional_cash,
+              l.desired_swap,
+              l.location,
+              l.contact,
               u.username,
               IFNULL(m.impressions,0) AS impressions
             FROM listings l
@@ -339,11 +352,35 @@ def home():
         )
         listings = cursor.fetchall()
 
+        # ————————————————
+        # 3) Rotate grid listings by plan weight + jitter
+        # ————————————————
+        # Build a weighted index list so higher-plan ads appear more often
+        weights = {'Diamond':5,'Gold':4,'Silver':3,'Bronze':2,'Free':1}
+        weighted_idxs = [
+            i for i, l in enumerate(listings)
+            for _ in range(weights.get(l['Plan'], 1))
+        ]
+        if weighted_idxs:
+            jitter = random.randrange(len(weighted_idxs))
+            grid_offset = (read_offset() + jitter) % len(weighted_idxs)
+            write_offset((grid_offset + 1) % len(weighted_idxs))
+
+            seen, rotated = set(), []
+            order_cycle = weighted_idxs[grid_offset:] + weighted_idxs[:grid_offset]
+            for idx in order_cycle:
+                if idx not in seen:
+                    seen.add(idx)
+                    rotated.append(listings[idx])
+                if len(rotated) == len(listings):
+                    break
+            listings = rotated
+
         # 2C) Bulk fetch offered_items for Swap Deals
-        swap_ids = [l['listing_id'] for l in listings if l['deal_type']=='Swap Deal']
+        swap_ids = [l['listing_id'] for l in listings if l['deal_type'] == 'Swap Deal']
         offers   = {}
         if swap_ids:
-            ph = ','.join(['%s']*len(swap_ids))
+            ph = ','.join(['%s'] * len(swap_ids))
             cursor.execute(
                 f"""
                 SELECT listing_id, item_id, title, description, image1, `condition`
@@ -357,18 +394,20 @@ def home():
                 o['image1'] = base_img + (o['image1'] or 'placeholder.jpg')
                 offers.setdefault(o['listing_id'], []).append(o)
 
-        # 2D) Merge images, offers, wishlist
+        # 2D) Merge, default missing fields, wishlist
         base_img = url_for('static', filename='images/', _external=True)
         for l in listings:
-            l['image_url']      = base_img + (l.get('image1') or 'placeholder.jpg')
-            l['banner_image']   = l['image_url']
-            l['offers']         = offers.get(l['listing_id'], [])
-            # ensure template keys
-            l.setdefault('additional_cash', None)
-            l.setdefault('required_cash', None)
+            l['image_url']    = base_img + (l.get('image1') or 'placeholder.jpg')
+            l['banner_image'] = l['image_url']
+            l['offers']       = offers.get(l['listing_id'], [])
+
+            l.setdefault('required_cash', 0)
+            l.setdefault('additional_cash', 0)
+            l.setdefault('desired_swap', '')
+
             l.setdefault('price', l.get('price'))
-            l.setdefault('location', l.get('location',''))
-            l.setdefault('contact', l.get('contact',''))
+            l.setdefault('location', l.get('location', ''))
+            l.setdefault('contact', l.get('contact', ''))
 
         if user_logged_in:
             cursor.execute(
@@ -379,7 +418,7 @@ def home():
             for l in listings:
                 l['is_wishlisted'] = (l['listing_id'] in wish_ids)
 
-        # 2E) Total for pagination
+        # 2E) Pagination total count
         count_q = "SELECT COUNT(*) AS total FROM listings WHERE 1=1"
         count_p = []
         if search:
@@ -390,6 +429,7 @@ def home():
             count_q += " AND category=%s"; count_p.append(selected_category)
         if deal_type_filter != 'All':
             count_q += " AND deal_type=%s"; count_p.append(deal_type_filter)
+
         cursor.execute(count_q, tuple(count_p))
         total_listings = cursor.fetchone()['total']
         total_pages    = (total_listings + per_page - 1) // per_page
@@ -399,12 +439,11 @@ def home():
         if conn:
             conn.rollback()
     finally:
-        if cursor: cursor.close()
-        if conn:    conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
-    # 3) (Optional) rotate grid listing order…
-
-    # 4) Render
     featured = listings[0] if listings else None
     return render_template(
         'home.html',
@@ -422,9 +461,6 @@ def home():
         page=page,
         total_pages=total_pages
     )
-
-
-
 
 
 
@@ -1300,11 +1336,12 @@ def edit_listing(listing_id):
     cursor = conn.cursor(dictionary=True)
     
     try:
-        # Fetch the listing to determine deal_type and verify ownership
+        # Fetch the listing, including images, to determine deal_type and verify ownership
         cursor.execute("""
             SELECT listing_id, user_id, deal_type, title, description, 
                    category, location, contact, desired_swap, 
-                   desired_swap_description, required_cash, additional_cash
+                   desired_swap_description, required_cash, additional_cash,
+                   image_url, image1, image2, image3
             FROM listings 
             WHERE listing_id = %s AND user_id = %s
         """, (listing_id, session['user_id']))
@@ -1327,7 +1364,7 @@ def edit_listing(listing_id):
             """, (listing_id,))
             offered_items = cursor.fetchall()  # Could return multiple items
         
-        # For Outright Sales, item details are already in the listing
+        # For Outright Sales, images are now included in the listing dictionary
         # No additional fetch needed, as data is in the listings table
         
         return render_template('edit_listing.html', listing=listing, offered_items=offered_items)
