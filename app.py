@@ -1265,6 +1265,7 @@ def update_proposal(proposal_id):
             WHERE user_id = %s
         """, (proposer_id,))
         subscriptions = cursor.fetchall()
+        
 
     except Exception as e:
         conn.rollback()
