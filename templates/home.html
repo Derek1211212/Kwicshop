@@ -1939,10 +1939,14 @@ body .mobile-bottom-nav {
 
 
 <!-- ===== MULTI-ITEM HERO CAROUSEL ===== -->
-<div class="multi-carousel-container" data-id="{{ listings.listing_id }}" data-plan="{{ listings.Plan }}">
+<div class="multi-carousel-container" data-plan="{{ listings.Plan }}">
   <div class="multi-carousel-track">
     {% for listing in carousel_listings %}
-      <div class="multi-carousel-item" data-id="{{ listing.listing_id }}" data-source="carousel">
+      <div
+        class="multi-carousel-item"
+        data-listing-id="{{ listing.listing_id }}"
+        data-source="carousel"
+      >
         <div
           class="multi-carousel-image"
           style="background-image:
@@ -1954,6 +1958,8 @@ body .mobile-bottom-nav {
             <a
               href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
               class="multi-carousel-button"
+              data-listing-id="{{ listing.listing_id }}"
+              data-source="carousel"
             >
               View Listing <i class="fas fa-arrow-right"></i>
             </a>
@@ -1963,6 +1969,7 @@ body .mobile-bottom-nav {
     {% endfor %}
   </div>
 </div>
+
 
 
 
@@ -2014,64 +2021,194 @@ body .mobile-bottom-nav {
     {% endfor %}
   </div>
 
-  <!-- 3) CATEGORY FILTERS -->
-  <div class="filters-scroll category-filter-row" style="display:flex;gap:0.75rem;overflow-x:auto;padding:0.75rem 2rem;margin-bottom:1rem;">
-    <!-- “All” button -->
-  <button
-    type="button"
-    class="filter-button category-filter{% if selected_category=='All' %} active{% endif %}"
-    data-value="All"
-  >
-    <img
-      src="https://api.iconify.design/mdi:format-list-bulleted.svg"
-      alt=""
-      class="category-icon"
-      onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';"
+<!-- CATEGORY FILTERS SECTION -->
+<!-- COMPACT CATEGORY FILTERS SECTION -->
+<div class="category-filters-container">
+  <div class="category-filter-grid">
+    <!-- All -->
+    <button
+      type="button"
+      class="filter-button category-filter{% if selected_category=='All' %} active{% endif %}"
+      data-value="All"
     >
-    All
-  </button>
+      <span class="category-icon-container">
+        <img
+          src="https://api.iconify.design/mdi:format-list-bulleted.svg"
+          alt="All"
+          class="category-icon"
+          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';"
+        >
+      </span>
+      <span class="category-name">All</span>
+    </button>
+
+    <!-- Electronics -->
+    <button type="button" class="filter-button category-filter{% if selected_category=='Electronics' %} active{% endif %}" data-value="Electronics">
+      <span class="category-icon-container">
+        <img src="https://api.iconify.design/mdi:television.svg" alt="Electronics" class="category-icon"
+          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
+      </span>
+      <span class="category-name">Electronics</span>
+    </button>
+
+    <!-- Mobile Phones & Accessories -->
+    <button type="button" class="filter-button category-filter{% if selected_category=='Mobile Phones & Accessories' %} active{% endif %}" data-value="Mobile Phones & Accessories">
+      <span class="category-icon-container">
+        <img src="https://api.iconify.design/mdi:cellphone.svg" alt="Mobile Phones & Accessories" class="category-icon"
+          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
+      </span>
+      <span class="category-name">Phones</span>
+    </button>
+
+    <!-- Computers & Networking -->
+    <button type="button" class="filter-button category-filter{% if selected_category=='Computers & Networking' %} active{% endif %}" data-value="Computers & Networking">
+      <span class="category-icon-container">
+        <img src="https://api.iconify.design/mdi:desktop-classic.svg" alt="Computers & Networking" class="category-icon"
+          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
+      </span>
+      <span class="category-name">Computers</span>
+    </button>
+
+    <!-- Home & Garden -->
+    <button type="button" class="filter-button category-filter{% if selected_category=='Home & Garden' %} active{% endif %}" data-value="Home & Garden">
+      <span class="category-icon-container">
+        <img src="https://api.iconify.design/mdi:home-variant.svg" alt="Home & Garden" class="category-icon"
+          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
+      </span>
+      <span class="category-name">Home</span>
+    </button>
 
 
-    {% for cat in categories %}
-      {%- set full_slug = cat.name.lower().replace('&','and').replace(' ', '-') -%}
-      {%- set anchor   = cat.name.split('&')[0].split()[0].lower() -%}
-      <button
-        type="button"
-        class="filter-button category-filter{% if selected_category==cat.name %} active{% endif %}"
-        data-value="{{ cat.name }}"
-      >
-    <img
-      src="https://api.iconify.design/mdi:{{ full_slug }}.svg"
-      alt=""
-      class="category-icon"
-      onerror="
-        if (!this.dataset.fallback) {
-          this.dataset.fallback = '1';
-          this.onerror = function() {
-            this.onerror = null;
-            this.src = '{{ url_for('static', filename='icons/placeholder.svg') }}';
-          };
-          this.src = 'https://api.iconify.design/mdi:{{ anchor }}.svg';
-        }
-      "
-    >
+    <!-- Sports & Outdoors -->
+    <button type="button" class="filter-button category-filter{% if selected_category=='Sports & Outdoors' %} active{% endif %}" data-value="Sports & Outdoors">
+      <span class="category-icon-container">
+        <img src="https://api.iconify.design/mdi:basketball.svg" alt="Sports & Outdoors" class="category-icon"
+          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
+      </span>
+      <span class="category-name">Sports</span>
+    </button>
 
-        {{ cat.name }}
-      </button>
-    {% endfor %}
+
+    <!-- Toys & Games -->
+    <button type="button" class="filter-button category-filter{% if selected_category=='Toys & Games' %} active{% endif %}" data-value="Toys & Games">
+      <span class="category-icon-container">
+        <img src="https://api.iconify.design/mdi:puzzle.svg" alt="Toys & Games" class="category-icon"
+          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
+      </span>
+      <span class="category-name">Toys</span>
+    </button>
+
+    <!-- Automobile & Vehicles -->
+    <button type="button" class="filter-button category-filter{% if selected_category=='Automobile & Vehicles' %} active{% endif %}" data-value="Automobile & Vehicles">
+      <span class="category-icon-container">
+        <img src="https://api.iconify.design/mdi:car.svg" alt="Automobile & Vehicles" class="category-icon"
+          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
+      </span>
+      <span class="category-name">Auto</span>
+    </button>
   </div>
-</form>
+</div>
 
 <style>
-  .category-icon {
-    width: 20px;
-    height: 20px;
-    object-fit: contain;
-    vertical-align: middle;
-    margin-right: 6px;
+  /* Base Styles */
+  .category-filters-container {
+    width: 100%;
+    padding: 0 0.5rem;
+    margin-bottom: 1rem;
   }
+  
+  .category-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 0.5rem;
+    width: 100%;
+  }
+  
+  .filter-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0.25rem;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    height: 100%;
+    min-height: 60px;
+  }
+  
+  .filter-button:hover {
+    background-color: #f5f5f5;
+  }
+  
   .filter-button.active {
     border: 2px solid var(--primary);
+    background-color: rgba(var(--primary-rgb), 0.1);
+    font-weight: 500;
+  }
+  
+  .category-icon-container {
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+  }
+  
+  .category-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  
+  .category-name {
+    font-size: 0.65rem;
+    font-weight: 500;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  
+  /* Tablet and Desktop Enhancements */
+  @media (min-width: 640px) {
+    .category-filter-grid {
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 0.75rem;
+    }
+    
+    .filter-button {
+      min-height: 70px;
+      padding: 0.5rem 0.3rem;
+    }
+    
+    .category-icon-container {
+      width: 20px;
+      height: 20px;
+    }
+    
+    .category-name {
+      font-size: 0.7rem;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .category-filter-grid {
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 1rem;
+    }
+    
+    .filter-button {
+      min-height: 75px;
+    }
+    
+    .category-name {
+      font-size: 0.75rem;
+    }
   }
 </style>
 
@@ -2099,16 +2236,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-  
-
-  <!-- =============================== -->
-  <!--   WAVE DIVIDER WITH CENTERED TEXT   -->
-  <!-- =============================== -->
-  <div class="carousel-divider">
-    <span class="divider-text">Find Your Next Swap Below</span>
-  </div>
-</section>
-
 <!-- ===== LISTINGS GRID ===== -->
 <section class="listings-container">
   <div class="listings-grid">
@@ -2117,6 +2244,7 @@ document.addEventListener('DOMContentLoaded', () => {
         href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
         class="listing-card-link"
         data-listing-id="{{ listing.listing_id }}"
+        data-source="grid"
       >
         <div class="listing-card {% if listing.deal_type == 'Swap Deal' %}swap-card{% else %}sale-card{% endif %}">
 
@@ -2585,45 +2713,61 @@ document.addEventListener("DOMContentLoaded", () => {
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  // Track impressions on carousel items
+  // collect all items we want to track
   const carouselItems = Array.from(document.querySelectorAll('.multi-carousel-item'));
   const gridLinks     = Array.from(document.querySelectorAll('.listing-card-link'));
 
+  const allTrackables = carouselItems.concat(gridLinks);
+
+  // 1) IntersectionObserver for impressions
   const observer = new IntersectionObserver(entries => {
     entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const el   = entry.target;
-        const id   = el.dataset.id;
-        const src  = el.dataset.source || 'grid';
-        fetch('/api/track_impression', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ listing_id: id, source: src })
-        });
-        observer.unobserve(el);
-      }
+      if (!entry.isIntersecting) return;
+      const el  = entry.target;
+      const id  = el.dataset.listingId;   // matches data-listing-id
+      const src = el.dataset.source || 'grid';
+      if (!id) return console.warn('Missing listingId on', el);
+
+      fetch('/api/track_impression', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ listing_id: id, source: src })
+      })
+      .then(r => r.json())
+      .then(j => { if (!j.success) console.error('Impression error', j); })
+      .catch(console.error);
+
+      observer.unobserve(el);
     });
   }, { threshold: 0.2 });
 
-  // Observe both carousel and grid
-  carouselItems.concat(gridLinks).forEach(el => observer.observe(el));
+  allTrackables.forEach(el => observer.observe(el));
 
-  // Track clicks on both
+  // 2) Click handler for both grid & carousel
   function handleClick(e) {
-    const el  = e.currentTarget;
-    const id  = el.dataset.id;
+    // if you clicked a nested element, climb up to the trackable container
+    let el = e.currentTarget;
+    const id  = el.dataset.listingId;
     const src = el.dataset.source || 'grid';
+    if (!id) return console.warn('Missing listingId on click target', el);
+
     fetch('/api/track_click', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ listing_id: id, source: src })
-    });
+    })
+    .then(r => r.json())
+    .then(j => { if (!j.success) console.error('Click error', j); })
+    .catch(console.error);
   }
 
-  carouselItems.concat(gridLinks).forEach(el => {
+  // wire up clicks on the link/button elements themselves
+  const carouselButtons = Array.from(document.querySelectorAll('.multi-carousel-button'));
+  carouselButtons.concat(gridLinks).forEach(el => {
     el.addEventListener('click', handleClick);
   });
 });
+
 </script>
 
 <script>

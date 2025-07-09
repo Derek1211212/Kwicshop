@@ -101,7 +101,7 @@ dbconfig = {
 
 cnxpool = pooling.MySQLConnectionPool(
     pool_name="mypool",
-    pool_size=20,
+    pool_size=32,
     **dbconfig
 )
 
@@ -208,27 +208,7 @@ scheduler.start()
 
 
 
-@cache.cached(timeout=3600, key_prefix='top_categories')
-def get_categories():
-    conn = get_db_connection()
-    cur  = conn.cursor(dictionary=True)
-    cur.execute("""
-        SELECT category, COUNT(*) AS cnt 
-          FROM listings 
-         GROUP BY category 
-         ORDER BY cnt DESC 
-         LIMIT 6
-    """)
-    cats = []
-    for r in cur.fetchall():
-        slug = r['category'].lower().replace(' ', '-')
-        cats.append({
-            'name': r['category'],
-            'icon_url': f"https://api.iconify.design/mdi:{slug}.svg"
-        })
-    cur.close()
-    conn.close()
-    return cats
+
 
 # 3) The home route
 @app.route('/')
@@ -245,8 +225,7 @@ def home():
     user_logged_in  = 'user_id' in session
     user_subscribed = False
 
-    # Preload categories
-    categories = get_categories()
+
 
     carousel_listings = []
     listings          = []
@@ -450,7 +429,6 @@ def home():
         carousel_listings=carousel_listings,
         listings=listings,
         featured_listing=featured,
-        categories=categories,
         search=search,
         selected_category=selected_category,
         deal_type_filter=deal_type_filter,
@@ -1076,24 +1054,24 @@ def check_login():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
+    conn    = None
+    cursor  = None
     try:
-        user_id = session.get('user_id')
-        logger.debug(f"Current user_id: {user_id}")
+        # 1) Open DB
+        conn   = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
 
-        # Get current user info
-        cursor.execute("SELECT id, username, email FROM users WHERE id = %s", (user_id,))
+        # 2) Current user
+        user_id = session.get('user_id')
+        cursor.execute("SELECT id, username, email, created_at FROM users WHERE id = %s", (user_id,))
         user = cursor.fetchone()
         if not user:
-            logger.error("User not found")
-            return "User not found.", 404
+            abort(404, "User not found")
 
-        # Get user listings
+        # 3) Fetch listings + impressions, clicks, proposal_count
         cursor.execute("""
             SELECT 
-                l.*, 
+                l.*,
                 IFNULL(m.impressions, 0) AS impressions,
                 IFNULL(m.clicks, 0) AS clicks,
                 (SELECT COUNT(*) FROM proposals p WHERE p.listing_id = l.listing_id) AS proposal_count
@@ -1103,55 +1081,84 @@ def dashboard():
         """, (user_id,))
         listings = cursor.fetchall()
 
-        # Deduplicate by listing_id (optional safety)
-        listings = list({listing['listing_id']: listing for listing in listings}.values())
+        # Dedupe (just in case)
+        listings = list({l['listing_id']: l for l in listings}.values())
 
-        logger.debug(f"Listings found: {len(listings)}")
-
-        # Fetch offered items for each listing
-        for listing in listings:
-            if listing['deal_type'] == 'Swap Deal':
+        # 4) Fetch offered items for swap deals
+        for l in listings:
+            if l['deal_type'] == 'Swap Deal':
                 cursor.execute("""
-                    SELECT 
-                        listing_id, title, description, `condition`,
-                        image1, image2, image3, image4
+                    SELECT listing_id, title, description, `condition`, image1, image2, image3, image4
                     FROM offered_items
                     WHERE listing_id = %s
-                """, (listing['listing_id'],))
-                listing['offered_items'] = cursor.fetchall()
-                logger.debug(f"Offered items for listing {listing['listing_id']}: {listing['offered_items']}")
+                """, (l['listing_id'],))
+                l['offered_items'] = cursor.fetchall()
             else:
-                listing['offered_items'] = []
+                l['offered_items'] = []
 
-        # Get proposals
+        # 5) Bulk‑fetch wishlist counts
+        listing_ids = [l['listing_id'] for l in listings]
+        if listing_ids:
+            ph = ','.join(['%s'] * len(listing_ids))
+            cursor.execute(
+                f"SELECT listing_id, COUNT(*) AS cnt FROM wishlists WHERE listing_id IN ({ph}) GROUP BY listing_id",
+                tuple(listing_ids)
+            )
+            wl_counts = {r['listing_id']: r['cnt'] for r in cursor.fetchall()}
+        else:
+            wl_counts = {}
+
+        # 6) Compute days_active & attach wishlist_count
+        today = datetime.utcnow().date()
+        for l in listings:
+            # wishlist
+            l['wishlist_count'] = wl_counts.get(l['listing_id'], 0)
+            # days active
+            created = l.get('created_at')
+            if created:
+                created_date = created.date() if hasattr(created, 'date') else created
+                l['days_active'] = (today - created_date).days
+            else:
+                l['days_active'] = 0
+
+        # 7) Fetch proposals for the dashboard
         cursor.execute("""
             SELECT p.*, l.title AS listing_title, u.username AS sender_username, u.contact AS sender_contact
             FROM proposals p
-            JOIN listings l ON p.listing_id = l.listing_id 
+            JOIN listings l ON p.listing_id = l.listing_id
             JOIN users u ON p.user_id = u.id
             WHERE l.user_id = %s
         """, (user_id,))
         proposals = cursor.fetchall()
 
-        unique_titles = list({proposal['listing_title'] for proposal in proposals})
+        unique_titles = list({p['listing_title'] for p in proposals})
 
+        # 8) Promotion plan prices (for sidebar or modal)
         plan_prices = {
             'Diamond': 100,
-            'Gold': 70,
-            'Silver': 40,
-            'Bronze': 20
+            'Gold':     70,
+            'Silver':   40,
+            'Bronze':   20
         }
 
-        return render_template('dashboard.html',
-                               user=user,
-                               listings=listings,
-                               proposals=proposals,
-                               unique_titles=unique_titles,
-                               plan_prices=plan_prices)
+        # 9) Render
+        return render_template(
+            'dashboard.html',
+            user=user,
+            listings=listings,
+            proposals=proposals,
+            unique_titles=unique_titles,
+            plan_prices=plan_prices
+        )
 
+    except Exception as e:
+        app.logger.error("Error in /dashboard: %s", e, exc_info=True)
+        abort(500, "Server error")
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 
@@ -1174,10 +1181,13 @@ def delete_listing(listing_id):
 
 
 
+from threading import Thread
+import time
+from pywebpush import webpush, WebPushException
+
 @app.route('/proposals/<int:proposal_id>', methods=['PUT'])
 @login_required
 def update_proposal(proposal_id):
-    # 1) Validate status
     status = request.json.get('status', '').lower()
     if status not in ('accepted', 'declined', 'negotiated'):
         return jsonify({'error': 'Invalid status'}), 400
@@ -1185,8 +1195,12 @@ def update_proposal(proposal_id):
     actor_id = session['user_id']
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
+
+    fetch_time = update_time = log_time = 0.0
+
     try:
-        # 2) Fetch proposer, owner, listing
+        # 1) Fetch + auth
+        start = time.time()
         cursor.execute("""
             SELECT
               p.user_id   AS proposer_id,
@@ -1198,29 +1212,30 @@ def update_proposal(proposal_id):
             WHERE p.id = %s
         """, (proposal_id,))
         row = cursor.fetchone()
+        fetch_time = time.time() - start
+
         if not row:
             return jsonify({'error': 'Proposal not found'}), 404
+        if row['owner_id'] != actor_id:
+            return jsonify({'error': 'Not authorized'}), 403
 
         proposer_id   = row['proposer_id']
-        owner_id      = row['owner_id']
         listing_id    = row['listing_id']
         listing_title = row['listing_title']
 
-        # 3) Authorization
-        if owner_id != actor_id:
-            return jsonify({'error': 'Not authorized'}), 403
+        # 2) Update status
+        start = time.time()
+        cursor.execute(
+            "UPDATE proposals SET status = %s WHERE id = %s",
+            (status, proposal_id)
+        )
+        conn.commit()
+        update_time = time.time() - start
 
-        # 4) Update status
-        cursor.execute("""
-            UPDATE proposals
-               SET status = %s
-             WHERE id = %s
-        """, (status, proposal_id))
         if cursor.rowcount == 0:
             return jsonify({'error': 'Update failed'}), 500
-        conn.commit()
 
-        # 5) Determine alert_type & push text
+        # 3) Build notification payload
         if status == 'accepted':
             alert_type = 'proposal_accepted'
             title = "Proposal Accepted"
@@ -1234,35 +1249,84 @@ def update_proposal(proposal_id):
             title = "Proposal Negotiated"
             body  = f"Your proposal for “{listing_title}” is up for negotiation."
 
-        # 6) Always log in notification_log (for offline/in-app notifications)
+        # 4) Log notification
+        start = time.time()
         cursor.execute("""
             INSERT INTO notification_log (listing_id, user_id, alert_type)
             VALUES (%s, %s, %s)
         """, (listing_id, proposer_id, alert_type))
         conn.commit()
+        log_time = time.time() - start
 
-        # 7) Fire off a push if possible
-        push_error = None
-        try:
-            send_push(
-                proposer_id,
-                title,
-                body,
-                url_for('listing_details', listing_id=listing_id)
-            )
-        except Exception as e:
-            push_error = str(e)
-            app.logger.error("Push error: %s", e)
+        # 5) Load push subscriptions
+        cursor.execute("""
+            SELECT endpoint, p256dh, auth
+            FROM push_subscriptions
+            WHERE user_id = %s
+        """, (proposer_id,))
+        subscriptions = cursor.fetchall()
 
-        # 8) Return success + reload flag
-        resp = {'success': True, 'reload': True}
-        if push_error:
-            resp['push_error'] = push_error
-        return jsonify(resp), 200
+    except Exception as e:
+        conn.rollback()
+        app.logger.error("DB error in update_proposal: %s", e)
+        return jsonify({'error': 'Server error'}), 500
 
     finally:
         cursor.close()
         conn.close()
+
+    # 6) Compute link once
+    link = url_for('listing_details', listing_id=listing_id, _external=True)
+
+    # 7) Background push worker
+    def _push_worker(subs, title, body, link):
+        key    = app.config['VAPID_PRIVATE_KEY']
+        claims = app.config['VAPID_CLAIMS']
+        with app.app_context():
+            for sub in subs:
+                payload = {
+                    "notification": {
+                        "title": title,
+                        "body":  body,
+                        "data":  { "url": "/my-proposals", "type": "proposal" }
+                    }
+                }
+                try:
+                    webpush(
+                        subscription_info={
+                            "endpoint": sub['endpoint'],
+                            "keys": {
+                                "p256dh": sub['p256dh'],
+                                "auth":   sub['auth']
+                            }
+                        },
+                        data=json.dumps(payload),
+                        vapid_private_key=key,
+                        vapid_claims=claims
+                    )
+                except WebPushException as wp_err:
+                    app.logger.error("WebPushError for %s: %s", sub['endpoint'], wp_err)
+                except Exception as e:
+                    app.logger.error("Async push error: %s", e)
+
+    # 8) Spawn thread (no DB here)
+    start = time.time()
+    Thread(
+        target=_push_worker,
+        args=(subscriptions, title, body, link),
+        daemon=True
+    ).start()
+    push_spawn_time = time.time() - start
+
+    # 9) Log timings
+    app.logger.info(
+        f"Fetch: {fetch_time:.3f}s, "
+        f"Update: {update_time:.3f}s, "
+        f"Log: {log_time:.3f}s, "
+        f"PushSpawn: {push_spawn_time:.3f}s"
+    )
+
+    return jsonify({'success': True, 'reload': True}), 200
 
 
 
@@ -1336,12 +1400,12 @@ def edit_listing(listing_id):
     cursor = conn.cursor(dictionary=True)
     
     try:
-        # Fetch the listing, including images, to determine deal_type and verify ownership
+        # Fetch the listing, including price and images, to determine deal_type and verify ownership
         cursor.execute("""
             SELECT listing_id, user_id, deal_type, title, description, 
                    category, location, contact, desired_swap, 
                    desired_swap_description, required_cash, additional_cash,
-                   image_url, image1, image2, image3
+                   price, image_url, image1, image2, image3
             FROM listings 
             WHERE listing_id = %s AND user_id = %s
         """, (listing_id, session['user_id']))
@@ -1364,9 +1428,6 @@ def edit_listing(listing_id):
             """, (listing_id,))
             offered_items = cursor.fetchall()  # Could return multiple items
         
-        # For Outright Sales, images are now included in the listing dictionary
-        # No additional fetch needed, as data is in the listings table
-        
         return render_template('edit_listing.html', listing=listing, offered_items=offered_items)
     
     finally:
@@ -1381,9 +1442,8 @@ def edit_listing(listing_id):
 def update_listing(listing_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    
     try:
-        # Verify ownership and fetch deal_type
+        # 1) Verify ownership + deal_type
         cursor.execute(
             "SELECT user_id, deal_type FROM listings WHERE listing_id = %s",
             (listing_id,)
@@ -1392,95 +1452,181 @@ def update_listing(listing_id):
         if not row or row['user_id'] != session['user_id']:
             flash('You do not have permission to edit this listing', 'danger')
             return redirect(url_for('dashboard'))
-
         deal_type = row['deal_type']
 
-        # Common fields
-        title = request.form.get('title')
-        description = request.form.get('description')
-        category = request.form.get('category')
-        location = request.form.get('location')
-        contact = request.form.get('contact')
+        # 2) Fetch entire existing listings row
+        cursor.execute("SELECT * FROM listings WHERE listing_id = %s", (listing_id,))
+        existing = cursor.fetchone()
 
-        # Update listings table
+        # 3) Field‐fallback helper
+        def getf(name):
+            v = request.form.get(name)
+            if v is None or v.strip() == '':
+                return existing[name]
+            return v.strip()
+
+        title       = getf('title')
+        description = getf('description')
+        category    = getf('category')
+        location    = getf('location')
+        contact     = getf('contact')
+
         if deal_type == 'Swap Deal':
-            desired_swap = request.form.get('desired_swap')
-            desired_swap_description = request.form.get('desired_swap_description')
-            required_cash = request.form.get('required_cash') or None
-            additional_cash = request.form.get('additional_cash') or None
-            
-            cursor.execute("""
+            desired_swap             = getf('desired_swap')
+            desired_swap_description = getf('desired_swap_description')
+            required_cash            = request.form.get('required_cash') or existing['required_cash']
+            additional_cash          = request.form.get('additional_cash') or existing['additional_cash']
+        else:
+            condition_sales = getf('condition')
+            price           = getf('price')
+
+        # 4) Handle Outright images (always preserve old if no new upload)
+        upload_dir = os.path.join(app.root_path, 'static', 'images')
+        os.makedirs(upload_dir, exist_ok=True)
+
+        form_to_db = [
+            ('image',  'image_url'),
+            ('image1', 'image1'),
+            ('image2', 'image2'),
+            ('image3', 'image3'),
+            ('image4', 'image4'),
+        ]
+        images_to_save = {}
+        for form_field, db_col in form_to_db:
+            file = request.files.get(form_field)
+            if file and allowed_file(file.filename):
+                fname = secure_filename(file.filename)
+                uniq  = f"{uuid.uuid4().hex}_{fname}"
+                file.save(os.path.join(upload_dir, uniq))
+                images_to_save[db_col] = uniq
+            else:
+                images_to_save[db_col] = existing[db_col]
+
+        # 5) Update listings table
+        if deal_type == 'Swap Deal':
+            sql = """
                 UPDATE listings
-                SET title=%s, description=%s, category=%s, location=%s, contact=%s,
-                    desired_swap=%s, desired_swap_description=%s, required_cash=%s, additional_cash=%s
-                WHERE listing_id=%s
-            """, (title, description, category, location, contact, 
-                  desired_swap, desired_swap_description, required_cash, additional_cash, listing_id))
-            
-            # Handle offered items
-            offered_items_count = min(int(request.form.get('offered_items_count', 0)), 2)
-            cursor.execute("DELETE FROM offered_items WHERE listing_id = %s", (listing_id,))  # Clear existing items
-            
-            upload_dir = os.path.join(app.root_path, 'static', 'images')
-            os.makedirs(upload_dir, exist_ok=True)
-            
-            for i in range(1, offered_items_count + 1):
-                offered_title = request.form.get(f'offered_title_{i}')
-                offered_description = request.form.get(f'offered_description_{i}')
-                offered_condition = request.form.get(f'offered_condition_{i}')
-                offered_images = [None] * 4
-                
+                SET
+                  title=%s,
+                  description=%s,
+                  category=%s,
+                  location=%s,
+                  contact=%s,
+                  desired_swap=%s,
+                  desired_swap_description=%s,
+                  required_cash=%s,
+                  additional_cash=%s
+                WHERE listing_id = %s
+            """
+            params = [
+                title, description, category, location, contact,
+                desired_swap, desired_swap_description,
+                required_cash, additional_cash,
+                listing_id
+            ]
+        else:
+            sql = """
+                UPDATE listings
+                SET
+                  title=%s,
+                  description=%s,
+                  category=%s,
+                  location=%s,
+                  contact=%s,
+                  `condition`=%s,
+                  price=%s,
+                  image_url=%s,
+                  image1=%s,
+                  image2=%s,
+                  image3=%s,
+                  image4=%s
+                WHERE listing_id = %s
+            """
+            params = [
+                title, description, category, location, contact,
+                condition_sales, price,
+                images_to_save['image_url'],
+                images_to_save['image1'],
+                images_to_save['image2'],
+                images_to_save['image3'],
+                images_to_save['image4'],
+                listing_id
+            ]
+
+        cursor.execute(sql, params)
+
+        # 6) Swap-Deal: preserve offered_items images
+        if deal_type == 'Swap Deal':
+            # a) Fetch existing offered_items fields only (no 'id')
+            cursor.execute("""
+                SELECT
+                  title   AS existing_title,
+                  description AS existing_description,
+                  `condition` AS existing_condition,
+                  image1  AS existing_image1,
+                  image2  AS existing_image2,
+                  image3  AS existing_image3,
+                  image4  AS existing_image4
+                FROM offered_items
+                WHERE listing_id = %s
+            """, (listing_id,))
+            old_items = cursor.fetchall()
+
+            # b) Delete old rows
+            cursor.execute("DELETE FROM offered_items WHERE listing_id = %s", (listing_id,))
+
+            # c) Re-insert up to requested count, falling back to old
+            requested = min(int(request.form.get('offered_items_count', 0)), 2)
+            for idx in range(requested):
+                slot = idx + 1
+                old = old_items[idx] if idx < len(old_items) else {}
+
+                otitle = request.form.get(f'offered_title_{slot}') or old.get('existing_title')
+                if not otitle:
+                    continue  # never insert a NULL title
+
+                odesc = request.form.get(f'offered_description_{slot}') or old.get('existing_description', '')
+                ocond = request.form.get(f'offered_condition_{slot}')   or old.get('existing_condition', '')
+
+                oimgs = []
                 for j in range(1, 5):
-                    file = request.files.get(f'offered_image_{i}_{j}')
+                    key = f'offered_image_{slot}_{j}'
+                    file = request.files.get(key)
                     if file and allowed_file(file.filename):
-                        filename = secure_filename(file.filename)
-                        unique_name = f"{uuid.uuid4().hex}_{filename}"
-                        file.save(os.path.join(upload_dir, unique_name))
-                        offered_images[j-1] = unique_name
-                
+                        fname = secure_filename(file.filename)
+                        uniq  = f"{uuid.uuid4().hex}_{fname}"
+                        file.save(os.path.join(upload_dir, uniq))
+                        oimgs.append(uniq)
+                    else:
+                        oimgs.append(old.get(f'existing_image{j}'))
+
                 cursor.execute("""
-                    INSERT INTO offered_items (listing_id, title, description, `condition`, image1, image2, image3, image4)
+                    INSERT INTO offered_items
+                      (listing_id, title, description, `condition`, image1, image2, image3, image4)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                """, (listing_id, offered_title, offered_description, offered_condition, 
-                      offered_images[0], offered_images[1], offered_images[2], offered_images[3]))
-        
-        else:  # Outright Sales
-            condition = request.form.get('condition')
-            price = request.form.get('price')
-            upload_dir = os.path.join(app.root_path, 'static', 'images')
-            os.makedirs(upload_dir, exist_ok=True)
-            
-            image_fields = ['image_url', 'image1', 'image2', 'image3', 'image4']
-            images = [None] * 5
-            for idx, field in enumerate(image_fields):
-                file = request.files.get(field if idx > 0 else 'image')
-                if file and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
-                    unique_name = f"{uuid.uuid4().hex}_{filename}"
-                    file.save(os.path.join(upload_dir, unique_name))
-                    images[idx] = unique_name
-            
-            cursor.execute("""
-                UPDATE listings
-                SET title=%s, description=%s, category=%s, location=%s, contact=%s,
-                    `condition`=%s, price=%s, image_url=%s, image1=%s, image2=%s, image3=%s, image4=%s
-                WHERE listing_id=%s
-            """, (title, description, category, location, contact, condition, price, 
-                  images[0], images[1], images[2], images[3], images[4], listing_id))
-        
+                """, (
+                    listing_id,
+                    otitle,
+                    odesc,
+                    ocond,
+                    oimgs[0], oimgs[1], oimgs[2], oimgs[3]
+                ))
+
+        # 7) Commit & redirect
         conn.commit()
         flash('Listing updated successfully!', 'success')
         return redirect(url_for('dashboard'))
-    
+
     except Exception as e:
         conn.rollback()
-        app.logger.error(f"Error updating listing: {e}")
-        flash('An error occurred while updating your listing', 'danger')
+        app.logger.error(f"[UPDATE-LISTING] Error updating listing #{listing_id}: {e}", exc_info=True)
+        flash(f'An error occurred while updating your listing: {e}', 'danger')
         return redirect(url_for('edit_listing', listing_id=listing_id))
-    
+
     finally:
         cursor.close()
         conn.close()
+
 
 
 

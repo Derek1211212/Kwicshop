@@ -6,69 +6,120 @@
     <title>Edit Product Listing</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #2a9d8f;
-            --primary-hover: #248b7e;
-            --primary-light: #e6f4f1;
-            --secondary: #264653;
-            --secondary-hover: #1e3b4a;
-            --accent: #e63946;
-            --accent-hover: #d62839;
-            --light-bg: #f8f9fa;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-light: #dbeafe;
+            --secondary: #1e293b;
+            --secondary-hover: #0f172a;
+            --accent: #dc2626;
+            --accent-hover: #b91c1c;
+            --success: #16a34a;
+            --warning: #ea580c;
+            --light-bg: #f8fafc;
             --card-bg: #ffffff;
-            --border-color: #e0e0e0;
-            --border-radius: 12px;
-            --btn-radius: 8px;
+            --border-color: #e2e8f0;
+            --border-radius: 10px;
+            --btn-radius: 6px;
             --transition: all 0.2s ease;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            --shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.12);
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 6px 12px rgba(0, 0, 0, 0.08);
+            --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
         }
 
         body {
             background-color: var(--light-bg);
-            padding-bottom: 3rem;
+            padding: 1rem 0 3rem;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            color: #333;
+            color: #334155;
+            -webkit-tap-highlight-color: transparent;
+            line-height: 1.6;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--secondary);
+            margin: 0;
         }
 
         .edit-container {
             max-width: 1000px;
-            margin: 2rem auto;
-            padding: 1.5rem;
+            margin: 0 auto;
             background: var(--card-bg);
             border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            transition: var(--transition);
+            box-shadow: var(--shadow-card);
+            overflow: hidden;
         }
 
         .card {
             border: none;
-            border-radius: var(--border-radius);
+            border-radius: 0;
             background: var(--card-bg);
         }
 
         .card-header {
-            background-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary), #1e40af);
             color: #fff;
-            padding: 1.25rem 1.5rem;
-            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            padding: 1.5rem 2rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .card-title {
-            font-size: 1.75rem;
+            font-size: 1.5rem;
             font-weight: 700;
             margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card-title i {
+            font-size: 1.25rem;
         }
 
         .card-body {
             padding: 2rem;
         }
 
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--primary-light);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-title i {
+            color: var(--primary);
+        }
+
         .form-label {
             font-weight: 600;
             color: var(--secondary);
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
         }
 
         .form-label.required::after {
@@ -78,19 +129,24 @@
         }
 
         .form-control, .form-select {
-            border-radius: var(--border-radius);
+            border-radius: var(--btn-radius);
             border: 1px solid var(--border-color);
-            padding: 12px 16px;
-            font-size: 1rem;
+            padding: 10px 14px;
+            font-size: 0.95rem;
             transition: var(--transition);
+            background-color: #fff;
         }
 
         .form-control:focus, .form-select:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.25);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
         }
 
-        /* Image Gallery Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        /* Improved Image Gallery Styles */
         .image-gallery-section {
             margin-bottom: 2.5rem;
         }
@@ -116,8 +172,8 @@
             height: 160px;
             background: var(--light-bg);
             border: 2px solid var(--border-color);
-            cursor: move;
             transition: var(--transition);
+            touch-action: manipulation;
         }
 
         .gallery-item img {
@@ -133,7 +189,7 @@
         }
 
         .gallery-item:hover img {
-            transform: scale(1.05);
+            transform: scale(1.03);
         }
 
         .gallery-item.active {
@@ -145,14 +201,16 @@
             position: absolute;
             top: 8px;
             left: 8px;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(30, 41, 59, 0.85);
             color: #fff;
             padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.85rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
             font-weight: 500;
+            z-index: 2;
         }
 
+        /* Action Buttons */
         .item-actions {
             position: absolute;
             bottom: 0;
@@ -161,14 +219,16 @@
             display: flex;
             justify-content: center;
             gap: 10px;
-            padding: 10px;
+            padding: 8px;
             background: rgba(0, 0, 0, 0.7);
-            transform: translateY(100%);
+            transform: translateY(0);
+            opacity: 0;
             transition: var(--transition);
+            z-index: 2;
         }
 
         .gallery-item.show-actions .item-actions {
-            transform: translateY(0);
+            opacity: 1;
         }
 
         .btn-action {
@@ -178,19 +238,28 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 255, 255, 0.3);
-            color: #fff;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--secondary);
             border: none;
             transition: var(--transition);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            font-size: 0.9rem;
         }
 
         .btn-action:hover {
             background: var(--primary);
+            color: white;
             transform: scale(1.1);
         }
 
+        .btn-remove {
+            background: rgba(220, 38, 38, 0.9);
+            color: white;
+        }
+
         .btn-remove:hover {
-            background: var(--accent);
+            background: var(--accent-hover);
         }
 
         .btn-action input[type="file"] {
@@ -203,83 +272,105 @@
             cursor: pointer;
         }
 
-        .preview-container {
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
+        /* Mobile Action Sheet */
+        .mobile-action-sheet {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
             padding: 1rem;
-            background: var(--light-bg);
-            height: 400px;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 10000; /* Increased z-index */
+        }
+
+        .mobile-action-sheet.show {
+            display: block !important; /* Force display */
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .action-sheet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .action-sheet-title {
+            font-weight: 600;
+            color: var(--secondary);
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .action-sheet-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #64748b;
+        }
+
+        .action-sheet-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .action-sheet-btn {
+            padding: 1rem;
+            border-radius: var(--btn-radius);
+            background: white;
+            border: 1px solid var(--border-color);
+            text-align: left;
+            font-weight: 500;
+            transition: var(--transition);
             display: flex;
             align-items: center;
-            justify-content: center;
-            margin-bottom: 1.5rem;
-            box-shadow: var(--shadow);
         }
 
-        .preview-image {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-
-        .preview-placeholder {
-            color: #6c757d;
+        .action-sheet-btn i {
+            margin-right: 0.75rem;
+            color: var(--primary);
+            width: 20px;
             text-align: center;
-            padding: 2rem;
         }
 
-        .preview-placeholder i {
-            font-size: 3.5rem;
-            color: #dee2e6;
-            margin-bottom: 1rem;
+        .action-sheet-btn.remove {
+            color: var(--accent);
         }
 
-        .upload-area {
-            border: 2px dashed var(--border-color);
-            border-radius: var(--border-radius);
-            padding: 2rem;
-            text-align: center;
-            background: #fff;
-            transition: var(--transition);
-            cursor: pointer;
+        .action-sheet-btn.remove i {
+            color: var(--accent);
         }
 
-        .upload-area:hover {
-            border-color: var(--primary);
+        .action-sheet-btn:hover {
             background: var(--primary-light);
         }
 
-        .upload-area i {
-            font-size: 2.5rem;
-            color: var(--primary);
-            margin-bottom: 0.75rem;
-        }
-
-        .upload-text {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--secondary);
-        }
-
-        .upload-subtext {
-            font-size: 0.9rem;
-            color: #6c757d;
-        }
-
-        .d-none {
-            display: none;
+        .action-sheet-btn.remove:hover {
+            background: rgba(220, 38, 38, 0.05);
         }
 
         /* Button Styles */
         .btn {
-            padding: 12px 24px;
-            font-size: 1rem;
+            padding: 10px 20px;
+            font-size: 0.95rem;
             font-weight: 600;
             border-radius: var(--btn-radius);
             transition: var(--transition);
-            min-height: 48px;
+            min-height: 42px;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
         }
 
@@ -292,7 +383,6 @@
         .btn-primary:hover {
             background-color: var(--primary-hover);
             box-shadow: var(--shadow-hover);
-            transform: translateY(-2px);
         }
 
         .btn-outline-secondary {
@@ -302,8 +392,9 @@
         }
 
         .btn-outline-secondary:hover {
-            background: #f1f3f5;
+            background: #f1f5f9;
             border-color: var(--primary);
+            color: var(--primary);
         }
 
         .btn-delete {
@@ -315,15 +406,19 @@
         .btn-delete:hover {
             background-color: var(--accent-hover);
             box-shadow: var(--shadow-hover);
-            transform: translateY(-2px);
         }
 
         /* Cash Sections */
         .cash-section {
             padding: 1.5rem;
             margin: 2rem 0;
-            background: #fff;
+            background: var(--light-bg);
             border-radius: var(--border-radius);
+            border-left: 4px solid transparent;
+            transition: var(--transition);
+        }
+
+        .cash-section:hover {
             box-shadow: var(--shadow);
         }
 
@@ -337,14 +432,40 @@
 
         .cash-header {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
 
         .cash-icon {
-            font-size: 2rem;
+            font-size: 1.5rem;
             color: var(--secondary);
+            background: var(--primary-light);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .cash-section.required .cash-icon {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--accent);
+        }
+
+        .cash-content h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0 0 0.5rem 0;
+            color: var(--secondary);
+        }
+
+        .cash-explanation {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin: 0;
         }
 
         .currency-input {
@@ -353,35 +474,77 @@
 
         .currency-symbol {
             position: absolute;
-            left: 15px;
+            left: 14px;
             top: 50%;
             transform: translateY(-50%);
-            color: #666;
-            font-weight: bold;
+            color: #475569;
+            font-weight: 600;
+            font-size: 1rem;
         }
 
         .currency-input input {
             padding-left: 35px;
         }
 
+        /* Form actions */
+        .form-actions {
+            background: #f8fafc;
+            padding: 1.5rem 2rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Status badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .status-badge i {
+            font-size: 0.9rem;
+        }
+
         /* Responsive Adjustments */
         @media (max-width: 768px) {
             .edit-container {
-                padding: 1rem;
+                border-radius: 0;
             }
+            
+            .card-header, .card-body {
+                padding: 1.25rem;
+            }
+            
             .gallery-container {
-                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
                 gap: 12px;
             }
+            
             .gallery-item {
-                height: 120px;
+                height: 140px;
             }
-            .preview-container {
-                height: 300px;
-            }
-            .btn-group-mobile {
+            
+            .form-actions {
                 flex-direction: column;
                 gap: 1rem;
+                align-items: stretch;
+            }
+            
+            .btn-group-mobile {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            
+            .btn {
+                width: 100%;
             }
         }
 
@@ -389,273 +552,425 @@
             .gallery-container {
                 grid-template-columns: repeat(2, 1fr);
             }
-            .preview-container {
-                height: 250px;
+            
+            .cash-header {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .status-badge {
+                align-self: flex-start;
+            }
+            
+            /* Hide item-actions on mobile to use action sheet exclusively */
+            .item-actions {
+                display: none;
             }
         }
 
-        .sortable-ghost {
-            opacity: 0.5;
-            background: var(--light-bg);
+
+
+        /* Helper classes */
+        .text-muted {
+            color: #64748b !important;
         }
+
+        .mb-0 {
+            margin-bottom: 0 !important;
+        }
+
+        .mt-4 {
+            margin-top: 1.5rem !important;
+        }
+
+        .mb-4 {
+            margin-bottom: 1.5rem !important;
+        }
+
+        .flex-1 {
+            flex: 1;
+        }
+
+
+.alert-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+.alert {
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.alert-success {
+    background-color: var(--success);
+    color: #fff;
+}
+
+.alert-danger {
+    background-color: var(--accent);
+    color: #fff;
+}
+
+.alert-dismissible .btn-close {
+    padding: 1rem;
+    background: none;
+}
+
+.alert i {
+    font-size: 1.1rem;
+}
     </style>
 </head>
 <body>
-    <div class="edit-container">
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">Edit Product Listing</h2>
-            </div>
-            <div class="card-body">
-<form method="POST" action="{{ url_for('update_listing', listing_id=listing.listing_id) }}" enctype="multipart/form-data">
-    <!-- Offered Items Section (Only for Swap Deals, Displayed First) -->
-    {% if listing.deal_type == 'Swap Deal' %}
-    <div class="mb-4 image-gallery-section">
-        <div class="gallery-header">
-            <h3 class="form-label required">Items Offered for Swap</h3>
-            <small class="text-muted">Edit details and images for each offered item | Max 2 items</small>
+    <!-- Mobile Action Sheet -->
+    <div class="mobile-action-sheet" id="mobileActionSheet">
+        <div class="action-sheet-header">
+            <h4 class="action-sheet-title" id="actionSheetTitle">Image Options</h4>
+            <button class="action-sheet-close" id="closeActionSheet">×</button>
         </div>
-        <input type="hidden" name="offered_items_count" id="offered_items_count" value="{{ offered_items|length }}">
-        {% for item in offered_items %}
-        <div class="card mb-3 offered-item" data-index="{{ loop.index }}">
-            <div class="card-body">
-                <h4>Item {{ loop.index }}</h4>
-                <!-- Offered Item Images -->
-                <div class="gallery-container" id="offered-gallery-{{ loop.index }}">
-                    {% for i in range(1, 5) %}
-                    <div class="gallery-item" data-index="{{ i }}" data-type="offered">
-                        {% if item['image' ~ i] %}
-                            <img src="{{ url_for('static', filename='images/' + item['image' ~ i]) }}"
-                                 onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
-                                 alt="Offered item {{ loop.index }} image {{ i }}">
-                        {% else %}
-                            <img src="https://via.placeholder.com/300?text=Image+{{ i }}" alt="No image">
-                        {% endif %}
-                        <span class="item-label">Image {{ i }}</span>
-                        <div class="item-actions">
-                            <button type="button" class="btn-action btn-remove" title="Remove image">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                            <label class="btn-action" title="Replace image">
-                                <i class="fas fa-sync"></i>
-                                <input type="file" name="offered_image_{{ loop.index }}_{{ i }}" accept="image/*">
-                            </label>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                <!-- Offered Item Details -->
-                <div class="mb-3">
-                    <label for="offered_title_{{ loop.index }}" class="form-label required">Title</label>
-                    <input type="text" class="form-control" id="offered_title_{{ loop.index }}" name="offered_title_{{ loop.index }}"
-                           value="{{ item.title }}" required>
-                </div>
-                <div class="mb-3">
-                    <label for="offered_description_{{ loop.index }}" class="form-label required">Description</label>
-                    <textarea class="form-control" id="offered_description_{{ loop.index }}" name="offered_description_{{ loop.index }}"
-                              rows="3" required>{{ item.description }}</textarea>
-                </div>
-                <div class="mb-3">
-                    <label for="offered_condition_{{ loop.index }}" class="form-label required">Condition</label>
-                    <select class="form-select" id="offered_condition_{{ loop.index }}" name="offered_condition_{{ loop.index }}" required>
-                        <option value="New" {% if item.condition == 'New' %}selected{% endif %}>New</option>
-                        <option value="Like New" {% if item.condition == 'Like New' %}selected{% endif %}>Like New</option>
-                        <option value="Good" {% if item.condition == 'Good' %}selected{% endif %}>Good</option>
-                        <option value="Fair" {% if item.condition == 'Fair' %}selected{% endif %}>Fair</option>
-                        <option value="Poor" {% if item.condition == 'Poor' %}selected{% endif %}>Poor</option>
-                    </select>
-                </div>
-                {% if loop.index == 2 %}
-                <button type="button" class="btn btn-outline-danger btn-remove-item" title="Remove this item">
-                    <i class="fas fa-trash me-2"></i> Remove Item
-                </button>
-                {% endif %}
-            </div>
-        </div>
-        {% endfor %}
-        {% if offered_items|length < 2 %}
-        <button type="button" class="btn btn-outline-secondary" id="add-offered-item">
-            <i class="fas fa-plus me-2"></i> Add Another Item
-        </button>
-        {% endif %}
-    </div>
-    {% endif %}
-
-    <!-- Swap and Cash Sections (Only for Swap Deals) -->
-    {% if listing.deal_type == 'Swap Deal' %}
-    <div class="mb-4">
-        <h3 class="form-label">Swap Preferences</h3>
-        <div class="mb-3">
-            <label for="desired_swap" class="form-label required">Desired Swap</label>
-            <input type="text" class="form-control" id="desired_swap" name="desired_swap" 
-                   value="{{ listing.desired_swap }}" required>
-        </div>
-        <div class="mb-3">
-            <label for="desired_swap_description" class="form-label">Swap Description</label>
-            <textarea class="form-control" id="desired_swap_description" name="desired_swap_description" 
-                      rows="3">{{ listing.desired_swap_description }}</textarea>
-        </div>
-    </div>
-    <div class="cash-section required">
-        <div class="cash-header">
-            <i class="fas fa-hand-holding-usd cash-icon"></i>
-            <div>
-                <h4>Cash You Require from Buyer</h4>
-                <p class="cash-explanation">This is the cash amount someone needs to add <strong>WITH THEIR ITEM</strong> to get your product.</p>
-            </div>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Additional Cash Required (₵)</label>
-            <div class="currency-input">
-                <span class="currency-symbol">₵</span>
-                <input type="number" class="form-control" id="required_cash" name="required_cash" 
-                       value="{{ listing.required_cash if listing.required_cash is not none }}" step="0.01" min="0">
-            </div>
-            <small class="form-text text-muted">Example: Buyer must add ₵100 with their laptop for your camera.</small>
-        </div>
-    </div>
-    <div class="cash-section offered">
-        <div class="cash-header">
-            <i class="fas fa-money-bill-wave cash-icon"></i>
-            <div>
-                <h4>Cash You're Offering to Add</h4>
-                <p class="cash-explanation">This is the cash amount you're willing to add <strong>WITH YOUR ITEM</strong> to make the swap attractive.</p>
-            </div>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Additional Cash Offer (₵)</label>
-            <div class="currency-input">
-                <span class="currency-symbol">₵</span>
-                <input type="number" class="form-control" id="additional_cash" name="additional_cash" 
-                       value="{{ listing.additional_cash if listing.additional_cash is not none }}" step="0.01" min="0">
-            </div>
-            <small class="form-text text-muted">Example: You'll add ₵50 with your bicycle for a scooter.</small>
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Item Details Section (Only for Outright Sales) -->
-    {% if listing.deal_type == 'Outright Sales' %}
-    <div class="mb-4 image-gallery-section">
-        <div class="gallery-header">
-            <label class="form-label required">Product Images</label>
-            <small class="text-muted">Tap image to edit/remove | Main image first</small>
-        </div>
-        <div class="gallery-container" id="gallery-container">
-            <!-- Main Image -->
-            <div class="gallery-item active" data-index="0" data-type="main">
-                {% if listing.image_url %}
-                    <img src="{{ url_for('static', filename='images/' + listing.image_url) }}"
-                         onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
-                         alt="Main listing image">
-                {% else %}
-                    <img src="https://via.placeholder.com/300?text=Main+Image" alt="No main image">
-                {% endif %}
-                <span class="item-label">Main</span>
-                <div class="item-actions">
-                    <button type="button" class="btn-action btn-remove" title="Remove image">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                    <label class="btn-action" title="Replace image">
-                        <i class="fas fa-sync"></i>
-                        <input type="file" name="image" accept="image/*">
-                    </label>
-                </div>
-            </div>
-            <!-- Additional Images -->
-            {% for i in range(1, 5) %}
-            <div class="gallery-item" data-index="{{ i }}" data-type="additional">
-                {% if listing['image' ~ i] %}
-                    <img src="{{ url_for('static', filename='images/' + listing['image' ~ i]) }}"
-                         onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
-                         alt="Additional image {{ i }}">
-                {% else %}
-                    <img src="https://via.placeholder.com/300?text=Image+{{ i }}" alt="No additional image">
-                {% endif %}
-                <span class="item-label">Image {{ i }}</span>
-                <div class="item-actions">
-                    <button type="button" class="btn-action btn-remove" title="Remove image">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                    <label class="btn-action" title="Replace image">
-                        <i class="fas fa-sync"></i>
-                        <input type="file" name="image{{ i }}" accept="image/*">
-                    </label>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    <div class="mb-4">
-        <h3 class="form-label">Item Details</h3>
-        <div class="mb-3">
-            <label for="title" class="form-label required">Title</label>
-            <input type="text" class="form-control" id="title" name="title" value="{{ listing.title }}" required>
-        </div>
-        <div class="mb-3">
-            <label for="description" class="form-label required">Description</label>
-            <textarea class="form-control" id="description" name="description" rows="4" required>{{ listing.description }}</textarea>
-        </div>
-        <div class="mb-3">
-            <label for="condition" class="form-label required">Condition</label>
-            <select class="form-select" id="condition" name="condition" required>
-                <option value="New" {% if listing.condition == 'New' %}selected{% endif %}>New</option>
-                <option value="Like New" {% if listing.condition == 'Like New' %}selected{% endif %}>Like New</option>
-                <option value="Good" {% if listing.condition == 'Good' %}selected{% endif %}>Good</option>
-                <option value="Fair" {% if listing.condition == 'Fair' %}selected{% endif %}>Fair</option>
-                <option value="Poor" {% if listing.condition == 'Poor' %}selected{% endif %}>Poor</option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label for="price" class="form-label required">Price (₵)</label>
-            <div class="currency-input">
-                <span class="currency-symbol">₵</span>
-                <input type="number" class="form-control" id="price" name="price" 
-                       value="{{ listing.price }}" step="0.01" min="0" required>
-            </div>
-            <small class="form-text text-muted">Enter the outright sale price for this item.</small>
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- General Information (Category, Location, Contact) -->
-    <div class="mb-4">
-        <h3 class="form-label">General Information</h3>
-        <div class="mb-3">
-            <label class="form-label required">Category</label>
-            <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-box"></i></span>
-                <input id="category-input" name="category" type="text" class="form-control" 
-                       placeholder="Start typing to search categories…" autocomplete="off" 
-                       required value="{{ listing.category }}">
-            </div>
-            <ul id="category-suggestions" class="list-group" style="display: none;"></ul>
-        </div>
-        <div class="mb-3">
-            <label for="location" class="form-label required">Location</label>
-            <input type="text" class="form-control" id="location" name="location" value="{{ listing.location }}" required>
-        </div>
-        <div class="mb-3">
-            <label for="contact" class="form-label required">Contact Information</label>
-            <input type="text" class="form-control" id="contact" name="contact" value="{{ listing.contact }}" required>
-        </div>
-    </div>
-
-    <!-- Form Actions -->
-    <div class="d-flex justify-content-between align-items-center mt-5 btn-group-mobile">
-        <button type="button" class="btn btn-delete" data-bs-toggle="modal" data-bs-target="#deleteModal">
-            <i class="fas fa-trash-alt me-2"></i> Delete Listing
-        </button>
-        <div class="d-flex gap-3 btn-group-mobile">
-            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-times me-2"></i> Cancel
-            </a>
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save me-2"></i> Save Changes
+        <div class="action-sheet-buttons">
+            <label class="action-sheet-btn" id="replaceImageLabel" for="">
+                <i class="fas fa-sync"></i> Replace Image
+            </label>
+            <button class="action-sheet-btn remove" id="removeImageBtn">
+                <i class="fas fa-trash"></i> Remove Image
             </button>
         </div>
     </div>
-</form>
+
+<div class="header-container">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="alert-container mb-3">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show" role="alert">
+                        <i class="fas {{ 'fa-exclamation-triangle' if category == 'danger' else 'fa-check-circle' }} me-2"></i>
+                        {{ message | safe }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+
+    <div class="edit-container">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-edit"></i> Edit Listing Details</h2>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('update_listing', listing_id=listing.listing_id) }}" enctype="multipart/form-data">
+                    <!-- Offered Items Section (Only for Swap Deals, Displayed First) -->
+                    {% if listing.deal_type == 'Swap Deal' %}
+                    <div class="mb-4 image-gallery-section">
+                        <div class="gallery-header">
+                            <h3 class="section-title"><i class="fas fa-exchange-alt"></i> Items Offered for Swap</h3>
+                            <small class="text-muted">Edit details and images for each offered item | Max 2 items</small>
+                        </div>
+                        <input type="hidden" name="offered_items_count" id="offered_items_count" value="{{ offered_items|length }}">
+                        {% for item in offered_items %}
+                        {% set item_index = loop.index %}
+                        <div class="card mb-3 offered-item" data-index="{{ item_index }}">
+                            <div class="card-body">
+                                <input type="hidden" name="item_id_{{ item_index }}" value="{{ item.item_id }}">
+                                <h4 class="d-flex align-items-center gap-2">
+                                    <span>Item {{ item_index }}</span>
+                                    {% if item_index == 1 %}
+                                    <span class="badge bg-primary">Primary</span>
+                                    {% endif %}
+                                </h4>
+                                
+                                <!-- Offered Item Images -->
+                                <div class="gallery-container" id="offered-gallery-{{ item_index }}">
+                                    {% for i in range(1, 5) %}
+                                    <div class="gallery-item" data-index="{{ i }}" data-type="offered">
+                                        {% if item['image' ~ i] %}
+                                            <img src="{{ url_for('static', filename='images/' + item['image' ~ i]) }}"
+                                                 onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
+                                                 alt="Offered item {{ item_index }} image {{ i }}">
+                                        {% else %}
+                                            <img src="https://via.placeholder.com/300?text=Image+{{ i }}" alt="No image">
+                                        {% endif %}
+                                        <span class="item-label">Image {{ i }}</span>
+                                        <div class="item-actions">
+                                            <button type="button" class="btn-action btn-remove" title="Remove image">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            <label class="btn-action" title="Replace image">
+                                                <i class="fas fa-sync"></i>
+                                                <input type="file" id="file-input-offered-{{ item_index }}-{{ i }}"
+                                                       name="offered_image_{{ item_index }}_{{ i }}"
+                                                       accept="image/*" class="image-upload-input">
+                                            </label>
+                                        </div>
+                                        <input type="hidden" name="remove_image_{{ item_index }}_{{ i }}" class="remove-image-input" value="false">
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                <!-- Offered Item Details -->
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label required">Title</label>
+                                        <input type="text" class="form-control" name="offered_title_{{ item_index }}" value="{{ item.title }}" required>
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label required">Description</label>
+                                        <textarea class="form-control" name="offered_description_{{ item_index }}" rows="3" required>{{ item.description }}</textarea>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label required">Condition</label>
+                                        <select class="form-select" name="offered_condition_{{ item_index }}" required>
+                                            <option value="New" {% if item.condition == 'New' %}selected{% endif %}>New</option>
+                                            <option value="Like New" {% if item.condition == 'Like New' %}selected{% endif %}>Like New</option>
+                                            <option value="Good" {% if item.condition == 'Good' %}selected{% endif %}>Good</option>
+                                            <option value="Fair" {% if item.condition == 'Fair' %}selected{% endif %}>Fair</option>
+                                            <option value="Poor" {% if item.condition == 'Poor' %}selected{% endif %}>Poor</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Original Value (₵)</label>
+                                        <div class="currency-input">
+                                            <span class="currency-symbol">₵</span>
+                                            <input type="number" class="form-control" name="offered_value_{{ item_index }}" value="{{ item.value if item.value is not none }}" step="0.01" min="0">
+                                        </div>
+                                    </div>
+                                    {% if item_index == 2 %}
+                                    <div class="col-12 mt-2">
+                                        <button type="button" class="btn btn-outline-danger btn-remove-item" title="Remove this item">
+                                            <i class="fas fa-trash me-2"></i> Remove Item
+                                        </button>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if offered_items|length < 2 %}
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-outline-secondary" id="add-offered-item">
+                                <i class="fas fa-plus me-2"></i> Add Another Item
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Swap and Cash Sections (Only for Swap Deals) -->
+                    {% if listing.deal_type == 'Swap Deal' %}
+                    <div class="mb-4">
+                        <h3 class="section-title"><i class="fas fa-handshake"></i> Swap Preferences</h3>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="desired_swap" class="form-label required">Desired Swap</label>
+                                <input type="text" class="form-control" id="desired_swap" name="desired_swap" 
+                                       value="{{ listing.desired_swap }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="desired_condition" class="form-label">Preferred Condition</label>
+                                <select class="form-select" id="desired_condition" name="desired_condition">
+                                    <option value="Like New" {% if listing.desired_condition == 'Like New' %}selected{% endif %}>Like New</option>
+                                    <option value="New" {% if listing.desired_condition == 'New' %}selected{% endif %}>New</option>
+                                    <option value="Good" {% if listing.desired_condition == 'Good' %}selected{% endif %}>Good</option>
+                                </select>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="desired_swap_description" class="form-label">Swap Description</label>
+                                <textarea class="form-control" id="desired_swap_description" name="desired_swap_description" 
+                                          rows="3">{{ listing.desired_swap_description }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cash-section required">
+                        <div class="cash-header">
+                            <div class="cash-icon">
+                                <i class="fas fa-hand-holding-usd"></i>
+                            </div>
+                            <div class="cash-content">
+                                <h4>Cash You Require from Buyer</h4>
+                                <p class="cash-explanation mb-0">This is the cash amount someone needs to add <strong>WITH THEIR ITEM</strong> to get your product.</p>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Additional Cash Required (₵)</label>
+                            <div class="currency-input">
+                                <span class="currency-symbol">₵</span>
+                                <input type="number" class="form-control" id="required_cash" name="required_cash" 
+                                       value="{{ listing.required_cash if listing.required_cash is not none }}" step="0.01" min="0">
+                            </div>
+                            <small class="form-text text-muted">Example: Buyer must add ₵100 with their laptop for your camera.</small>
+                        </div>
+                    </div>
+                    <div class="cash-section offered">
+                        <div class="cash-header">
+                            <div class="cash-icon">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <div class="cash-content">
+                                <h4>Cash You're Offering to Add</h4>
+                                <p class="cash-explanation mb-0">This is the cash amount you're willing to add <strong>WITH YOUR ITEM</strong> to make the swap attractive.</p>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Additional Cash Offer (₵)</label>
+                            <div class="currency-input">
+                                <span class="currency-symbol">₵</span>
+                                <input type="number" class="form-control" id="additional_cash" name="additional_cash" 
+                                       value="{{ listing.additional_cash if listing.additional_cash is not none }}" step="0.01" min="0">
+                            </div>
+                            <small class="form-text text-muted">Example: You'll add ₵50 with your bicycle for a scooter.</small>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Item Details Section (Only for Outright Sales) -->
+                    {% if listing.deal_type == 'Outright Sales' %}
+                    <div class="mb-4 image-gallery-section">
+                        <div class="gallery-header">
+                            <h3 class="section-title"><i class="fas fa-images"></i> Product Images</h3>
+                            <small class="text-muted">Tap image to edit/remove | Main image first</small>
+                        </div>
+                        <div class="gallery-container" id="gallery-container">
+                            <!-- Main Image -->
+                            <div class="gallery-item active" data-index="0" data-type="main">
+                                {% if listing.image_url %}
+                                    <img src="{{ url_for('static', filename='images/' + listing.image_url) }}"
+                                         onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
+                                         alt="Main listing image">
+                                {% else %}
+                                    <img src="https://via.placeholder.com/300?text=Main+Image" alt="No main image">
+                                {% endif %}
+                                <span class="item-label">Main</span>
+                                <div class="item-actions">
+                                    <button type="button" class="btn-action btn-remove" title="Remove image">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <label class="btn-action" title="Replace image">
+                                        <i class="fas fa-sync"></i>
+                                        <input type="file" id="file-input-main" name="image" accept="image/*" class="image-upload-input">
+                                    </label>
+                                </div>
+                                <input type="hidden" name="remove_image_0" class="remove-image-input" value="false">
+                            </div>
+                            <!-- Additional Images -->
+                            {% for i in range(1, 5) %}
+                            <div class="gallery-item" data-index="{{ i }}" data-type="additional">
+                                {% if listing['image' ~ i] %}
+                                    <img src="{{ url_for('static', filename='images/' + listing['image' ~ i]) }}"
+                                         onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
+                                         alt="Additional image {{ i }}">
+                                {% else %}
+                                    <img src="https://via.placeholder.com/300?text=Image+{{ i }}" alt="No additional image">
+                                {% endif %}
+                                <span class="item-label">Image {{ i }}</span>
+                                <div class="item-actions">
+                                    <button type="button" class="btn-action btn-remove" title="Remove image">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <label class="btn-action" title="Replace image">
+                                        <i class="fas fa-sync"></i>
+                                        <input type="file" id="file-input-additional-{{ i }}" name="image{{ i }}" accept="image/*" class="image-upload-input">
+                                    </label>
+                                </div>
+                                <input type="hidden" name="remove_image_{{ i }}" class="remove-image-input" value="false">
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-3">
+                            <label class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i> Add More Images
+                                <input type="file" id="bulk-upload" accept="image/*" multiple style="display: none;">
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <h3 class="section-title"><i class="fas fa-info-circle"></i> Item Details</h3>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="title" class="form-label required">Title</label>
+                                <input type="text" class="form-control" id="title" name="title" value="{{ listing.title }}" required>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="description" class="form-label required">Description</label>
+                                <textarea class="form-control" id="description" name="description" rows="4" required>{{ listing.description }}</textarea>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="condition" class="form-label required">Condition</label>
+                                <select class="form-select" id="condition" name="condition" required>
+                                    <option value="New" {% if listing.condition == 'New' %}selected{% endif %}>New</option>
+                                    <option value="Like New" {% if listing.condition == 'Like New' %}selected{% endif %}>Like New</option>
+                                    <option value="Good" {% if listing.condition == 'Good' %}selected{% endif %}>Good</option>
+                                    <option value="Fair" {% if listing.condition == 'Fair' %}selected{% endif %}>Fair</option>
+                                    <option value="Poor" {% if listing.condition == 'Poor' %}selected{% endif %}>Poor</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="price" class="form-label required">Price (₵)</label>
+                                <div class="currency-input">
+                                    <span class="currency-symbol">₵</span>
+                                    <input type="number" class="form-control" id="price" name="price" 
+                                           value="{{ listing.price }}" step="0.01" min="0" required>
+                                </div>
+                                <small class="form-text text-muted">Enter the outright sale price for this item.</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- General Information (Category, Location, Contact) -->
+                    <div class="mb-4">
+                        <h3 class="section-title"><i class="fas fa-cog"></i> General Information</h3>
+                        <div class="mb-3">
+                            <label class="form-label required">Category</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-box"></i></span>
+                                <input id="category-input" name="category" type="text" class="form-control" 
+                                       placeholder="Start typing to search categories…" autocomplete="off" 
+                                       required value="{{ listing.category }}">
+                            </div>
+                            <ul id="category-suggestions" class="list-group" style="display: none;"></ul>
+                        </div>
+                        <div class="mb-3">
+                            <label for="location" class="form-label required">Location</label>
+                            <input type="text" class="form-control" id="location" name="location" value="{{ listing.location }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contact" class="form-label required">Contact Information</label>
+                            <input type="text" class="form-control" id="contact" name="contact" value="{{ listing.contact }}" required>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+
+                            <button type="submit" class="btn btn-primary flex-1">
+                                <i class="fas fa-save me-2"></i> Save Changes
+                            </button>
+
+                        <div class="d-flex gap-2 btn-group-mobile">
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary flex-1">
+                                <i class="fas fa-times me-2"></i> Cancel
+                            </a>
+                        <button type="button" class="btn btn-delete" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            <i class="fas fa-trash-alt me-2"></i> Delete Listing
+                        </button>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -670,6 +985,9 @@
                 </div>
                 <div class="modal-body">
                     <p>Are you sure you want to delete this listing? This action cannot be undone.</p>
+                    <div class="alert alert-danger mt-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i> Deleting this listing will remove it permanently from our platform.
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -681,129 +999,225 @@
         </div>
     </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-<script>
-// Initialize Sortable for main gallery (Outright Sales)
-const gallery = document.getElementById('gallery-container');
-if (gallery) {
-    new Sortable(gallery, { animation: 150, ghostClass: 'sortable-ghost' });
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script>
+
+document.querySelector('form').addEventListener('submit', function(e) {
+    const requiredInputs = this.querySelectorAll('[required]');
+    let missingFields = [];
+    requiredInputs.forEach(input => {
+        if (!input.value.trim()) {
+            missingFields.push(input.name);
+        }
+    });
+    if (missingFields.length) {
+        console.log('Missing required fields:', missingFields);
+        e.preventDefault();
+        alert('Please fill all required fields: ' + missingFields.join(', '));
+    }
+});
+
+// Debounce function to prevent multiple rapid taps
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
 }
 
-// Handle main gallery interactions (Outright Sales)
-function attachMainGalleryListeners() {
-    const items = document.querySelectorAll('#gallery-container .gallery-item');
+// Detect mobile devices
+const isMobile = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+           window.innerWidth <= 576 ||
+           ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+};
+
+// Mobile Action Sheet Handling
+const mobileActionSheet = document.getElementById('mobileActionSheet');
+const closeActionSheet = document.getElementById('closeActionSheet');
+const replaceImageLabel = document.getElementById('replaceImageLabel');
+const removeImageBtn = document.getElementById('removeImageBtn');
+let currentActiveItem = null;
+
+function showMobileActionSheet(item) {
+    console.log('showMobileActionSheet called for item:', item.dataset.index, 'type:', item.dataset.type);
+    console.log('isMobile:', isMobile());
+    currentActiveItem = item;
+    const index = item.dataset.index;
+    const type = item.dataset.type;
+    let fileInputId;
+
+    if (type === 'main') {
+        fileInputId = 'file-input-main';
+    } else if (type === 'additional') {
+        fileInputId = `file-input-additional-${index}`;
+    } else if (type === 'offered') {
+        const offeredIndex = item.closest('.offered-item').dataset.index;
+        fileInputId = `file-input-offered-${offeredIndex}-${index}`;
+    }
+
+    console.log('Setting file input ID:', fileInputId);
+    replaceImageLabel.setAttribute('for', fileInputId);
+    document.getElementById('actionSheetTitle').textContent = `${type === 'main' ? 'Main' : `Image ${index}`} Options`;
+    mobileActionSheet.classList.add('show');
+    console.log('Action sheet display:', getComputedStyle(mobileActionSheet).display);
+}
+
+function hideMobileActionSheet() {
+    mobileActionSheet.classList.remove('show');
+    currentActiveItem = null;
+}
+
+closeActionSheet.addEventListener('click', hideMobileActionSheet);
+
+removeImageBtn.addEventListener('click', function() {
+    if (currentActiveItem) {
+        removeImageFromItem(currentActiveItem);
+    }
+    hideMobileActionSheet();
+});
+
+// Handle gallery interactions
+function attachGalleryListeners() {
+    const items = document.querySelectorAll('.gallery-item');
+    
+    const debouncedHandler = debounce(function(e, item) {
+        if (e.type === 'touchend') {
+            e.preventDefault();
+        }
+        if (e.target.closest('.item-actions')) return;
+        
+        if (isMobile()) {
+            showMobileActionSheet(item);
+            return;
+        }
+        
+        // Desktop behavior
+        const container = item.closest('.gallery-container');
+        if (container) {
+            container.querySelectorAll('.gallery-item').forEach(i => {
+                i.classList.remove('show-actions', 'active');
+            });
+        }
+        item.classList.add('show-actions');
+        if (item.dataset.index === '0') {
+            item.classList.add('active');
+        }
+    }, 200);
+
     items.forEach(item => {
-        const showActions = e => {
-            if (e.target.closest('.item-actions')) return;
-            items.forEach(i => i.classList.remove('show-actions', 'active'));
-            item.classList.add('show-actions', 'active');
-        };
-        item.removeEventListener('click', showActions);
-        item.addEventListener('click', showActions);
-        if ('ontouchstart' in window) {
-            item.removeEventListener('touchend', showActions);
-            item.addEventListener('touchend', e => {
-                e.preventDefault();
-                showActions(e);
+        ['click', 'touchend'].forEach(eventType => {
+            item.addEventListener(eventType, function(e) {
+                debouncedHandler(e, item);
+            });
+        });
+
+        const input = item.querySelector('.image-upload-input');
+        if (input) {
+            input.addEventListener('change', function() {
+                updateImage(this);
             });
         }
-
-        const input = item.querySelector('input[type="file"]');
-        input.removeEventListener('change', updateImage);
-        input.addEventListener('change', updateImage);
 
         const removeBtn = item.querySelector('.btn-remove');
-        removeBtn.removeEventListener('click', removeImage);
-        removeBtn.addEventListener('click', removeImage);
-        if ('ontouchstart' in window) {
-            removeBtn.removeEventListener('touchend', removeImage);
-            removeBtn.addEventListener('touchend', e => {
-                e.preventDefault();
-                removeImage(e);
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                removeImageFromItem(item);
             });
         }
-    });
-    if (items.length) items[0].click();
-}
-
-// Handle offered items interactions (Swap Deals)
-function attachOfferedItemListeners() {
-    document.querySelectorAll('.offered-item .gallery-item').forEach(item => {
-        const showActions = e => {
-            if (e.target.closest('.item-actions')) return;
-            item.parentNode.querySelectorAll('.gallery-item').forEach(i => i.classList.remove('show-actions', 'active'));
-            item.classList.add('show-actions', 'active');
-        };
-        item.removeEventListener('click', showActions);
-        item.addEventListener('click', showActions);
-        if ('ontouchstart' in window) {
-            item.removeEventListener('touchend', showActions);
-            item.addEventListener('touchend', e => {
-                e.preventDefault();
-                showActions(e);
-            });
-        }
-
-        const input = item.querySelector('input[type="file"]');
-        input.removeEventListener('change', updateImage);
-        input.addEventListener('change', updateImage);
-
-        const removeBtn = item.querySelector('.btn-remove');
-        removeBtn.removeEventListener('click', removeImage);
-        removeBtn.addEventListener('click', removeImage);
-        if ('ontouchstart' in window) {
-            removeBtn.removeEventListener('touchend', removeImage);
-            removeBtn.addEventListener('touchend', e => {
-                e.preventDefault();
-                removeImage(e);
-            });
-        }
-    });
-
-    // Remove entire offered item
-    document.querySelectorAll('.btn-remove-item').forEach(btn => {
-        btn.removeEventListener('click', removeOfferedItem);
-        btn.addEventListener('click', removeOfferedItem);
-    });
-
-    // Initialize Sortable for each offered item gallery
-    document.querySelectorAll('.offered-item .gallery-container').forEach(gallery => {
-        new Sortable(gallery, { animation: 150, ghostClass: 'sortable-ghost' });
     });
 }
 
-function updateImage() {
-    const file = this.files[0];
+function updateImage(input) {
+    const file = input.files[0];
     if (file) {
-        const img = this.closest('.gallery-item').querySelector('img');
+        const img = input.closest('.gallery-item').querySelector('img');
+        const removeInput = input.closest('.gallery-item').querySelector('.remove-image-input');
         const reader = new FileReader();
-        reader.onload = e => img.src = e.target.result;
+        reader.onload = e => {
+            img.src = e.target.result;
+            if (input.closest('.gallery-item').dataset.index === '0') {
+                input.closest('.gallery-item').classList.add('active');
+            }
+            if (removeInput) {
+                removeInput.value = 'false'; // Ensure remove flag is false when uploading
+            }
+        };
         reader.readAsDataURL(file);
     }
 }
 
-function removeImage(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    const item = this.closest('.gallery-item');
+function removeImageFromItem(item) {
     const img = item.querySelector('img');
-    const input = item.querySelector('input[type="file"]');
+    const input = item.querySelector('.image-upload-input');
+    const removeInput = item.querySelector('.remove-image-input');
+    
+    console.log('Removing image for item:', item.dataset.index, 'type:', item.dataset.type);
     img.src = `https://via.placeholder.com/300?text=Image+${item.dataset.index}`;
-    input.value = '';
-    item.classList.remove('active', 'show-actions');
+    
+    if (input) {
+        input.value = '';
+        console.log('Cleared file input:', input.id);
+    }
+    
+    if (removeInput) {
+        removeInput.value = 'true';
+        console.log('Set remove-image-input to true:', removeInput.name);
+    }
+    
+    // Keep the first item as the main image
+    if (item.dataset.index === '0') {
+        item.classList.add('active');
+        item.querySelector('.item-label').textContent = 'Main';
+    }
+    
+    item.classList.remove('show-actions');
 }
 
-function removeOfferedItem(e) {
-    e.preventDefault();
-    const item = this.closest('.offered-item');
-    item.remove();
-    const count = parseInt(document.getElementById('offered_items_count').value) - 1;
-    document.getElementById('offered_items_count').value = count;
-    document.getElementById('add-offered-item').style.display = 'block';
-}
+// Bulk image upload handler
+document.getElementById('bulk-upload')?.addEventListener('change', function(e) {
+    const files = e.target.files;
+    const galleryContainer = document.getElementById('gallery-container');
+    let emptySlots = [];
+    
+    galleryContainer.querySelectorAll('.gallery-item').forEach(item => {
+        const img = item.querySelector('img');
+        if (img.src.includes('placeholder.com') && !emptySlots.some(slot => slot.index === item.dataset.index)) {
+            emptySlots.push({
+                index: item.dataset.index,
+                element: item
+            });
+        }
+    });
+    
+    for (let i = 0; i < Math.min(files.length, emptySlots.length); i++) {
+        const file = files[i];
+        const slot = emptySlots[i];
+        const input = slot.element.querySelector('.image-upload-input');
+        const removeInput = slot.element.querySelector('.remove-image-input');
+        
+        if (input) {
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            input.files = dataTransfer.files;
+            updateImage(input);
+            if (removeInput) {
+                removeInput.value = 'false';
+            }
+        }
+    }
+    
+    this.value = '';
+});
 
-// Add new offered item
+// Add new offered item (for Swap Deals)
 document.getElementById('add-offered-item')?.addEventListener('click', function() {
     const count = parseInt(document.getElementById('offered_items_count').value) + 1;
     if (count > 2) return;
@@ -811,7 +1225,12 @@ document.getElementById('add-offered-item')?.addEventListener('click', function(
     const template = `
         <div class="card mb-3 offered-item" data-index="${count}">
             <div class="card-body">
-                <h4>Item ${count}</h4>
+                <input type="hidden" name="item_id_${count}" value="">
+                <h4 class="d-flex align-items-center gap-2">
+                    <span>Item ${count}</span>
+                    <span class="badge bg-secondary">Additional</span>
+                </h4>
+                
                 <div class="gallery-container" id="offered-gallery-${count}">
                     ${[1,2,3,4].map(i => `
                         <div class="gallery-item" data-index="${i}" data-type="offered">
@@ -823,134 +1242,150 @@ document.getElementById('add-offered-item')?.addEventListener('click', function(
                                 </button>
                                 <label class="btn-action" title="Replace image">
                                     <i class="fas fa-sync"></i>
-                                    <input type="file" name="offered_image_${count}_${i}" accept="image/*">
+                                    <input type="file" id="file-input-offered-${count}-${i}"
+                                           name="offered_image_${count}_${i}"
+                                           accept="image/*" class="image-upload-input">
                                 </label>
                             </div>
+                            <input type="hidden" name="remove_image_${count}_${i}" class="remove-image-input" value="false">
                         </div>
                     `).join('')}
                 </div>
-                <div class="mb-3">
-                    <label for="offered_title_${count}" class="form-label required">Title</label>
-                    <input type="text" class="form-control" id="offered_title_${count}" name="offered_title_${count}" required>
+                
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label required">Title</label>
+                        <input type="text" class="form-control" name="offered_title_${count}" required>
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label required">Description</label>
+                        <textarea class="form-control" name="offered_description_${count}" rows="3" required></textarea>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label required">Condition</label>
+                        <select class="form-select" name="offered_condition_${count}" required>
+                            <option value="New">New</option>
+                            <option value="Like New" selected>Like New</option>
+                            <option value="Good">Good</option>
+                            <option value="Fair">Fair</option>
+                            <option value="Poor">Poor</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Original Value (₵)</label>
+                        <div class="currency-input">
+                            <span class="currency-symbol">₵</span>
+                            <input type="number" class="form-control" name="offered_value_${count}" step="0.01" min="0">
+                        </div>
+                    </div>
+                    <div class="col-12 mt-2">
+                        <button type="button" class="btn btn-outline-danger btn-remove-item" title="Remove this item">
+                            <i class="fas fa-trash me-2"></i> Remove Item
+                        </button>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label for="offered_description_${count}" class="form-label required">Description</label>
-                    <textarea class="form-control" id="offered_description_${count}" name="offered_description_${count}" rows="3" required></textarea>
-                </div>
-                <div class="mb-3">
-                    <label for="offered_condition_${count}" class="form-label required">Condition</label>
-                    <select class="form-select" id="offered_condition_${count}" name="offered_condition_${count}" required>
-                        <option value="New">New</option>
-                        <option value="Like New">Like New</option>
-                        <option value="Good">Good</option>
-                        <option value="Fair">Fair</option>
-                        <option value="Poor">Poor</option>
-                    </select>
-                </div>
-                <button type="button" class="btn btn-outline-danger btn-remove-item" title="Remove this item">
-                    <i class="fas fa-trash me-2"></i> Remove Item
-                </button>
             </div>
         </div>
     `;
     this.insertAdjacentHTML('beforebegin', template);
     document.getElementById('offered_items_count').value = count;
     if (count === 2) this.style.display = 'none';
-    attachOfferedItemListeners();
-
-    // Auto-resize new textarea
-    const newTextarea = document.querySelector(`#offered_description_${count}`);
-    newTextarea.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = `${this.scrollHeight}px`;
-    });
-    newTextarea.dispatchEvent(new Event('input'));
-});
-
-// Initialize listeners
-attachMainGalleryListeners();
-attachOfferedItemListeners();
-
-// Auto-resize textareas
-document.querySelectorAll('textarea').forEach(textarea => {
-    textarea.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = `${this.scrollHeight}px`;
-    });
-    textarea.dispatchEvent(new Event('input'));
-});
-
-// Form validation feedback
-document.querySelector('form').addEventListener('submit', function(e) {
-    const requiredInputs = this.querySelectorAll('[required]');
-    let isValid = true;
-    requiredInputs.forEach(input => {
-        if (!input.value.trim()) {
-            isValid = false;
-            input.classList.add('is-invalid');
-            const feedback = document.createElement('div');
-            feedback.className = 'invalid-feedback';
-            feedback.textContent = 'This field is required.';
-            if (!input.nextElementSibling?.classList.contains('invalid-feedback')) {
-                input.parentNode.appendChild(feedback);
-            }
-        } else {
-            input.classList.remove('is-invalid');
-            const feedback = input.nextElementSibling;
-            if (feedback?.classList.contains('invalid-feedback')) {
-                feedback.remove();
-            }
-        }
-    });
-    if (!isValid) {
-        e.preventDefault();
-        const firstInvalid = this.querySelector('.is-invalid');
-        if (firstInvalid) firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // Attach listeners to the new item
+    attachGalleryListeners();
+    
+    // Add click handler for remove item button
+    const removeItemBtn = document.querySelector(`.offered-item[data-index="${count}"] .btn-remove-item`);
+    if (removeItemBtn) {
+        removeItemBtn.addEventListener('click', function() {
+            this.closest('.offered-item').remove();
+            document.getElementById('offered_items_count').value = count - 1;
+            document.getElementById('add-offered-item').style.display = 'block';
+        });
     }
 });
 
-// Enhanced button interactions
-document.querySelectorAll('.btn').forEach(btn => {
-    btn.addEventListener('touchstart', () => { btn.style.transform = 'scale(0.95)'; });
-    btn.addEventListener('touchend', () => { btn.style.transform = 'scale(1)'; });
-    btn.addEventListener('mouseenter', () => { btn.style.transform = 'translateY(-2px)'; });
-    btn.addEventListener('mouseleave', () => { btn.style.transform = 'translateY(0)'; });
+// Remove offered item handler
+document.querySelectorAll('.btn-remove-item').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const item = this.closest('.offered-item');
+        const count = parseInt(document.getElementById('offered_items_count').value) - 1;
+        item.remove();
+        document.getElementById('offered_items_count').value = count;
+        document.getElementById('add-offered-item').style.display = 'block';
+    });
 });
 
-// Category suggestions
-const CATEGORY_DEFS = [
-    { name: 'Electronics', synonyms: ['gadget', 'device', 'tech'] },
-    { name: 'Computers & Networking', synonyms: ['pc', 'laptop', 'desktop', 'router', 'server'] },
-    { name: 'Mobile Phones & Accessories', synonyms: ['phone', 'mobile', 'charger', 'case'] },
-    { name: 'Software & Apps', synonyms: ['app', 'program', 'software'] },
-    { name: 'Health & Beauty', synonyms: ['skincare', 'makeup', 'wellness'] },
-    { name: 'Medical Equipment', synonyms: ['stethoscope', 'syringe', 'hospital'] },
-    { name: 'Sports & Outdoors', synonyms: ['sport', 'hiking', 'camping'] },
-    { name: 'Fashion & Apparel', synonyms: ['clothes', 'shirt', 'dress', 'jeans'] },
-    { name: 'Jewelry & Watches', synonyms: ['ring', 'necklace', 'watch'] },
-    { name: 'Home & Garden', synonyms: ['furniture', 'decor', 'plants'] },
-    { name: 'Kitchen & Dining', synonyms: ['cookware', 'utensils', 'appliances'] },
-    { name: 'Tools & DIY', synonyms: ['hammer', 'drill', 'screwdriver'] },
-    { name: 'Automotive & Vehicles', synonyms: ['car', 'vehicle', 'truck', 'motorcycle'] },
-    { name: 'Industrial & Scientific', synonyms: ['lab', 'industrial', 'machine'] },
-    { name: 'Agriculture & Farming', synonyms: ['farm', 'tractor', 'crop'] },
-    { name: 'Food & Beverages', synonyms: ['food', 'drink', 'beverage'] },
-    { name: 'Office Supplies', synonyms: ['pen', 'paper', 'stationery'] },
-    { name: 'Books, Music & Movies', synonyms: ['book', 'cd', 'dvd', 'movie'] },
-    { name: 'Toys & Games', synonyms: ['toy', 'game', 'puzzle'] },
-    { name: 'Baby & Kids', synonyms: ['baby', 'child', 'kids'] },
-    { name: 'Pets & Accessories', synonyms: ['pet', 'dog', 'cat', 'leash'] },
-    { name: 'Art, Crafts & Sewing', synonyms: ['art', 'craft', 'sewing'] },
-    { name: 'Collectibles & Hobbies', synonyms: ['coin', 'stamp', 'hobby'] },
-    { name: 'Travel & Experiences', synonyms: ['trip', 'tour', 'holiday'] },
-    { name: 'Real Estate & Property', synonyms: ['house', 'apartment', 'land'] },
-    { name: 'Education & Training', synonyms: ['course', 'lesson', 'training'] },
-    { name: 'Services', synonyms: ['service', 'repair', 'consulting'] },
-    { name: 'Other', synonyms: [] }
-];
+// Initialize listeners when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    attachGalleryListeners();
+    
+    // Auto-resize textareas
+    document.querySelectorAll('textarea').forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = `${this.scrollHeight}px`;
+        });
+        textarea.dispatchEvent(new Event('input'));
+    });
+    
+    // Enhanced touch feedback for buttons
+    document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('touchstart', () => { 
+            btn.style.transform = 'scale(0.95)'; 
+            btn.style.transition = 'transform 0.1s ease';
+        });
+        btn.addEventListener('touchend', () => { 
+            btn.style.transform = 'scale(1)'; 
+            btn.style.transition = 'transform 0.2s ease';
+        });
+    });
 
-document.addEventListener('DOMContentLoaded', () => {
-    const input = document.getElementById('category-input');
+    // Form submission debugging
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const formData = new FormData(this);
+        const formObject = {};
+        for (let [key, value] of formData.entries()) {
+            formObject[key] = value;
+        }
+        console.log('Form data on submit:', formObject);
+        // Uncomment to prevent submission for debugging
+        // e.preventDefault();
+    });
+
+    // Category suggestions
+    const CATEGORY_DEFS = [
+        { name: 'Electronics', synonyms: ['gadget', 'device', 'tech'] },
+        { name: 'Computers & Networking', synonyms: ['pc', 'laptop', 'desktop', 'router', 'server'] },
+        { name: 'Mobile Phones & Accessories', synonyms: ['phone', 'mobile', 'charger', 'case'] },
+        { name: 'Software & Apps', synonyms: ['app', 'program', 'software'] },
+        { name: 'Health & Beauty', synonyms: ['skincare', 'makeup', 'wellness'] },
+        { name: 'Medical Equipment', synonyms: ['stethoscope', 'syringe', 'hospital'] },
+        { name: 'Sports & Outdoors', synonyms: ['sport', 'hiking', 'camping'] },
+        { name: 'Fashion & Apparel', synonyms: ['clothes', 'shirt', 'dress', 'jeans'] },
+        { name: 'Jewelry & Watches', synonyms: ['ring', 'necklace', 'watch'] },
+        { name: 'Home & Garden', synonyms: ['furniture', 'decor', 'plants'] },
+        { name: 'Kitchen & Dining', synonyms: ['cookware', 'utensils', 'appliances'] },
+        { name: 'Tools & DIY', synonyms: ['hammer', 'drill', 'screwdriver'] },
+        { name: 'Automotive & Vehicles', synonyms: ['car', 'vehicle', 'truck', 'motorcycle'] },
+        { name: 'Industrial & Scientific', synonyms: ['lab', 'industrial', 'machine'] },
+        { name: 'Agriculture & Farming', synonyms: ['farm', 'tractor', 'crop'] },
+        { name: 'Food & Beverages', synonyms: ['food', 'drink', 'beverage'] },
+        { name: 'Office Supplies', synonyms: ['pen', 'paper', 'stationery'] },
+        { name: 'Books, Music & Movies', synonyms: ['book', 'cd', 'dvd', 'movie'] },
+        { name: 'Toys & Games', synonyms: ['toy', 'game', 'puzzle'] },
+        { name: 'Baby & Kids', synonyms: ['baby', 'child', 'kids'] },
+        { name: 'Pets & Accessories', synonyms: ['pet', 'dog', 'cat', 'leash'] },
+        { name: 'Art, Crafts & Sewing', synonyms: ['art', 'craft', 'sewing'] },
+        { name: 'Collectibles & Hobbies', synonyms: ['coin', 'stamp', 'hobby'] },
+        { name: 'Travel & Experiences', synonyms: ['trip', 'tour', 'holiday'] },
+        { name: 'Real Estate & Property', synonyms: ['house', 'apartment', 'land'] },
+        { name: 'Education & Training', synonyms: ['course', 'lesson', 'training'] },
+        { name: 'Services', synonyms: ['service', 'repair', 'consulting'] },
+        { name: 'Other', synonyms: [] }
+    ];
+
+    const categoryInput = document.getElementById('category-input');
     const sugList = document.getElementById('category-suggestions');
 
     function renderSuggestions(term) {
@@ -966,7 +1401,7 @@ document.addEventListener('DOMContentLoaded', () => {
             li.className = 'list-group-item';
             li.style.cursor = 'pointer';
             li.addEventListener('mousedown', () => {
-                input.value = cat.name;
+                categoryInput.value = cat.name;
                 hideSuggestions();
             });
             sugList.appendChild(li);
@@ -978,10 +1413,10 @@ document.addEventListener('DOMContentLoaded', () => {
         sugList.style.display = 'none';
     }
 
-    input.addEventListener('input', e => renderSuggestions(e.target.value));
-    input.addEventListener('focus', () => renderSuggestions(input.value));
-    input.addEventListener('blur', () => setTimeout(hideSuggestions, 100));
+    categoryInput.addEventListener('input', e => renderSuggestions(e.target.value));
+    categoryInput.addEventListener('focus', () => renderSuggestions(categoryInput.value));
+    categoryInput.addEventListener('blur', () => setTimeout(hideSuggestions, 100));
 });
-</script>
+    </script>
 </body>
 </html>

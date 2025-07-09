@@ -169,12 +169,20 @@ self.addEventListener('push', event => {
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  const urlToOpen = event.notification.data?.url || '/';
+
+  // pull out our data
+  const { url, type } = event.notification.data || {};
+
+  // for proposal‑status pushes, go to /my-proposals
+  const urlToOpen = (type === 'proposal')
+    ? '/my-proposals'
+    : (url || '/');
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then(windowClients => {
         for (const client of windowClients) {
-          if (client.url === urlToOpen && 'focus' in client) {
+          if (client.url.endsWith(urlToOpen) && 'focus' in client) {
             return client.focus();
           }
         }
@@ -182,3 +190,4 @@ self.addEventListener('notificationclick', event => {
       })
   );
 });
+

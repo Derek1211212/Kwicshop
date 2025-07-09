@@ -3,150 +3,659 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Promote Listing - {{ listing.title }}</title>
+  <title>Promote Your Listing - Transparent Advertising</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      background-color: #f4f4f4;
+    * {
       margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #4361ee;
+      --primary-dark: #3a56d4;
+      --secondary: #06d6a0;
+      --danger: #ef476f;
+      --warning: #ffd166;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --gray: #6c757d;
+      --light-gray: #e9ecef;
+      --border: #dee2e6;
+      --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      --transition: all 0.3s ease;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7ff;
+      color: var(--dark);
+      line-height: 1.6;
       padding: 20px;
     }
+
     .container {
-      max-width: 600px;
-      margin: 40px auto;
-      background: #fff;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      padding: 30px 0;
+      background: linear-gradient(135deg, #4361ee, #3a0ca3);
+      color: white;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      box-shadow: var(--card-shadow);
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+    }
+
+    header p {
+      max-width: 700px;
+      margin: 0 auto;
+      opacity: 0.9;
+    }
+
+    .listing-card {
+      background: white;
+      border-radius: 12px;
       padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 30px;
+      box-shadow: var(--card-shadow);
     }
-    h2 {
-      text-align: center;
-      color: #333;
-    }
-    p {
-      text-align: center;
-      color: #666;
-    }
-    .plan-options {
-      display: grid;
-      grid-gap: 15px;
-      margin: 20px 0;
-    }
-    .plan-option {
-      padding: 15px;
-      border: 2px solid #ccc;
+
+    .listing-img {
+      width: 120px;
+      height: 120px;
       border-radius: 8px;
+      object-fit: cover;
+      background: linear-gradient(45deg, #4361ee, #4cc9f0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 3rem;
+    }
+
+    .listing-info h2 {
+      margin-bottom: 10px;
+      color: var(--primary);
+    }
+
+    .listing-stats {
+      display: flex;
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    .stat-box {
+      background: var(--light);
+      padding: 8px 15px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    .stat-box i {
+      margin-right: 5px;
+      color: var(--primary);
+    }
+
+    .content-wrapper {
+      display: flex;
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+
+    .main-content {
+      flex: 3;
+    }
+
+    .sidebar {
+      flex: 1;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title i {
+      background: var(--primary);
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .plans-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 25px;
+      margin-bottom: 40px;
+    }
+
+    .plan-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+      transition: var(--transition);
+      border: 2px solid var(--border);
+      position: relative;
+    }
+
+    .plan-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      border-color: var(--primary);
+    }
+
+    .plan-card.popular {
+      border: 2px solid var(--primary);
+      transform: scale(1.02);
+    }
+
+    .plan-card.popular::before {
+      content: "POPULAR CHOICE";
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: var(--primary);
+      color: white;
+      padding: 5px 15px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 0 0 0 12px;
+    }
+
+    .plan-header {
+      padding: 25px;
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
       text-align: center;
-      cursor: pointer;
-      transition: border-color 0.3s ease, background-color 0.3s ease;
+      border-bottom: 1px solid var(--border);
     }
-    .plan-option:hover {
-      border-color: #007bff;
-    }
-    .plan-option.active {
-      border-color: #007bff;
-      background-color: #e7f0ff;
-    }
+
     .plan-name {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: #333;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 5px;
     }
+
     .plan-price {
-      font-size: 1rem;
-      color: #28a745;
-      margin-top: 5px;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 10px;
     }
-    #proceedPayment {
-      display: block;
-      width: 100%;
-      padding: 12px;
+
+    .plan-price span {
       font-size: 1rem;
+      color: var(--gray);
+      font-weight: normal;
+    }
+
+    .plan-estimate {
+      color: var(--secondary);
       font-weight: 600;
-      color: #fff;
-      background-color: #28a745;
+      background: rgba(6, 214, 160, 0.1);
+      padding: 5px 10px;
+      border-radius: 20px;
+      display: inline-block;
+      font-size: 0.9rem;
+    }
+
+    .plan-features {
+      padding: 25px;
+    }
+
+    .feature-list {
+      list-style: none;
+      margin-bottom: 25px;
+    }
+
+    .feature-list li {
+      padding: 10px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .feature-list li:last-child {
+      border-bottom: none;
+    }
+
+    .feature-list i {
+      color: var(--secondary);
+      width: 20px;
+      text-align: center;
+    }
+
+    .plan-footer {
+      padding: 0 25px 25px;
+      text-align: center;
+    }
+
+    .select-btn {
+      background: var(--primary);
+      color: white;
       border: none;
-      border-radius: 5px;
+      padding: 12px 25px;
+      border-radius: 8px;
+      font-weight: 600;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      transition: var(--transition);
+      width: 100%;
+      font-size: 1rem;
     }
-    #proceedPayment:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
+
+    .select-btn:hover {
+      background: var(--primary-dark);
     }
-    #proceedPayment:hover:not(:disabled) {
-      background-color: #218838;
+
+    .guarantee-box {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 30px;
+    }
+
+    .guarantee-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .guarantee-icon {
+      background: var(--warning);
+      color: var(--dark);
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .guarantee-content {
+      background: rgba(255, 209, 102, 0.15);
+      padding: 20px;
+      border-radius: 8px;
+      border-left: 4px solid var(--warning);
+    }
+
+    .guarantee-content h3 {
+      margin-bottom: 10px;
+      color: var(--dark);
+    }
+
+    .guarantee-content p {
+      margin-bottom: 15px;
+    }
+
+    .benefit-list {
+      list-style: none;
+      margin-top: 15px;
+    }
+
+    .benefit-list li {
+      padding: 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .benefit-list i {
+      color: var(--secondary);
+    }
+
+    .info-box {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 30px;
+    }
+
+    .info-box h3 {
+      margin-bottom: 15px;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .faq-section {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .faq-item {
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+    }
+
+    .faq-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .faq-question {
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .faq-question i {
+      color: var(--primary);
+    }
+
+    .faq-answer {
+      color: var(--gray);
+      padding-left: 28px;
+    }
+
+    .disclaimer {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 30px;
+      box-shadow: var(--card-shadow);
+      font-size: 0.9rem;
+      color: var(--gray);
+      border-top: 3px solid var(--light-gray);
+    }
+
+    .disclaimer strong {
+      color: var(--dark);
+    }
+
+    @media (max-width: 900px) {
+      .content-wrapper {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .plans-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .listing-card {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .listing-stats {
+        justify-content: center;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Promote Listing</h2>
-    <p>Select a promotion plan for "<strong>{{ listing.title }}</strong>"</p>
-    <div class="plan-options" id="planOptions">
-      {% for plan, price in plan_prices.items() %}
-      <div class="plan-option" data-plan="{{ plan }}" data-price="{{ price }}">
-        <div class="plan-name">{{ plan }}</div>
-        <div class="plan-price">₵{{ price }}</div>
+    <header>
+      <h1>Promote Your Listing</h1>
+      <p>Maximize visibility with our targeted promotion plans. We provide realistic estimates and guarantee satisfaction.</p>
+    </header>
+
+    <div class="listing-card">
+      <div class="listing-img">
+        <i class="fas fa-home"></i>
       </div>
-      {% endfor %}
+      <div class="listing-info">
+        <h2>Modern Apartment in City Center</h2>
+        <p>Beautiful 3-bedroom apartment with stunning city views, recently renovated with modern amenities.</p>
+        <div class="listing-stats">
+          <div class="stat-box"><i class="fas fa-eye"></i> 245 views</div>
+          <div class="stat-box"><i class="fas fa-heart"></i> 18 favorites</div>
+          <div class="stat-box"><i class="fas fa-calendar"></i> 14 days active</div>
+        </div>
+      </div>
     </div>
-    <button id="proceedPayment" disabled>Proceed to Payment</button>
+
+    <div class="content-wrapper">
+      <div class="main-content">
+        <div class="section-title">
+          <i class="fas fa-rocket"></i>
+          <h2>Choose a Promotion Plan</h2>
+        </div>
+        
+        <div class="plans-container">
+          <!-- Basic Plan -->
+          <div class="plan-card">
+            <div class="plan-header">
+              <div class="plan-name">Basic Boost</div>
+              <div class="plan-price">₵149 <span>/ week</span></div>
+              <div class="plan-estimate">~2,500 - 4,000 impressions</div>
+            </div>
+            <div class="plan-features">
+              <ul class="feature-list">
+                <li><i class="fas fa-check-circle"></i> Standard visibility in search results</li>
+                <li><i class="fas fa-check-circle"></i> Featured in category listings</li>
+                <li><i class="fas fa-check-circle"></i> Basic performance analytics</li>
+                <li><i class="fas fa-check-circle"></i> 7-day promotion period</li>
+              </ul>
+            </div>
+            <div class="plan-footer">
+              <button class="select-btn">Select Basic</button>
+            </div>
+          </div>
+          
+          <!-- Popular Standard Plan -->
+          <div class="plan-card popular">
+            <div class="plan-header">
+              <div class="plan-name">Standard Promotion</div>
+              <div class="plan-price">₵299 <span>/ week</span></div>
+              <div class="plan-estimate">~6,000 - 9,000 impressions</div>
+            </div>
+            <div class="plan-features">
+              <ul class="feature-list">
+                <li><i class="fas fa-check-circle"></i> Priority placement in search</li>
+                <li><i class="fas fa-check-circle"></i> Featured on homepage carousel</li>
+                <li><i class="fas fa-check-circle"></i> Email newsletter inclusion</li>
+                <li><i class="fas fa-check-circle"></i> Advanced analytics dashboard</li>
+                <li><i class="fas fa-check-circle"></i> 14-day promotion period</li>
+              </ul>
+            </div>
+            <div class="plan-footer">
+              <button class="select-btn">Select Standard</button>
+            </div>
+          </div>
+          
+          <!-- Premium Plan -->
+          <div class="plan-card">
+            <div class="plan-header">
+              <div class="plan-name">Premium Visibility</div>
+              <div class="plan-price">₵499 <span>/ week</span></div>
+              <div class="plan-estimate">~12,000 - 18,000 impressions</div>
+            </div>
+            <div class="plan-features">
+              <ul class="feature-list">
+                <li><i class="fas fa-check-circle"></i> Top placement in all searches</li>
+                <li><i class="fas fa-check-circle"></i> Dedicated featured section</li>
+                <li><i class="fas fa-check-circle"></i> Social media promotion</li>
+                <li><i class="fas fa-check-circle"></i> Detailed performance reports</li>
+                <li><i class="fas fa-check-circle"></i> Priority customer support</li>
+                <li><i class="fas fa-check-circle"></i> 30-day promotion period</li>
+              </ul>
+            </div>
+            <div class="plan-footer">
+              <button class="select-btn">Select Premium</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="guarantee-box">
+          <div class="guarantee-header">
+            <div class="guarantee-icon">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <h2>Our Impression Guarantee</h2>
+          </div>
+          
+          <div class="guarantee-content">
+            <h3>What happens if we don't meet our impression estimates?</h3>
+            <p>We provide realistic impression estimates based on historical data, but sometimes market conditions or other factors may affect performance. Here's our commitment to you:</p>
+            
+            <ul class="benefit-list">
+              <li><i class="fas fa-check"></i> <strong>Transparent Reporting:</strong> Real-time analytics so you can track performance</li>
+              <li><i class="fas fa-check"></i> <strong>90% Impression Guarantee:</strong> If you receive less than 90% of the lower estimate, we'll extend your promotion at no extra cost</li>
+              <li><i class="fas fa-check"></i> <strong>Performance Review:</strong> Our team will analyze underperforming campaigns and optimize accordingly</li>
+              <li><i class="fas fa-check"></i> <strong>Credit Options:</strong> For significant underperformance, we offer account credits for future promotions</li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="faq-section">
+          <div class="section-title">
+            <i class="fas fa-question-circle"></i>
+            <h2>Frequently Asked Questions</h2>
+          </div>
+          
+          <div class="faq-item">
+            <div class="faq-question">
+              <i class="fas fa-chevron-right"></i>
+              How accurate are your impression estimates?
+            </div>
+            <div class="faq-answer">
+              Our estimates are based on historical data from similar promotions during comparable time periods. While we strive for accuracy, many factors can affect actual performance including seasonality, market trends, and listing quality. We provide a realistic range rather than a guaranteed number.
+            </div>
+          </div>
+          
+          <div class="faq-item">
+            <div class="faq-question">
+              <i class="fas fa-chevron-right"></i>
+              What should I do if my campaign is underperforming?
+            </div>
+            <div class="faq-answer">
+              First, check your campaign analytics to understand performance. If impressions are significantly below estimates, contact our support team within 3 days of campaign completion. We'll review your campaign and apply our guarantee policy if applicable.
+            </div>
+          </div>
+          
+          <div class="faq-item">
+            <div class="faq-question">
+              <i class="fas fa-chevron-right"></i>
+              Can I get a refund if impressions are low?
+            </div>
+            <div class="faq-answer">
+              While we don't offer direct refunds, our guarantee provides significant value if impressions fall short. For campaigns receiving less than 90% of the lower estimate, we'll extend your promotion at no cost. For extreme underperformance (less than 50% of estimate), we offer account credits for future promotions.
+            </div>
+          </div>
+          
+          <div class="faq-item">
+            <div class="faq-question">
+              <i class="fas fa-chevron-right"></i>
+              How can I maximize my impression results?
+            </div>
+            <div class="faq-answer">
+              High-quality photos, detailed descriptions, competitive pricing, and prompt response to inquiries all improve engagement. Our team also provides free optimization tips for all promoted listings. Premium plans include professional listing enhancement services.
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="sidebar">
+        <div class="info-box">
+          <h3><i class="fas fa-lightbulb"></i> Maximize Your Results</h3>
+          <p>Get the most from your promotion:</p>
+          <ul class="benefit-list">
+            <li><i class="fas fa-camera"></i> Use high-quality photos</li>
+            <li><i class="fas fa-pen"></i> Write a compelling description</li>
+            <li><i class="fas fa-tag"></i> Set a competitive price</li>
+            <li><i class="fas fa-bolt"></i> Respond quickly to inquiries</li>
+          </ul>
+        </div>
+        
+        <div class="info-box">
+          <h3><i class="fas fa-chart-line"></i> Real Performance Data</h3>
+          <p>Based on similar listings in your category:</p>
+          <ul class="benefit-list">
+            <li><i class="fas fa-check"></i> Average 87% of listings reach impression targets</li>
+            <li><i class="fas fa-check"></i> 92% of underperforming campaigns qualified for guarantee benefits</li>
+            <li><i class="fas fa-check"></i> 98% customer satisfaction with resolution process</li>
+          </ul>
+        </div>
+        
+        <div class="info-box">
+          <h3><i class="fas fa-headset"></i> Support & Assistance</h3>
+          <p>Our team is here to help:</p>
+          <ul class="benefit-list">
+            <li><i class="fas fa-envelope"></i> promotion-support@example.com</li>
+            <li><i class="fas fa-phone"></i> (123) 456-7890</li>
+            <li><i class="fas fa-comments"></i> Live chat available</li>
+            <li><i class="fas fa-clock"></i> Mon-Fri 9am-6pm</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <div class="disclaimer">
+      <p><strong>Disclaimer:</strong> Impression estimates are based on historical data and current market conditions. Actual results may vary based on factors including but not limited to: market demand, listing quality, seasonality, and overall platform traffic. Our 90% impression guarantee applies only when campaigns run for their full duration and when listings meet our quality standards. See full terms for details.</p>
+    </div>
   </div>
 
   <script>
-    // Get all plan option elements and the payment button.
-    const planOptions = document.querySelectorAll('.plan-option');
-    const proceedBtn = document.getElementById('proceedPayment');
-    let selectedPlan = null;
-    let selectedPrice = null;
-
-    // Add click listener to each plan option.
-    planOptions.forEach(option => {
-      option.addEventListener('click', () => {
-        // Remove active class from all options.
-        planOptions.forEach(o => o.classList.remove('active'));
-        // Set active class on clicked option.
-        option.classList.add('active');
-        selectedPlan = option.getAttribute('data-plan');
-        selectedPrice = option.getAttribute('data-price');
-        proceedBtn.disabled = false;
+    // FAQ toggle functionality
+    document.querySelectorAll('.faq-question').forEach(question => {
+      question.addEventListener('click', () => {
+        const answer = question.nextElementSibling;
+        const icon = question.querySelector('i');
+        
+        if (answer.style.display === 'block') {
+          answer.style.display = 'none';
+          icon.className = 'fas fa-chevron-right';
+        } else {
+          answer.style.display = 'block';
+          icon.className = 'fas fa-chevron-down';
+        }
       });
     });
 
-    // When user clicks Proceed, initiate payment.
-    proceedBtn.addEventListener('click', async () => {
-      if (!selectedPlan || !selectedPrice) {
-        alert("Please select a promotion plan first.");
-        return;
-      }
-      // Prepare payload.
-      const payload = {
-        plan: selectedPlan,
-        price: selectedPrice,
-        listing_id: {{ listing.listing_id }}
-      };
-
-      try {
-        const response = await fetch('/initiate_payment', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload)
+    // Plan selection functionality
+    document.querySelectorAll('.select-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        // Remove active class from all buttons
+        document.querySelectorAll('.select-btn').forEach(btn => {
+          btn.textContent = btn.textContent.replace('✓ ', '');
+          btn.classList.remove('selected');
         });
-        const data = await response.json();
-        console.log('Payment response:', data);
-        if (response.ok && data.authorization_url) {
-          // Redirect to Paystack checkout.
-          window.location.href = data.authorization_url;
-        } else {
-          throw new Error(data.error || 'Payment initialization failed');
-        }
-      } catch (error) {
-        console.error('Payment error:', error);
-        alert(`Payment Error: ${error.message}`);
-      }
+        
+        // Add active state to clicked button
+        this.textContent = '✓ ' + this.textContent;
+        this.classList.add('selected');
+        
+        // Smooth scroll to guarantee section
+        document.querySelector('.guarantee-box').scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
     });
   </script>
 </body>
