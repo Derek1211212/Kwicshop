@@ -101,9 +101,11 @@ dbconfig = {
 
 cnxpool = pooling.MySQLConnectionPool(
     pool_name="mypool",
-    pool_size=32,
+    pool_size=5,                 # fewer simultaneous connections
+    pool_reset_session=True,     # clean each connection before reuse
     **dbconfig
 )
+
 
 def get_db_connection():
     # returns a connection from the pool
@@ -1265,7 +1267,7 @@ def update_proposal(proposal_id):
             WHERE user_id = %s
         """, (proposer_id,))
         subscriptions = cursor.fetchall()
-        
+
 
     except Exception as e:
         conn.rollback()
