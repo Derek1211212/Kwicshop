@@ -1528,117 +1528,129 @@ select.form-control {
         </nav>
 
 <!-- Listings Section -->
-<!-- Listings Section -->
 <section id="listings" class="dashboard-section active">
-    <h2>My Listings</h2>
-    <div class="listings-grid">
-        {% for listing in listings %}
-        <div class="listing-card" data-listing-id="{{ listing.listing_id }}">
-            <div class="image-container">
-                {% if listing.deal_type == 'Swap Deal' and listing.offered_items|length == 2 %}
-                    <div class="offered-items-images">
-                        {% for item in listing.offered_items[:2] %}
-                            <div class="offered-item">
-                                <img src="{{ url_for('static', filename='images/' + item.image1.split('/')[-1]) }}"
-                                     alt="{{ item.title }}"
-                                     onerror="this.src='https://via.placeholder.com/150x120?text=No+Image'">
-                                <p>{{ item.title }}</p>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    {% set display_image = listing.image_url %}
-                    {% if listing.deal_type == 'Swap Deal' and listing.offered_items and listing.offered_items|length == 1 %}
-                        {% set display_image = listing.offered_items[0].image1 %}
-                    {% endif %}
-                    {% if display_image %}
-                        <img src="{{ url_for('static', filename='images/' + display_image.split('/')[-1]) }}"
-                             alt="{{ listing.title }}"
-                             class="listing-image"
-                             onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
-                    {% else %}
-                        <img src="https://via.placeholder.com/300x200?text=No+Image"
-                             alt="No Image"
-                             class="listing-image">
-                    {% endif %}
-                {% endif %}
-                <div class="plan-badge">
-                    {% if listing.plan == 'Free' %}
-                    <a href="{{ url_for('promote_listing', listing_id=listing.listing_id) }}" class="badge badge-promote">
-                        Promote Ad<i class="fas fa-arrow-up"></i>
-                    </a>
-                    {% else %}
-                    <span class="badge {% if listing.plan == 'Premium' %}badge-premium{% elif listing.plan == 'Standard' %}badge-standard{% else %}badge-basic{% endif %}">
-                        {{ listing.plan }}
-                    </span>
-                    {% endif %}
-                </div>
-                <div class="deal-type-badge">
-                    <span class="badge {% if listing.deal_type == 'Swap Deal' %}badge-swap{% else %}badge-sale{% endif %}">
-                        {{ listing.deal_type }}
-                    </span>
-                </div>
-                <div class="promote-badge">
-                    <a href="{{ url_for('promote_listing', listing_id=listing.listing_id) }}" class="badge badge-promote">
-                        Promote<i class="fas fa-arrow-up"></i>
-                    </a>
-                </div>
-            </div>
-            <div class="listing-content">
-                {% if listing.deal_type == 'Swap Deal' and listing.offered_items|length == 2 %}
-                    <div class="offered-items-descriptions">
-                        {% for item in listing.offered_items[:2] %}
-                            <div class="offered-item-description">
-                                <h3>{{ item.title }}</h3>
-                                <p class="description-text" data-full-text="{{ item.description }}">{{ item.description[:50] }}{% if item.description|length > 50 %}...{% endif %}</p>
-                                {% if item.description|length > 50 %}
-                                    <a href="#" class="read-more">Read more</a>
-                                {% endif %}
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <h3>{{ listing.title }}</h3>
-                    <p>{{ listing.description[:100] }}{% if listing.description|length > 100 %}...{% endif %}</p>
-                {% endif %}
-                <div class="mobile-stats-container">
-<div class="listing-stats-mobile">
-  <div class="stat-item-mobile">
-    <i class="fas fa-eye"></i>
-    <span class="stat-count-mobile">{{ listing.impressions|default(0)|humanize_number }}</span>
-    <span class="stat-label-mobile">views</span>
-  </div>
-    <div class="stat-item-mobile">
-    <i class="fas fa-mouse-pointer"></i>
-    <span class="stat-count-mobile">{{ listing.clicks|default(0)|humanize_number }}</span>
-    <span class="stat-label-mobile">clicks</span>
-  </div>
-  <div class="stat-item-mobile">
-    <i class="fas fa-heart"></i>
-    <span class="stat-count-mobile">{{ listing.wishlist_count }}</span>
-    <span class="stat-label-mobile">favorites</span>
-  </div>
-  <div class="stat-item-mobile">
-    <i class="fas fa-calendar-alt"></i>
-    <span class="stat-count-mobile">{{ listing.days_active }}</span>
-    <span class="stat-label-mobile">days active</span>
-  </div>
-</div>
+  <h2>My Listings</h2>
+  <div class="listings-grid">
+    {% for listing in listings %}
+    <div class="listing-card" data-listing-id="{{ listing.listing_id }}">
+      <div class="image-container">
 
-                </div>
-            </div>
-            <div class="listing-actions">
-                <button class="btn btn-primary edit-listing"
-                        onclick="window.location.href='{{ url_for('edit_listing', listing_id=listing.listing_id) }}'">
-                    Edit
-                </button>
-                <button class="btn btn-outline-danger delete-listing" data-id="{{ listing.listing_id }}">Delete</button>
-            </div>
+        {# — Offered‑items images or main image — #}
+        {% if listing.deal_type == 'Swap Deal' and listing.offered_items|length == 2 %}
+          <div class="offered-items-images">
+            {% for item in listing.offered_items[:2] %}
+              <div class="offered-item">
+                <img src="{{ url_for('static', filename='images/' + item.image1.split('/')[-1]) }}"
+                     alt="{{ item.title }}"
+                     onerror="this.src='https://via.placeholder.com/150x120?text=No+Image'">
+                <p>{{ item.title }}</p>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          {% set display_image = listing.image_url %}
+          {% if listing.deal_type == 'Swap Deal' and listing.offered_items and listing.offered_items|length == 1 %}
+            {% set display_image = listing.offered_items[0].image1 %}
+          {% endif %}
+          <img src="{{ display_image
+                       and url_for('static', filename='images/' + display_image.split('/')[-1])
+                       or 'https://via.placeholder.com/300x200?text=No+Image' }}"
+               alt="{{ listing.title }}"
+               class="listing-image"
+               onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+        {% endif %}
 
+        {# — Plan badge — #}
+        <div class="plan-badge">
+          <span class="badge
+                       {% if listing.plan == 'Premium' %}badge-premium
+                       {% elif listing.plan == 'Standard' %}badge-standard
+                       {% else %}badge-basic
+                       {% endif %}">
+            {{ listing.plan }}
+          </span>
         </div>
-        {% endfor %}
+
+        {# — Promote badge only for Free plan — #}
+        {% if listing.Plan == 'Free' %}
+        <div class="promote-badge">
+          <a href="{{ url_for('promote_listing', listing_id=listing.listing_id) }}"
+             class="badge badge-promote">
+            Promote <i class="fas fa-arrow-up"></i>
+          </a>
+        </div>
+        {% endif %}
+
+        {# — Deal‑type badge — #}
+        <div class="deal-type-badge">
+          <span class="badge {% if listing.deal_type == 'Swap Deal' %}badge-swap{% else %}badge-sale{% endif %}">
+            {{ listing.deal_type }}
+          </span>
+        </div>
+      </div>
+
+      <div class="listing-content">
+        {% if listing.deal_type == 'Swap Deal' and listing.offered_items|length == 2 %}
+          <div class="offered-items-descriptions">
+            {% for item in listing.offered_items[:2] %}
+              <div class="offered-item-description">
+                <h3>{{ item.title }}</h3>
+                <p class="description-text" data-full-text="{{ item.description }}">
+                  {{ item.description[:50] }}{% if item.description|length > 50 %}...{% endif %}
+                </p>
+                {% if item.description|length > 50 %}
+                  <a href="#" class="read-more">Read more</a>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <h3>{{ listing.title }}</h3>
+          <p>
+            {{ listing.description[:100] }}{% if listing.description|length > 100 %}...{% endif %}
+          </p>
+        {% endif %}
+
+        <div class="mobile-stats-container">
+          <div class="listing-stats-mobile">
+            <div class="stat-item-mobile">
+              <i class="fas fa-eye"></i>
+              <span class="stat-count-mobile">{{ listing.impressions|default(0)|humanize_number }}</span>
+              <span class="stat-label-mobile">views</span>
+            </div>
+            <div class="stat-item-mobile">
+              <i class="fas fa-mouse-pointer"></i>
+              <span class="stat-count-mobile">{{ listing.clicks|default(0)|humanize_number }}</span>
+              <span class="stat-label-mobile">clicks</span>
+            </div>
+            <div class="stat-item-mobile">
+              <i class="fas fa-heart"></i>
+              <span class="stat-count-mobile">{{ listing.wishlist_count }}</span>
+              <span class="stat-label-mobile">favorites</span>
+            </div>
+            <div class="stat-item-mobile">
+              <i class="fas fa-calendar-alt"></i>
+              <span class="stat-count-mobile">{{ listing.days_active }}</span>
+              <span class="stat-label-mobile">days active</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="listing-actions">
+        <button class="btn btn-primary edit-listing"
+                onclick="window.location.href='{{ url_for('edit_listing', listing_id=listing.listing_id) }}'">
+          Edit
+        </button>
+        <button class="btn btn-outline-danger delete-listing" data-id="{{ listing.listing_id }}">
+          Delete
+        </button>
+      </div>
     </div>
+    {% endfor %}
+  </div>
 </section>
+
 
         <!-- Create Listing Section -->
         <section id="create-listing" class="dashboard-section">
@@ -1699,10 +1711,10 @@ select.form-control {
                                     <span class="input-group-text input-icon"><i class="fas fa-crown"></i></span>
                                     <select name="plan" class="form-select" required>
                                         <option value="Free">Free (₵0, No Promo)</option>
-                                        <option value="Bronze">Bronze (₵20, 3 Weeks Promo)</option>
-                                        <option value="Silver">Silver (₵50, 1 Month Promo)</option>
-                                        <option value="Gold">Gold (₵100, 2 Months Promo)</option>
-                                        <option value="Diamond">Diamond (₵200, 3 Months Promo)</option>
+                                        <option value="Bronze">Bronze (₵20, 1 Weeks Promo)</option>
+                                        <option value="Silver">Silver (₵40, 2 Weeks Promo)</option>
+                                        <option value="Gold">Gold (₵70, 3 Weeks Promo)</option>
+                                        <option value="Diamond">Diamond (₵100, 1 Months Promo)</option>
                                     </select>
                                 </div>
                                 <p class="help-text">Better plans get more visibility</p>

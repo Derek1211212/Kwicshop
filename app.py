@@ -6,7 +6,7 @@ flask.Markup = markupsafe.Markup
 import os
 
 from dotenv import load_dotenv
-from flask import Flask, render_template, url_for, abort, request, session, redirect, flash, jsonify
+from flask import Flask, render_template, url_for, abort, request, session, redirect, flash, jsonify, current_app
 import mysql.connector
 from functools import wraps
 from flask_wtf import FlaskForm
@@ -101,7 +101,7 @@ dbconfig = {
 
 cnxpool = pooling.MySQLConnectionPool(
     pool_name="mypool",
-    pool_size=5,                 # fewer simultaneous connections
+    pool_size=15,                 # fewer simultaneous connections
     pool_reset_session=True,     # clean each connection before reuse
     **dbconfig
 )
@@ -1847,12 +1847,16 @@ def create_listing():
             flash("Desired item is required for swap.", "error")
             logger.error("Missing desired swap item")
             return redirect(url_for('dashboard'))
+        # Extract condition from first offered item
+        condition = offered_items[0]['condition']
     else:
         price = request.form.get('price') or None
-        off_conds = [request.form.get('condition')]
+        # Grab the sale-condition directly from the form
+        condition = request.form.get('condition')
+        off_conds = [condition]
         off_descs = [description]
         offered_items = []
-    logger.debug(f"Deal specifics: desired_swap={desired_swap}, price={price}")
+    logger.debug(f"Deal specifics: desired_swap={desired_swap}, price={price}, condition={condition}")
 
     # 5) Combine description
     if deal_type == 'Swap Deal':
@@ -1892,7 +1896,7 @@ def create_listing():
         session['user_id'], title, combined_description, category,
         desired_swap, desired_swap_description,
         additional_cash, required_cash,
-        (offered_items[0]['condition'] if offered_items else None),
+        condition,
         location, contact
     ]
     if deal_type == 'Outright Sales':
@@ -1937,6 +1941,7 @@ def create_listing():
     flash("Listing created successfully!", "success")
     logger.debug("Listing creation completed successfully")
     return redirect(url_for('dashboard'))
+
 
 
 
@@ -2322,7 +2327,6 @@ def reset_password(token):
 
 # --- Impression & Click Tracking Endpoints ---
 @app.route('/api/track_impression', methods=['POST'])
-@login_required
 def track_impression():
     data = request.get_json() or {}
     lid = data.get('listing_id')
@@ -2366,7 +2370,6 @@ def track_impression():
         conn.close()
 
 @app.route('/api/track_click', methods=['POST'])
-@login_required
 def track_click():
     data = request.get_json() or {}
     lid = data.get('listing_id')
@@ -2435,99 +2438,48 @@ def humanize_number(value):
 @login_required
 def initiate_payment():
     try:
-        if not request.is_json:
-            return jsonify({'error': 'Invalid request format'}), 400
-
         data = request.get_json()
-        print("Received payment request data:", data)  # Debug logging
-
-        # Validate required fields
-        required_fields = ['plan', 'price', 'listing_id']
-        if not all(key in data for key in required_fields):
-            return jsonify({'error': 'Missing required fields'}), 400
-
-        plan = data['plan']
-        try:
-            price = int(data['price']) * 100  # Convert price to kobo
-        except ValueError as ve:
-            print("Value error during price conversion:", str(ve))
-            return jsonify({'error': 'Invalid price value'}), 400
-        listing_id = data['listing_id']
-
-        print(f"Processing payment for listing {listing_id}, plan {plan}, price {price}")  # Debug logging
+        plan = data.get('plan')
+        price = int(data.get('price')) * 100  # ₵ -> pesewas
+        listing_id = data.get('listing_id')
 
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        try:
-            # Verify that the listing exists and belongs to the current user
-            cursor.execute("SELECT user_id FROM listings WHERE listing_id = %s", (listing_id,))
-            listing = cursor.fetchone()
-            if not listing:
-                print(f"Listing {listing_id} not found")
-                return jsonify({'error': 'Listing not found'}), 404
-            if listing['user_id'] != session['user_id']:
-                print(f"Listing {listing_id} doesn't belong to user {session['user_id']}")
-                return jsonify({'error': 'This listing does not belong to you'}), 403
+        cursor.execute("SELECT user_id FROM listings WHERE listing_id = %s", (listing_id,))
+        listing = cursor.fetchone()
+        if not listing:
+            return jsonify({'error': 'Listing not found'}), 404
+        if listing['user_id'] != session['user_id']:
+            return jsonify({'error': 'Unauthorized'}), 403
 
-            # Get user email
-            cursor.execute("SELECT email FROM users WHERE id = %s", (session['user_id'],))
-            user = cursor.fetchone()
-            if not user or not user.get('email'):
-                print(f"User {session['user_id']} email not found")
-                return jsonify({'error': 'User email not found'}), 400
+        cursor.execute("SELECT email FROM users WHERE id = %s", (session['user_id'],))
+        user = cursor.fetchone()
+        if not user or not user.get('email'):
+            return jsonify({'error': 'User email not found'}), 400
 
-            # Prepare Paystack payload
-            payload = {
-                "email": user['email'],
-                "amount": price,
-                "metadata": {
-                    "plan": plan,
-                    "listing_id": listing_id,
-                    "user_id": session['user_id']
-                },
-                "callback_url": url_for('payment_verification', _external=True)
-            }
+        payload = {
+            "email": user['email'],
+            "amount": price,
+            "metadata": {"plan": plan, "listing_id": listing_id, "user_id": session['user_id']},
+            "callback_url": url_for('payment_verification', _external=True)
+        }
 
-            print("Sending to Paystack:", payload)  # Debug logging
+        headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
+        response = requests.post("https://api.paystack.co/transaction/initialize", json=payload, headers=headers)
+        resp_json = response.json()
 
-            headers = {
-                "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}",
-                "Content-Type": "application/json"
-            }
-
-            response = requests.post(
-                "https://api.paystack.co/transaction/initialize",
-                headers=headers,
-                json=payload
-            )
-
-            print("Paystack response:", response.status_code, response.text)  # Debug logging
-
-            response_data = response.json()
-            if response.status_code == 200 and response_data.get("status") is True:
-                # Check for the authorization_url inside the "data" object
-                if "data" in response_data and "authorization_url" in response_data["data"]:
-                    return jsonify(response_data["data"])
-                else:
-                    error_msg = response_data.get("message", "No payment URL received")
-                    print("Error: Authorization URL missing:", response_data)
-                    return jsonify({'error': error_msg}), 400
-            else:
-                error_msg = response_data.get("message", "Payment initialization failed")
-                print("Error initializing payment:", error_msg)
-                return jsonify({'error': error_msg}), 400
-
-        except Exception as db_e:
-            print("Database error:", repr(db_e))
-            return jsonify({'error': 'Database operation failed: ' + str(db_e)}), 500
-        finally:
-            cursor.close()
-            conn.close()
+        if resp_json.get("status") and "authorization_url" in resp_json["data"]:
+            return jsonify({'authorization_url': resp_json["data"]["authorization_url"]})
+        else:
+            return jsonify({'error': resp_json.get("message", "Paystack error")}), 400
 
     except Exception as e:
-        print("Unexpected error:", repr(e))
+        print("Payment error:", str(e))
         return jsonify({'error': 'Internal server error: ' + str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 
 

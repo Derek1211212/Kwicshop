@@ -1587,7 +1587,7 @@ body .mobile-bottom-nav {
 #wishlist-count, #wishlist-count-mobile {
   position: absolute;
   top: -6px;
-  right: -6px;
+  right: 20px;
   background: #dc3545;
   color: #fff;
   font-size: 0.75rem;
@@ -1701,6 +1701,11 @@ body .mobile-bottom-nav {
 /* === Deal‑type badge, images, etc… reuse your existing CSS below this line === */
 
 
+.tooltip {
+  pointer-events: none;
+}
+
+
 </style>
     <script>
     const USER_LOGGED_IN  = {{ 'true' if user_logged_in else 'false' }};
@@ -1757,23 +1762,25 @@ body .mobile-bottom-nav {
       <span class="active-indicator"></span>
     </a>
     {% if session.get('user_id') %}
-      <a href="/dashboard" class="nav-item">
-        <i class="fas fa-user nav-icon"></i>
-        <span class="nav-label">Dashboard</span>
-        <span class="tooltip">Click here to upload an item for swap</span>
-      </a>
+
+    <div class="nav-item-wrapper">
+
+  <a href="/dashboard" class="nav-item">
+    <i class="fas fa-user nav-icon"></i>
+    <span class="nav-label">Dashboard</span>
+    <span class="tooltip">Click here to upload an item for swap</span>
+  </a>
+  
+</div>
       <a href="/my-proposals" class="nav-item">
         <i class="fas fa-exchange-alt nav-icon"></i>
-        <span class="nav-label">Offers</span>
+        <span class="nav-label">Sent Offers</span>
       </a>
+
       <a href="{{ url_for('view_wishlist') }}" class="nav-item wishlist-link">
         <i class="fas fa-heart nav-icon"></i>
         <span class="nav-label">Wishlist</span>
         <span id="wishlist-count-mobile">{{ session.get('wishlist_count', 0) }}</span>
-      </a>
-      <a href="/logout" class="nav-item">
-        <i class="fas fa-sign-out-alt nav-icon"></i>
-        <span class="nav-label">Logout</span>
       </a>
     {% else %}
       <a href="/login" class="nav-item">
@@ -1790,44 +1797,25 @@ body .mobile-bottom-nav {
 </div>
 
 
- <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      if (window.matchMedia('(max-width: 768px)').matches) {
-        const navItems = document.querySelectorAll('.mobile-bottom-nav .nav-item');
-        navItems.forEach(item => {
-          item.addEventListener('touchend', e => {
-            e.preventDefault();
-            const tooltip = item.querySelector('.tooltip');
-            const href = item.getAttribute('href');
-            console.log(`Tapped item: ${href}, Tooltip exists: ${!!tooltip}`);
-            if (href === '/login') {
-              console.log('Navigating to login');
-              window.location.href = href;
-              return;
-            }
-            if (tooltip) {
-              navItems.forEach(other => {
-                const otherTooltip = other.querySelector('.tooltip');
-                if (otherTooltip && other !== item) {
-                  otherTooltip.style.display = 'none';
-                }
-              });
-              const isVisible = tooltip.style.display === 'block';
-              tooltip.style.display = isVisible ? 'none' : 'block';
-              console.log(`Toggled ${href} tooltip to: ${tooltip.style.display}`);
-              if (isVisible) {
-                console.log(`Navigating to ${href}`);
-                window.location.href = href;
-              }
-            } else {
-              console.log(`No tooltip, navigating to ${href}`);
-              window.location.href = href;
-            }
-          });
-        });
-      }
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.matchMedia('(max-width: 768px)').matches) {
+    const navItems = document.querySelectorAll('.mobile-bottom-nav .nav-item');
+    navItems.forEach(item => {
+      item.addEventListener('touchend', e => {
+        e.preventDefault();
+        const tooltip = item.querySelector('.tooltip');
+        const href = item.getAttribute('href');
+        if (tooltip) {
+          tooltip.style.display = 'block';
+        }
+        window.location.href = href;
+      });
     });
-  </script>
+  }
+});
+</script>
+
 
   <body>
   <!-- Your content -->
@@ -2248,19 +2236,19 @@ document.addEventListener('DOMContentLoaded', () => {
       >
         <div class="listing-card {% if listing.deal_type == 'Swap Deal' %}swap-card{% else %}sale-card{% endif %}">
 
-          <!-- Badge -->
+          <!-- Deal‑type Badge + Wishlist -->
           <div class="deal-type-badge">{{ listing.deal_type }}</div>
-              {% if user_logged_in %}
-                <button
-                  class="wishlist-btn"
-                  data-listing-id="{{ listing.listing_id }}"
-                  aria-pressed="{{ listing.is_wishlisted|lower }}"
-                >
-                  <i class="fas fa-heart {{ listing.is_wishlisted and 'wishlisted' or '' }}"></i>
-                </button>
-              {% endif %}
+          {% if user_logged_in %}
+            <button
+              class="wishlist-btn"
+              data-listing-id="{{ listing.listing_id }}"
+              aria-pressed="{{ listing.is_wishlisted|lower }}"
+            >
+              <i class="fas fa-heart {{ listing.is_wishlisted and 'wishlisted' or '' }}"></i>
+            </button>
+          {% endif %}
 
-          <!-- Photos for Swap Deals -->
+          <!-- Photos -->
           {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 1 %}
             <div class="swap-photo-row">
               {% for o in listing.offers[:3] %}
@@ -2268,9 +2256,6 @@ document.addEventListener('DOMContentLoaded', () => {
                   <img src="{{ o.image1 }}" alt="{{ o.title }}" loading="lazy">
                 </div>
               {% endfor %}
-            </div>
-            <div class="swap-offer-titles">
-              {{ listing.offers[:3] | map(attribute='title') | join(' + ') }}
             </div>
           {% else %}
             <div class="card-image">
@@ -2280,41 +2265,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <!-- Content -->
           <div class="card-content">
-            {% if listing.deal_type == 'Outright Sales' or listing.offers|length <= 1 %}
+
+            {% if listing.deal_type == 'Swap Deal' %}
+              {# — TITLE: all offer‑titles + additional_cash (if any) — #}
+              {% set titles = listing.offers | map(attribute='title') | list %}
+              <h3 class="listing-title">
+                {{ titles | join(' + ') }}
+                {% if listing.additional_cash|float > 0 %}
+                  + ₵{{ "{:,.2f}".format(listing.additional_cash|float) }}
+                {% endif %}
+              </h3>
+
+              {# — WANTS & PLUS CASH — #}
+              <div class="swap-details">
+                <div class="detail-item">
+                  <span class="detail-label">Wants:</span>
+                  <span class="detail-value">{{ listing.desired_swap }}</span>
+                </div>
+                {% if listing.required_cash|float > 0 %}
+                  <div class="detail-item">
+                    <span class="detail-label">Plus Cash:</span>
+                    <span class="detail-value cash-adjustment">
+                      + ₵{{ "{:,.2f}".format(listing.required_cash|float) }}
+                    </span>
+                  </div>
+                {% endif %}
+              </div>
+
+            {% else %}
+              {# — OUTRIGHT SALE: title + required_cash — #}
               <h3 class="listing-title">
                 {{ listing.title }}
                 {% if listing.required_cash|float > 0 %}
                   <span class="required-cash">+ ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span>
                 {% endif %}
               </h3>
-            {% endif %}
-
-            {% if listing.deal_type == 'Outright Sales' %}
               <div class="price-display">
                 ₵{{ "{:,.2f}".format(listing.price|float) }}
               </div>
-            {% else %}
-              <div class="swap-details">
-                <div class="detail-item">
-                  <span class="detail-label">Wants:</span>
-                  <span class="detail-value">{{ listing.desired_swap }}</span>
-                </div>
-                {% if listing.additional_cash|float > 0 %}
-                  <div class="detail-item">
-                    <span class="detail-label">Plus Cash:</span>
-                    <span class="detail-value cash-adjustment">
-                      + ₵{{ "{:,.2f}".format(listing.additional_cash|float) }}
-                    </span>
-                  </div>
-                {% endif %}
-              </div>
             {% endif %}
+
           </div>
         </div>
       </a>
     {% endfor %}
   </div>
 </section>
+
 
 <!-- ===== AUTO-SCROLL SCRIPT ===== -->
 <script>
