@@ -2249,19 +2249,19 @@ document.addEventListener('DOMContentLoaded', () => {
           {% endif %}
 
           <!-- Photos -->
-          {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 1 %}
-            <div class="swap-photo-row">
-              {% for o in listing.offers[:3] %}
-                <div class="swap-photo">
-                  <img src="{{ o.image1 }}" alt="{{ o.title }}" loading="lazy">
-                </div>
-              {% endfor %}
-            </div>
-          {% else %}
-            <div class="card-image">
-              <img src="{{ listing.image_url }}" alt="{{ listing.title }}" loading="lazy">
-            </div>
-          {% endif %}
+        {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 1 %}
+          <div class="swap-photo-row">
+            {% for o in listing.offers[:3] %}
+              <div class="swap-photo">
+                <img src="{{ o.image1 }}" alt="{{ o.title }}">
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="card-image">
+            <img src="{{ listing.image_url }}" alt="{{ listing.title }}">
+          </div>
+        {% endif %}
 
           <!-- Content -->
           <div class="card-content">
@@ -2664,23 +2664,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   //======== 5) Lazy Loading Images ========//
-  function lazyLoadImages() {
-    const images = document.querySelectorAll('img[loading="lazy"]');
-    const observer = new IntersectionObserver(entries => {
+document.addEventListener('DOMContentLoaded', () => {
+  const images = document.querySelectorAll('img[data-src]');
+  const observer = new IntersectionObserver(
+    (entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const img = entry.target;
-          const src = img.dataset.src;
-          if (src) {
-            img.src = src;
-            img.removeAttribute('data-src');
-          }
+          img.src = img.dataset.src;
+          img.removeAttribute('data-src');
           observer.unobserve(img);
         }
       });
-    }, {rootMargin: '200px'});
-    images.forEach(img => observer.observe(img));
-  }
+    },
+    { rootMargin: '200px' }
+  );
+  images.forEach(img => observer.observe(img));
+});
 
   //======== 7) Hero Carousel ========//
   function initCarousel() {
