@@ -101,7 +101,7 @@ dbconfig = {
 
 cnxpool = pooling.MySQLConnectionPool(
     pool_name="mypool",
-    pool_size=15,                 # fewer simultaneous connections
+    pool_size=10,                 # fewer simultaneous connections
     pool_reset_session=True,     # clean each connection before reuse
     **dbconfig
 )
