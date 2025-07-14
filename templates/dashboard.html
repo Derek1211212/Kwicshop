@@ -1768,8 +1768,8 @@ select.form-control {
                                                 <select name="offer_condition[]" class="form-select" required>
                                                     <option value="">Select</option>
                                                     <option>New</option>
-                                                    <option>Used - Like New</option>
-                                                    <option>Used - Good</option>
+                                                    <option>Slightly Used New</option>
+                                                    <option>Used but in Good Condition</option>
                                                     <option>Used - Needs Repair</option>
                                                 </select>
                                             </div>
@@ -1815,9 +1815,9 @@ select.form-control {
                                         <select name="desired_condition" class="form-select" required>
                                             <option value="">Select</option>
                                             <option>New</option>
-                                            <option>Used - Like New</option>
-                                            <option>Used - Good</option>
-                                            <option>Used - Any Condition</option>
+                                            <option>Slightly Used</option>
+                                            <option>Used but in Good Condition</option>
+                                            <option>Used and needs repairs</option>
                                         </select>
                                     </div>
                                 </div>
@@ -1872,9 +1872,9 @@ select.form-control {
                                     <select name="condition" class="form-select" required>
                                         <option value="">Select</option>
                                         <option>New</option>
-                                        <option>Used - Like New</option>
-                                        <option>Used - Good</option>
-                                        <option>Used - Fair</option>
+                                        <option>Slightly Used</option>
+                                        <option>Used but in Good ondition</option>
+                                        <option>Used and need repairs</option>
                                     </select>
                                 </div>
                             </div>
@@ -1974,7 +1974,7 @@ select.form-control {
             </div>
         </section>
 
-        <!-- Profile Section -->
+        <!-- Profile Section --> 
         <section id="profile" class="dashboard-section">
             <h2>Profile Settings</h2>
             <form id="profile-form" class="profile-form">
@@ -1988,6 +1988,7 @@ select.form-control {
                 </div>
                 <button type="submit" class="btn btn-primary">Update Profile</button>
             </form>
+
             <h3 style="margin-top: 30px;">Change Password</h3>
             <form id="password-form" class="profile-form">
                 <div class="form-group">
@@ -2000,7 +2001,18 @@ select.form-control {
                 </div>
                 <button type="submit" class="btn btn-primary">Change Password</button>
             </form>
+
+            <!-- Logout Button -->
+            <div class="mt-4">
+                <form action="{{ url_for('logout') }}" method="post">
+                    <!-- If you use Flask-WTF, include your CSRF token here -->
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </button>
+                </form>
+            </div>
         </section>
+
 
         <!-- Image Modal -->
         <div id="imageModal" class="image-modal">
@@ -2038,6 +2050,7 @@ select.form-control {
             { name: 'Mobile Phones & Accessories', synonyms: ['phone','mobile','charger','case', 'HeadPhone', 'Android', 'iphone', 'MacBook'] },
             { name: 'Software & Apps', synonyms: ['app','program','software'] },
             { name: 'Health & Beauty', synonyms: ['skincare','makeup','wellness'] },
+            { name: 'Medical Equipment', synonyms: ['stethoscope','syringe','hospital'] },
             { name: 'Medical Equipment', synonyms: ['stethoscope','syringe','hospital'] },
             { name: 'Sports & Outdoors', synonyms: ['sport','hiking','camping'] },
             { name: 'Fashion & Apparel', synonyms: ['clothes','shirt','dress','jeans'] },

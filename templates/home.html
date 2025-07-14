@@ -2419,39 +2419,27 @@ document.addEventListener("DOMContentLoaded", () => {
   // 3) Main push-subscribe logic
   async function subscribeUser() {
     try {
-      // Wait until SW is active
       const reg = await navigator.serviceWorker.ready;
-
-      // Request notification permission
       const perm = await Notification.requestPermission();
       if (perm !== 'granted') {
         throw new Error('Notification permission not granted');
       }
 
-      // Retrieve the VAPID public key injected by Flask
       const key = {{ vapid_public_key | tojson }};
-      console.log('🔑 VAPID key:', key);
-      if (!key) {
-        throw new Error('Missing VAPID public key!');
-      }
+      if (!key) throw new Error('Missing VAPID public key!');
 
-      // Subscribe with applicationServerKey
       const subscription = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(key)
       });
-      console.log('✅ Obtained subscription:', subscription);
 
-      // Send subscription to backend
       const resp = await fetch('/subscribe', {
         method:      'POST',
         credentials: 'include',
         headers:     { 'Content-Type': 'application/json' },
         body:        JSON.stringify(subscription)
       });
-      if (!resp.ok) {
-        throw new Error(`Subscribe API failed: ${resp.status}`);
-      }
+      if (!resp.ok) throw new Error(`Subscribe API failed: ${resp.status}`);
       console.log('✅ Subscription stored on server');
 
     } catch (err) {
@@ -2459,30 +2447,47 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 4) Banner display & button handlers
+  // 4) Banner display & button handlers (with 24 h re‑prompt)
   document.addEventListener('DOMContentLoaded', () => {
-    const PROMPT_KEY = 'swapsphere_notif_prompted';
-    const banner     = document.getElementById('notify-prompt');
+    const PROMPT_KEY      = 'swapsphere_notif_prompted';      // stores 'yes'
+    const PROMPT_NO_KEY   = 'swapsphere_notif_prompted_no';   // stores timestamp
+    const REPEAT_INTERVAL = 24 * 60 * 60 * 1000;              // 24 hours in ms
 
-    if (
-      USER_LOGGED_IN === true &&
-      USER_SUBSCRIBED === false &&
-      !localStorage.getItem(PROMPT_KEY)
-    ) {
+    const banner = document.getElementById('notify-prompt');
+
+    function shouldShowBanner() {
+      // Skip if already subscribed
+      if (USER_SUBSCRIBED === true) return false;
+      // Skip if they already clicked “yes”
+      if (localStorage.getItem(PROMPT_KEY) === 'yes') return false;
+
+      const noTs = parseInt(localStorage.getItem(PROMPT_NO_KEY), 10);
+      if (!noTs) {
+        // Never refused → show banner
+        return true;
+      }
+      // Only show if more than 24 h since last “no”
+      return (Date.now() - noTs) > REPEAT_INTERVAL;
+    }
+
+    if (USER_LOGGED_IN === true && shouldShowBanner()) {
       banner.style.display = 'block';
     }
 
     document.getElementById('notify-yes').onclick = () => {
       subscribeUser();
       localStorage.setItem(PROMPT_KEY, 'yes');
+      localStorage.removeItem(PROMPT_NO_KEY);
       banner.remove();
     };
+
     document.getElementById('notify-no').onclick = () => {
-      localStorage.setItem(PROMPT_KEY, 'no');
+      localStorage.setItem(PROMPT_NO_KEY, Date.now().toString());
       banner.remove();
     };
   });
 </script>
+
 
 
 
