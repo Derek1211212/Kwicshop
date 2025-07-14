@@ -160,10 +160,10 @@ def check_and_update_expired_plans():
 
         # Define plan durations in days
         PLAN_DURATIONS = {
-            'Diamond': 90,   # 3 months
-            'Gold': 60,      # 2 months
-            'Silver': 30,    # 1 month
-            'Standard': 21   # 3 weeks
+            'Diamond': 30,   # 3 months
+            'Gold': 21,      # 2 months
+            'Silver': 14,    # 1 month
+            
         }
 
         # Fetch listings with non-Free plans
@@ -227,10 +227,9 @@ def home():
     user_logged_in  = 'user_id' in session
     user_subscribed = False
 
-
-
     carousel_listings = []
     listings          = []
+    total_pages       = 0   # ensure defined
 
     conn   = None
     cursor = None
@@ -246,7 +245,8 @@ def home():
             )
             user_subscribed = cursor.fetchone() is not None
 
-        # 2A) Carousel (unchanged)
+        # 2A) Carousel
+        start = time.perf_counter()
         cursor.execute("""
             SELECT listing_id, image1, title, `Plan`
               FROM listings
@@ -254,6 +254,8 @@ def home():
              LIMIT 20
         """)
         raw = cursor.fetchall()
+        logging.info("Query: carousel fetch took %.4fs", time.perf_counter() - start)
+
         PLAN_WEIGHTS = {'Diamond':5,'Gold':4,'Silver':3,'Bronze':2,'Free':1}
         weighted = [
             idx for idx, rec in enumerate(raw)
@@ -277,7 +279,7 @@ def home():
                 c['banner_image'] = base_img + (c.get('image1') or 'placeholder.jpg')
             carousel_listings = ordered
 
-        # 2B) Grid listings + metrics + pagination
+        # 2B) Listings grid
         base_q = """
             SELECT 
               l.listing_id,
@@ -314,7 +316,7 @@ def home():
 
         plan_case = (
             "CASE l.`Plan` WHEN 'Diamond' THEN 5 WHEN 'Gold' THEN 4 "
-            "WHEN 'Silver' THEN 3 WHEN 'Bronze' THEN 2 ELSE 1 END"
+            "WHEN 'Silver' THEN 3 ELSE 1 END"
         )
         if location_q:
             base_q += " AND l.location IS NOT NULL"
@@ -325,19 +327,22 @@ def home():
             )
             params += [location_q, location_q, f"%{location_q}%"]
 
-        cursor.execute(
-            base_q
-            + " ORDER BY " + plan_case + " DESC, l.created_at DESC"
-            + " LIMIT %s OFFSET %s",
-            tuple(params + [per_page, offset])
-        )
-        listings = cursor.fetchall()
+        cache_key_grid = f"grid:{search}:{selected_category}:{deal_type_filter}:{location_q}:{page}"
+        listings = cache.get(cache_key_grid)
+        if listings is None:
+            start = time.perf_counter()
+            cursor.execute(
+                base_q
+                + " ORDER BY " + plan_case + " DESC, l.created_at DESC"
+                + " LIMIT %s OFFSET %s",
+                tuple(params + [per_page, offset])
+            )
+            listings = cursor.fetchall()
+            cache.set(cache_key_grid, listings, timeout=30)
+            logging.info("Query: listings grid fetch took %.4fs", time.perf_counter() - start)
 
-        # ————————————————
-        # 3) Rotate grid listings by plan weight + jitter
-        # ————————————————
-        # Build a weighted index list so higher-plan ads appear more often
-        weights = {'Diamond':5,'Gold':4,'Silver':3,'Bronze':2,'Free':1}
+        # 3) Rotate grid listings
+        weights = {'Diamond':5,'Gold':4,'Silver':3,'Free':1}
         weighted_idxs = [
             i for i, l in enumerate(listings)
             for _ in range(weights.get(l['Plan'], 1))
@@ -357,11 +362,12 @@ def home():
                     break
             listings = rotated
 
-        # 2C) Bulk fetch offered_items for Swap Deals
+        # 2C) offered_items
         swap_ids = [l['listing_id'] for l in listings if l['deal_type'] == 'Swap Deal']
         offers   = {}
         if swap_ids:
             ph = ','.join(['%s'] * len(swap_ids))
+            start = time.perf_counter()
             cursor.execute(
                 f"""
                 SELECT listing_id, item_id, title, description, image1, `condition`
@@ -374,8 +380,9 @@ def home():
             for o in cursor.fetchall():
                 o['image1'] = base_img + (o['image1'] or 'placeholder.jpg')
                 offers.setdefault(o['listing_id'], []).append(o)
+            logging.info("Query: offered_items fetch took %.4fs", time.perf_counter() - start)
 
-        # 2D) Merge, default missing fields, wishlist
+        # 2D) Merge & wishlist
         base_img = url_for('static', filename='images/', _external=True)
         for l in listings:
             l['image_url']    = base_img + (l.get('image1') or 'placeholder.jpg')
@@ -411,9 +418,16 @@ def home():
         if deal_type_filter != 'All':
             count_q += " AND deal_type=%s"; count_p.append(deal_type_filter)
 
-        cursor.execute(count_q, tuple(count_p))
-        total_listings = cursor.fetchone()['total']
-        total_pages    = (total_listings + per_page - 1) // per_page
+        cache_key = f"cnt:{search}:{selected_category}:{deal_type_filter}"
+        total_listings = cache.get(cache_key)
+        if total_listings is None:
+            start = time.perf_counter()
+            cursor.execute(count_q, tuple(count_p))
+            total_listings = cursor.fetchone()['total']
+            cache.set(cache_key, total_listings, timeout=30)
+            logging.info("Query: count listings took %.4fs", time.perf_counter() - start)
+
+        total_pages = (total_listings + per_page - 1) // per_page
 
     except Exception as e:
         logging.error("Error in home(): %s", e, exc_info=True)
@@ -441,6 +455,8 @@ def home():
         page=page,
         total_pages=total_pages
     )
+
+
 
 
 
@@ -2784,6 +2800,262 @@ def test_push():
         url_for('home')  # or any other URL
     )
     return 'OK'
+
+
+
+@app.route('/api/heartbeat', methods=['POST'])
+def heartbeat():
+    data = request.get_json()
+    visitor_id = data.get('visitorId')
+    current_page = data.get('currentPage', '/')
+    ip = request.remote_addr
+    user_id = session.get('user_id')  # matches users.id
+    user_agent = request.headers.get('User-Agent')
+    device_info = data.get('deviceInfo', '')
+    now = datetime.utcnow()
+
+    if not visitor_id:
+        return jsonify(success=False, error='Missing visitor_id'), 400
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO visitor_activity (visitor_id, user_id, last_seen, current_page, ip_address, user_agent, device_info)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE 
+            user_id=VALUES(user_id),
+            last_seen=VALUES(last_seen),
+            current_page=VALUES(current_page),
+            ip_address=VALUES(ip_address),
+            user_agent=VALUES(user_agent),
+            device_info=VALUES(device_info)
+    """, (visitor_id, user_id, now, current_page, ip, user_agent, device_info))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return jsonify(success=True)
+
+# Active visitors list for table
+@app.route('/admin/active_visitors')
+def active_visitors():
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+
+    threshold = datetime.utcnow() - timedelta(minutes=5)
+    cur.execute("""
+        SELECT va.*, u.username, u.name, u.avatar, u.email
+        FROM visitor_activity va
+        LEFT JOIN users u ON va.user_id = u.id
+        WHERE va.last_seen >= %s
+    """, (threshold,))
+    visitors = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    return jsonify(visitors)
+
+# Additional endpoint for traffic sources
+@app.route('/admin/traffic_sources')
+def traffic_sources():
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+
+    # This is simplified - in a real app you'd parse referrers from user_agent or have a separate tracking system
+    cur.execute("""
+        SELECT 
+            CASE 
+                WHEN user_agent LIKE '%Twitter%' THEN 'Social Media'
+                WHEN user_agent LIKE '%Facebook%' THEN 'Social Media'
+                WHEN user_agent LIKE '%Google%' THEN 'Search Engines'
+                WHEN user_agent LIKE '%Bing%' THEN 'Search Engines'
+                WHEN user_agent LIKE '%Yahoo%' THEN 'Search Engines'
+                WHEN user_agent LIKE '%LinkedIn%' THEN 'Social Media'
+                WHEN user_agent LIKE '%Mail%' THEN 'Email'
+                WHEN user_agent LIKE '%Outlook%' THEN 'Email'
+                WHEN user_agent LIKE '%Gmail%' THEN 'Email'
+                WHEN referrer IS NULL OR referrer = '' THEN 'Direct'
+                ELSE 'Referral'
+            END as source,
+            COUNT(DISTINCT visitor_id) as count
+        FROM visitor_activity
+        WHERE last_seen >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+        GROUP BY source
+        ORDER BY count DESC
+    """)
+    
+    result = cur.fetchall()
+    cur.close()
+    conn.close()
+    
+    labels = [row['source'] for row in result]
+    values = [row['count'] for row in result]
+    
+    return jsonify({
+        'labels': labels,
+        'values': values
+    })
+
+# Endpoint for device breakdown
+@app.route('/admin/device_breakdown')
+def device_breakdown():
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+
+    cur.execute("""
+        SELECT 
+            CASE 
+                WHEN user_agent LIKE '%Mobile%' THEN 'Mobile'
+                WHEN user_agent LIKE '%Tablet%' THEN 'Tablet'
+                ELSE 'Desktop'
+            END as device,
+            COUNT(DISTINCT visitor_id) as count
+        FROM visitor_activity
+        WHERE last_seen >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+        GROUP BY device
+        ORDER BY count DESC
+    """)
+    
+    result = cur.fetchall()
+    cur.close()
+    conn.close()
+    
+    labels = [row['device'] for row in result]
+    values = [row['count'] for row in result]
+    
+    return jsonify({
+        'labels': labels,
+        'values': values
+    })
+
+# Endpoint for top pages
+@app.route('/admin/top_pages')
+def top_pages():
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+
+    cur.execute("""
+        SELECT 
+            current_page as page,
+            COUNT(*) as views,
+            AVG(TIMESTAMPDIFF(SECOND, first_seen, last_seen)) as avg_duration
+        FROM (
+            SELECT 
+                visitor_id,
+                current_page,
+                MIN(last_seen) as first_seen,
+                MAX(last_seen) as last_seen
+            FROM visitor_activity
+            WHERE last_seen >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            GROUP BY visitor_id, current_page
+        ) as sessions
+        GROUP BY current_page
+        ORDER BY views DESC
+        LIMIT 5
+    """)
+    
+    result = cur.fetchall()
+    cur.close()
+    conn.close()
+    
+    return jsonify(result)
+
+# Enhanced analytics endpoint
+@app.route('/admin/analytics')
+def analytics():
+    start = request.args.get('start')
+    end = request.args.get('end')
+    period = request.args.get('period', 'day')  # day, week, month, year
+
+    if not start or not end:
+        return jsonify({'error': 'Missing start or end date'}), 400
+
+    try:
+        # Parse dates in YYYY-MM-DD format
+        start_dt = datetime.strptime(start, '%Y-%m-%d')
+        end_dt = datetime.strptime(end, '%Y-%m-%d') + timedelta(days=1)
+    except ValueError as e:
+        return jsonify({'error': f'Invalid date format. Please use YYYY-MM-DD. Error: {str(e)}'}), 400
+
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+
+    # Choose SQL grouping by period
+    if period == 'week':
+        group_by = "YEARWEEK(last_seen, 1)"
+        label = "DATE_FORMAT(DATE_ADD(last_seen, INTERVAL(1 - DAYOFWEEK(last_seen)) DAY), '%Y-%m-%d') as date"
+    elif period == 'month':
+        group_by = "DATE_FORMAT(last_seen, '%Y-%m')"
+        label = "DATE_FORMAT(last_seen, '%Y-%m') as date"
+    elif period == 'year':
+        group_by = "YEAR(last_seen)"
+        label = "YEAR(last_seen) as date"
+    else:  # default: day
+        group_by = "DATE(last_seen)"
+        label = "DATE(last_seen) as date"
+
+    # Chart: unique visitors and page views per period
+    cur.execute(f"""
+        SELECT 
+            {label}, 
+            COUNT(DISTINCT visitor_id) as unique_visitors,
+            COUNT(*) as page_views
+        FROM visitor_activity
+        WHERE last_seen BETWEEN %s AND %s
+        GROUP BY {group_by}
+        ORDER BY date
+    """, (start_dt, end_dt))
+    chart_data = cur.fetchall()
+
+    # Summary metrics for the whole range
+    cur.execute("""
+        SELECT 
+            COUNT(DISTINCT visitor_id) as total_unique,
+            COUNT(*) as page_views,
+            AVG(session_duration) as avg_session,
+            (SUM(CASE WHEN page_count = 1 THEN 1 ELSE 0 END) / COUNT(*)) * 100 as bounce_rate
+        FROM (
+            SELECT 
+                visitor_id,
+                COUNT(*) as page_count,
+                TIMESTAMPDIFF(SECOND, MIN(last_seen), MAX(last_seen)) as session_duration
+            FROM visitor_activity
+            WHERE last_seen BETWEEN %s AND %s
+            GROUP BY visitor_id
+        ) as sessions
+    """, (start_dt, end_dt))
+    summary = cur.fetchone()
+
+    # Count active visitors
+    threshold = datetime.utcnow() - timedelta(minutes=5)
+    cur.execute("""
+        SELECT COUNT(DISTINCT visitor_id) as active
+        FROM visitor_activity
+        WHERE last_seen >= %s
+    """, (threshold,))
+    active = cur.fetchone()['active']
+
+    cur.close()
+    conn.close()
+
+    return jsonify({
+        'summary': summary,
+        'chart': chart_data,
+        'active': active
+    })
+
+
+@app.route('/admin/usage')
+def admin_usage():
+    return render_template('admin_usage.html')
+
+
+
+
+
+
 
 
 

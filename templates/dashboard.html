@@ -1711,7 +1711,6 @@ select.form-control {
                                     <span class="input-group-text input-icon"><i class="fas fa-crown"></i></span>
                                     <select name="plan" class="form-select" required>
                                         <option value="Free">Free (₵0, No Promo)</option>
-                                        <option value="Bronze">Bronze (₵20, 1 Weeks Promo)</option>
                                         <option value="Silver">Silver (₵40, 2 Weeks Promo)</option>
                                         <option value="Gold">Gold (₵70, 3 Weeks Promo)</option>
                                         <option value="Diamond">Diamond (₵100, 1 Months Promo)</option>
@@ -2541,5 +2540,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
+<script src="{{ url_for('static', filename='heartbeat.js') }}"></script>
 </body>
 </html>
