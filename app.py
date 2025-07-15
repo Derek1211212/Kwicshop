@@ -31,6 +31,7 @@ import itertools
 from mysql.connector import pooling
 from flask_caching import Cache
 import multiprocessing
+import threading
 
 
 
@@ -55,6 +56,18 @@ app = Flask(__name__, template_folder=os.path.join(BASE_DIR, 'templates'))
 app.config['SECRET_KEY'] = 'fa470fe714e44404511cbad16224f52777068d05bb5c29ed'
 
 app.config.from_pyfile('config.py')
+
+impressions_cache = {}
+cache_lock = threading.Lock()  # to avoid race conditions
+
+clicks_cache = {}
+clicks_cache_lock = threading.Lock()
+
+
+# Initialize the scheduler
+scheduler = BackgroundScheduler()
+scheduler.start()
+
 
 from logging.handlers import RotatingFileHandler
 if not app.debug:
@@ -90,38 +103,53 @@ cache.init_app(app)
 
 # Database connection function
 dbconfig = {
-    "host":       os.getenv('DB_HOST'),
-    "user":       os.getenv('DB_USER'),
-    "password":   os.getenv('DB_PASSWORD'),
-    "database":   os.getenv('DB_DATABASE'),
-    "port":       int(os.getenv('DB_PORT')),
+    "host":       os.getenv('DB_HOST', 'localhost'),
+    "user":       os.getenv('DB_USER', 'root'),
+    "password":   os.getenv('DB_PASSWORD', ''),
+    "database":   os.getenv('DB_DATABASE', ''),
+    "port":       int(os.getenv('DB_PORT', 3306)),
     "charset":    'utf8mb4',
     "collation":  'utf8mb4_unicode_ci',
     "use_unicode": True
 }
 
-# 2) Compute a safe pool_size per process
-MAX_DB_CONN    = 500
-SAFETY_FACTOR  = 0.8    # only use 80% of max connections for app pools
-# How many app workers/processes will each try to open a pool?
-WEB_CONCURRENCY = int(os.getenv('WEB_CONCURRENCY',
-                                multiprocessing.cpu_count() * 2))
-# Pool size per process
-per_process_pool = max(
-    5,  # at least a handful of connections
-    int((MAX_DB_CONN * SAFETY_FACTOR) / WEB_CONCURRENCY)
+# ─── 2) Determine how many app‑server processes you’re running ──────────────
+#    (e.g. Gunicorn --workers or similar). Default to 1 in dev.
+try:
+    WEB_CONCURRENCY = int(os.getenv('WEB_CONCURRENCY', '1'))
+    if WEB_CONCURRENCY < 1:
+        raise ValueError
+except ValueError:
+    WEB_CONCURRENCY = 1
+
+# ─── 3) Define your total‑app ceiling and per‑pool cap ───────────────────────
+TOTAL_APP_CONN = 200   # across all workers, aim to use no more than this
+MAX_PER_POOL   = 20    # mysql.connector.pooling hard upper bound
+MIN_PER_POOL   = 5     # always at least this many connections
+
+# ─── 4) Compute per‑process pool size ────────────────────────────────────────
+raw_size = TOTAL_APP_CONN // WEB_CONCURRENCY
+pool_size = max(MIN_PER_POOL, min(raw_size, MAX_PER_POOL))
+
+logger.info(
+    f"DB Pool Configuration → WEB_CONCURRENCY={WEB_CONCURRENCY}, "
+    f"TOTAL_APP_CONN={TOTAL_APP_CONN}, raw_per_pool={raw_size}, "
+    f"using pool_size={pool_size}"
 )
 
-# 3) Instantiate your pool
+# ─── 5) Instantiate the MySQLConnectionPool ────────────────────────────────
 cnxpool = pooling.MySQLConnectionPool(
     pool_name="mypool",
-    pool_size=per_process_pool,
+    pool_size=pool_size,
     pool_reset_session=True,
     **dbconfig
 )
 
+# ─── 6) Helper to get a connection from the pool ────────────────────────────
 def get_db_connection():
-    """Grab a ready‐to‐go connection from the pool."""
+    """
+    Returns a mysql.connector connection from the configured pool.
+    """
     return cnxpool.get_connection()
 
 
@@ -481,61 +509,53 @@ def listing_details(listing_id):
     conn = None
     cursor = None
     listing = None
+
     app.logger.debug(f"Accessing listing_details for listing_id: {listing_id}, method: {request.method}")
-    
-    # Handle unexpected POST requests
+
+    # Handle unexpected POST requests gracefully
     if request.method == 'POST':
         app.logger.debug(f"Unexpected POST to listing_details: {request.form.to_dict()}")
         flash('Error: Invalid form submission. Please use the proposal form.', 'danger')
         return redirect(url_for('listing_details', listing_id=listing_id))
-    
+
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        
-        # Log query execution
-        app.logger.debug(f"Fetching listing with ID: {listing_id}")
-        
-        # 1) Fetch the main listing + owner info
+
+        # Step 1: Fetch main listing + owner + avg rating & count in one query
+        app.logger.debug("Fetching main listing + avg rating + owner info")
         cursor.execute("""
-            SELECT l.*, u.username, u.email
+            SELECT l.*, u.username, u.email,
+                   COALESCE(avg_r.avg_rating, 0) AS avg_rating,
+                   COALESCE(avg_r.rating_count, 0) AS rating_count
             FROM listings AS l
             JOIN users AS u ON l.user_id = u.id
+            LEFT JOIN (
+                SELECT listing_id, AVG(rating_value) AS avg_rating, COUNT(*) AS rating_count
+                FROM ratings
+                WHERE listing_id = %s
+                GROUP BY listing_id
+            ) AS avg_r ON l.listing_id = avg_r.listing_id
             WHERE l.listing_id = %s
-        """, (listing_id,))
+        """, (listing_id, listing_id))
         listing = cursor.fetchone()
         if not listing:
             app.logger.warning(f"No listing found for ID: {listing_id}")
             abort(404)
-        
-        # 2) Fetch average rating & total count
-        app.logger.debug("Fetching ratings")
+
+        # Step 2: Fetch reviews (limit to latest 20)
+        app.logger.debug("Fetching reviews (limit 20)")
         cursor.execute("""
-            SELECT 
-                AVG(rating_value) AS avg_rating, 
-                COUNT(*) AS rating_count
-            FROM ratings
-            WHERE listing_id = %s
-        """, (listing_id,))
-        rd = cursor.fetchone() or {}
-        listing['avg_rating'] = float(rd.get('avg_rating') or 0)
-        listing['rating_count'] = rd.get('rating_count') or 0
-        
-        # 3) Fetch all reviews
-        app.logger.debug("Fetching reviews")
-        cursor.execute("""
-            SELECT r.review_id,
-                   r.review_text,
-                   r.created_at,
-                   u.username AS reviewer
+            SELECT r.review_id, r.review_text, r.created_at, u.username AS reviewer
             FROM reviews AS r
             JOIN users AS u ON r.user_id = u.id
             WHERE r.listing_id = %s
             ORDER BY r.created_at DESC
+            LIMIT 20
         """, (listing_id,))
         listing['reviews'] = cursor.fetchall() or []
-        
-        # 4) Fetch offered items with escaped `condition` column
+
+        # Step 3: Fetch offered items
         app.logger.debug("Fetching offered items")
         cursor.execute("""
             SELECT title, description, `condition`, image1, image2, image3, image4
@@ -543,9 +563,9 @@ def listing_details(listing_id):
             WHERE listing_id = %s
         """, (listing_id,))
         listing['offered_items'] = cursor.fetchall() or []
-        
-        app.logger.debug(f"Listing data: {listing}")
-        
+
+        app.logger.debug(f"Listing data loaded successfully: {listing}")
+
     except mysql.connector.Error as e:
         app.logger.error(f"Database error in listing_details: {str(e)}", exc_info=True)
         if conn:
@@ -561,12 +581,13 @@ def listing_details(listing_id):
             cursor.close()
         if conn:
             conn.close()
-    
+
     return render_template(
         'listing_details.html',
         listing=listing,
-        listing_id=listing_id  # Add listing_id to template context
+        listing_id=listing_id
     )
+
 
 
 
@@ -2353,92 +2374,181 @@ def reset_password(token):
 
 
 
+
+def flush_impressions():
+    """
+    Merge cached impressions into listing_metrics table,
+    then clear the in-memory cache. Runs every hour.
+    """
+    global impressions_cache
+    now = datetime.utcnow()
+    logging.info(f"⏱ Flushing impressions at {now}. Cache size: {len(impressions_cache)}")
+
+    # Step 1: Copy & clear cache under lock
+    with cache_lock:
+        to_flush = impressions_cache
+        impressions_cache = {}
+
+    if not to_flush:
+        logging.info("Nothing to flush. Skipping DB update.")
+        return
+
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        for lid, counts in to_flush.items():
+            impressions = counts['impressions']
+            carousel = counts['carousel_impressions']
+
+            sql = """
+                INSERT INTO listing_metrics (listing_id, impressions, carousel_impressions)
+                VALUES (%s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                  impressions = impressions + VALUES(impressions),
+                  carousel_impressions = carousel_impressions + VALUES(carousel_impressions)
+            """
+            cur.execute(sql, (lid, impressions, carousel))
+
+        conn.commit()
+        logging.info(f"✅ Successfully flushed {len(to_flush)} items to DB.")
+
+    except Exception as e:
+        logging.exception("❌ Failed to flush impressions to DB:")
+        if conn:
+            conn.rollback()
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+def flush_clicks():
+    """
+    Flush cached click counts to listing_metrics table every hour.
+    """
+    global clicks_cache
+    now = datetime.utcnow()
+    logging.info(f"⏱ Flushing clicks at {now}. Cache size: {len(clicks_cache)}")
+
+    # Copy and clear the cache safely
+    with clicks_cache_lock:
+        to_flush = clicks_cache
+        clicks_cache = {}
+
+    if not to_flush:
+        logging.info("Nothing to flush. Skipping DB update.")
+        return
+
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        # check once if carousel_clicks column exists
+        cur.execute("SHOW COLUMNS FROM listing_metrics LIKE 'carousel_clicks'")
+        has_cc = cur.fetchone() is not None
+
+        for lid, counts in to_flush.items():
+            clicks = counts['clicks']
+            carousel = counts['carousel_clicks']
+
+            if has_cc:
+                sql = """
+                    INSERT INTO listing_metrics (listing_id, clicks, carousel_clicks)
+                    VALUES (%s, %s, %s)
+                    ON DUPLICATE KEY UPDATE
+                        clicks = clicks + VALUES(clicks),
+                        carousel_clicks = carousel_clicks + VALUES(carousel_clicks)
+                """
+                params = (lid, clicks, carousel)
+            else:
+                sql = """
+                    INSERT INTO listing_metrics (listing_id, clicks)
+                    VALUES (%s, %s)
+                    ON DUPLICATE KEY UPDATE clicks = clicks + VALUES(clicks)
+                """
+                params = (lid, clicks)
+
+            cur.execute(sql, params)
+
+        conn.commit()
+        logging.info(f"✅ Successfully flushed {len(to_flush)} click items to DB.")
+
+    except Exception as e:
+        logging.exception("❌ Failed to flush clicks to DB:")
+        if conn:
+            conn.rollback()
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+
+
+# Schedule it to run every hour (or every minute for testing)
+scheduler.add_job(func=flush_impressions, trigger='interval', hours=1, next_run_time=datetime.utcnow())
+scheduler.add_job(func=flush_clicks, trigger='interval', hours=1, next_run_time=datetime.utcnow())
+
+
+
+
+
 # --- Impression & Click Tracking Endpoints ---
 @app.route('/api/track_impression', methods=['POST'])
 def track_impression():
-    data = request.get_json() or {}
-    lid = data.get('listing_id')
+    data   = request.get_json() or {}
+    lid    = str(data.get('listing_id'))
     source = data.get('source', 'grid')
+
     if not lid:
         return jsonify(success=False, error='Missing listing_id'), 400
 
-    conn = get_db_connection()
-    cur = conn.cursor()
     try:
-        # check if carousel_impressions column exists
-        cur.execute("SHOW COLUMNS FROM listing_metrics LIKE 'carousel_impressions'")
-        has_ci = cur.fetchone() is not None
+        with cache_lock:
+            if lid not in impressions_cache:
+                impressions_cache[lid] = {'impressions': 0, 'carousel_impressions': 0}
 
-        if has_ci:
-            # upsert with carousel_impressions
-            sql = (
-                "INSERT INTO listing_metrics (listing_id, impressions, carousel_impressions) "
-                "VALUES (%s,1,CASE WHEN %s='carousel' THEN 1 ELSE 0 END) "
-                "ON DUPLICATE KEY UPDATE impressions = impressions + 1, "
-                "carousel_impressions = carousel_impressions + (CASE WHEN %s='carousel' THEN 1 ELSE 0 END)"
-            )
-            params = (lid, source, source)
-        else:
-            # fallback: only track total impressions
-            sql = (
-                "INSERT INTO listing_metrics (listing_id, impressions) VALUES (%s,1) "
-                "ON DUPLICATE KEY UPDATE impressions = impressions + 1"
-            )
-            params = (lid,)
+            impressions_cache[lid]['impressions'] += 1
+            if source == 'carousel':
+                impressions_cache[lid]['carousel_impressions'] += 1
 
-        cur.execute(sql, params)
-        conn.commit()
         return jsonify(success=True)
+
     except Exception as e:
-        conn.rollback()
-        logging.error("Impression track error: %s", e)
-        return jsonify(success=False), 500
-    finally:
-        cur.close()
-        conn.close()
+        logging.exception("Error tracking impression")
+        return jsonify(success=False, error=str(e)), 500
+
 
 @app.route('/api/track_click', methods=['POST'])
 def track_click():
     data = request.get_json() or {}
-    lid = data.get('listing_id')
+    lid = str(data.get('listing_id'))
     source = data.get('source', 'grid')
     if not lid:
         return jsonify(success=False, error='Missing listing_id'), 400
 
-    conn = get_db_connection()
-    cur = conn.cursor()
     try:
-        # check if carousel_clicks column exists
-        cur.execute("SHOW COLUMNS FROM listing_metrics LIKE 'carousel_clicks'")
-        has_cc = cur.fetchone() is not None
+        with clicks_cache_lock:
+            if lid not in clicks_cache:
+                clicks_cache[lid] = {'clicks': 0, 'carousel_clicks': 0}
 
-        if has_cc:
-            # upsert with carousel_clicks
-            sql = (
-                "INSERT INTO listing_metrics (listing_id, clicks, carousel_clicks) "
-                "VALUES (%s,1,CASE WHEN %s='carousel' THEN 1 ELSE 0 END) "
-                "ON DUPLICATE KEY UPDATE clicks = clicks + 1, "
-                "carousel_clicks = carousel_clicks + (CASE WHEN %s='carousel' THEN 1 ELSE 0 END)"
-            )
-            params = (lid, source, source)
-        else:
-            # fallback: only track total clicks
-            sql = (
-                "INSERT INTO listing_metrics (listing_id, clicks) VALUES (%s,1) "
-                "ON DUPLICATE KEY UPDATE clicks = clicks + 1"
-            )
-            params = (lid,)
+            clicks_cache[lid]['clicks'] += 1
+            if source == 'carousel':
+                clicks_cache[lid]['carousel_clicks'] += 1
 
-        cur.execute(sql, params)
-        conn.commit()
         return jsonify(success=True)
+
     except Exception as e:
-        conn.rollback()
-        logging.error("Click track error: %s", e)
-        return jsonify(success=False), 500
-    finally:
-        cur.close()
-        conn.close()
+        logging.exception("Error tracking click")
+        return jsonify(success=False, error=str(e)), 500
+
 
 
 
