@@ -99,17 +99,9 @@ dbconfig = {
     "use_unicode": True
 }
 
-cnxpool = pooling.MySQLConnectionPool(
-    pool_name="mypool",
-    pool_size=10,                 # fewer simultaneous connections
-    pool_reset_session=True,     # clean each connection before reuse
-    **dbconfig
-)
-
 
 def get_db_connection():
-    # returns a connection from the pool
-    return cnxpool.get_connection()
+    return mysql.connector.connect(**dbconfig)
 
 
 
