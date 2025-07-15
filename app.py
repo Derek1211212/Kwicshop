@@ -3175,6 +3175,9 @@ def admin_usage():
 
 
 
+@app.route('/keepalive')
+def keepalive():
+    return 'OK', 200
 
 
 
