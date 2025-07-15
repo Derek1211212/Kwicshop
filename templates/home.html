@@ -2227,7 +2227,10 @@ document.addEventListener('DOMContentLoaded', () => {
 <!-- ===== LISTINGS GRID ===== -->
 <section class="listings-container">
   <div class="listings-grid">
+    {% set ns = namespace(outer_idx=0) %}
     {% for listing in listings %}
+      {% set ns.outer_idx = loop.index0 %}
+
       <a
         href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
         class="listing-card-link"
@@ -2249,23 +2252,32 @@ document.addEventListener('DOMContentLoaded', () => {
           {% endif %}
 
           <!-- Photos -->
-        {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 1 %}
-          <div class="swap-photo-row">
-            {% for o in listing.offers[:3] %}
-              <div class="swap-photo">
-                <img src="{{ o.image1 }}" alt="{{ o.title }}">
-              </div>
-            {% endfor %}
-          </div>
-        {% else %}
-          <div class="card-image">
-            <img src="{{ listing.image_url }}" alt="{{ listing.title }}">
-          </div>
-        {% endif %}
+          {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 1 %}
+            <div class="swap-photo-row">
+              {% for o in listing.offers[:3] %}
+                <div class="swap-photo">
+                  <img src="{{ o.image1 }}" alt="{{ o.title }}"
+                       {% if ns.outer_idx < 6 %}
+                          loading="eager" fetchpriority="high"
+                       {% else %}
+                          loading="lazy"
+                       {% endif %}>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="card-image">
+              <img src="{{ listing.image_url }}" alt="{{ listing.title }}"
+                   {% if ns.outer_idx < 6 %}
+                      loading="eager" fetchpriority="high"
+                   {% else %}
+                      loading="lazy"
+                   {% endif %}>
+            </div>
+          {% endif %}
 
           <!-- Content -->
           <div class="card-content">
-
             {% if listing.deal_type == 'Swap Deal' %}
               {# — TITLE: all offer‑titles + additional_cash (if any) — #}
               {% set titles = listing.offers | map(attribute='title') | list %}
@@ -2304,13 +2316,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 ₵{{ "{:,.2f}".format(listing.price|float) }}
               </div>
             {% endif %}
-
           </div>
         </div>
       </a>
     {% endfor %}
   </div>
 </section>
+
 
 
 <!-- ===== AUTO-SCROLL SCRIPT ===== -->
