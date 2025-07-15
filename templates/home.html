@@ -342,6 +342,7 @@
       margin-bottom: 1rem;
       display: -webkit-box;
       -webkit-line-clamp: 2;
+      line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
@@ -797,6 +798,18 @@
   margin-bottom: 0.2rem;
 }
 .swap-wants-line .detail-label {
+  font-weight: 600;
+  color: var(--primary-dark);
+}
+.swap-plus-cash-line {
+  padding: 0 1rem 0 1rem;
+  font-size: 0.97rem;
+  font-weight: 500;
+  color: var(--secondary);
+  word-break: break-word;
+  margin-bottom: 0.2rem;
+}
+.swap-plus-cash-line .detail-label {
   font-weight: 600;
   color: var(--primary-dark);
 }
@@ -1584,19 +1597,33 @@ body .mobile-bottom-nav {
 }
 
 .wishlist-btn {
-  background: none;
+  background: rgba(255,255,255,0.9);
   border: none;
   position: absolute;
   top: 8px;
   right: 8px;
   font-size: 1.2rem;
   color: #ccc;
+  padding: 6px;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   cursor: pointer;
-  transition: color .2s;
+  transition: background 0.2s ease, transform 0.1s ease, color 0.2s ease;
+  z-index: 2;
+}
+
+.wishlist-btn:hover {
+  background: rgba(255,255,255,1);
+  transform: scale(1.1);
+  color: var(--primary);
+}
+
+.wishlist-btn i {
+  pointer-events: none;
 }
 
 .wishlist-btn i.wishlisted {
-  color: var(--primary);
+  color: #e74c3c;
 }
 
 .nav-item.wishlist-link {
@@ -1615,8 +1642,38 @@ body .mobile-bottom-nav {
   line-height: 18px;
   border-radius: 50%;
   text-align: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
 }
 
+.nav-links .wishlist-link {
+  position: relative;
+  margin-left: 1rem;
+}
+
+#wishlist-count {
+  right: -10px;
+  font-size: 0.7rem;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.4);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.wishlist-btn.animate {
+  animation: pop 0.3s ease;
+}
+
+.tooltip {
+  pointer-events: none;
+}
 
 /* === Listing Container & Grid === */
 .listings-container {
@@ -1648,42 +1705,6 @@ body .mobile-bottom-nav {
   box-shadow: 0 6px 16px rgba(0,0,0,0.12);
 }
 
-.wishlist-btn {
-  /* make it a white circle button */
-  background: rgba(255,255,255,0.9);
-  border: none;
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  font-size: 1.2rem;
-  color: #ccc;
-  padding: 6px;
-  border-radius: 50%;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  cursor: pointer;
-  transition: 
-    background .2s ease,
-    transform .1s ease,
-    color .2s ease;
-  z-index: 2;
-}
-
-.wishlist-btn:hover {
-  /* brighten and slightly grow on hover */
-  background: rgba(255,255,255,1);
-  transform: scale(1.1);
-  color: var(--primary);
-}
-
-.wishlist-btn i {
-  pointer-events: none; /* so click always hits the button */
-}
-
-.wishlist-btn i.wishlisted {
-  /* solid red when active */
-  color: #e74c3c;
-}
-
 /* === Nav Wishlist Badge === */
 .nav-links .wishlist-link {
   position: relative;
@@ -1706,7 +1727,6 @@ body .mobile-bottom-nav {
 }
 
 
-
 @keyframes pop {
   0%   { transform: scale(1); }
   50%  { transform: scale(1.4); }
@@ -1720,15 +1740,10 @@ body .mobile-bottom-nav {
 /* === Deal‑type badge, images, etc… reuse your existing CSS below this line === */
 
 
-.tooltip {
-  pointer-events: none;
-}
-
-
 </style>
-    <script>
-    const USER_LOGGED_IN  = {{ 'true' if user_logged_in else 'false' }};
-    const USER_SUBSCRIBED = {{ 'true' if user_subscribed else 'false' }};
+<script>
+    const USER_LOGGED_IN  = {{ user_logged_in | tojson }};
+    const USER_SUBSCRIBED = {{ user_subscribed | tojson }};
   </script>
 </head>
 <body>
@@ -2011,17 +2026,7 @@ document.addEventListener('DOMContentLoaded', () => {
         type="button"
         class="filter-button deal-filter{% if deal_type_filter == deal %} active{% endif %}"
         data-value="{{ deal }}"
-        style="
-          flex: 0 0 auto;
-          background: {% if deal_type_filter == deal %}var(--primary){% else %}#f0f0f0{% endif %};
-          color: {% if deal_type_filter == deal %}#fff{% else %}#333{% endif %};
-          border: none;
-          padding: 0.5rem 1rem;
-          border-radius: 50px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: background 0.3s, color 0.3s;
-        "
+        style="flex: 0 0 auto; background: {{ 'var(--primary)' if deal_type_filter == deal else '#f0f0f0' }}; color: {{ '#fff' if deal_type_filter == deal else '#333' }}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
       >
         {{ deal }}
       </button>
@@ -2037,6 +2042,7 @@ document.addEventListener('DOMContentLoaded', () => {
       type="button"
       class="filter-button category-filter{% if selected_category=='All' %} active{% endif %}"
       data-value="All"
+      style="flex: 0 0 auto; background: {{ 'var(--primary)' if selected_category=='All' else '#f0f0f0' }}; color: {{ '#fff' if selected_category=='All' else '#333' }}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
     >
       <span class="category-icon-container">
         <img
@@ -2050,7 +2056,9 @@ document.addEventListener('DOMContentLoaded', () => {
     </button>
 
     <!-- Electronics -->
-    <button type="button" class="filter-button category-filter{% if selected_category=='Electronics' %} active{% endif %}" data-value="Electronics">
+    <button type="button" class="filter-button category-filter{% if selected_category=='Electronics' %} active{% endif %}" data-value="Electronics"
+      style="flex: 0 0 auto; background: {{ 'var(--primary)' if selected_category=='Electronics' else '#f0f0f0' }}; color: {{ '#fff' if selected_category=='Electronics' else '#333' }}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
+    >
       <span class="category-icon-container">
         <img src="https://api.iconify.design/mdi:television.svg" alt="Electronics" class="category-icon"
           onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
@@ -2059,7 +2067,9 @@ document.addEventListener('DOMContentLoaded', () => {
     </button>
 
     <!-- Mobile Phones & Accessories -->
-    <button type="button" class="filter-button category-filter{% if selected_category=='Mobile Phones & Accessories' %} active{% endif %}" data-value="Mobile Phones & Accessories">
+    <button type="button" class="filter-button category-filter{% if selected_category=='Mobile Phones & Accessories' %} active{% endif %}" data-value="Mobile Phones & Accessories"
+      style="flex: 0 0 auto; background: {{ 'var(--primary)' if selected_category=='Mobile Phones & Accessories' else '#f0f0f0' }}; color: {{ '#fff' if selected_category=='Mobile Phones & Accessories' else '#333' }}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
+    >
       <span class="category-icon-container">
         <img src="https://api.iconify.design/mdi:cellphone.svg" alt="Mobile Phones & Accessories" class="category-icon"
           onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
@@ -2068,7 +2078,9 @@ document.addEventListener('DOMContentLoaded', () => {
     </button>
 
     <!-- Computers & Networking -->
-    <button type="button" class="filter-button category-filter{% if selected_category=='Computers & Networking' %} active{% endif %}" data-value="Computers & Networking">
+    <button type="button" class="filter-button category-filter{% if selected_category=='Computers & Networking' %} active{% endif %}" data-value="Computers & Networking"
+      style="flex: 0 0 auto; background: {{ 'var(--primary)' if selected_category=='Computers & Networking' else '#f0f0f0' }}; color: {{ '#fff' if selected_category=='Computers & Networking' else '#333' }}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
+    >
       <span class="category-icon-container">
         <img src="https://api.iconify.design/mdi:desktop-classic.svg" alt="Computers & Networking" class="category-icon"
           onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
@@ -2076,18 +2088,11 @@ document.addEventListener('DOMContentLoaded', () => {
       <span class="category-name">Computers</span>
     </button>
 
-    <!-- Home & Garden -->
-    <button type="button" class="filter-button category-filter{% if selected_category=='Home & Garden' %} active{% endif %}" data-value="Home & Garden">
-      <span class="category-icon-container">
-        <img src="https://api.iconify.design/mdi:home-variant.svg" alt="Home & Garden" class="category-icon"
-          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
-      </span>
-      <span class="category-name">Home</span>
-    </button>
-
 
     <!-- Sports & Outdoors -->
-    <button type="button" class="filter-button category-filter{% if selected_category=='Sports & Outdoors' %} active{% endif %}" data-value="Sports & Outdoors">
+    <button type="button" class="filter-button category-filter{% if selected_category=='Sports & Outdoors' %} active{% endif %}" data-value="Sports & Outdoors"
+      style="flex: 0 0 auto; background: {{ 'var(--primary)' if selected_category=='Sports & Outdoors' else '#f0f0f0' }}; color: {{ '#fff' if selected_category=='Sports & Outdoors' else '#333' }}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
+    >
       <span class="category-icon-container">
         <img src="https://api.iconify.design/mdi:basketball.svg" alt="Sports & Outdoors" class="category-icon"
           onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
@@ -2097,7 +2102,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     <!-- Toys & Games -->
-    <button type="button" class="filter-button category-filter{% if selected_category=='Toys & Games' %} active{% endif %}" data-value="Toys & Games">
+    <button type="button" class="filter-button category-filter{% if selected_category=='Toys & Games' %} active{% endif %}" data-value="Toys & Games"
+      style="flex: 0 0 auto; background: {{ 'var(--primary)' if selected_category=='Toys & Games' else '#f0f0f0' }}; color: {{ '#fff' if selected_category=='Toys & Games' else '#333' }}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
+    >
       <span class="category-icon-container">
         <img src="https://api.iconify.design/mdi:puzzle.svg" alt="Toys & Games" class="category-icon"
           onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
@@ -2106,7 +2113,9 @@ document.addEventListener('DOMContentLoaded', () => {
     </button>
 
     <!-- Automobile & Vehicles -->
-    <button type="button" class="filter-button category-filter{% if selected_category=='Automobile & Vehicles' %} active{% endif %}" data-value="Automobile & Vehicles">
+    <button type="button" class="filter-button category-filter{% if selected_category=='Automobile & Vehicles' %} active{% endif %}" data-value="Automobile & Vehicles"
+      style="flex: 0 0 auto; background: {{ 'var(--primary)' if selected_category=='Automobile & Vehicles' else '#f0f0f0' }}; color: {{ '#fff' if selected_category=='Automobile & Vehicles' else '#333' }}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
+    >
       <span class="category-icon-container">
         <img src="https://api.iconify.design/mdi:car.svg" alt="Automobile & Vehicles" class="category-icon"
           onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
@@ -2310,16 +2319,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="detail-label">Wants:</span>
                 <span>{{ listing.desired_swap }}</span>
               </div>
-              <div class="swap-details">
-                {% if listing.required_cash|float > 0 %}
-                  <div class="detail-item">
-                    <span class="detail-label">Plus Cash:</span>
-                    <span class="detail-value cash-adjustment">
-                      + ₵{{ "{:,.2f}".format(listing.required_cash|float) }}
-                    </span>
-                  </div>
-                {% endif %}
-              </div>
+              {% if listing.required_cash|float > 0 %}
+                <div class="swap-plus-cash-line">
+                  <span class="detail-label">Plus Cash:</span>
+                  <span>+ ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span>
+                </div>
+              {% endif %}
 
             {% else %}
               {# — OUTRIGHT SALE: title + required_cash — #}

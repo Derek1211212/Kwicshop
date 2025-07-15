@@ -261,7 +261,7 @@ def home():
     deal_type_filter  = request.args.get('deal_type', 'All')
     location_q        = request.args.get('location', '').strip()
     page              = request.args.get('page', 1, type=int)
-    per_page          = 12
+    per_page          = 1000
     offset            = (page - 1) * per_page
 
     user_logged_in  = 'user_id' in session

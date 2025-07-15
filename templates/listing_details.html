@@ -1266,28 +1266,6 @@
         </div>
       {% endif %}
 
-      <!-- Additional Information -->
-      <div class="details-section">
-        <div class="detail-header">
-          <i class="fas fa-info-circle detail-icon"></i>
-          <h3>Additional Information</h3>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Category</span>
-          <p class="detail-content">{{ listing.category }}</p>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Listed On</span>
-          <p class="detail-content">
-            {{ listing.created_at.strftime('%d %b %Y at %H:%M') if listing.created_at else 'Not specified' }}
-          </p>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Location</span>
-          <p class="detail-content">{{ listing.location or 'Not specified' }}</p>
-        </div>
-      </div>
-
       <!-- Contact Information -->
       <div class="details-section">
         <div class="detail-header">
@@ -1311,6 +1289,28 @@
               <span>{{ listing.email }}</span>
             </div>
           {% endif %}
+        </div>
+      </div>
+
+      <!-- Additional Information -->
+      <div class="details-section">
+        <div class="detail-header">
+          <i class="fas fa-info-circle detail-icon"></i>
+          <h3>Additional Information</h3>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Category</span>
+          <p class="detail-content">{{ listing.category }}</p>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Listed On</span>
+          <p class="detail-content">
+            {{ listing.created_at.strftime('%d %b %Y at %H:%M') if listing.created_at else 'Not specified' }}
+          </p>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Location</span>
+          <p class="detail-content">{{ listing.location or 'Not specified' }}</p>
         </div>
       </div>
 
