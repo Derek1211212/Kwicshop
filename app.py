@@ -255,7 +255,7 @@ scheduler.start()
 # 3) The home route
 @app.route('/')
 def home():
-    # 0) Read search & pagination params
+    # Read search & pagination params
     search            = request.args.get('search', '').strip()
     selected_category = request.args.get('category', 'All')
     deal_type_filter  = request.args.get('deal_type', 'All')
@@ -266,46 +266,31 @@ def home():
 
     user_logged_in  = 'user_id' in session
     user_subscribed = False
-
     carousel_listings = []
-    listings          = []
-    total_pages       = 0   # ensure defined
+    listings = []
+    total_pages = 0
 
-    conn   = None
+    conn = None
     cursor = None
     try:
-        conn   = get_db_connection()
+        conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # 1) Push subscription check
-        if user_logged_in:
-            cursor.execute(
-                "SELECT 1 FROM push_subscriptions WHERE user_id=%s",
-                (session['user_id'],)
-            )
-            user_subscribed = cursor.fetchone() is not None
-
-        # 2A) Carousel
-        start = time.perf_counter()
+        # ✅ 1) Carousel listings (public data)
         cursor.execute("""
             SELECT listing_id, image1, title, `Plan`
-              FROM listings
-             ORDER BY created_at DESC
-             LIMIT 20
+            FROM listings
+            ORDER BY created_at DESC
+            LIMIT 20
         """)
         raw = cursor.fetchall()
-        logging.info("Query: carousel fetch took %.4fs", time.perf_counter() - start)
 
         PLAN_WEIGHTS = {'Diamond':5,'Gold':4,'Silver':3,'Bronze':2,'Free':1}
-        weighted = [
-            idx for idx, rec in enumerate(raw)
-            for _ in range(PLAN_WEIGHTS.get(rec['Plan'],1))
-        ]
+        weighted = [idx for idx, rec in enumerate(raw) for _ in range(PLAN_WEIGHTS.get(rec['Plan'],1))]
         if weighted:
             jitter = random.randrange(len(weighted))
             carousel_offset = (read_offset() + jitter) % len(weighted)
             write_offset((carousel_offset + 1) % len(weighted))
-
             seen, ordered = set(), []
             for idx in weighted[carousel_offset:] + weighted[:carousel_offset]:
                 if idx not in seen:
@@ -313,30 +298,17 @@ def home():
                     ordered.append(raw[idx])
                 if len(ordered) == 5:
                     break
-
             base_img = url_for('static', filename='images/', _external=True)
             for c in ordered:
                 c['banner_image'] = base_img + (c.get('image1') or 'placeholder.jpg')
             carousel_listings = ordered
 
-        # 2B) Listings grid
+        # ✅ 2) Listings grid (public, cacheable)
         base_q = """
             SELECT 
-              l.listing_id,
-              l.title,
-              l.description,
-              l.category,
-              l.deal_type,
-              l.`Plan`,
-              l.image1,
-              l.price,
-              l.required_cash,
-              l.additional_cash,
-              l.desired_swap,
-              l.location,
-              l.contact,
-              u.username,
-              IFNULL(m.impressions,0) AS impressions
+                l.listing_id, l.title, l.description, l.category, l.deal_type, l.`Plan`,
+                l.image1, l.price, l.required_cash, l.additional_cash, l.desired_swap,
+                l.location, l.contact, u.username, IFNULL(m.impressions,0) AS impressions
             FROM listings l
             JOIN users u ON l.user_id = u.id
             LEFT JOIN listing_metrics m ON l.listing_id = m.listing_id
@@ -370,31 +342,23 @@ def home():
         cache_key_grid = f"grid:{search}:{selected_category}:{deal_type_filter}:{location_q}:{page}"
         listings = cache.get(cache_key_grid)
         if listings is None:
-            start = time.perf_counter()
             cursor.execute(
-                base_q
-                + " ORDER BY " + plan_case + " DESC, l.created_at DESC"
+                base_q + " ORDER BY " + plan_case + " DESC, l.created_at DESC"
                 + " LIMIT %s OFFSET %s",
                 tuple(params + [per_page, offset])
             )
             listings = cursor.fetchall()
-            cache.set(cache_key_grid, listings, timeout=30)
-            logging.info("Query: listings grid fetch took %.4fs", time.perf_counter() - start)
+            cache.set(cache_key_grid, listings, timeout=60)
 
-        # 3) Rotate grid listings
+        # ✅ 3) Rotate grid listings (still public)
         weights = {'Diamond':5,'Gold':4,'Silver':3,'Free':1}
-        weighted_idxs = [
-            i for i, l in enumerate(listings)
-            for _ in range(weights.get(l['Plan'], 1))
-        ]
+        weighted_idxs = [i for i, l in enumerate(listings) for _ in range(weights.get(l['Plan'],1))]
         if weighted_idxs:
             jitter = random.randrange(len(weighted_idxs))
             grid_offset = (read_offset() + jitter) % len(weighted_idxs)
             write_offset((grid_offset + 1) % len(weighted_idxs))
-
             seen, rotated = set(), []
-            order_cycle = weighted_idxs[grid_offset:] + weighted_idxs[:grid_offset]
-            for idx in order_cycle:
+            for idx in weighted_idxs[grid_offset:] + weighted_idxs[:grid_offset]:
                 if idx not in seen:
                     seen.add(idx)
                     rotated.append(listings[idx])
@@ -402,42 +366,46 @@ def home():
                     break
             listings = rotated
 
-        # 2C) offered_items
+        # ✅ 4) Fetch offered items (public)
         swap_ids = [l['listing_id'] for l in listings if l['deal_type'] == 'Swap Deal']
-        offers   = {}
+        offers = {}
         if swap_ids:
             ph = ','.join(['%s'] * len(swap_ids))
-            start = time.perf_counter()
             cursor.execute(
                 f"""
                 SELECT listing_id, item_id, title, description, image1, `condition`
-                  FROM offered_items
-                 WHERE listing_id IN ({ph})
-                 ORDER BY listing_id, item_id
+                FROM offered_items
+                WHERE listing_id IN ({ph})
+                ORDER BY listing_id, item_id
                 """, tuple(swap_ids)
             )
             base_img = url_for('static', filename='images/', _external=True)
             for o in cursor.fetchall():
                 o['image1'] = base_img + (o['image1'] or 'placeholder.jpg')
                 offers.setdefault(o['listing_id'], []).append(o)
-            logging.info("Query: offered_items fetch took %.4fs", time.perf_counter() - start)
 
-        # 2D) Merge & wishlist
         base_img = url_for('static', filename='images/', _external=True)
         for l in listings:
             l['image_url']    = base_img + (l.get('image1') or 'placeholder.jpg')
             l['banner_image'] = l['image_url']
             l['offers']       = offers.get(l['listing_id'], [])
-
             l.setdefault('required_cash', 0)
             l.setdefault('additional_cash', 0)
             l.setdefault('desired_swap', '')
-
             l.setdefault('price', l.get('price'))
             l.setdefault('location', l.get('location', ''))
             l.setdefault('contact', l.get('contact', ''))
 
+        # ✅ 5) Only now: small per-user queries
         if user_logged_in:
+            # Check push subscription
+            cursor.execute(
+                "SELECT 1 FROM push_subscriptions WHERE user_id=%s",
+                (session['user_id'],)
+            )
+            user_subscribed = cursor.fetchone() is not None
+
+            # Fetch wishlisted listing_ids
             cursor.execute(
                 "SELECT listing_id FROM wishlists WHERE user_id=%s",
                 (session['user_id'],)
@@ -446,7 +414,7 @@ def home():
             for l in listings:
                 l['is_wishlisted'] = (l['listing_id'] in wish_ids)
 
-        # 2E) Pagination total count
+        # ✅ 6) Pagination total count (public, cacheable)
         count_q = "SELECT COUNT(*) AS total FROM listings WHERE 1=1"
         count_p = []
         if search:
@@ -458,14 +426,12 @@ def home():
         if deal_type_filter != 'All':
             count_q += " AND deal_type=%s"; count_p.append(deal_type_filter)
 
-        cache_key = f"cnt:{search}:{selected_category}:{deal_type_filter}"
-        total_listings = cache.get(cache_key)
+        cache_key_cnt = f"cnt:{search}:{selected_category}:{deal_type_filter}"
+        total_listings = cache.get(cache_key_cnt)
         if total_listings is None:
-            start = time.perf_counter()
             cursor.execute(count_q, tuple(count_p))
             total_listings = cursor.fetchone()['total']
-            cache.set(cache_key, total_listings, timeout=30)
-            logging.info("Query: count listings took %.4fs", time.perf_counter() - start)
+            cache.set(cache_key_cnt, total_listings, timeout=60)
 
         total_pages = (total_listings + per_page - 1) // per_page
 
@@ -495,6 +461,7 @@ def home():
         page=page,
         total_pages=total_pages
     )
+
 
 
 
