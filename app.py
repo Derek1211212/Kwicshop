@@ -30,6 +30,7 @@ import random
 import itertools
 from mysql.connector import pooling
 from flask_caching import Cache
+import multiprocessing
 
 
 
@@ -99,10 +100,29 @@ dbconfig = {
     "use_unicode": True
 }
 
+# 2) Compute a safe pool_size per process
+MAX_DB_CONN    = 500
+SAFETY_FACTOR  = 0.8    # only use 80% of max connections for app pools
+# How many app workers/processes will each try to open a pool?
+WEB_CONCURRENCY = int(os.getenv('WEB_CONCURRENCY',
+                                multiprocessing.cpu_count() * 2))
+# Pool size per process
+per_process_pool = max(
+    5,  # at least a handful of connections
+    int((MAX_DB_CONN * SAFETY_FACTOR) / WEB_CONCURRENCY)
+)
+
+# 3) Instantiate your pool
+cnxpool = pooling.MySQLConnectionPool(
+    pool_name="mypool",
+    pool_size=per_process_pool,
+    pool_reset_session=True,
+    **dbconfig
+)
 
 def get_db_connection():
-    return mysql.connector.connect(**dbconfig)
-
+    """Grab a ready‐to‐go connection from the pool."""
+    return cnxpool.get_connection()
 
 
 
