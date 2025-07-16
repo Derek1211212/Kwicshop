@@ -9,18 +9,20 @@
     /* [START styles: everything] */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
-      --primary: #4361ee;
-      --primary-dark: #3a56d4;
-      --secondary: #06d6a0;
-      --danger: #ef476f;
-      --warning: #ffd166;
-      --light: #f8f9fa;
-      --dark: #212529;
-      --gray: #6c757d;
-      --light-gray: #e9ecef;
-      --border: #dee2e6;
+      --primary: #81C784;
+      --primary-dark: #66BB6A;
+      --primary-light: #A5D6A7;
+      --secondary: #374151;
+      --accent: #f59e0b;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --light: #f9fafb;
+      --dark: #212121;
+      --gray: #6b7280;
+      --light-gray: #e5e7eb;
+      --border: #e5e7eb;
       --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-      --transition: all 0.3s ease;
+      --transition: all 0.2s ease;
     }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -33,7 +35,7 @@
     header {
       text-align: center;
       padding: 30px 0;
-      background: linear-gradient(135deg, #4361ee, #3a0ca3);
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       color: white;
       border-radius: 12px;
       margin-bottom: 30px;
@@ -48,7 +50,7 @@
     }
     .listing-img {
       width: 120px; height: 120px; border-radius: 8px;
-      background: linear-gradient(45deg, #4361ee, #4cc9f0);
+      background: linear-gradient(45deg, var(--primary), var(--primary-light));
       display: flex; align-items: center; justify-content: center;
       color: white; font-size: 3rem; object-fit: cover;
     }
