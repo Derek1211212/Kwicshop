@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AuctionHub – About Us</title>
+  <!-- … same CSS … -->
+  <style>
+    /* reuse header & reset … */
+    .about-hero{padding:80px 0 40px;text-align:center;}
+    .about-hero h1{font-family:'Playfair Display',serif;font-size:3rem;color:var(--accent-light);}
+    .about-content{max-width:800px;margin:40px auto;line-height:1.8;color:var(--text-light);}
+        *{margin:0;padding:0;box-sizing:border-box;}
+    :root{--primary:#0f172a;--secondary:#1e293b;--accent:#f97316;--accent-light:#fdba74;--text:#e2e8f0;--text-light:#94a3b8;}
+    body{font-family:'Montserrat',sans-serif;background:linear-gradient(135deg,var(--primary),#020617);color:var(--text);min-height:100vh;line-height:1.6;}
+    .container{max-width:1400px;margin:0 auto;padding:0 20px;}
+    header{background:rgba(15,23,42,.8);backdrop-filter:blur(10px);padding:15px 0;position:sticky;top:0;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.1);}
+    .header-content{display:flex;justify-content:space-between;align-items:center;}
+    .logo{display:flex;align-items:center;gap:12px;}
+    .logo-icon{background:var(--accent);color:var(--primary);width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;}
+    .logo-text{font-family:'Playfair Display',serif;font-weight:800;font-size:28px;background:linear-gradient(to right,var(--accent),var(--accent-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    nav ul{display:flex;list-style:none;gap:30px;}
+    nav a{color:var(--text);text-decoration:none;font-weight:500;font-size:16px;position:relative;transition:color .3s;}
+    nav a:hover, nav a.active{color:var(--accent);}
+    nav a.active::after{content:'';position:absolute;bottom:-5px;left:0;width:100%;height:2px;background:var(--accent);}
+    .user-actions{display:flex;gap:15px;align-items:center;}
+    .btn{padding:10px 24px;border-radius:8px;font-weight:600;cursor:pointer;transition:all .3s;border:none;font-size:16px;}
+    .btn-primary{background:var(--accent);color:var(--primary);}
+    .btn-primary:hover{background:#ea580c;transform:translateY(-2px);box-shadow:0 4px 15px rgba(249,115,22,.3);}
+    .btn-outline{background:transparent;border:2px solid var(--accent);color:var(--accent);}
+    .btn-outline:hover{background:rgba(249,115,22,.1);}
+
+
+    /* then: form styles */
+    .sell-form{max-width:700px;margin:60px auto 80px;background:var(--secondary);padding:30px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.2);}
+    .sell-form h2{font-family:'Playfair Display',serif;font-size:2rem;color:var(--accent-light);margin-bottom:20px;text-align:center;}
+    .form-group{margin-bottom:18px;}
+    .form-group label{display:block;color:var(--text-light);margin-bottom:6px;}
+    .form-group input,
+    .form-group textarea{width:100%;padding:12px;border:none;border-radius:8px;background:var(--primary);color:var(--text);}
+    .form-group input[type="file"]{padding:4px;}
+    .form-group textarea{resize:vertical;height:100px;}
+    .form-actions{text-align:center;margin-top:20px;}
+  </style>
+</head>
+<body>
+  <header>…</header>
+
+  <section class="about-hero">
+    <div class="container">
+      <h1>About AuctionHub</h1>
+      <p>Your premier Friday auction destination—<br>discover, bid, and win!</p>
+    </div>
+  </section>
+  <section class="about-content container">
+    <h2>Our Mission</h2>
+    <p>AuctionHub brings the thrill of live auctions...</p>
+    <h2>How It Works</h2>
+    <ol>
+      <li>Browse live auctions every Friday at 7 PM.</li>
+      <li>Place your bids in real time.</li>
+      <li>Win amazing deals on rare and luxury items.</li>
+    </ol>
+    <h2>Meet the Team</h2>
+    <p>Founded by auction enthusiasts to make bidding easy and fun.</p>
+  </section>
+
+  <footer>…</footer>
+</body>
+</html>

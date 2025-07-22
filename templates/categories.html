@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>AuctionHub – Categories</title>
+  <!-- FontAwesome & Google Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    /* … same RESET & VARIABLES as auction_home … */
+    *{margin:0;padding:0;box-sizing:border-box;}
+    :root{--primary:#0f172a;--secondary:#1e293b;--accent:#f97316;--accent-light:#fdba74;--text:#e2e8f0;--text-light:#94a3b8;}
+    body{font-family:'Montserrat',sans-serif;background:linear-gradient(135deg,var(--primary),#020617);color:var(--text);min-height:100vh;line-height:1.6;}
+    .container{max-width:1400px;margin:0 auto;padding:0 20px;}
+    header{background:rgba(15,23,42,.8);backdrop-filter:blur(10px);padding:15px 0;position:sticky;top:0;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.1);}
+    .header-content{display:flex;justify-content:space-between;align-items:center;}
+    .logo{display:flex;align-items:center;gap:12px;}
+    .logo-icon{background:var(--accent);color:var(--primary);width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;}
+    .logo-text{font-family:'Playfair Display',serif;font-weight:800;font-size:28px;background:linear-gradient(to right,var(--accent),var(--accent-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    nav ul{display:flex;list-style:none;gap:30px;}
+    nav a{color:var(--text);text-decoration:none;font-weight:500;font-size:16px;position:relative;transition:color .3s;}
+    nav a:hover, nav a.active{color:var(--accent);}
+    nav a.active::after{content:'';position:absolute;bottom:-5px;left:0;width:100%;height:2px;background:var(--accent);}
+    .user-actions{display:flex;gap:15px;align-items:center;}
+    .btn{padding:10px 24px;border-radius:8px;font-weight:600;cursor:pointer;transition:all .3s;border:none;font-size:16px;}
+    .btn-primary{background:var(--accent);color:var(--primary);}
+    .btn-primary:hover{background:#ea580c;transform:translateY(-2px);box-shadow:0 4px 15px rgba(249,115,22,.3);}
+    .btn-outline{background:transparent;border:2px solid var(--accent);color:var(--accent);}
+    .btn-outline:hover{background:rgba(249,115,22,.1);}
+
+    /* Page Title */
+    .page-title{padding:80px 0 20px;text-align:center;}
+    .page-title h1{font-family:'Playfair Display',serif;font-size:3rem;font-weight:800;color:var(--accent-light);}
+
+    /* Categories Grid */
+    .cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:30px;padding:40px 0;}
+    .cat-card{background:var(--secondary);border-radius:12px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.15);transition:transform .3s;}
+    .cat-card:hover{transform:translateY(-5px);}
+    .cat-image{height:160px;background:#111;background-size:cover;background-position:center;}
+    .cat-content{padding:20px;text-align:center;}
+    .cat-name{font-size:1.25rem;font-weight:600;margin-bottom:8px;color:var(--text);}
+    .cat-count{font-size:.9rem;color:var(--text-light);}
+
+    /* Footer – same as auction_home */
+    footer{background:var(--primary);padding:60px 0 30px;border-top:1px solid rgba(255,255,255,.05);}
+    .footer-content{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:40px;margin-bottom:40px;}
+    .footer-column h3{font-size:1.3rem;margin-bottom:20px;color:var(--text);position:relative;padding-bottom:10px;}
+    .footer-column h3::after{content:'';position:absolute;bottom:0;left:0;width:50px;height:2px;background:var(--accent);}
+    .footer-links{list-style:none;}
+    .footer-links li{margin-bottom:12px;}
+    .footer-links a{color:var(--text-light);text-decoration:none;transition:color .3s;}
+    .footer-links a:hover{color:var(--accent);}
+    .social-links{display:flex;gap:15px;margin-top:20px;}
+    .social-links a{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:var(--secondary);color:var(--text);transition:all .3s;}
+    .social-links a:hover{background:var(--accent);transform:translateY(-3px);}
+    .copyright{text-align:center;padding-top:30px;border-top:1px solid rgba(255,255,255,.05);color:var(--text-light);font-size:.9rem;}
+  </style>
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <div class="logo-icon">AH</div>
+          <div class="logo-text">AuctionHub</div>
+        </div>
+        <nav>
+          <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/auctions">Auctions</a></li>
+            <li><a href="/categories" class="active">Categories</a></li>
+            <li><a href="/sell">Sell</a></li>
+            <li><a href="/about">About</a></li>
+          </ul>
+        </nav>
+        <div class="user-actions">
+          <a href="/login"    class="btn btn-outline"><i class="fas fa-user"></i> Sign In</a>
+          <a href="/register" class="btn btn-primary">Register</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- PAGE TITLE -->
+  <section class="page-title">
+    <div class="container">
+      <h1>Browse Categories</h1>
+    </div>
+  </section>
+
+  <!-- CATEGORIES GRID -->
+  <section class="cat-grid container">
+    {% for cat in categories %}
+      <a href="/categories/{{ cat.id }}" class="cat-card">
+        <div class="cat-image" style="background-image:url('{{ url_for('static', filename='uploads/'+cat.image) }}')"></div>
+        <div class="cat-content">
+          <div class="cat-name">{{ cat.name }}</div>
+          <div class="cat-count">{{ cat.item_count }} items</div>
+        </div>
+      </a>
+    {% endfor %}
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <!-- same footer columns as homepage -->
+        <div class="footer-column">
+          <div class="logo">
+            <div class="logo-icon">AH</div>
+            <div class="logo-text">AuctionHub</div>
+          </div>
+          <p style="margin-top:20px;color:var(--text-light);">
+            The premier destination for exclusive auctions every Friday.
+          </p>
+          <div class="social-links">
+            <a href="#"><i class="fab fa-facebook-f"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+          </div>
+        </div>
+        <div class="footer-column">
+          <h3>Quick Links</h3>
+          <ul class="footer-links">
+            <li><a href="/">Home</a></li>
+            <li><a href="/auctions">Auctions</a></li>
+            <li><a href="/categories">Categories</a></li>
+            <li><a href="/how-it-works">How It Works</a></li>
+            <li><a href="/sell">Sell</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h3>Customer Service</h3>
+          <ul class="footer-links">
+            <li><a href="/help">Help Center</a></li>
+            <li><a href="/faq">FAQ</a></li>
+            <li><a href="/shipping-returns">Shipping & Returns</a></li>
+            <li><a href="/payment-methods">Payment Methods</a></li>
+            <li><a href="/contact">Contact Us</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h3>Newsletter</h3>
+          <p style="color:var(--text-light);margin-bottom:20px;">
+            Subscribe for auction alerts.
+          </p>
+          <form action="/subscribe" method="post" style="display:flex;gap:10px;">
+            <input type="email" name="email" placeholder="Your email" required
+                   style="flex:1;padding:12px;border:none;border-radius:8px;
+                          background:var(--primary);color:var(--text);">
+            <button class="btn-primary" style="padding:12px 20px;">
+              Subscribe
+            </button>
+          </form>
+        </div>
+      </div>
+      <div class="copyright">
+        &copy; {{ current_year }} AuctionHub. All rights reserved.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

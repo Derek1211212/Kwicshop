@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuctionHub – Sell an Item</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #0f172a;
+      --secondary: #1e293b;
+      --accent: #f97316;
+      --accent-light: #fdba74;
+      --text: #e2e8f0;
+      --text-light: #94a3b8;
+      --success: #10b981;
+      --error: #ef4444;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --border: #334155;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: linear-gradient(135deg, var(--primary), #020617);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 10% 20%, rgba(249, 115, 22, 0.1) 0%, rgba(15, 23, 42, 0) 50%),
+                  radial-gradient(circle at 90% 80%, rgba(249, 115, 22, 0.05) 0%, rgba(15, 23, 42, 0) 50%);
+      z-index: -1;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Header Styles */
+    header {
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(10px);
+      padding: 15px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      background: var(--accent);
+      color: var(--primary);
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      transition: transform 0.3s;
+    }
+
+    .logo:hover .logo-icon {
+      transform: rotate(15deg);
+    }
+
+    .logo-text {
+      font-family: 'Playfair Display', serif;
+      font-weight: 800;
+      font-size: 28px;
+      background: linear-gradient(to right, var(--accent), var(--accent-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    nav ul {
+      display: flex;
+      list-style: none;
+      gap: 30px;
+    }
+
+    nav a {
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 16px;
+      position: relative;
+      transition: color 0.3s;
+      padding: 8px 0;
+    }
+
+    nav a:hover, nav a.active {
+      color: var(--accent);
+    }
+
+    nav a.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    .user-actions {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+      font-size: 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--primary);
+    }
+
+    .btn-primary:hover {
+      background: #ea580c;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-outline:hover {
+      background: rgba(249, 115, 22, 0.1);
+    }
+
+    /* Form Section */
+    .sell-section {
+      padding: 40px 0 80px;
+    }
+
+    .sell-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .sell-info {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      height: fit-content;
+    }
+
+    .sell-info h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      color: var(--accent-light);
+      margin-bottom: 20px;
+      position: relative;
+      display: inline-block;
+    }
+
+    .sell-info h2::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 60px;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 3px;
+    }
+
+    .sell-info p {
+      color: var(--text-light);
+      margin-bottom: 20px;
+      line-height: 1.7;
+    }
+
+    .tips-list {
+      margin-top: 25px;
+      padding-left: 20px;
+    }
+
+    .tips-list li {
+      margin-bottom: 15px;
+      color: var(--text-light);
+      position: relative;
+    }
+
+    .tips-list li::before {
+      content: '•';
+      color: var(--accent);
+      font-size: 20px;
+      position: absolute;
+      left: -20px;
+      top: -2px;
+    }
+
+    .sell-form {
+      background: var(--card-bg);
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+    }
+
+    .sell-form h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: var(--accent-light);
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 22px;
+      position: relative;
+    }
+
+    .form-group.full-width {
+      grid-column: span 2;
+    }
+
+    .form-group label {
+      display: block;
+      color: var(--text-light);
+      margin-bottom: 8px;
+      font-weight: 500;
+      font-size: 15px;
+    }
+
+    .form-group label span {
+      color: var(--accent);
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.4);
+      color: var(--text);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 15px;
+      transition: all 0.3s;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      border-color: var(--accent);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      height: 120px;
+    }
+
+    .form-group input[type="number"] {
+      padding-right: 40px;
+    }
+
+    .currency-symbol {
+      position: absolute;
+      right: 15px;
+      bottom: 14px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .file-upload {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .file-upload:hover {
+      border-color: var(--accent);
+      background: rgba(15, 23, 42, 0.3);
+    }
+
+    .file-upload i {
+      font-size: 40px;
+      color: var(--accent);
+      margin-bottom: 15px;
+      display: block;
+    }
+
+    .file-upload p {
+      color: var(--text-light);
+      margin-bottom: 15px;
+    }
+
+    .file-upload input {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .file-preview {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .preview-item {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      aspect-ratio: 1/1;
+    }
+
+    .preview-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: var(--secondary);
+    }
+
+    .preview-item .remove {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 24px;
+      height: 24px;
+      background: var(--error);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .preview-item:hover .remove {
+      opacity: 1;
+    }
+
+    .form-actions {
+      text-align: center;
+      margin-top: 30px;
+      grid-column: span 2;
+    }
+
+    .btn-submit {
+      padding: 14px 40px;
+      font-size: 17px;
+      border-radius: 10px;
+      min-width: 200px;
+    }
+
+    .form-note {
+      color: var(--text-light);
+      font-size: 14px;
+      text-align: center;
+      margin-top: 20px;
+      grid-column: span 2;
+    }
+
+    .form-note a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .form-note a:hover {
+      text-decoration: underline;
+    }
+
+    /* Footer Styles */
+    footer {
+      background: var(--primary);
+      padding: 50px 0 30px;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-content {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 30px;
+    }
+
+    .footer-column h3 {
+      color: var(--accent-light);
+      margin-bottom: 20px;
+      font-size: 18px;
+      position: relative;
+      padding-bottom: 10px;
+    }
+
+    .footer-column h3::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 40px;
+      height: 2px;
+      background: var(--accent);
+    }
+
+    .footer-column ul {
+      list-style: none;
+    }
+
+    .footer-column ul li {
+      margin-bottom: 12px;
+    }
+
+    .footer-column ul li a {
+      color: var(--text-light);
+      text-decoration: none;
+      transition: color 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .footer-column ul li a:hover {
+      color: var(--accent);
+    }
+
+    .footer-column p {
+      color: var(--text-light);
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .social-links {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .social-links a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--secondary);
+      color: var(--text);
+      transition: all 0.3s;
+    }
+
+    .social-links a:hover {
+      background: var(--accent);
+      transform: translateY(-3px);
+    }
+
+    .footer-bottom {
+      text-align: center;
+      padding-top: 30px;
+      margin-top: 30px;
+      border-top: 1px solid var(--border);
+      color: var(--text-light);
+      font-size: 14px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 992px) {
+      .sell-container {
+        grid-template-columns: 1fr;
+        max-width: 700px;
+      }
+      
+      .footer-content {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .form-group.full-width {
+        grid-column: span 1;
+      }
+      
+      .form-actions {
+        grid-column: span 1;
+      }
+      
+      .form-note {
+        grid-column: span 1;
+      }
+      
+      nav ul {
+        gap: 15px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .header-content {
+        flex-direction: column;
+        gap: 15px;
+      }
+      
+      .footer-content {
+        grid-template-columns: 1fr;
+      }
+      
+      .sell-form {
+        padding: 25px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <a href="#" class="logo">
+          <div class="logo-icon">A</div>
+          <div class="logo-text">AuctionHub</div>
+        </a>
+        <nav>
+          <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Auctions</a></li>
+            <li><a href="#" class="active">Sell</a></li>
+            <li><a href="#">Categories</a></li>
+            <li><a href="#">How It Works</a></li>
+          </ul>
+        </nav>
+        <div class="user-actions">
+          <button class="btn btn-outline"><i class="fas fa-user"></i> Profile</button>
+          <button class="btn btn-primary"><i class="fas fa-gavel"></i> My Bids</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sell Section -->
+  <section class="sell-section">
+    <div class="container">
+      <div class="sell-container">
+        <div class="sell-info">
+          <h2>Sell with Confidence</h2>
+          <p>List your items on AuctionHub and reach thousands of potential buyers. Our platform makes selling easy, secure, and profitable.</p>
+          
+          <ul class="tips-list">
+            <li><strong>High-quality photos</strong> increase bids by up to 50%</li>
+            <li><strong>Detailed descriptions</strong> help buyers understand your item</li>
+            <li><strong>Competitive starting bids</strong> attract more interest</li>
+            <li><strong>Set a reserve price</strong> to ensure your item sells for what it's worth</li>
+            <li><strong>Clear auction times</strong> create bidding excitement</li>
+          </ul>
+          
+          <div style="margin-top: 30px; background: rgba(15, 23, 42, 0.5); padding: 20px; border-radius: 10px; border-left: 3px solid var(--accent);">
+            <p><i class="fas fa-lightbulb" style="color: var(--accent); margin-right: 10px;"></i> <strong>Pro Tip:</strong> Items listed between Tuesday and Thursday receive 30% more views than weekend listings.</p>
+          </div>
+        </div>
+
+        <form class="sell-form" action="/sell" method="post" enctype="multipart/form-data">
+          <h2>List Your Item</h2>
+          
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label for="title">Item Title <span>*</span></label>
+              <input id="title" name="title" placeholder="e.g., Vintage Rolex Submariner Watch" required>
+            </div>
+            
+            <div class="form-group full-width">
+              <label for="description">Description <span>*</span></label>
+              <textarea id="description" name="description" placeholder="Provide detailed information about your item, including condition, features, and any imperfections..." required></textarea>
+            </div>
+            
+            <div class="form-group full-width">
+              <label for="images">Upload Images</label> <!-- Removed * since it's optional -->
+              <div class="file-upload" id="file-upload-area">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Drag & drop images here or click to browse</p>
+                <small>Up to 4 images (JPEG, PNG, max 5MB each)</small>
+                <input type="file" id="images" name="images" accept="image/*" multiple>
+              </div>
+              <div class="file-preview" id="file-preview"></div>
+            </div>
+            
+            <div class="form-group">
+              <label for="starting_bid">Starting Bid ($) <span>*</span></label>
+              <input id="starting_bid" name="starting_bid" type="number" step="0.01" min="0.01" placeholder="0.00" required>
+              <span class="currency-symbol">$</span>
+            </div>
+            
+            <div class="form-group">
+              <label for="reserve_price">Reserve Price ($)</label>
+              <input id="reserve_price" name="reserve_price" type="number" step="0.01" placeholder="Optional">
+              <span class="currency-symbol">$</span>
+            </div>
+            
+            <div class="form-group">
+              <label for="auction_date">Auction Date <span>*</span></label>
+              <input id="auction_date" name="auction_date" type="date" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="start_time">Start Time <span>*</span></label>
+              <input id="start_time" name="start_time" type="time" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="end_time">End Time <span>*</span></label>
+              <input id="end_time" name="end_time" type="time" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="category">Category <span>*</span></label>
+              <select id="category" name="category" required>
+                <option value="">Select a category</option>
+                <option value="electronics">Electronics</option>
+                <option value="art">Art & Collectibles</option>
+                <option value="jewelry">Jewelry & Watches</option>
+                <option value="furniture">Home & Furniture</option>
+                <option value="vehicles">Vehicles</option>
+                <option value="clothing">Clothing & Accessories</option>
+                <option value="sports">Sports & Outdoors</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="condition">Item Condition <span>*</span></label>
+              <select id="condition" name="condition" required>
+                <option value="">Select condition</option>
+                <option value="new">Brand New</option>
+                <option value="excellent">Like New/Excellent</option>
+                <option value="good">Good</option>
+                <option value="fair">Fair</option>
+                <option value="poor">Poor/For Parts</option>
+              </select>
+            </div>
+            
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary btn-submit">Submit Listing</button>
+            </div>
+            
+            <div class="form-note">
+              <p>By submitting, you agree to our <a href="#">Terms of Service</a> and <a href="#">Seller Fees</a>. A 5% final value fee will apply to successful sales.</p>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-column">
+          <h3>About AuctionHub</h3>
+          <p>Connecting buyers and sellers in a trusted marketplace since 2015. Premium auctions for unique items and collectibles.</p>
+          <div class="social-links">
+            <a href="#"><i class="fab fa-facebook-f"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+          </div>
+        </div>
+        
+        <div class="footer-column">
+          <h3>For Sellers</h3>
+          <ul>
+            <li><a href="#"><i class="fas fa-arrow-right"></i> How to Sell</a></li>
+            <li><a href="#"><i class="fas fa-arrow-right"></i> Seller Fees</a></li>
+            <li><a href="#"><i class="fas fa-arrow-right"></i> Seller Protection</a></li>
+            <li><a href="#"><i class="fas fa-arrow-right"></i> Success Stories</a></li>
+          </ul>
+        </div>
+        
+        <div class="footer-column">
+          <h3>For Buyers</h3>
+          <ul>
+            <li><a href="#"><i class="fas fa-arrow-right"></i> How to Bid</a></li>
+            <li><a href="#"><i class="fas fa-arrow-right"></i> Buyer Protection</a></li>
+            <li><a href="#"><i class="fas fa-arrow-right"></i> Payment Options</a></li>
+            <li><a href="#"><i class="fas fa-arrow-right"></i> Shipping Information</a></li>
+          </ul>
+        </div>
+        
+        <div class="footer-column">
+          <h3>Contact Us</h3>
+          <ul>
+            <li><a href="#"><i class="fas fa-envelope"></i> support@auctionhub.com</a></li>
+            <li><a href="#"><i class="fas fa-phone"></i> +1 (800) 555-0199</a></li>
+            <li><a href="#"><i class="fas fa-map-marker-alt"></i> 123 Auction Street, NY</a></li>
+            <li><a href="#"><i class="fas fa-headset"></i> Live Chat Support</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="footer-bottom">
+        <p>© 2025 AuctionHub. All rights reserved. | Privacy Policy | Terms of Service</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set minimum date to today
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('auction_date').min = today;
+      
+      // Set default times
+      document.getElementById('start_time').value = '19:00';
+      document.getElementById('end_time').value = '23:00';
+      
+      // Image preview functionality
+      const fileInput = document.getElementById('images');
+      const filePreview = document.getElementById('file-preview');
+      const fileUploadArea = document.getElementById('file-upload-area');
+      
+      fileInput.addEventListener('change', function() {
+        filePreview.innerHTML = '';
+        const files = fileInput.files;
+        
+        for (let i = 0; i < Math.min(files.length, 4); i++) {
+          const file = files[i];
+          const reader = new FileReader();
+          
+          reader.onload = function(e) {
+            const previewItem = document.createElement('div');
+            previewItem.className = 'preview-item';
+            previewItem.innerHTML = `
+              <img src="${e.target.result}" alt="Preview">
+              <div class="remove" data-index="${i}"><i class="fas fa-times"></i></div>
+            `;
+            filePreview.appendChild(previewItem);
+            
+            previewItem.querySelector('.remove').addEventListener('click', function() {
+              const newFiles = Array.from(fileInput.files);
+              newFiles.splice(parseInt(this.getAttribute('data-index')), 1);
+              
+              const dataTransfer = new DataTransfer();
+              newFiles.forEach(file => dataTransfer.items.add(file));
+              fileInput.files = dataTransfer.files;
+              
+              fileInput.dispatchEvent(new Event('change'));
+            });
+          };
+          
+          reader.readAsDataURL(file);
+        }
+      });
+      
+      // Drag and drop functionality
+      fileUploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.style.borderColor = 'var(--accent)';
+        this.style.backgroundColor = 'rgba(15, 23, 42, 0.3)';
+      });
+      
+      fileUploadArea.addEventListener('dragleave', function() {
+        this.style.borderColor = 'var(--border)';
+        this.style.backgroundColor = '';
+      });
+      
+      fileUploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.style.borderColor = 'var(--border)';
+        this.style.backgroundColor = '';
+        
+        if (e.dataTransfer.files.length) {
+          fileInput.files = e.dataTransfer.files;
+          fileInput.dispatchEvent(new Event('change'));
+        }
+      });
+      
+      // Debug form submission
+      document.querySelector('.sell-form').addEventListener('submit', function(event) {
+        console.log('Form submission triggered');
+        // Uncomment the line below to prevent submission for testing
+        // event.preventDefault();
+      });
+    });
+  </script>
+</body>
+</html>

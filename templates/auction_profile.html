@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your Auction Profile – AuctionHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #0f172a;
+      --primary-light: #1e293b;
+      --accent: #dc2626;
+      --success: #059669;
+      --warning: #f59e0b;
+      --light: #f8fafc;
+      --gray: #94a3b8;
+      --dark: #1e293b;
+      --border-radius: 12px;
+      --shadow-sm: 0 2px 6px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+      --transition: all 0.3s ease;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+      color: #334155;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px 15px;
+    }
+    
+    /* Profile Header */
+    .profile-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .profile-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .profile-title i {
+      color: var(--accent);
+      background: rgba(220, 38, 38, 0.1);
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    
+    /* Stats Cards - Mobile Optimized */
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 25px;
+    }
+    
+    .stat-card {
+      background: white;
+      border-radius: var(--border-radius);
+      padding: 15px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+    }
+    
+    .stat-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      margin: 0 auto 8px;
+    }
+    
+    .icon-bid { background: rgba(5, 150, 105, 0.1); color: var(--success); }
+    .icon-list { background: rgba(220, 38, 38, 0.1); color: var(--accent); }
+    .icon-win { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+    .icon-active { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 3px 0;
+    }
+    
+    .stat-label {
+      color: var(--gray);
+      font-weight: 500;
+      font-size: 0.85rem;
+    }
+    
+    /* Sections */
+    section {
+      background: white;
+      border-radius: var(--border-radius);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 25px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .section-title i {
+      color: var(--accent);
+    }
+    
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      padding: 8px 15px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition);
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    
+    /* Mobile Card View */
+    .mobile-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .card-item {
+      background: #f8fafc;
+      border-radius: var(--border-radius);
+      padding: 15px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid #e2e8f0;
+      position: relative;
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    
+    .card-title {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 1.1rem;
+      flex: 1;
+    }
+    
+    .card-status {
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+    
+    .status-live { background: rgba(5, 150, 105, 0.1); color: var(--success); }
+    .status-pending { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+    .status-closed { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    
+    .card-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .detail-item {
+      font-size: 0.9rem;
+    }
+    
+    .detail-label {
+      font-weight: 600;
+      color: var(--gray);
+      font-size: 0.85rem;
+      margin-bottom: 3px;
+    }
+    
+    .detail-value {
+      color: var(--dark);
+    }
+    
+    .card-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .action-btn {
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      padding: 6px 12px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      flex: 1;
+      justify-content: center;
+      text-align: center;
+    }
+    
+    .action-btn:hover {
+      background: var(--primary);
+      color: white;
+    }
+    
+    /* Rating Widget */
+    .rating-container {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px dashed #e2e8f0;
+    }
+    
+    .rating-widget {
+      position: relative;
+    }
+    
+    .rate-button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 15px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      width: 100%;
+      justify-content: center;
+    }
+    
+    .inline-rating-form {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .star-rating {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    
+    .star-rating label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      width: 20%;
+    }
+    
+    .star-rating input[type="radio"] {
+      display: none;
+    }
+    
+    .star {
+      font-size: 2rem;
+      color: #ddd;
+      transition: color 0.2s;
+      margin-bottom: 5px;
+    }
+    
+    .star-rating input[type="radio"]:checked ~ .star,
+    .star-rating label:hover .star {
+      color: #ffc107;
+    }
+    
+    .rating-value {
+      font-size: 0.8rem;
+      color: var(--gray);
+      text-align: center;
+    }
+    
+    .inline-rating-form textarea {
+      width: 100%;
+      resize: vertical;
+      padding: 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      min-height: 80px;
+    }
+    
+    .inline-rating-form button.small {
+      align-self: flex-end;
+      padding: 8px 15px;
+      font-size: 0.9rem;
+      background: var(--success);
+    }
+    
+    .inline-rating-form button.small:hover {
+      background: #047857;
+    }
+    
+    /* Empty states */
+    .empty-state {
+      text-align: center;
+      padding: 30px 15px;
+      color: var(--gray);
+    }
+    
+    .empty-icon {
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+      color: #cbd5e1;
+    }
+    
+    .empty-state p {
+      font-size: 1rem;
+      margin-bottom: 20px;
+    }
+    
+    /* Footer */
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+      color: var(--gray);
+      font-size: 0.9rem;
+    }
+    
+    /* Desktop View */
+    @media (min-width: 768px) {
+      .container {
+        padding: 30px 20px;
+      }
+      
+      .stats-container {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+      }
+      
+      .stat-card {
+        padding: 20px;
+      }
+      
+      .section-title {
+        font-size: 1.6rem;
+      }
+      
+      .mobile-cards {
+        display: none;
+      }
+      
+      .table-container {
+        display: block;
+      }
+    }
+    
+    /* Mobile Only */
+    @media (max-width: 767px) {
+      .table-container {
+        display: none;
+      }
+      
+      .profile-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+      
+      .profile-title {
+        font-size: 1.6rem;
+      }
+      
+      .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      
+      .btn-primary {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .mobile-cards {
+        display: flex;
+      }
+    }
+    
+    /* Table Styles (for desktop) */
+    .table-container {
+      overflow-x: auto;
+      border-radius: var(--border-radius);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 800px;
+    }
+    
+    th {
+      background: var(--primary);
+      color: white;
+      text-align: left;
+      padding: 12px;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      font-size: 0.9rem;
+    }
+    
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 0.9rem;
+    }
+    
+    .auction-link {
+      color: var(--primary);
+      font-weight: 600;
+      text-decoration: none;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .auction-link i {
+      font-size: 0.8rem;
+    }
+    
+    .status-badge {
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+    
+    .desktop-rating-widget {
+      position: relative;
+      font-size: 0.85rem;
+    }
+    
+    .desktop-rating-widget summary {
+      cursor: pointer;
+      list-style: none;
+      display: inline-block;
+      padding: 5px 10px;
+      border: 1px solid var(--accent);
+      border-radius: 4px;
+      background: var(--accent);
+      color: white;
+      font-weight: 500;
+    }
+
+.result-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.result-badge.won {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+
+.result-badge.lost {
+  background: rgba(239, 68, 68, 0.1);
+  color: #b91c1c;
+}
+
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <h1 class="profile-title">
+        <i class="fas fa-user-circle"></i>
+        Your Auction Profile
+      </h1>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="stats-container">
+      <div class="stat-card">
+        <div class="stat-icon icon-bid">
+          <i class="fas fa-gavel"></i>
+        </div>
+        <div class="stat-value">{{ bid_history|length if bid_history else 0 }}</div>
+        <div class="stat-label">Bids Placed</div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon icon-list">
+          <i class="fas fa-list"></i>
+        </div>
+        <div class="stat-value">{{ listings|length if listings else 0 }}</div>
+        <div class="stat-label">Listings Created</div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon icon-win">
+          <i class="fas fa-trophy"></i>
+        </div>
+        <div class="stat-value">
+          {% set wins = namespace(count=0) %}
+          {% for listing in listings %}
+            {% if listing.status == 'closed' and listing.winner_username %}
+              {% set wins.count = wins.count + 1 %}
+            {% endif %}
+          {% endfor %}
+          {{ wins.count }}
+        </div>
+        <div class="stat-label">Auctions Won</div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon icon-active">
+          <i class="fas fa-bolt"></i>
+        </div>
+        <div class="stat-value">
+          {% set active = namespace(count=0) %}
+          {% for listing in listings %}
+            {% if listing.status == 'live' %}
+              {% set active.count = active.count + 1 %}
+            {% endif %}
+          {% endfor %}
+          {{ active.count }}
+        </div>
+        <div class="stat-label">Active Listings</div>
+      </div>
+    </div>
+
+    <!-- Bid History Section -->
+<section>
+  <div class="section-header">
+    <h2 class="section-title">
+      <i class="fas fa-history"></i>
+      Your Bid History
+    </h2>
+  </div>
+
+  {% if bid_history %}
+    <!-- Desktop Table View -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Auction</th>
+            <th>Bid Amount</th>
+            <th>When</th>
+            <th>Status</th>
+            <th>Result</th>
+            <th>View</th>
+            <th>Rate Seller</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for bid in bid_history %}
+          <tr>
+            <td>
+              <a href="{{ url_for('auction_show', auction_id=bid.auction_id) }}"
+                 class="auction-link">
+                <i class="fas fa-arrow-right"></i>
+                {{ bid.auction_title }}
+              </a>
+            </td>
+            <td><strong>GHS {{ '%.2f'|format(bid.bid_amount) }}</strong></td>
+            <td>{{ bid.bid_time.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>
+              <span class="status-badge status-{{ bid.auction_status }}">
+                {{ bid.auction_status|capitalize }}
+              </span>
+            </td>
+            <td>
+              {% if bid.auction_status == 'closed' %}
+                <span class="result-badge {{ 'won' if bid.is_winner else 'lost' }}">
+                  {{ 'Won' if bid.is_winner else 'Lost' }}
+                </span>
+              {% else %}
+                <span class="gray-text">—</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{{ url_for('auction_show', auction_id=bid.auction_id) }}"
+                 class="action-btn">
+                <i class="fas fa-eye"></i> View
+              </a>
+            </td>
+            <td>
+              {% if bid.auction_status != 'closed' or (bid.auction_id, 'seller') in existing_ratings %}
+                <span class="gray-text">—</span>
+              {% else %}
+                <details class="desktop-rating-widget">
+                  <summary><i class="fas fa-star"></i> Rate Seller</summary>
+                  <form method="POST" class="inline-rating-form">
+                    <input type="hidden" name="auction_id"      value="{{ bid.auction_id }}">
+                    <input type="hidden" name="role"            value="seller">
+                    <input type="hidden" name="rated_user_id"   value="{{ bid.seller_id }}">
+
+                    <div class="star-rating">
+                      {% for i in range(1, 6) %}
+                      <label>
+                        <input type="radio" name="rating" value="{{ i }}" required>
+                        <span class="star">&#9733;</span>
+                        <span class="rating-value">{{ i }}</span>
+                      </label>
+                      {% endfor %}
+                    </div>
+
+                    <textarea name="comment" rows="3"
+                              placeholder="Share your experience with this seller..."></textarea>
+                    <button type="submit" class="btn-primary small">
+                      <i class="fas fa-check"></i> Submit Rating
+                    </button>
+                  </form>
+                </details>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile Card View -->
+    <div class="mobile-cards">
+      {% for bid in bid_history %}
+      <div class="card-item">
+        <div class="card-header">
+          <div class="card-title">{{ bid.auction_title }}</div>
+          <div class="card-status status-{{ bid.auction_status }}">
+            {{ bid.auction_status|capitalize }}
+          </div>
+        </div>
+
+        <!-- Result badge -->
+        {% if bid.auction_status == 'closed' %}
+        <div class="result-badge {{ 'won' if bid.is_winner else 'lost' }}">
+          {{ 'Won' if bid.is_winner else 'Lost' }}
+        </div>
+        {% endif %}
+
+        <div class="card-details">
+          <div class="detail-item">
+            <div class="detail-label">Bid Amount</div>
+            <div class="detail-value">GHS {{ '%.2f'|format(bid.bid_amount) }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">When</div>
+            <div class="detail-value">{{ bid.bid_time.strftime('%Y-%m-%d %H:%M') }}</div>
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <a href="{{ url_for('auction_show', auction_id=bid.auction_id) }}"
+             class="action-btn">
+            <i class="fas fa-eye"></i> View
+          </a>
+          {% if bid.auction_status == 'closed' and (bid.auction_id, 'seller') not in existing_ratings %}
+          <button class="action-btn rate-trigger" data-bid="{{ bid.id }}">
+            <i class="fas fa-star"></i> Rate Seller
+          </button>
+          {% else %}
+          <button class="action-btn" disabled>
+            <i class="fas fa-star"></i> Rated
+          </button>
+          {% endif %}
+        </div>
+
+        {% if bid.auction_status == 'closed' and (bid.auction_id, 'seller') not in existing_ratings %}
+        <div class="rating-container" id="rating-{{ bid.id }}">
+          <!-- same inline-rating-form as above -->
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon"><i class="fas fa-inbox"></i></div>
+      <p>You haven't placed any bids yet.</p>
+      <a href="{{ url_for('auctions') }}" class="btn-primary">
+        <i class="fas fa-search"></i> Browse Auctions
+      </a>
+    </div>
+  {% endif %}
+</section>
+
+
+    <!-- Your Listings Section -->
+    <!-- Your Listings Section -->
+    <section>
+      <div class="section-header">
+        <h2 class="section-title">
+          <i class="fas fa-box-open"></i>
+          Your Auction Listings
+        </h2>
+        <a href="{{ url_for('sell') }}" class="btn-primary">
+          <i class="fas fa-plus"></i> New Listing
+        </a>
+      </div>
+      
+      {% if listings %}
+        <!-- Mobile Card View -->
+        <div class="mobile-cards">
+          {% for it in listings %}
+          <div class="card-item">
+            <div class="card-header">
+              <div class="card-title">{{ it.title }}</div>
+              <div class="card-status status-{{ it.status }}">
+                {{ it.status|capitalize }}
+              </div>
+            </div>
+            
+            <div class="card-details">
+              <div class="detail-item">
+                <div class="detail-label">Date</div>
+                <div class="detail-value">{{ it.auction_date.strftime('%Y-%m-%d') }}</div>
+              </div>
+              
+              <div class="detail-item">
+                <div class="detail-label">Ends At</div>
+                <div class="detail-value">{{ it.end_time.strftime('%H:%M') }}</div>
+              </div>
+              
+              <div class="detail-item">
+                <div class="detail-label">Winner</div>
+                <div class="detail-value">
+                  {% if it.status == 'closed' and it.winner_username %}
+                    <div class="winner-info">
+                      <strong>{{ it.winner_username }}</strong><br>
+                      <small>{{ it.winner_email }}</small><br>
+                      <small>{{ it.winner_contact }}</small>
+                    </div>
+                  {% else %}
+                    —
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            
+            <div class="card-actions">
+              <a href="{{ url_for('auction_show', auction_id=it.id) }}" class="action-btn">
+                <i class="fas fa-eye"></i> View
+              </a>
+              
+              {% if it.status != 'closed' or (it.id, 'buyer') in existing_ratings %}
+                <button class="action-btn" disabled>
+                  <i class="fas fa-star"></i> Rated
+                </button>
+              {% else %}
+                <button class="action-btn rate-trigger" data-listing="{{ it.id }}">
+                  <i class="fas fa-star"></i> Rate Buyer
+                </button>
+              {% endif %}
+            </div>
+            
+            {% if it.status == 'closed' and it.winner_username and not (it.id, 'buyer') in existing_ratings %}
+            <div class="rating-container" id="rating-listing-{{ it.id }}">
+              <form method="POST" class="inline-rating-form">
+                <input type="hidden" name="auction_id" value="{{ it.id }}">
+               Rate                <input type="hidden" name="role" value="buyer">
+                <input type="hidden" name="rated_user_id" value="{{ it.winner_id }}">
+                
+                <div class="star-rating">
+                  {% for i in range(1,6) %}
+                  <label>
+                    <input type="radio" name="rating" value="{{ i }}" required>
+                    <span class="star">★</span>
+                    <span class="rating-value">{{ i }}</span>
+                  </label>
+                  {% endfor %}
+                </div>
+                
+                <textarea name="comment" rows="3" placeholder="Share your experience with this buyer..."></textarea>
+                <button type="submit" class="btn-primary small">
+                  <i class="fas fa-check"></i> Submit Rating
+                </button>
+              </form>
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        
+        <!-- Desktop Table View -->
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Ends At</th>
+                <th>Winner</th>
+                <th>View</th>
+                <th>Rate Buyer</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for it in listings %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('auction_show', auction_id=it.id) }}" class="auction-link">
+                    <i class="fas fa-arrow-right"></i>
+                    {{ it.title }}
+                  </a>
+                </td>
+                <td>
+                  <span class="status-badge status-{{ it.status }}">
+                    {{ it.status|capitalize }}
+                  </span>
+                </td>
+                <td>{{ it.auction_date.strftime('%Y-%m-%d') }}</td>
+                <td>{{ it.end_time.strftime('%H:%M') }}</td>
+                <td>
+                  {% if it.status == 'closed' and it.winner_username %}
+                    <div class="winner-info">
+                      <strong>{{ it.winner_username }}</strong><br>
+                      <small>{{ it.winner_email }}</small><br>
+                      <small>{{ it.winner_contact }}</small>
+                    </div>
+                  {% else %}
+                    <span class="gray-text">—</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{{ url_for('auction_show', auction_id=it.id) }}" class="action-btn">
+                    <i class="fas fa-eye"></i> View
+                  </a>
+                </td>
+                <td>
+                  {% if it.status != 'closed' or (it.id, 'buyer') in existing_ratings %}
+                    <span class="gray-text">—</span>
+                  {% else %}
+                    <details class="desktop-rating-widget">
+                      <summary><i class="fas fa-star"></i> Rate Buyer</summary>
+                      <form method="POST" class="inline-rating-form">
+                        <input type="hidden" name="auction_id" value="{{ it.id }}">
+                        <input type="hidden" name="role" value="buyer">
+                        <input type="hidden" name="rated_user_id" value="{{ it.winner_id }}">
+                        
+                        <div class="star-rating">
+                          {% for i in range(1,6) %}
+                          <label>
+                            <input type="radio" name="rating" value="{{ i }}" required>
+                            <span class="star">★</span>
+                            <span class="rating-value">{{ i }}</span>
+                          </label>
+                          {% endfor %}
+                        </div>
+                        
+                        <textarea name="comment" rows="3" placeholder="Share your experience with this buyer..."></textarea>
+                        <button type="submit" class="btn-primary small">
+                          <i class="fas fa-check"></i> Submit Rating
+                        </button>
+                      </form>
+                    </details>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">
+            <i class="fas fa-box"></i>
+          </div>
+          <p>You haven't created any auction listings yet.</p>
+          <a href="{{ url_for('sell') }}" class="btn-primary">
+            <i class="fas fa-plus"></i> Create Your First Listing
+          </a>
+        </div>
+      {% endif %}
+    </section>
+
+    <footer>
+      &copy; {{ current_year }} AuctionHub. All rights reserved.
+    </footer>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize all rating forms as hidden on mobile
+      document.querySelectorAll('.rating-container').forEach(el => {
+        el.style.display = 'none';
+      });
+      
+      // Toggle rating forms on mobile
+      document.querySelectorAll('.rate-trigger').forEach(button => {
+        button.addEventListener('click', function() {
+          const bidId = this.getAttribute('data-bid');
+          const listingId = this.getAttribute('data-listing');
+          const ratingContainer = bidId 
+            ? document.getElementById(`rating-${bidId}`)
+            : document.getElementById(`rating-listing-${listingId}`);
+          
+          if (ratingContainer) {
+            // Toggle display
+            ratingContainer.style.display = 
+              ratingContainer.style.display === 'none' ? 'block' : 'none';
+            
+            // Scroll to the rating form
+            if (ratingContainer.style.display === 'block') {
+              ratingContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          }
+        });
+      });
+      
+      // Close rating form when clicking outside
+      document.addEventListener('click', function(e) {
+        const isRatingForm = e.target.closest('.inline-rating-form');
+        const isRateButton = e.target.closest('.rate-trigger');
+        
+        if (!isRatingForm && !isRateButton) {
+          document.querySelectorAll('.rating-container').forEach(el => {
+            el.style.display = 'none';
+          });
+        }
+      });
+      
+      // Prevent closing when clicking inside the form
+      document.querySelectorAll('.inline-rating-form').forEach(form => {
+        form.addEventListener('click', function(e) {
+          e.stopPropagation();
+        });
+      });
+    });
+  </script>
+</body>
+</html>

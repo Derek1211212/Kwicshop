@@ -32,6 +32,9 @@ from mysql.connector import pooling
 from flask_caching import Cache
 import multiprocessing
 import threading
+from datetime import datetime, date
+
+
 
 
 
@@ -3134,6 +3137,587 @@ def analytics():
         'chart': chart_data,
         'active': active
     })
+
+
+@app.route('/auctions')
+def auctions():
+    cnx = get_db_connection()
+    cur = cnx.cursor(dictionary=True)
+
+    # 1. Distinct live categories
+    cur.execute("""
+        SELECT DISTINCT category
+        FROM auction_items
+        WHERE status = 'live'
+          AND category IS NOT NULL
+          AND category <> ''
+        ORDER BY category
+    """)
+    categories = [row['category'] for row in cur.fetchall()]
+
+    # 2. Live auction items + current_bid + bid_count
+    cur.execute("""
+        SELECT
+            ai.*,
+            COALESCE((
+                SELECT MAX(bid_amount)
+                FROM auction_bids b
+                WHERE b.auction_item_id = ai.id
+            ), ai.starting_bid) AS current_bid,
+            (
+                SELECT COUNT(*)
+                FROM auction_bids b
+                WHERE b.auction_item_id = ai.id
+            ) AS bid_count
+        FROM auction_items ai
+        WHERE ai.status = 'live'
+        ORDER BY ai.end_time ASC
+    """)
+    items = cur.fetchall()
+
+    # 3. Prepare ISO timestamps for countdown JS
+    for item in items:
+        et = item['end_time']
+        if isinstance(et, datetime):
+            item['end_time_iso'] = et.isoformat()
+        else:
+            # Try parse string
+            try:
+                parsed = datetime.strptime(str(et), '%Y-%m-%d %H:%M:%S')
+                item['end_time_iso'] = parsed.isoformat()
+            except:
+                item['end_time_iso'] = ''
+
+    cur.close()
+    cnx.close()
+
+    return render_template(
+        'auction_home.html',
+        categories=categories,
+        items=items,
+        current_year=datetime.utcnow().year
+    )
+
+
+
+@app.route('/black-friday-auctions')
+def black_friday_auctions():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT ai.id, ai.title, ai.image1, ai.starting_bid, ai.start_time, ai.end_time, u.username
+        FROM auction_items ai
+        JOIN users u ON ai.user_id = u.id
+        WHERE ai.status = 'live'
+        ORDER BY ai.start_time ASC
+        LIMIT 10
+    """)
+    auction_items = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('black_friday_auctions.html', auction_items=auction_items)
+
+
+@app.route('/auction/<int:auction_id>', methods=['GET', 'POST'])
+def auction_show(auction_id):
+    cnx = get_db_connection()
+    cur = cnx.cursor(dictionary=True)
+
+    # 1. Fetch item + seller
+    cur.execute("""
+        SELECT ai.*, u.username AS seller_username
+        FROM auction_items ai
+        JOIN users u ON ai.user_id = u.id
+        WHERE ai.id = %s
+    """, (auction_id,))
+    item = cur.fetchone()
+    if not item:
+        cur.close(); cnx.close()
+        return "Auction not found", 404
+
+    # 2. Handle new bid
+    if request.method == 'POST':
+        bid_amount = request.form.get('bid_amount', type=float)
+        bidder_id  = session.get('user_id')
+        if not bidder_id:
+            flash("You must be logged in to bid", "warning")
+            return redirect(url_for('login'))
+
+        cur.execute("""
+            INSERT INTO auction_bids (auction_item_id, bidder_id, bid_amount)
+            VALUES (%s, %s, %s)
+        """, (auction_id, bidder_id, bid_amount))
+        cnx.commit()
+        flash("Your bid was placed!", "success")
+        return redirect(url_for('auction_show', auction_id=auction_id))
+
+    # 3. Compute current bid & count
+    cur.execute("""
+        SELECT 
+            IFNULL(MAX(bid_amount), %s) AS current_bid,
+            COUNT(*) AS bid_count
+        FROM auction_bids
+        WHERE auction_item_id = %s
+    """, (item['starting_bid'], auction_id))
+    bd = cur.fetchone()
+    item['current_bid'] = bd['current_bid']
+    item['bid_count']  = bd['bid_count']
+
+    # 4. Highest single bid & bidder
+    cur.execute("""
+        SELECT b.bid_amount, b.bid_time, u.username
+        FROM auction_bids b
+        JOIN users u ON u.id = b.bidder_id
+        WHERE b.auction_item_id = %s
+        ORDER BY b.bid_amount DESC
+        LIMIT 1
+    """, (auction_id,))
+    highest_bid = cur.fetchone()
+
+    # 5. Recent bids for initial page render
+    cur.execute("""
+        SELECT b.bid_amount, b.bid_time, u.username
+        FROM auction_bids b
+        JOIN users u ON u.id = b.bidder_id
+        WHERE b.auction_item_id = %s
+        ORDER BY b.bid_time DESC
+        LIMIT 10
+    """, (auction_id,))
+    recent_bids = cur.fetchall()
+
+    # 6. Feedback if closed
+    feedback = None
+    if item['status'] == 'closed':
+        cur.execute("""
+            SELECT seller_feedback, buyer_feedback
+            FROM auction_feedback
+            WHERE auction_item_id = %s
+        """, (auction_id,))
+        feedback = cur.fetchone()
+
+    # 7. ISO timestamp for countdown
+    et = item['end_time']
+    item['end_time_iso'] = et.isoformat() if isinstance(et, datetime) else ''
+
+    cur.close()
+    cnx.close()
+
+    return render_template(
+        'auction_show.html',
+        item=item,
+        recent_bids=recent_bids,
+        highest_bid=highest_bid,
+        feedback=feedback,
+        current_year=date.today().year
+    )
+
+# ----------------------------------------------------
+# 2) JSON endpoint returning Recent Bids for polling
+# ----------------------------------------------------
+@app.route('/auction/<int:auction_id>/bids')
+def auction_bids(auction_id):
+    cnx = get_db_connection()
+    cur = cnx.cursor(dictionary=True)
+
+    # Fetch the 10 most recent bids, newest first
+    cur.execute("""
+        SELECT b.bid_amount, b.bid_time, u.username
+        FROM auction_bids b
+        JOIN users u ON u.id = b.bidder_id
+        WHERE b.auction_item_id = %s
+        ORDER BY b.bid_time DESC
+        LIMIT 10
+    """, (auction_id,))
+    rows = cur.fetchall()
+
+    # Build JSON-friendly list
+    bids = []
+    for r in rows:
+        # bid_time as milliseconds since epoch
+        ms = int(r['bid_time'].timestamp() * 1000)
+        bids.append({
+            'bid_amount': float(r['bid_amount']),
+            'bid_time': ms,
+            'bid_time_display': r['bid_time'].strftime('%Y-%m-%d %H:%M:%S'),
+            'username': r['username']
+        })
+
+    cur.close()
+    cnx.close()
+    return jsonify(bids=bids)
+
+
+
+@app.route('/categories')
+def categories():
+    cnx = get_db_connection()
+    cur = cnx.cursor(dictionary=True)
+    # You need a categories table; for now we fetch distinct
+    cur.execute("""
+      SELECT c.id, c.name, c.image,
+        (SELECT COUNT(*) FROM auction_items ai WHERE ai.category_id=c.id AND ai.status='live') AS item_count
+      FROM categories c
+      ORDER BY c.name
+    """)
+    cats = cur.fetchall()
+    cur.close(); cnx.close()
+    return render_template(
+      'categories.html',
+      categories=cats,
+      current_year=now_year()
+    )
+
+
+
+@app.route('/categories/<int:cat_id>')
+def category_show(cat_id):
+    cnx = get_db_connection()
+    cur = cnx.cursor(dictionary=True)
+    # show items in that category
+    cur.execute("""
+      SELECT ai.*, 
+        COALESCE((SELECT MAX(bid_amount) FROM auction_bids b WHERE b.auction_item_id=ai.id), ai.starting_bid) AS current_bid,
+        (SELECT COUNT(*) FROM auction_bids b WHERE b.auction_item_id=ai.id) AS bid_count
+      FROM auction_items ai
+      WHERE ai.category_id=%s AND ai.status='live'
+      ORDER BY ai.end_time ASC
+    """, (cat_id,))
+    items = cur.fetchall()
+    for it in items:
+        it['end_time_iso'] = it['end_time'].isoformat()
+    cur.close(); cnx.close()
+    return render_template(
+      'auction_home.html',  # reuse grid template
+      items=items,
+      current_year=now_year()
+    )
+
+
+# Configuration for uploads
+UPLOAD_FOLDER = os.path.join('static', 'images')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+ALLOWED_EXT = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+# Ensure the upload folder exists
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+def allowed_file(filename):
+    ext = filename.rsplit('.', 1)[-1].lower()
+    return '.' in filename and ext in ALLOWED_EXT
+
+
+
+@app.route('/sell', methods=['GET', 'POST'])
+def sell():
+    if 'user_id' not in session:
+        flash("Please log in first", "warning")
+        return redirect(url_for('sign_in'))
+
+    if request.method == 'POST':
+        conn = None
+        cur = None
+        try:
+            user_id = session['user_id']
+            title = request.form['title'].strip()
+            description = request.form['description'].strip()
+            category = request.form['category'].strip()
+            item_condition = request.form['condition'].strip()
+            starting_bid = float(request.form['starting_bid'])
+            reserve_price = float(request.form['reserve_price'])
+
+            # Parse auction date and time
+            auction_date = datetime.strptime(request.form['auction_date'], '%Y-%m-%d').date()
+            start_time_str = request.form['start_time']
+            end_time_str = request.form['end_time']
+            today = date.today()
+            start_time = datetime.combine(today, datetime.strptime(start_time_str, '%H:%M').time())
+            end_time = datetime.combine(today, datetime.strptime(end_time_str, '%H:%M').time())
+
+            # Image uploads
+            image_paths = [None, None, None, None]
+            uploaded_files = request.files.getlist('images')
+            print(f"[DEBUG] Received {len(uploaded_files)} files")
+
+            for idx, image_file in enumerate(uploaded_files[:4]):  # Limit to 4
+                print(f"[DEBUG] Processing image{idx+1}: {image_file.filename}")
+                if image_file and allowed_file(image_file.filename):
+                    filename = secure_filename(image_file.filename)
+                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    image_file.save(filepath)
+                    image_paths[idx] = filename
+                    print(f"[DEBUG] Saved image{idx+1} to: {filepath}")
+                else:
+                    print(f"[DEBUG] image{idx+1} is not allowed or not uploaded")
+
+            # Insert into DB
+            conn = get_db_connection()
+            cur = conn.cursor()
+
+            query = """
+                INSERT INTO auction_items (
+                    user_id, title, description,
+                    image1, image2, image3, image4,
+                    starting_bid, reserve_price,
+                    auction_date, start_time, end_time,
+                    status, paid_fee, category, item_condition
+                )
+                VALUES (
+                    %s, %s, %s,
+                    %s, %s, %s, %s,
+                    %s, %s,
+                    %s, %s, %s,
+                    %s, %s, %s, %s
+                )
+            """
+
+            cur.execute(query, (
+                user_id, title, description,
+                image_paths[0], image_paths[1], image_paths[2], image_paths[3],
+                starting_bid, reserve_price,
+                auction_date, start_time, end_time,
+                'pending', 0, category, item_condition
+            ))
+
+            conn.commit()
+            flash("Auction listing created successfully!", "success")
+            return redirect(url_for('dashboard'))
+
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            flash(f"Error creating listing: {e}", "danger")
+            print(f"[ERROR] {e}")
+
+        finally:
+            if cur:
+                cur.close()
+            if conn:
+                conn.close()
+
+    return render_template('sell.html', current_year=datetime.now().year)
+
+
+
+
+# ─── ABOUT ───────────────────────────────────────────────────────────────────
+
+@app.route('/about')
+def about():
+    return render_template('about.html', current_year=date.today().year)
+
+# ─── AUTH: LOGIN / REGISTER ──────────────────────────────────────────────────
+@app.route('/sign-in', methods=['GET','POST'])
+def sign_in():
+    if request.method == 'POST':
+        email = request.form['email']
+        pw    = request.form['password']
+        conn = get_db_connection()
+        cur  = conn.cursor(dictionary=True)
+        cur.execute("SELECT id, password_hash FROM users WHERE email = %s", (email,))
+        user = cur.fetchone()
+        cur.close(); conn.close()
+        if user and verify_password(pw, user['password_hash']):
+            session['user_id'] = user['id']
+            flash("Signed in successfully", "success")
+            return redirect(url_for('auction_home'))
+        else:
+            flash("Invalid credentials", "danger")
+    return render_template('login_auction.html')
+
+
+@app.route('/sign-out')
+def sign_out():
+    session.clear()
+    flash("You have been signed out", "info")
+    return redirect(url_for('sign_in'))
+
+
+
+@app.route('/register', methods=['GET','POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        email    = request.form['email']
+        pw       = request.form['password']
+        # hash & insert
+        pw_hash = hash_password(pw)
+        conn = get_db_connection()
+        cur  = conn.cursor()
+        cur.execute("""
+            INSERT INTO users (username, email, password_hash)
+            VALUES (%s, %s, %s)
+        """, (username, email, pw_hash))
+        conn.commit()
+        cur.close(); conn.close()
+        flash("Account created—please sign in", "success")
+        return redirect(url_for('sign_in'))
+    return render_template('register.html')
+
+# --- password helpers (stub: implement your own) ---
+def hash_password(pw):
+    import hashlib
+    return hashlib.sha256(pw.encode()).hexdigest()
+
+def verify_password(pw, pw_hash):
+    import hashlib
+    return hashlib.sha256(pw.encode()).hexdigest() == pw_hash
+
+
+
+
+@app.route('/auction_profile', methods=['GET', 'POST'])
+def auction_profile():
+    if 'user_id' not in session:
+        flash("Please log in to view your auction profile", "warning")
+        return redirect(url_for('sign_in'))
+
+    user_id = session['user_id']
+    cnx = get_db_connection()
+    cur = cnx.cursor(dictionary=True)
+
+    if request.method == 'POST':
+        auction_id = request.form['auction_id']
+        role = request.form['role']
+        rated_user_id = request.form['rated_user_id']
+        rating = int(request.form['rating'])
+        comment = request.form.get('comment', '').strip()
+
+        # Check for duplicate ratings
+        cur.execute("""
+            SELECT 1 FROM auction_ratings
+            WHERE auction_item_id = %s AND rater_id = %s AND role = %s
+        """, (auction_id, user_id, role))
+        if cur.fetchone():
+            flash("You have already rated this.", "warning")
+        else:
+            # Insert the rating
+            cur.execute("""
+                INSERT INTO auction_ratings
+                  (auction_item_id, rater_id, rated_user_id, role, rating, comment)
+                VALUES
+                  (%s, %s, %s, %s, %s, %s)
+            """, (auction_id, user_id, rated_user_id, role, rating, comment))
+            cnx.commit()
+            flash("Rating submitted successfully!", "success")
+        return redirect(url_for('auction_profile'))
+
+    # Fetch existing ratings
+    cur.execute("""
+        SELECT auction_item_id, role
+        FROM auction_ratings
+        WHERE rater_id = %s
+    """, (user_id,))
+    existing_ratings = {(row['auction_item_id'], row['role']) for row in cur.fetchall()}
+
+    # Fetch bid history
+    cur.execute("""
+        SELECT 
+            b.auction_item_id         AS auction_id,
+            ai.title                  AS auction_title,
+            ai.status                 AS auction_status,
+            MAX(b.bid_amount)         AS bid_amount,
+            (
+                SELECT b2.bid_time
+                FROM auction_bids b2
+                WHERE b2.auction_item_id = b.auction_item_id
+                  AND b2.bidder_id = b.bidder_id
+                ORDER BY b2.bid_time DESC
+                LIMIT 1
+            )                         AS bid_time,
+            ai.user_id                AS seller_id
+        FROM auction_bids b
+        JOIN auction_items ai
+            ON b.auction_item_id = ai.id
+        WHERE b.bidder_id = %s
+        GROUP BY b.auction_item_id, ai.title, ai.status, ai.user_id
+        ORDER BY bid_time DESC
+    """, (user_id,))
+    bid_history = cur.fetchall()
+
+    # Determine winners
+    cur.execute("""
+        SELECT b.auction_item_id
+        FROM auction_items ai
+        JOIN auction_bids b
+            ON ai.id = b.auction_item_id
+        WHERE ai.status = 'closed'
+        GROUP BY b.auction_item_id
+        HAVING
+            MAX(b.bid_amount) = (
+                SELECT MAX(b2.bid_amount)
+                FROM auction_bids b2
+                WHERE b2.auction_item_id = b.auction_item_id
+            )
+            AND
+            MAX(CASE WHEN b.bidder_id = %s THEN b.bid_amount ELSE NULL END)
+              = MAX(b.bid_amount)
+    """, (user_id,))
+    winners = {row['auction_item_id'] for row in cur.fetchall()}
+
+    for bid in bid_history:
+        bid['is_winner'] = (bid['auction_id'] in winners)
+
+    # Fetch listings with winner_id
+    cur.execute("""
+        SELECT
+            ai.*,
+            (
+              SELECT u.username
+              FROM auction_bids bb
+              JOIN users u ON bb.bidder_id = u.id
+              WHERE bb.auction_item_id = ai.id
+              ORDER BY bb.bid_amount DESC
+              LIMIT 1
+            ) AS winner_username,
+            (
+              SELECT u.email
+              FROM auction_bids bb
+              JOIN users u ON bb.bidder_id = u.id
+              WHERE bb.auction_item_id = ai.id
+              ORDER BY bb.bid_amount DESC
+              LIMIT 1
+            ) AS winner_email,
+            (
+              SELECT u.contact
+              FROM auction_bids bb
+              JOIN users u ON bb.bidder_id = u.id
+              WHERE bb.auction_item_id = ai.id
+              ORDER BY bb.bid_amount DESC
+              LIMIT 1
+            ) AS winner_contact,
+            (
+              SELECT bb.bidder_id
+              FROM auction_bids bb
+              WHERE bb.auction_item_id = ai.id
+              ORDER BY bb.bid_amount DESC
+              LIMIT 1
+            ) AS winner_id
+        FROM auction_items ai
+        WHERE ai.user_id = %s
+        ORDER BY ai.auction_date DESC, ai.start_time DESC
+    """, (user_id,))
+    listings = cur.fetchall()
+
+    cur.close()
+    cnx.close()
+
+    return render_template(
+        'auction_profile.html',
+        bid_history=bid_history,
+        listings=listings,
+        existing_ratings=existing_ratings,
+        current_year=date.today().year
+    )
+
+    
+   
+
+
+
+
 
 
 @app.route('/admin/usage')

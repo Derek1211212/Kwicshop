@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ item.title }} – Auction</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #0f172a;
+      --primary-light: #1e293b;
+      --secondary: #dc2626;
+      --accent: #16a34a;
+      --light: #f8fafc;
+      --gray: #94a3b8;
+      --dark: #1e293b;
+      --success: #16a34a;
+      --warning: #f59e0b;
+      --error: #dc2626;
+      --border-radius: 12px;
+      --shadow-sm: 0 2px 6px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+      --transition: all 0.3s ease;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+      color: #334155;
+      line-height: 1.6;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .auction-container {
+      max-width: 1200px;
+      margin: 20px auto;
+      background: white;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      position: relative;
+    }
+    
+    /* Header */
+    .auction-header {
+      padding: 20px 30px;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .auction-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+    
+    .auction-id {
+      background: rgba(255,255,255,0.1);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    
+    /* Main Content */
+    .auction-content {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 30px;
+      padding: 30px;
+    }
+    
+    @media (min-width: 992px) {
+      .auction-content {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    
+    /* Image Gallery */
+    .image-section {
+      position: relative;
+    }
+    
+    .auction-image {
+      width: 100%;
+      height: 400px;
+      object-fit: cover;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+    
+    .auction-image:hover {
+      transform: scale(1.01);
+    }
+    
+    .image-thumbnails {
+      display: flex;
+      gap: 12px;
+      margin-top: 15px;
+      overflow-x: auto;
+      padding-bottom: 5px;
+    }
+    
+    .thumbnail {
+      width: 80px;
+      height: 60px;
+      border-radius: 8px;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: var(--transition);
+    }
+    
+    .thumbnail:hover, .thumbnail.active {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+    }
+    
+    /* Auction Info */
+    .info-section {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .info-card {
+      background: white;
+      border-radius: var(--border-radius);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid #e2e8f0;
+    }
+    
+    .info-card h2 {
+      font-size: 1.3rem;
+      margin-bottom: 15px;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .info-card h2 i {
+      color: var(--accent);
+    }
+    
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    
+    .info-item {
+      padding: 12px 0;
+      border-bottom: 1px dashed #e2e8f0;
+    }
+    
+    .info-item:last-child {
+      border-bottom: none;
+    }
+    
+    .info-label {
+      font-weight: 600;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .info-value {
+      margin-top: 5px;
+      font-size: 1.1rem;
+      color: var(--dark);
+    }
+    
+    .highlight {
+      color: var(--accent);
+      font-weight: 700;
+    }
+    
+    .seller-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+    
+    .seller-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    
+    /* Countdown */
+    .countdown-container {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      color: white;
+      border-radius: var(--border-radius);
+      padding: 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .countdown-container::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: pulse 3s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(0.8); opacity: 0.7; }
+      50% { transform: scale(1.2); opacity: 0.3; }
+      100% { transform: scale(0.8); opacity: 0.7; }
+    }
+    
+    .countdown-title {
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .countdown {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      margin: 10px 0;
+      font-family: 'Courier New', monospace;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .countdown-ended {
+      font-size: 1.5rem;
+      font-weight: 700;
+      padding: 10px;
+      background: var(--secondary);
+      border-radius: 8px;
+      display: inline-block;
+    }
+    
+    /* Bid Box */
+    .bid-box {
+      background: white;
+      border-radius: var(--border-radius);
+      padding: 25px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid #e2e8f0;
+    }
+    
+    .bid-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .current-bid {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    
+    .bid-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .bid-input-group {
+      position: relative;
+    }
+    
+    .bid-input-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    
+    .bid-currency {
+      position: absolute;
+      left: 15px;
+      top: 43px;
+      font-weight: 600;
+      color: var(--gray);
+    }
+    
+    .bid-input {
+      width: 100%;
+      padding: 15px 15px 15px 40px;
+      font-size: 1.1rem;
+      border: 2px solid #cbd5e1;
+      border-radius: 8px;
+      transition: var(--transition);
+    }
+    
+    .bid-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2);
+      outline: none;
+    }
+    
+    .bid-btn {
+      padding: 15px;
+      background: var(--accent);
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    
+    .bid-btn:hover {
+      background: #15803d;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(22, 163, 74, 0.3);
+    }
+    
+    .bid-btn:active {
+      transform: translateY(0);
+    }
+    
+    .bid-hint {
+      font-size: 0.9rem;
+      color: var(--gray);
+      text-align: center;
+      margin-top: 5px;
+    }
+    
+    /* Flash Messages */
+    .message {
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: fadeIn 0.5s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .success {
+      background: #dcfce7;
+      color: var(--success);
+      border: 1px solid #bbf7d0;
+    }
+    
+    .error {
+      background: #fee2e2;
+      color: var(--error);
+      border: 1px solid #fecaca;
+    }
+    
+    /* Recent Bids */
+    .recent-bids {
+      background: white;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid #e2e8f0;
+    }
+    
+    .recent-bids h2 {
+      background: var(--primary);
+      color: white;
+      margin: 0;
+      padding: 15px 20px;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .bids-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .bids-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 15px 20px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 0.95rem;
+      transition: var(--transition);
+    }
+    
+    .bids-list li:last-child {
+      border-bottom: none;
+    }
+    
+    .bids-list li:hover {
+      background: #f8fafc;
+    }
+    
+    .bids-list .bidder {
+      font-weight: 600;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .bids-list .bid-amount {
+      font-weight: 700;
+      color: var(--accent);
+    }
+    
+    .bids-list .timestamp {
+      color: var(--gray);
+      font-size: 0.85rem;
+      min-width: 140px;
+      text-align: right;
+    }
+    
+    .no-bids {
+      text-align: center;
+      padding: 30px;
+      color: var(--gray);
+      font-style: italic;
+    }
+    
+    .update-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      background: #f1f5f9;
+      color: var(--gray);
+      font-size: 0.9rem;
+      gap: 8px;
+    }
+    
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(0,0,0,0.1);
+      border-radius: 50%;
+      border-top-color: var(--accent);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      .auction-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      
+      .auction-title {
+        font-size: 1.5rem;
+      }
+      
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .current-bid {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="auction-container">
+    <!-- Auction Header -->
+    <div class="auction-header">
+      <h1 class="auction-title">{{ item.title }}</h1>
+      <div class="auction-id">ID: #{{ item.id }}</div>
+    </div>
+    
+    <div class="auction-content">
+      <!-- Left Column: Image and Description -->
+      <div class="image-section">
+        <!-- Main Auction Image -->
+        <img
+          src="{{ url_for('static', filename='images/' + item.image1) }}"
+          alt="Auction Image"
+          class="auction-image"
+          id="main-image"
+        >
+        
+        <!-- Image Thumbnails -->
+        <div class="image-thumbnails">
+          <img 
+            src="{{ url_for('static', filename='images/' + item.image1) }}" 
+            class="thumbnail active" 
+            data-image="{{ url_for('static', filename='images/' + item.image1) }}"
+            alt="Thumbnail 1"
+          >
+          {% if item.image2 %}
+          <img 
+            src="{{ url_for('static', filename='images/' + item.image2) }}" 
+            class="thumbnail" 
+            data-image="{{ url_for('static', filename='images/' + item.image2) }}"
+            alt="Thumbnail 2"
+          >
+          {% endif %}
+          {% if item.image3 %}
+          <img 
+            src="{{ url_for('static', filename='images/' + item.image3) }}" 
+            class="thumbnail" 
+            data-image="{{ url_for('static', filename='images/' + item.image3) }}"
+            alt="Thumbnail 3"
+          >
+          {% endif %}
+          {% if item.image4 %}
+          <img 
+            src="{{ url_for('static', filename='images/' + item.image4) }}" 
+            class="thumbnail" 
+            data-image="{{ url_for('static', filename='images/' + item.image4) }}"
+            alt="Thumbnail 4"
+          >
+          {% endif %}
+        </div>
+        
+        <!-- Description Card -->
+        <div class="info-card" style="margin-top: 25px;">
+          <h2><i class="fas fa-align-left"></i> Description</h2>
+          <div class="info-value">{{ item.description }}</div>
+        </div>
+      </div>
+      
+      <!-- Right Column: Auction Details -->
+      <div class="info-section">
+        <!-- Seller and Status Card -->
+        <div class="info-card">
+          <h2><i class="fas fa-info-circle"></i> Auction Details</h2>
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-label"><i class="fas fa-user"></i> Seller</div>
+              <div class="seller-info">
+                <div class="seller-avatar">{{ item.seller_username[0]|upper }}</div>
+                <div class="info-value">{{ item.seller_username }}</div>
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <div class="info-label"><i class="fas fa-flag"></i> Status</div>
+              <div class="info-value">
+                {% if item.is_active %}
+                  <span class="highlight" style="color: var(--accent);"><i class="fas fa-play-circle"></i> Active</span>
+                {% else %}
+                  <span style="color: var(--secondary);"><i class="fas fa-ban"></i> Closed</span>
+                {% endif %}
+              </div>
+            </div>
+            
+            <div class="info-item">
+              <div class="info-label"><i class="fas fa-gavel"></i> Starting Bid</div>
+              <div class="info-value">GHS {{ '%.2f' % item.starting_bid }}</div>
+            </div>
+            
+            <div class="info-item">
+              <div class="info-label"><i class="fas fa-trophy"></i> Highest Bid</div>
+              <div class="info-value">
+                {% if highest_bid %}
+                  <span class="highlight">GHS {{ '%.2f' % highest_bid.bid_amount }}</span> by {{ highest_bid.username }}
+                {% else %}
+                  <span style="color: var(--gray);">No bids yet</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Countdown Timer -->
+        <div class="countdown-container">
+          <div class="countdown-title">
+            <i class="fas fa-clock"></i> Auction Ends In
+          </div>
+          <div class="countdown" data-endtime="{{ item.end_time_iso }}"></div>
+        </div>
+        
+        <!-- Bid Box -->
+        <div class="bid-box">
+          <div class="bid-header">
+            <div>
+              <div class="info-label">Place Your Bid</div>
+              <div class="current-bid">
+                {% if highest_bid %}
+                  GHS {{ '%.2f' % highest_bid.bid_amount }}
+                {% else %}
+                  GHS {{ '%.2f' % item.starting_bid }}
+                {% endif %}
+              </div>
+            </div>
+            <div class="bid-hint">
+              Minimum bid: GHS {{ '%.2f' % (highest_bid.bid_amount + 1 if highest_bid else item.starting_bid) }}
+            </div>
+          </div>
+          
+          <form method="POST" class="bid-form">
+            <div class="bid-input-group">
+              <label for="bid_amount">Your Bid Amount (GHS)</label>
+              <span class="bid-currency">GHS</span>
+              <input 
+                type="number" 
+                id="bid_amount" 
+                name="bid_amount" 
+                class="bid-input"
+                min="{{ highest_bid.bid_amount + 1 if highest_bid else item.starting_bid }}"
+                step="0.01" 
+                placeholder="Enter amount"
+                required
+              >
+            </div>
+            
+            <button type="submit" class="bid-btn">
+              <i class="fas fa-gavel"></i> Place Bid
+            </button>
+          </form>
+          
+          <!-- Flash messages -->
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, msg in messages %}
+                <div class="message {{ 'success' if category=='success' else 'error' }}">
+                  <i class="fas fa-{{ 'check-circle' if category=='success' else 'exclamation-circle' }}"></i>
+                  {{ msg }}
+                </div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+        </div>
+        
+        <!-- Recent Bids Panel -->
+        <div class="recent-bids">
+          <h2><i class="fas fa-history"></i> Recent Bids</h2>
+          <ul class="bids-list" id="bids-list">
+            {% if recent_bids %}
+              {% for bid in recent_bids %}
+                <li data-bid-id="{{ bid.bid_time.timestamp() }}">
+                  <span class="bidder"><i class="fas fa-user"></i> {{ bid.username }}</span>
+                  <span class="bid-amount">GHS {{ '%.2f' % bid.bid_amount }}</span>
+                  <span class="timestamp">{{ bid.bid_time.strftime('%Y-%m-%d %H:%M') }}</span>
+                </li>
+              {% endfor %}
+            {% else %}
+              <div class="no-bids">No bids placed yet</div>
+            {% endif %}
+          </ul>
+          <div class="update-indicator" id="update-indicator">
+            <div class="spinner"></div>
+            <span>Live updating...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    // Countdown Timer
+    function updateCountdown() {
+      const el = document.querySelector('.countdown');
+      if (!el) return;
+      
+      const endTime = new Date(el.dataset.endtime).getTime();
+      const now = Date.now();
+      const diff = endTime - now;
+      
+      if (diff <= 0) {
+        el.innerHTML = '<div class="countdown-ended">Auction Ended</div>';
+        return;
+      }
+      
+      const h = Math.floor(diff / (1000 * 60 * 60));
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const s = Math.floor((diff % 60000) / 1000);
+      
+      el.innerHTML = `${h}<span style="font-size: 0.6em;">h</span> ${m}<span style="font-size: 0.6em;">m</span> ${s}<span style="font-size: 0.6em;">s</span>`;
+    }
+    
+    // Initialize countdown
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+    
+    // Thumbnail click handler
+    document.querySelectorAll('.thumbnail').forEach(thumb => {
+      thumb.addEventListener('click', function() {
+        // Update main image
+        document.getElementById('main-image').src = this.dataset.image;
+        
+        // Update active class
+        document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+    
+    // Bid form validation
+    const bidForm = document.querySelector('.bid-form');
+    if (bidForm) {
+      bidForm.addEventListener('submit', function(e) {
+        const bidInput = document.getElementById('bid_amount');
+        const minBid = parseFloat(bidInput.min);
+        const bidValue = parseFloat(bidInput.value);
+        
+        if (bidValue < minBid) {
+          e.preventDefault();
+          alert(`Your bid must be at least GHS ${minBid.toFixed(2)}`);
+        }
+      });
+    }
+    
+    // Fetch new bids with visual feedback
+    async function fetchNewBids() {
+      const listEl = document.getElementById('bids-list');
+      const indicator = document.getElementById('update-indicator');
+      
+      if (!listEl) return;
+      
+      // Show updating indicator
+      indicator.style.display = 'flex';
+      
+      try {
+        const url = '{{ url_for("auction_show", auction_id=item.id) }}'.replace('/auction/','/auction/' + {{ item.id }} + '/bids');
+        const resp = await fetch(url);
+        
+        if (!resp.ok) {
+          throw new Error('Failed to fetch bids');
+        }
+        
+        const data = await resp.json();
+        
+        // Clear "no bids" message if it exists
+        if (listEl.querySelector('.no-bids')) {
+          listEl.innerHTML = '';
+        }
+        
+        data.forEach(bid => {
+          // Skip if already in list
+          if (listEl.querySelector(`[data-bid-id="${bid.bid_time}"]`)) return;
+          
+          const li = document.createElement('li');
+          li.dataset.bidId = bid.bid_time;
+          li.innerHTML = `
+            <span class="bidder"><i class="fas fa-user"></i> ${bid.username}</span>
+            <span class="bid-amount">GHS ${parseFloat(bid.bid_amount).toFixed(2)}</span>
+            <span class="timestamp">${bid.bid_time_display}</span>
+          `;
+          
+          // Add animation for new bids
+          li.style.opacity = '0';
+          li.style.transform = 'translateY(20px)';
+          listEl.insertBefore(li, listEl.firstChild);
+          
+          // Animate new bid
+          setTimeout(() => {
+            li.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            li.style.opacity = '1';
+            li.style.transform = 'translateY(0)';
+          }, 50);
+        });
+        
+      } catch(e) {
+        console.error('Error fetching bids:', e);
+      } finally {
+        // Hide updating indicator after a delay
+        setTimeout(() => {
+          indicator.style.display = 'none';
+        }, 1000);
+      }
+    }
+    
+    // Poll for new bids every 5 seconds
+    setInterval(fetchNewBids, 5000);
+    
+    // Initial setup
+    document.addEventListener('DOMContentLoaded', function() {
+      // Hide update indicator initially
+      document.getElementById('update-indicator').style.display = 'none';
+    });
+  </script>
+</body>
+</html>
