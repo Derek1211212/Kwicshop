@@ -3712,6 +3712,7 @@ def auction_profile():
         current_year=date.today().year
     )
 
+
     
    
 
