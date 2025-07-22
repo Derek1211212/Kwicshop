@@ -127,7 +127,7 @@ except ValueError:
 
 # ─── 3) Define your total‑app ceiling and per‑pool cap ───────────────────────
 TOTAL_APP_CONN = 200   # across all workers, aim to use no more than this
-MAX_PER_POOL   = 20    # mysql.connector.pooling hard upper bound
+MAX_PER_POOL   = 15    # mysql.connector.pooling hard upper bound
 MIN_PER_POOL   = 5     # always at least this many connections
 
 # ─── 4) Compute per‑process pool size ────────────────────────────────────────
@@ -3713,7 +3713,7 @@ def auction_profile():
     )
 
 
-    
+
    
 
 
