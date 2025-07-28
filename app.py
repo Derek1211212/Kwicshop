@@ -33,6 +33,9 @@ from flask_caching import Cache
 import multiprocessing
 import threading
 from datetime import datetime, date
+from mysql.connector import connect, Error
+import string
+
 
 
 
@@ -3221,6 +3224,7 @@ def black_friday_auctions():
     return render_template('black_friday_auctions.html', auction_items=auction_items)
 
 
+
 @app.route('/auction/<int:auction_id>', methods=['GET', 'POST'])
 def auction_show(auction_id):
     cnx = get_db_connection()
@@ -3229,26 +3233,29 @@ def auction_show(auction_id):
     # 1. Fetch item + seller
     cur.execute("""
         SELECT ai.*, u.username AS seller_username
-        FROM auction_items ai
-        JOIN users u ON ai.user_id = u.id
-        WHERE ai.id = %s
+          FROM auction_items ai
+          JOIN users u ON ai.user_id = u.id
+         WHERE ai.id = %s
     """, (auction_id,))
     item = cur.fetchone()
     if not item:
-        cur.close(); cnx.close()
+        cur.close()
+        cnx.close()
         return "Auction not found", 404
 
-    # 2. Handle new bid
+    # 2. Handle new bid submission
     if request.method == 'POST':
         bid_amount = request.form.get('bid_amount', type=float)
         bidder_id  = session.get('user_id')
         if not bidder_id:
             flash("You must be logged in to bid", "warning")
-            return redirect(url_for('login'))
+            cur.close()
+            cnx.close()
+            return redirect(url_for('sign_in'))
 
         cur.execute("""
-            INSERT INTO auction_bids (auction_item_id, bidder_id, bid_amount)
-            VALUES (%s, %s, %s)
+            INSERT INTO auction_bids (auction_item_id, bidder_id, bid_amount, bid_time)
+            VALUES (%s, %s, %s, UTC_TIMESTAMP())
         """, (auction_id, bidder_id, bid_amount))
         cnx.commit()
         flash("Your bid was placed!", "success")
@@ -3258,9 +3265,9 @@ def auction_show(auction_id):
     cur.execute("""
         SELECT 
             IFNULL(MAX(bid_amount), %s) AS current_bid,
-            COUNT(*) AS bid_count
-        FROM auction_bids
-        WHERE auction_item_id = %s
+            COUNT(*)            AS bid_count
+          FROM auction_bids
+         WHERE auction_item_id = %s
     """, (item['starting_bid'], auction_id))
     bd = cur.fetchone()
     item['current_bid'] = bd['current_bid']
@@ -3269,38 +3276,45 @@ def auction_show(auction_id):
     # 4. Highest single bid & bidder
     cur.execute("""
         SELECT b.bid_amount, b.bid_time, u.username
-        FROM auction_bids b
-        JOIN users u ON u.id = b.bidder_id
-        WHERE b.auction_item_id = %s
-        ORDER BY b.bid_amount DESC
-        LIMIT 1
+          FROM auction_bids b
+          JOIN users u ON u.id = b.bidder_id
+         WHERE b.auction_item_id = %s
+         ORDER BY b.bid_amount DESC
+         LIMIT 1
     """, (auction_id,))
     highest_bid = cur.fetchone()
 
     # 5. Recent bids for initial page render
     cur.execute("""
-        SELECT b.bid_amount, b.bid_time, u.username
-        FROM auction_bids b
-        JOIN users u ON u.id = b.bidder_id
-        WHERE b.auction_item_id = %s
-        ORDER BY b.bid_time DESC
-        LIMIT 10
+        SELECT b.bid_amount,
+               b.bid_time,
+               u.username,
+               DATE_FORMAT(b.bid_time, '%%Y-%%m-%%d %%H:%%i') AS bid_time_display
+          FROM auction_bids b
+          JOIN users u ON u.id = b.bidder_id
+         WHERE b.auction_item_id = %s
+         ORDER BY b.bid_time DESC
+         LIMIT 10
     """, (auction_id,))
     recent_bids = cur.fetchall()
 
-    # 6. Feedback if closed
+    # 6. Optional feedback if closed
     feedback = None
     if item['status'] == 'closed':
         cur.execute("""
             SELECT seller_feedback, buyer_feedback
-            FROM auction_feedback
-            WHERE auction_item_id = %s
+              FROM auction_feedback
+             WHERE auction_item_id = %s
         """, (auction_id,))
         feedback = cur.fetchone()
 
     # 7. ISO timestamp for countdown
-    et = item['end_time']
-    item['end_time_iso'] = et.isoformat() if isinstance(et, datetime) else ''
+    end_time = item['end_time']
+    item['end_time_iso'] = end_time.isoformat() if isinstance(end_time, datetime) else ''
+
+    # 8. Determine if auction has ended
+    now = datetime.utcnow()
+    is_ended = (item['status'] == 'closed') or (end_time < now)
 
     cur.close()
     cnx.close()
@@ -3311,43 +3325,9 @@ def auction_show(auction_id):
         recent_bids=recent_bids,
         highest_bid=highest_bid,
         feedback=feedback,
-        current_year=date.today().year
+        current_year=date.today().year,
+        is_ended=is_ended
     )
-
-# ----------------------------------------------------
-# 2) JSON endpoint returning Recent Bids for polling
-# ----------------------------------------------------
-@app.route('/auction/<int:auction_id>/bids')
-def auction_bids(auction_id):
-    cnx = get_db_connection()
-    cur = cnx.cursor(dictionary=True)
-
-    # Fetch the 10 most recent bids, newest first
-    cur.execute("""
-        SELECT b.bid_amount, b.bid_time, u.username
-        FROM auction_bids b
-        JOIN users u ON u.id = b.bidder_id
-        WHERE b.auction_item_id = %s
-        ORDER BY b.bid_time DESC
-        LIMIT 10
-    """, (auction_id,))
-    rows = cur.fetchall()
-
-    # Build JSON-friendly list
-    bids = []
-    for r in rows:
-        # bid_time as milliseconds since epoch
-        ms = int(r['bid_time'].timestamp() * 1000)
-        bids.append({
-            'bid_amount': float(r['bid_amount']),
-            'bid_time': ms,
-            'bid_time_display': r['bid_time'].strftime('%Y-%m-%d %H:%M:%S'),
-            'username': r['username']
-        })
-
-    cur.close()
-    cnx.close()
-    return jsonify(bids=bids)
 
 
 
@@ -3512,19 +3492,32 @@ def about():
 @app.route('/sign-in', methods=['GET','POST'])
 def sign_in():
     if request.method == 'POST':
-        email = request.form['email']
-        pw    = request.form['password']
+        email = request.form.get('email', '').strip().lower()
+        pw    = request.form.get('password', '')
+
+        # Fetch user record (including hashed password and verified flag)
         conn = get_db_connection()
         cur  = conn.cursor(dictionary=True)
-        cur.execute("SELECT id, password_hash FROM users WHERE email = %s", (email,))
+        cur.execute(
+            "SELECT id, password, verified FROM users WHERE email = %s",
+            (email,)
+        )
         user = cur.fetchone()
-        cur.close(); conn.close()
-        if user and verify_password(pw, user['password_hash']):
+        cur.close()
+        conn.close()
+
+        # Validate hash and verification
+        if user and check_password_hash(user['password'], pw):
+            if not user.get('verified'):
+                flash("Please verify your email before logging in.", "warning")
+                return redirect(url_for('sign_in'))
+
             session['user_id'] = user['id']
             flash("Signed in successfully", "success")
-            return redirect(url_for('auction_home'))
+            return redirect(url_for('auctions'))
         else:
             flash("Invalid credentials", "danger")
+
     return render_template('login_auction.html')
 
 
@@ -3547,7 +3540,7 @@ def register():
         conn = get_db_connection()
         cur  = conn.cursor()
         cur.execute("""
-            INSERT INTO users (username, email, password_hash)
+            INSERT INTO users (username, email, password)
             VALUES (%s, %s, %s)
         """, (username, email, pw_hash))
         conn.commit()
@@ -3714,7 +3707,112 @@ def auction_profile():
 
 
 
-   
+# --- Email (OTP) helper ---
+SMTP_HOST    = "smtp.gmail.com"
+SMTP_PORT    = 587
+SENDER_EMAIL = "Derickbill3@gmail.com"
+SENDER_PWD   = "bxyw odgw iwvl tpad"
+
+def send_otp(to_email, code):
+    subject = "Your SwapHub Verification Code"
+    body    = f"Your verification code is: {code}\n\nThis expires in 15 minutes."
+    msg     = f"Subject: {subject}\n\n{body}"
+    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+        server.starttls()
+        server.login(SENDER_EMAIL, SENDER_PWD)
+        server.sendmail(SENDER_EMAIL, to_email, msg)
+
+# --- Signup route ---
+@app.route("/signup_auction", methods=["GET", "POST"])
+def signup_auction():
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        email    = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        contact  = request.form.get("contact", "").strip()
+        name     = request.form.get("name", "").strip()
+
+        # Validate presence
+        missing = [fld for fld, val in
+                   [("Username", username), ("Email", email),
+                    ("Password", password), ("Contact", contact),
+                    ("Name", name)] if not val]
+        if missing:
+            flash(f"Missing required field(s): {', '.join(missing)}", "danger")
+            return render_template("signup_auction.html",
+                                   username=username, email=email,
+                                   contact=contact, name=name)
+
+        # Hash the password before storing
+        pw_hash = generate_password_hash(password)
+
+        # Insert user & OTP logic
+        try:
+            conn = get_db_connection()
+            cur  = conn.cursor()
+            cur.execute("""
+                INSERT INTO users
+                  (username, email, password, contact, name, account_status, verified)
+                VALUES (%s,%s,%s,%s,%s,'pending',0)
+            """, (username, email, pw_hash, contact, name))
+            user_id = cur.lastrowid
+
+            code       = ''.join(random.choices(string.digits, k=6))
+            expires_at = datetime.utcnow() + timedelta(minutes=15)
+            cur.execute("""
+                INSERT INTO email_verifications (user_id, code, expires_at)
+                VALUES (%s,%s,%s)
+            """, (user_id, code, expires_at))
+
+            conn.commit()
+            send_otp(email, code)
+
+            flash("A verification code has been sent to your e‑mail.", "info")
+            return redirect(url_for("verify_email", user_id=user_id))
+
+        except Error as e:
+            conn.rollback()
+            flash("Error creating account: " + str(e), "danger")
+        finally:
+            cur.close()
+            conn.close()
+
+    return render_template("signup_auction.html")
+
+# --- Verification route ---
+@app.route("/verify-email/<int:user_id>", methods=["GET", "POST"])
+def verify_email(user_id):
+    if request.method == "POST":
+        code_sub = request.form.get("code", "").strip()
+        conn     = get_db_connection()
+        cur      = conn.cursor(dictionary=True)
+        cur.execute("""
+            SELECT code
+              FROM email_verifications
+             WHERE user_id = %s
+               AND expires_at >= UTC_TIMESTAMP()
+             ORDER BY created_at DESC
+             LIMIT 1
+        """, (user_id,))
+        rec = cur.fetchone()
+
+        if rec and rec["code"] == code_sub:
+            cur.execute("""
+                UPDATE users
+                   SET verified = 1, account_status = 'active'
+                 WHERE id = %s
+            """, (user_id,))
+            cur.execute("DELETE FROM email_verifications WHERE user_id = %s", (user_id,))
+            conn.commit()
+            flash("Your account has been verified! You can now log in.", "success")
+            return redirect(url_for("sign_in"))
+        else:
+            flash("Invalid or expired code. Please try again.", "danger")
+
+        cur.close()
+        conn.close()
+
+    return render_template("verify_email.html", user_id=user_id)
 
 
 

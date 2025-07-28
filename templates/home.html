@@ -1764,11 +1764,11 @@ body .mobile-bottom-nav {
     </a>
 
     {% if session.get('user_id') %}
-      <a href="{{ url_for('view_wishlist') }}" class="nav-item wishlist-link">
-        <i class="fas fa-heart"></i>
+      <a href="{{ url_for('view_wishlist') }}" class="nav-item wishlist-link">Wishlist
         <span id="wishlist-count">{{ session.get('wishlist_count', 0) }}</span>
       </a>
     {% endif %}
+    <a href="/auctions">Auctions</a>
     <a href="/my-proposals">My Offers</a>
     {% if session.get('user_id') %}
       <a href="/logout" class="btn btn-outline">Logout</a>

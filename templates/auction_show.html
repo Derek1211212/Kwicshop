@@ -565,108 +565,130 @@
         </div>
       </div>
       
-      <!-- Right Column: Auction Details -->
-      <div class="info-section">
-        <!-- Seller and Status Card -->
-        <div class="info-card">
-          <h2><i class="fas fa-info-circle"></i> Auction Details</h2>
-          <div class="info-grid">
-            <div class="info-item">
-              <div class="info-label"><i class="fas fa-user"></i> Seller</div>
-              <div class="seller-info">
-                <div class="seller-avatar">{{ item.seller_username[0]|upper }}</div>
-                <div class="info-value">{{ item.seller_username }}</div>
-              </div>
-            </div>
-            
-            <div class="info-item">
-              <div class="info-label"><i class="fas fa-flag"></i> Status</div>
-              <div class="info-value">
-                {% if item.is_active %}
-                  <span class="highlight" style="color: var(--accent);"><i class="fas fa-play-circle"></i> Active</span>
-                {% else %}
-                  <span style="color: var(--secondary);"><i class="fas fa-ban"></i> Closed</span>
-                {% endif %}
-              </div>
-            </div>
-            
-            <div class="info-item">
-              <div class="info-label"><i class="fas fa-gavel"></i> Starting Bid</div>
-              <div class="info-value">GHS {{ '%.2f' % item.starting_bid }}</div>
-            </div>
-            
-            <div class="info-item">
-              <div class="info-label"><i class="fas fa-trophy"></i> Highest Bid</div>
-              <div class="info-value">
-                {% if highest_bid %}
-                  <span class="highlight">GHS {{ '%.2f' % highest_bid.bid_amount }}</span> by {{ highest_bid.username }}
-                {% else %}
-                  <span style="color: var(--gray);">No bids yet</span>
-                {% endif %}
-              </div>
-            </div>
-          </div>
+<!-- Right Column: Auction Details -->
+<div class="info-section">
+  <!-- Seller and Status Card -->
+  <div class="info-card">
+    <h2><i class="fas fa-info-circle"></i> Auction Details</h2>
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-label"><i class="fas fa-user"></i> Seller</div>
+        <div class="seller-info">
+          <div class="seller-avatar">{{ item.seller_username[0]|upper }}</div>
+          <div class="info-value">{{ item.seller_username }}</div>
         </div>
-        
-        <!-- Countdown Timer -->
-        <div class="countdown-container">
-          <div class="countdown-title">
-            <i class="fas fa-clock"></i> Auction Ends In
-          </div>
-          <div class="countdown" data-endtime="{{ item.end_time_iso }}"></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label"><i class="fas fa-flag"></i> Status</div>
+        <div class="info-value">
+          {% set s = item.status %}
+          {% if s == 'pending' %}
+            <span class="badge badge-pending"><i class="fas fa-clock"></i> Pending</span>
+          {% elif s == 'approved' %}
+            <span class="badge badge-approved"><i class="fas fa-check-circle"></i> Approved</span>
+          {% elif s == 'live' %}
+            <span class="badge badge-live"><i class="fas fa-play-circle"></i> Live</span>
+          {% elif s == 'rejected' %}
+            <span class="badge badge-rejected"><i class="fas fa-times-circle"></i> Rejected</span>
+          {% elif s == 'closed' %}
+            <span class="badge badge-closed"><i class="fas fa-ban"></i> Closed</span>
+          {% else %}
+            <span class="badge"><i class="fas fa-info-circle"></i> {{ s|capitalize }}</span>
+          {% endif %}
         </div>
-        
-        <!-- Bid Box -->
-        <div class="bid-box">
-          <div class="bid-header">
-            <div>
-              <div class="info-label">Place Your Bid</div>
-              <div class="current-bid">
-                {% if highest_bid %}
-                  GHS {{ '%.2f' % highest_bid.bid_amount }}
-                {% else %}
-                  GHS {{ '%.2f' % item.starting_bid }}
-                {% endif %}
-              </div>
-            </div>
-            <div class="bid-hint">
-              Minimum bid: GHS {{ '%.2f' % (highest_bid.bid_amount + 1 if highest_bid else item.starting_bid) }}
-            </div>
-          </div>
-          
-          <form method="POST" class="bid-form">
-            <div class="bid-input-group">
-              <label for="bid_amount">Your Bid Amount (GHS)</label>
-              <span class="bid-currency">GHS</span>
-              <input 
-                type="number" 
-                id="bid_amount" 
-                name="bid_amount" 
-                class="bid-input"
-                min="{{ highest_bid.bid_amount + 1 if highest_bid else item.starting_bid }}"
-                step="0.01" 
-                placeholder="Enter amount"
-                required
-              >
-            </div>
-            
-            <button type="submit" class="bid-btn">
-              <i class="fas fa-gavel"></i> Place Bid
-            </button>
-          </form>
-          
-          <!-- Flash messages -->
-          {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-              {% for category, msg in messages %}
-                <div class="message {{ 'success' if category=='success' else 'error' }}">
-                  <i class="fas fa-{{ 'check-circle' if category=='success' else 'exclamation-circle' }}"></i>
-                  {{ msg }}
-                </div>
-              {% endfor %}
-            {% endif %}
-          {% endwith %}
+      </div>
+      <div class="info-item">
+        <div class="info-label"><i class="fas fa-gavel"></i> Starting Bid</div>
+        <div class="info-value">GHS {{ '%.2f' % item.starting_bid }}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label"><i class="fas fa-trophy"></i> Highest Bid</div>
+        <div class="info-value">
+          {% if highest_bid %}
+            <span class="highlight">GHS {{ '%.2f' % highest_bid.bid_amount }}</span> by {{ highest_bid.username }}
+          {% else %}
+            <span style="color: var(--gray);">No bids yet</span>
+          {% endif %}
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Countdown Timer -->
+  <div class="countdown-container">
+    <div class="countdown-title"><i class="fas fa-clock"></i> Auction Ends In</div>
+    <div class="countdown" data-endtime="{{ item.end_time_iso }}"></div>
+  </div>
+
+  <!-- Bid Box -->
+  <div class="bid-box">
+    <div class="bid-header">
+      <div>
+        <div class="info-label">Place Your Bid</div>
+        <div class="current-bid">
+          {% if highest_bid %}
+            GHS {{ '%.2f' % highest_bid.bid_amount }}
+          {% else %}
+            GHS {{ '%.2f' % item.starting_bid }}
+          {% endif %}
+        </div>
+      </div>
+      <div class="bid-hint">
+        Minimum bid: GHS {{ '%.2f' % (highest_bid.bid_amount + 1 if highest_bid else item.starting_bid) }}
+      </div>
+    </div>
+
+    {% if is_ended %}
+      <form class="bid-form">
+        <div class="bid-input-group">
+          <label>Your Bid Amount (GHS)</label>
+          <input
+            type="number"
+            class="bid-input"
+            disabled
+            placeholder="Auction has ended"
+          />
+        </div>
+        <button type="button" class="bid-btn" disabled>
+          <i class="fas fa-gavel"></i> Auction Closed
+        </button>
+      </form>
+    {% else %}
+      <form method="POST" class="bid-form">
+        <div class="bid-input-group">
+          <label for="bid_amount">Your Bid Amount (GHS)</label>
+          <span class="bid-currency">GHS</span>
+          <input
+            type="number"
+            id="bid_amount"
+            name="bid_amount"
+            class="bid-input"
+            min="{{ highest_bid.bid_amount + 1 if highest_bid else item.starting_bid }}"
+            step="0.01"
+            placeholder="Enter amount"
+            required
+          />
+        </div>
+        <button type="submit" class="bid-btn">
+          <i class="fas fa-gavel"></i> Place Bid
+        </button>
+      </form>
+    {% endif %}
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="message {{ 'success' if category=='success' else 'error' }}">
+            <i class="fas fa-{{ 'check-circle' if category=='success' else 'exclamation-circle' }}"></i>
+            {{ msg }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+</div>
+
         
         <!-- Recent Bids Panel -->
         <div class="recent-bids">
@@ -694,127 +716,127 @@
   </div>
 
   <!-- JavaScript -->
-  <script>
-    // Countdown Timer
-    function updateCountdown() {
-      const el = document.querySelector('.countdown');
-      if (!el) return;
-      
-      const endTime = new Date(el.dataset.endtime).getTime();
-      const now = Date.now();
-      const diff = endTime - now;
-      
-      if (diff <= 0) {
-        el.innerHTML = '<div class="countdown-ended">Auction Ended</div>';
-        return;
-      }
-      
-      const h = Math.floor(diff / (1000 * 60 * 60));
-      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const s = Math.floor((diff % 60000) / 1000);
-      
-      el.innerHTML = `${h}<span style="font-size: 0.6em;">h</span> ${m}<span style="font-size: 0.6em;">m</span> ${s}<span style="font-size: 0.6em;">s</span>`;
+<script>
+  // Countdown Timer + Live‐Poll Control
+  let pollIntervalId = null;
+
+  function updateCountdown() {
+    const el = document.querySelector('.countdown');
+    if (!el) return;
+
+    const endTime = new Date(el.dataset.endtime).getTime();
+    const now = Date.now();
+    const diff = endTime - now;
+
+    if (diff <= 0) {
+      el.innerHTML = '<div class="countdown-ended">Auction Ended</div>';
+      stopPolling();
+      return;
     }
-    
-    // Initialize countdown
-    setInterval(updateCountdown, 1000);
+
+    const h = Math.floor(diff / (1000 * 60 * 60));
+    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const s = Math.floor((diff % 60000) / 1000);
+
+    el.innerHTML = `
+      ${h}<span style="font-size:0.6em;">h</span>
+      ${m}<span style="font-size:0.6em;">m</span>
+      ${s}<span style="font-size:0.6em;">s</span>
+    `;
+  }
+
+  function stopPolling() {
+    // stop the fetchNewBids interval
+    if (pollIntervalId !== null) {
+      clearInterval(pollIntervalId);
+      pollIntervalId = null;
+    }
+    // disable bid form if present
+    const bidForm = document.querySelector('.bid-form');
+    if (bidForm) {
+      bidForm.querySelectorAll('input, button').forEach(el => el.disabled = true);
+      bidForm.querySelector('.bid-btn').innerHTML = '<i class="fas fa-gavel"></i> Auction Closed';
+    }
+  }
+
+  async function fetchNewBids() {
+    const listEl = document.getElementById('bids-list');
+    const indicator = document.getElementById('update-indicator');
+    if (!listEl) return;
+
+    indicator.style.display = 'flex';
+
+    try {
+      // URL to your bids‐only endpoint
+      const resp = await fetch(`{{ url_for("auction_show", auction_id=item.id) }}/bids`);
+      if (!resp.ok) throw new Error('Failed to fetch bids');
+      const data = await resp.json();
+
+      if (listEl.querySelector('.no-bids')) {
+        listEl.innerHTML = '';
+      }
+
+      data.forEach(bid => {
+        if (listEl.querySelector(`[data-bid-id="${bid.bid_time}"]`)) return;
+        const li = document.createElement('li');
+        li.dataset.bidId = bid.bid_time;
+        li.innerHTML = `
+          <span class="bidder"><i class="fas fa-user"></i> ${bid.username}</span>
+          <span class="bid-amount">GHS ${parseFloat(bid.bid_amount).toFixed(2)}</span>
+          <span class="timestamp">${bid.bid_time_display}</span>
+        `;
+        li.style.opacity = '0';
+        li.style.transform = 'translateY(20px)';
+        listEl.insertBefore(li, listEl.firstChild);
+
+        setTimeout(() => {
+          li.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+          li.style.opacity = '1';
+          li.style.transform = 'translateY(0)';
+        }, 50);
+      });
+    } catch (e) {
+      console.error('Error fetching bids:', e);
+    } finally {
+      setTimeout(() => indicator.style.display = 'none', 1000);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // start countdown and polling
     updateCountdown();
-    
-    // Thumbnail click handler
+    setInterval(updateCountdown, 1000);
+
+    pollIntervalId = setInterval(fetchNewBids, 5000);
+
+    // thumbnail handler
     document.querySelectorAll('.thumbnail').forEach(thumb => {
-      thumb.addEventListener('click', function() {
-        // Update main image
-        document.getElementById('main-image').src = this.dataset.image;
-        
-        // Update active class
+      thumb.addEventListener('click', () => {
+        document.getElementById('main-image').src = thumb.dataset.image;
         document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
+        thumb.classList.add('active');
       });
     });
-    
-    // Bid form validation
+
+    // bid form validation
     const bidForm = document.querySelector('.bid-form');
     if (bidForm) {
       bidForm.addEventListener('submit', function(e) {
-        const bidInput = document.getElementById('bid_amount');
-        const minBid = parseFloat(bidInput.min);
-        const bidValue = parseFloat(bidInput.value);
-        
-        if (bidValue < minBid) {
+        const input = this.querySelector('#bid_amount');
+        const min = parseFloat(input.min);
+        const val = parseFloat(input.value);
+        if (val < min) {
           e.preventDefault();
-          alert(`Your bid must be at least GHS ${minBid.toFixed(2)}`);
+          alert(`Your bid must be at least GHS ${min.toFixed(2)}`);
         }
       });
     }
-    
-    // Fetch new bids with visual feedback
-    async function fetchNewBids() {
-      const listEl = document.getElementById('bids-list');
-      const indicator = document.getElementById('update-indicator');
-      
-      if (!listEl) return;
-      
-      // Show updating indicator
-      indicator.style.display = 'flex';
-      
-      try {
-        const url = '{{ url_for("auction_show", auction_id=item.id) }}'.replace('/auction/','/auction/' + {{ item.id }} + '/bids');
-        const resp = await fetch(url);
-        
-        if (!resp.ok) {
-          throw new Error('Failed to fetch bids');
-        }
-        
-        const data = await resp.json();
-        
-        // Clear "no bids" message if it exists
-        if (listEl.querySelector('.no-bids')) {
-          listEl.innerHTML = '';
-        }
-        
-        data.forEach(bid => {
-          // Skip if already in list
-          if (listEl.querySelector(`[data-bid-id="${bid.bid_time}"]`)) return;
-          
-          const li = document.createElement('li');
-          li.dataset.bidId = bid.bid_time;
-          li.innerHTML = `
-            <span class="bidder"><i class="fas fa-user"></i> ${bid.username}</span>
-            <span class="bid-amount">GHS ${parseFloat(bid.bid_amount).toFixed(2)}</span>
-            <span class="timestamp">${bid.bid_time_display}</span>
-          `;
-          
-          // Add animation for new bids
-          li.style.opacity = '0';
-          li.style.transform = 'translateY(20px)';
-          listEl.insertBefore(li, listEl.firstChild);
-          
-          // Animate new bid
-          setTimeout(() => {
-            li.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-            li.style.opacity = '1';
-            li.style.transform = 'translateY(0)';
-          }, 50);
-        });
-        
-      } catch(e) {
-        console.error('Error fetching bids:', e);
-      } finally {
-        // Hide updating indicator after a delay
-        setTimeout(() => {
-          indicator.style.display = 'none';
-        }, 1000);
-      }
-    }
-    
-    // Poll for new bids every 5 seconds
-    setInterval(fetchNewBids, 5000);
-    
-    // Initial setup
-    document.addEventListener('DOMContentLoaded', function() {
-      // Hide update indicator initially
-      document.getElementById('update-indicator').style.display = 'none';
-    });
-  </script>
+
+    // hide update indicator initially
+    const indicator = document.getElementById('update-indicator');
+    if (indicator) indicator.style.display = 'none';
+  });
+</script>
+
 </body>
 </html>
