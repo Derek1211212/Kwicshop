@@ -3163,7 +3163,7 @@ def auctions():
     cnx = get_db_connection()
     cur = cnx.cursor(dictionary=True)
 
-    # Distinct categories
+    # 1. Distinct categories (unchanged)
     cur.execute("""
         SELECT DISTINCT category
         FROM auction_items
@@ -3174,38 +3174,48 @@ def auctions():
     """)
     categories = [row['category'] for row in cur.fetchall()]
 
-    # Auction items + current_bid + bid_count
-    cur.execute("""
+    # 2. Read filters from query string
+    selected_cat = request.args.get('category', 'all')
+    q           = request.args.get('q', '').strip()
+
+    # 3. Build SQL
+    sql = """
         SELECT
             ai.*,
             COALESCE((
-                SELECT MAX(bid_amount)
-                FROM auction_bids b
+                SELECT MAX(bid_amount) FROM auction_bids b
                 WHERE b.auction_item_id = ai.id
             ), ai.starting_bid) AS current_bid,
             (
-                SELECT COUNT(*)
-                FROM auction_bids b
+                SELECT COUNT(*) FROM auction_bids b
                 WHERE b.auction_item_id = ai.id
             ) AS bid_count
         FROM auction_items ai
         WHERE ai.status = 'live'
-        ORDER BY ai.end_time ASC
-    """)
+    """
+    params = []
+
+    if selected_cat != 'all':
+        sql += " AND ai.category = %s"
+        params.append(selected_cat)
+
+    if q:
+        sql += " AND (ai.title LIKE %s OR ai.description LIKE %s)"
+        like_q = f"%{q}%"
+        params.extend([like_q, like_q])
+
+    sql += " ORDER BY ai.end_time ASC"
+
+    cur.execute(sql, params)
     items = cur.fetchall()
 
     now = datetime.utcnow()
     for item in items:
-        # Handle end time and is_open flag
-        try:
-            et = item['end_time']
-            if isinstance(et, str):
-                et = datetime.strptime(et, '%Y-%m-%d %H:%M:%S')
-            item['end_time_iso'] = et.isoformat()
-            item['is_open'] = et > now  # Auction is still open
-        except:
-            item['end_time_iso'] = ''
-            item['is_open'] = False
+        et = item['end_time']
+        if isinstance(et, str):
+            et = datetime.strptime(et, '%Y-%m-%d %H:%M:%S')
+        item['end_time_iso'] = et.isoformat()
+        item['is_open']      = (et > now)
 
     cur.close()
     cnx.close()
@@ -3214,8 +3224,82 @@ def auctions():
         'auction_home.html',
         categories=categories,
         items=items,
+        selected_cat=selected_cat,
+        q=q,
         current_year=now.year
     )
+
+
+
+
+@app.route('/auctions.json')
+def auctions_json():
+    """
+    Returns a JSON list of live auctions, optionally filtered by:
+      - category (exact match)
+      - q (substring search on title or description)
+    """
+    # 1) Grab filters from query string
+    selected_cat = request.args.get('category', 'all')
+    q            = request.args.get('q', '').strip()
+
+    # 2) Base SQL and params list
+    sql = """
+        SELECT
+          ai.*,
+          COALESCE((
+            SELECT MAX(bid_amount)
+            FROM auction_bids b
+            WHERE b.auction_item_id = ai.id
+          ), ai.starting_bid) AS current_bid,
+          (
+            SELECT COUNT(*)
+            FROM auction_bids b
+            WHERE b.auction_item_id = ai.id
+          ) AS bid_count
+        FROM auction_items ai
+        WHERE ai.status = 'live'
+    """
+    params = []
+
+    # 3) Category filter
+    if selected_cat != 'all':
+        sql += " AND ai.category = %s"
+        params.append(selected_cat)
+
+    # 4) Text search filter
+    if q:
+        sql += " AND (ai.title LIKE %s OR ai.description LIKE %s)"
+        like_q = f"%{q}%"
+        params.extend([like_q, like_q])
+
+    # 5) Final ordering
+    sql += " ORDER BY ai.end_time ASC;"
+
+    # 6) Execute
+    cnx = get_db_connection()
+    cur = cnx.cursor(dictionary=True)
+    cur.execute(sql, params)
+    items = cur.fetchall()
+    cur.close()
+    cnx.close()
+
+    # 7) Post‑process each item
+    now = datetime.utcnow()
+    for item in items:
+        # Parse end_time into ISO for client‑side countdown
+        et = item.get('end_time')
+        if isinstance(et, str):
+            try:
+                et = datetime.strptime(et, '%Y-%m-%d %H:%M:%S')
+            except ValueError:
+                et = None
+        item['end_time_iso'] = et.isoformat() if et else ''
+        # Mark open vs expired
+        item['is_open'] = (et and et > now)
+
+    # 8) Return JSON
+    return jsonify(items)
 
 
 
