@@ -3241,6 +3241,7 @@ def black_friday_auctions():
 
 
 
+
 @app.route('/auction/<int:auction_id>', methods=['GET', 'POST'])
 def auction_show(auction_id):
     cnx = get_db_connection()
