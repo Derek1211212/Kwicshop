@@ -14,38 +14,32 @@
     }
 
     :root {
-      --primary: #0f172a;
-      --secondary: #1e293b;
-      --accent: #f97316;
-      --accent-light: #fdba74;
-      --text: #e2e8f0;
-      --text-light: #94a3b8;
-      --success: #10b981;
-      --error: #ef4444;
-      --card-bg: rgba(30, 41, 59, 0.7);
-      --border: #334155;
+      --primary: #2E7D32;
+      --primary-light: #4CAF50;
+      --primary-lighter: #E8F5E9;
+      --secondary: #1B5E20;
+      --accent: #388E3C;
+      --accent-light: #81C784;
+      --accent-lighter: #C8E6C9;
+      --text: #212121;
+      --text-light: #757575;
+      --success: #4CAF50;
+      --error: #F44336;
+      --card-bg: #ffffff;
+      --border: #E0E0E0;
+      --background: #F5F9F5;
+      --shadow: 0 4px 12px rgba(46, 125, 50, 0.08);
+      --hover-shadow: 0 6px 16px rgba(46, 125, 50, 0.15);
     }
 
     body {
       font-family: 'Montserrat', sans-serif;
-      background: linear-gradient(135deg, var(--primary), #020617);
+      background-color: var(--background);
       color: var(--text);
       min-height: 100vh;
       line-height: 1.6;
       position: relative;
       overflow-x: hidden;
-    }
-
-    body::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle at 10% 20%, rgba(249, 115, 22, 0.1) 0%, rgba(15, 23, 42, 0) 50%),
-                  radial-gradient(circle at 90% 80%, rgba(249, 115, 22, 0.05) 0%, rgba(15, 23, 42, 0) 50%);
-      z-index: -1;
     }
 
     .container {
@@ -56,13 +50,12 @@
 
     /* Header Styles */
     header {
-      background: rgba(15, 23, 42, 0.8);
-      backdrop-filter: blur(10px);
+      background: #ffffff;
       padding: 15px 0;
       position: sticky;
       top: 0;
       z-index: 100;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--shadow);
       border-bottom: 1px solid var(--border);
     }
 
@@ -80,8 +73,8 @@
     }
 
     .logo-icon {
-      background: var(--accent);
-      color: var(--primary);
+      background: var(--primary);
+      color: white;
       width: 40px;
       height: 40px;
       border-radius: 10px;
@@ -90,20 +83,24 @@
       justify-content: center;
       font-size: 20px;
       font-weight: 700;
-      transition: transform 0.3s;
+      transition: transform 0.3s, background 0.3s;
     }
 
     .logo:hover .logo-icon {
       transform: rotate(15deg);
+      background: var(--secondary);
     }
 
     .logo-text {
       font-family: 'Playfair Display', serif;
       font-weight: 800;
       font-size: 28px;
-      background: linear-gradient(to right, var(--accent), var(--accent-light));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--primary);
+      transition: color 0.3s;
+    }
+
+    .logo:hover .logo-text {
+      color: var(--secondary);
     }
 
     nav ul {
@@ -113,7 +110,7 @@
     }
 
     nav a {
-      color: var(--text);
+      color: var(--text-light);
       text-decoration: none;
       font-weight: 500;
       font-size: 16px;
@@ -123,7 +120,7 @@
     }
 
     nav a:hover, nav a.active {
-      color: var(--accent);
+      color: var(--primary);
     }
 
     nav a.active::after {
@@ -133,7 +130,7 @@
       left: 0;
       width: 100%;
       height: 2px;
-      background: var(--accent);
+      background: var(--primary);
       border-radius: 2px;
     }
 
@@ -157,24 +154,24 @@
     }
 
     .btn-primary {
-      background: var(--accent);
-      color: var(--primary);
+      background: var(--primary);
+      color: white;
     }
 
     .btn-primary:hover {
-      background: #ea580c;
+      background: var(--secondary);
       transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
+      box-shadow: var(--hover-shadow);
     }
 
     .btn-outline {
       background: transparent;
-      border: 2px solid var(--accent);
-      color: var(--accent);
+      border: 2px solid var(--primary);
+      color: var(--primary);
     }
 
     .btn-outline:hover {
-      background: rgba(249, 115, 22, 0.1);
+      background: var(--primary-lighter);
     }
 
     /* Form Section */
@@ -194,16 +191,15 @@
       background: var(--card-bg);
       border-radius: 16px;
       padding: 30px;
-      backdrop-filter: blur(10px);
       border: 1px solid var(--border);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      box-shadow: var(--shadow);
       height: fit-content;
     }
 
     .sell-info h2 {
       font-family: 'Playfair Display', serif;
       font-size: 2.2rem;
-      color: var(--accent-light);
+      color: var(--primary);
       margin-bottom: 20px;
       position: relative;
       display: inline-block;
@@ -235,6 +231,7 @@
       margin-bottom: 15px;
       color: var(--text-light);
       position: relative;
+      padding-left: 10px;
     }
 
     .tips-list li::before {
@@ -242,7 +239,7 @@
       color: var(--accent);
       font-size: 20px;
       position: absolute;
-      left: -20px;
+      left: -15px;
       top: -2px;
     }
 
@@ -250,15 +247,14 @@
       background: var(--card-bg);
       padding: 40px;
       border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
       border: 1px solid var(--border);
     }
 
     .sell-form h2 {
       font-family: 'Playfair Display', serif;
       font-size: 2rem;
-      color: var(--accent-light);
+      color: var(--primary);
       margin-bottom: 30px;
       text-align: center;
     }
@@ -287,7 +283,7 @@
     }
 
     .form-group label span {
-      color: var(--accent);
+      color: var(--error);
     }
 
     .form-group input,
@@ -297,7 +293,7 @@
       padding: 14px;
       border: 1px solid var(--border);
       border-radius: 10px;
-      background: rgba(15, 23, 42, 0.4);
+      background: white;
       color: var(--text);
       font-family: 'Montserrat', sans-serif;
       font-size: 15px;
@@ -309,7 +305,7 @@
     .form-group select:focus {
       border-color: var(--accent);
       outline: none;
-      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+      box-shadow: 0 0 0 3px var(--accent-lighter);
     }
 
     .form-group textarea {
@@ -325,7 +321,7 @@
       position: absolute;
       right: 15px;
       bottom: 14px;
-      color: var(--text);
+      color: var(--text-light);
       font-weight: 500;
     }
 
@@ -338,11 +334,12 @@
       transition: all 0.3s;
       position: relative;
       overflow: hidden;
+      background: var(--primary-lighter);
     }
 
     .file-upload:hover {
       border-color: var(--accent);
-      background: rgba(15, 23, 42, 0.3);
+      background: var(--accent-lighter);
     }
 
     .file-upload i {
@@ -379,13 +376,14 @@
       border-radius: 8px;
       overflow: hidden;
       aspect-ratio: 1/1;
+      border: 1px solid var(--border);
     }
 
     .preview-item img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      background: var(--secondary);
+      background: #f9f9f9;
     }
 
     .preview-item .remove {
@@ -402,11 +400,11 @@
       color: white;
       font-size: 12px;
       cursor: pointer;
-      opacity: 0;
+      opacity: 0.8;
       transition: opacity 0.3s;
     }
 
-    .preview-item:hover .remove {
+    .preview-item .remove:hover {
       opacity: 1;
     }
 
@@ -421,6 +419,8 @@
       font-size: 17px;
       border-radius: 10px;
       min-width: 200px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
     }
 
     .form-note {
@@ -429,20 +429,45 @@
       text-align: center;
       margin-top: 20px;
       grid-column: span 2;
+      background: var(--primary-lighter);
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 3px solid var(--accent);
     }
 
     .form-note a {
-      color: var(--accent);
+      color: var(--primary);
       text-decoration: none;
+      font-weight: 500;
     }
 
     .form-note a:hover {
       text-decoration: underline;
     }
 
+    .info-box {
+      margin-top: 30px;
+      background: var(--primary-lighter);
+      padding: 20px;
+      border-radius: 10px;
+      border-left: 3px solid var(--accent);
+    }
+
+    .info-box p {
+      color: var(--text);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .info-box i {
+      color: var(--accent);
+      margin-top: 3px;
+    }
+
     /* Footer Styles */
     footer {
-      background: var(--primary);
+      background: white;
       padding: 50px 0 30px;
       border-top: 1px solid var(--border);
     }
@@ -454,7 +479,7 @@
     }
 
     .footer-column h3 {
-      color: var(--accent-light);
+      color: var(--primary);
       margin-bottom: 20px;
       font-size: 18px;
       position: relative;
@@ -489,7 +514,7 @@
     }
 
     .footer-column ul li a:hover {
-      color: var(--accent);
+      color: var(--primary);
     }
 
     .footer-column p {
@@ -511,13 +536,14 @@
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      background: var(--secondary);
-      color: var(--text);
+      background: var(--primary-lighter);
+      color: var(--primary);
       transition: all 0.3s;
     }
 
     .social-links a:hover {
-      background: var(--accent);
+      background: var(--primary);
+      color: white;
       transform: translateY(-3px);
     }
 
@@ -577,6 +603,35 @@
       .sell-form {
         padding: 25px;
       }
+      
+      .file-preview {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .suggestions {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      color: var(--text-light);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .suggestions span {
+      background: var(--accent-lighter);
+      color: var(--primary);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-block;
+      transition: all 0.2s;
+      border: 1px solid var(--accent-light);
+    }
+    .suggestions span:hover {
+      background: var(--accent);
+      color: white;
+      transform: translateY(-2px);
     }
   </style>
 </head>
@@ -622,8 +677,8 @@
             <li><strong>Clear auction times</strong> create bidding excitement</li>
           </ul>
           
-          <div style="margin-top: 30px; background: rgba(15, 23, 42, 0.5); padding: 20px; border-radius: 10px; border-left: 3px solid var(--accent);">
-            <p><i class="fas fa-lightbulb" style="color: var(--accent); margin-right: 10px;"></i> <strong>Pro Tip:</strong> Items listed between Tuesday and Thursday receive 30% more views than weekend listings.</p>
+          <div class="info-box">
+            <p><i class="fas fa-lightbulb"></i> <strong>Pro Tip:</strong> Items listed between Tuesday and Thursday receive 30% more views than weekend listings.</p>
           </div>
         </div>
 
@@ -642,7 +697,7 @@
             </div>
             
             <div class="form-group full-width">
-              <label for="images">Upload Images</label> <!-- Removed * since it's optional -->
+              <label for="images">Upload Images</label>
               <div class="file-upload" id="file-upload-area">
                 <i class="fas fa-cloud-upload-alt"></i>
                 <p>Drag & drop images here or click to browse</p>
@@ -667,16 +722,32 @@
             <div class="form-group">
               <label for="auction_date">Auction Date <span>*</span></label>
               <input id="auction_date" name="auction_date" type="date" required>
+              <div class="suggestions">
+                Suggested slots:
+                <span data-day-offset="2">This Tuesday</span>
+                <span data-day-offset="4">This Thursday</span>
+                <span data-day-offset="9">Next Tuesday</span>
+              </div>
             </div>
-            
+
+
+            <div class="form-group">
+  <label for="auction_end_date">Auction End Date <span>*</span></label>
+  <input
+    id="auction_end_date"
+    name="auction_end_date"
+    type="date"
+    required>
+</div>
+
             <div class="form-group">
               <label for="start_time">Start Time <span>*</span></label>
-              <input id="start_time" name="start_time" type="time" required>
+              <input id="start_time" name="start_time" type="time" min="08:00" max="22:00" required>
             </div>
-            
+
             <div class="form-group">
               <label for="end_time">End Time <span>*</span></label>
-              <input id="end_time" name="end_time" type="time" required>
+              <input id="end_time" name="end_time" type="time" min="08:00" max="22:00" required>
             </div>
             
             <div class="form-group">
@@ -823,18 +894,18 @@
       fileUploadArea.addEventListener('dragover', function(e) {
         e.preventDefault();
         this.style.borderColor = 'var(--accent)';
-        this.style.backgroundColor = 'rgba(15, 23, 42, 0.3)';
+        this.style.backgroundColor = 'var(--accent-lighter)';
       });
       
       fileUploadArea.addEventListener('dragleave', function() {
         this.style.borderColor = 'var(--border)';
-        this.style.backgroundColor = '';
+        this.style.backgroundColor = 'var(--primary-lighter)';
       });
       
       fileUploadArea.addEventListener('drop', function(e) {
         e.preventDefault();
         this.style.borderColor = 'var(--border)';
-        this.style.backgroundColor = '';
+        this.style.backgroundColor = 'var(--primary-lighter)';
         
         if (e.dataTransfer.files.length) {
           fileInput.files = e.dataTransfer.files;
@@ -849,6 +920,67 @@
         // event.preventDefault();
       });
     });
+  </script>
+
+  <script>
+document.addEventListener('DOMContentLoaded', () => {
+  const startDateInput = document.getElementById('auction_date');
+  const endDateInput   = document.getElementById('auction_end_date');
+
+  // Initialize min/max on load
+  const today = new Date();
+  const isoDate = d => d.toISOString().split('T')[0];
+
+  startDateInput.min = isoDate(today);
+  startDateInput.max = isoDate(new Date(today.getTime() + 14*24*60*60*1000));
+
+  // Whenever start-date changes, bump end-date constraints
+  startDateInput.addEventListener('change', () => {
+    const sd = new Date(startDateInput.value);
+    if (isNaN(sd)) return;
+    const minEnd = new Date(sd.getTime() + 24*60*60*1000);
+    const maxEnd = new Date(sd.getTime() + 14*24*60*60*1000);
+    endDateInput.min = isoDate(minEnd);
+    endDateInput.max = isoDate(maxEnd);
+    // auto‑fill end-date if empty
+    if (!endDateInput.value) endDateInput.value = isoDate(minEnd);
+  });
+
+  // Suggested‑slots logic stays the same for start-date…
+
+  // Form submission validation
+  document.querySelector('.sell-form').addEventListener('submit', e => {
+    const sDate = startDateInput.value;
+    const eDate = endDateInput.value;
+    const sTime = document.getElementById('start_time').value;
+    const eTime = document.getElementById('end_time').value;
+    if (!sDate || !eDate || !sTime || !eTime) return;
+
+    let startDT = new Date(`${sDate}T${sTime}`);
+    let endDT   = new Date(`${eDate}T${eTime}`);
+    if (endDT <= startDT) {
+      alert("Your end‑datetime must be after the start‑datetime.");
+      e.preventDefault();
+      return;
+    }
+
+    const diffHrs = (endDT - startDT) / (1000*60*60);
+    if (diffHrs < 24) {
+      alert("Auctions must run for at least 24 hours.");
+      e.preventDefault(); return;
+    }
+    if (diffHrs > 14*24) {
+      alert("Auctions can run for at most 14 days.");
+      e.preventDefault(); return;
+    }
+
+    const sh = startDT.getHours(), eh = endDT.getHours();
+    if (sh < 8 || sh > 22 || eh < 8 || eh > 22) {
+      alert("Auctions may only start/end between 08:00 and 22:00.");
+      e.preventDefault();
+    }
+  });
+});
   </script>
 </body>
 </html>

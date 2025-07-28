@@ -3142,12 +3142,28 @@ def analytics():
     })
 
 
+
+
+
+def get_time_left(end_dt):
+    now = datetime.utcnow()
+    diff = end_dt - now
+    if diff.total_seconds() <= 0:
+        return "Closed"
+    days = diff.days
+    hours = diff.seconds // 3600
+    return f"{days}d {hours}h"
+
+app.jinja_env.globals.update(get_time_left=get_time_left)
+
+
+
 @app.route('/auctions')
 def auctions():
     cnx = get_db_connection()
     cur = cnx.cursor(dictionary=True)
 
-    # 1. Distinct live categories
+    # Distinct categories
     cur.execute("""
         SELECT DISTINCT category
         FROM auction_items
@@ -3158,7 +3174,7 @@ def auctions():
     """)
     categories = [row['category'] for row in cur.fetchall()]
 
-    # 2. Live auction items + current_bid + bid_count
+    # Auction items + current_bid + bid_count
     cur.execute("""
         SELECT
             ai.*,
@@ -3178,18 +3194,18 @@ def auctions():
     """)
     items = cur.fetchall()
 
-    # 3. Prepare ISO timestamps for countdown JS
+    now = datetime.utcnow()
     for item in items:
-        et = item['end_time']
-        if isinstance(et, datetime):
+        # Handle end time and is_open flag
+        try:
+            et = item['end_time']
+            if isinstance(et, str):
+                et = datetime.strptime(et, '%Y-%m-%d %H:%M:%S')
             item['end_time_iso'] = et.isoformat()
-        else:
-            # Try parse string
-            try:
-                parsed = datetime.strptime(str(et), '%Y-%m-%d %H:%M:%S')
-                item['end_time_iso'] = parsed.isoformat()
-            except:
-                item['end_time_iso'] = ''
+            item['is_open'] = et > now  # Auction is still open
+        except:
+            item['end_time_iso'] = ''
+            item['is_open'] = False
 
     cur.close()
     cnx.close()
@@ -3198,7 +3214,7 @@ def auctions():
         'auction_home.html',
         categories=categories,
         items=items,
-        current_year=datetime.utcnow().year
+        current_year=now.year
     )
 
 
@@ -3379,7 +3395,7 @@ def category_show(cat_id):
 # Configuration for uploads
 UPLOAD_FOLDER = os.path.join('static', 'images')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-ALLOWED_EXT = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+ALLOWED_EXT = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'avif'}
 
 # Ensure the upload folder exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -3397,79 +3413,102 @@ def sell():
         return redirect(url_for('sign_in'))
 
     if request.method == 'POST':
-        conn = None
-        cur = None
+        conn = cur = None
         try:
-            user_id = session['user_id']
-            title = request.form['title'].strip()
-            description = request.form['description'].strip()
-            category = request.form['category'].strip()
+            # 1) Pull in all form fields
+            title          = request.form['title'].strip()
+            description    = request.form['description'].strip()
+            category       = request.form['category'].strip()
             item_condition = request.form['condition'].strip()
-            starting_bid = float(request.form['starting_bid'])
-            reserve_price = float(request.form['reserve_price'])
+            starting_bid   = float(request.form['starting_bid'])
+            reserve_price  = float(request.form.get('reserve_price') or 0.0)
 
-            # Parse auction date and time
-            auction_date = datetime.strptime(request.form['auction_date'], '%Y-%m-%d').date()
-            start_time_str = request.form['start_time']
-            end_time_str = request.form['end_time']
-            today = date.today()
-            start_time = datetime.combine(today, datetime.strptime(start_time_str, '%H:%M').time())
-            end_time = datetime.combine(today, datetime.strptime(end_time_str, '%H:%M').time())
+            # 2) Dates & times
+            start_date = datetime.strptime(
+                request.form['auction_date'], '%Y-%m-%d'
+            ).date()
+            end_date = datetime.strptime(
+                request.form['auction_end_date'], '%Y-%m-%d'
+            ).date()
+            start_time = datetime.strptime(
+                request.form['start_time'], '%H:%M'
+            ).time()
+            end_time = datetime.strptime(
+                request.form['end_time'], '%H:%M'
+            ).time()
 
-            # Image uploads
+            start_dt = datetime.combine(start_date, start_time)
+            end_dt   = datetime.combine(end_date,   end_time)
+            # ensure end > start
+            if end_dt <= start_dt:
+                flash("End datetime must come after start datetime.", "error")
+                return redirect(url_for('sell'))
+
+            span = end_dt - start_dt
+            if span < timedelta(hours=24):
+                flash("Auctions must run at least 24 hours.", "error")
+                return redirect(url_for('sell'))
+            if span > timedelta(days=14):
+                flash("Auctions can run at most 14 days.", "error")
+                return redirect(url_for('sell'))
+            if not (8 <= start_dt.hour <= 22 and 8 <= end_dt.hour <= 22):
+                flash("Auctions must start/end between 08:00 and 22:00.", "error")
+                return redirect(url_for('sell'))
+
+            # 3) Image uploads (initialize array!)
             image_paths = [None, None, None, None]
-            uploaded_files = request.files.getlist('images')
-            print(f"[DEBUG] Received {len(uploaded_files)} files")
-
-            for idx, image_file in enumerate(uploaded_files[:4]):  # Limit to 4
-                print(f"[DEBUG] Processing image{idx+1}: {image_file.filename}")
-                if image_file and allowed_file(image_file.filename):
-                    filename = secure_filename(image_file.filename)
-                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                    image_file.save(filepath)
+            uploaded = request.files.getlist('images') or []
+            for idx, img in enumerate(uploaded[:4]):
+                if img and allowed_file(img.filename):
+                    filename = secure_filename(img.filename)
+                    dest = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    img.save(dest)
                     image_paths[idx] = filename
-                    print(f"[DEBUG] Saved image{idx+1} to: {filepath}")
-                else:
-                    print(f"[DEBUG] image{idx+1} is not allowed or not uploaded")
 
-            # Insert into DB
+            # 4) Insert
             conn = get_db_connection()
             cur = conn.cursor()
-
-            query = """
+            cur.execute("""
                 INSERT INTO auction_items (
-                    user_id, title, description,
-                    image1, image2, image3, image4,
-                    starting_bid, reserve_price,
-                    auction_date, start_time, end_time,
-                    status, paid_fee, category, item_condition
+                  user_id, title, description,
+                  image1, image2, image3, image4,
+                  starting_bid, reserve_price,
+                  auction_date, auction_end_date,
+                  start_time, end_time,
+                  status, paid_fee,
+                  category, item_condition
+                ) VALUES (
+                  %s, %s, %s,
+                  %s, %s, %s, %s,
+                  %s, %s,
+                  %s, %s,
+                  %s, %s,
+                  %s, %s,
+                  %s, %s
                 )
-                VALUES (
-                    %s, %s, %s,
-                    %s, %s, %s, %s,
-                    %s, %s,
-                    %s, %s, %s,
-                    %s, %s, %s, %s
-                )
-            """
-
-            cur.execute(query, (
-                user_id, title, description,
-                image_paths[0], image_paths[1], image_paths[2], image_paths[3],
+            """, (
+                session['user_id'], title, description,
+                image_paths[0], image_paths[1],
+                image_paths[2], image_paths[3],
                 starting_bid, reserve_price,
-                auction_date, start_time, end_time,
-                'pending', 0, category, item_condition
+                start_date, end_date,
+                start_dt,    # full datetime now
+                end_dt,      # full datetime now
+                'pending', 0,
+                category, item_condition
             ))
-
             conn.commit()
+
             flash("Auction listing created successfully!", "success")
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('auctions'))
 
         except Exception as e:
+            # log so you see it in console
+            print("[ERROR creating auction]", e)
+            flash(f"Error creating auction: {e}", "danger")
             if conn:
                 conn.rollback()
-            flash(f"Error creating listing: {e}", "danger")
-            print(f"[ERROR] {e}")
+            return redirect(url_for('sell'))
 
         finally:
             if cur:
@@ -3477,8 +3516,8 @@ def sell():
             if conn:
                 conn.close()
 
+    # GET
     return render_template('sell.html', current_year=datetime.now().year)
-
 
 
 

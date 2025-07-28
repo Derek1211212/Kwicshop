@@ -93,7 +93,7 @@
     .auction-image {
       width: 100%;
       height: 400px;
-      object-fit: cover;
+      object-fit: contain;
       border-radius: var(--border-radius);
       box-shadow: var(--shadow-sm);
       transition: var(--transition);
@@ -599,13 +599,18 @@
       </div>
       <div class="info-item">
         <div class="info-label"><i class="fas fa-gavel"></i> Starting Bid</div>
-        <div class="info-value">GHS {{ '%.2f' % item.starting_bid }}</div>
+        <div class="info-value">
+          GHS {{ "{:,.2f}".format(item.starting_bid) }}
+        </div>
       </div>
       <div class="info-item">
         <div class="info-label"><i class="fas fa-trophy"></i> Highest Bid</div>
         <div class="info-value">
           {% if highest_bid %}
-            <span class="highlight">GHS {{ '%.2f' % highest_bid.bid_amount }}</span> by {{ highest_bid.username }}
+            <span class="highlight">
+              GHS {{ "{:,.2f}".format(highest_bid.bid_amount) }}
+            </span>
+            by {{ highest_bid.username }}
           {% else %}
             <span style="color: var(--gray);">No bids yet</span>
           {% endif %}
@@ -621,22 +626,27 @@
   </div>
 
   <!-- Bid Box -->
-  <div class="bid-box">
-    <div class="bid-header">
-      <div>
-        <div class="info-label">Place Your Bid</div>
-        <div class="current-bid">
-          {% if highest_bid %}
-            GHS {{ '%.2f' % highest_bid.bid_amount }}
-          {% else %}
-            GHS {{ '%.2f' % item.starting_bid }}
-          {% endif %}
-        </div>
-      </div>
-      <div class="bid-hint">
-        Minimum bid: GHS {{ '%.2f' % (highest_bid.bid_amount + 1 if highest_bid else item.starting_bid) }}
+<div class="bid-box">
+  <div class="bid-header">
+    <div>
+      <div class="info-label">Place Your Bid</div>
+      <div class="current-bid">
+        {% if highest_bid %}
+          GHS {{ "{:,.2f}".format(highest_bid.bid_amount) }}
+        {% else %}
+          GHS {{ "{:,.2f}".format(item.starting_bid) }}
+        {% endif %}
       </div>
     </div>
+    <div class="bid-hint">
+      Minimum bid:
+      GHS {{
+        "{:,.2f}".format(
+          (highest_bid.bid_amount + 1) if highest_bid else item.starting_bid
+        )
+      }}
+    </div>
+  </div>
 
     {% if is_ended %}
       <form class="bid-form">

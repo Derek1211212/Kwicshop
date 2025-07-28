@@ -11,298 +11,521 @@
     /* RESET & VARIABLES */
     * { margin:0; padding:0; box-sizing:border-box; }
     :root {
-      --primary:#e8f5e9;           /* Light green background */
-      --secondary:#ffffff;         /* White cards */
-      --accent:#4caf50;            /* Medium green accents */
-      --accent-light:#81c784;      /* Lighter green */
-      --text:#2e7d32;             /* Dark green text */
-      --text-light:#388e3c;        /* Medium green secondary text */
-      --border:#c8e6c9;            /* Light green borders */
+      --primary:#f5fbf5;
+      --secondary:#ffffff;
+      --accent:#2e8b57;
+      --accent-light:#3cb371;
+      --accent-lighter:#90ee90;
+      --text:#2e7d32;
+      --text-light:#4a7852;
+      --border:#d0e7d0;
+      --shadow: 0 5px 15px rgba(46, 139, 87, 0.1);
+      --transition: all 0.3s ease;
     }
     body {
       font-family:'Montserrat',sans-serif;
-      background:linear-gradient(135deg, #f1f8e9 0%, #e8f5e9 100%);
+      background-color: var(--primary);
       color:var(--text); min-height:100vh; line-height:1.6;
     }
     .container { max-width:1400px; margin:0 auto; padding:0 20px; }
 
     /* HEADER */
     header {
-      background:rgba(232, 245, 233, 0.95); 
-      backdrop-filter:blur(10px);
+      background: var(--secondary);
       padding:15px 0; position:sticky; top:0; z-index:100;
-      box-shadow:0 4px 12px rgba(0,0,0,0.05);
+      box-shadow: var(--shadow);
       border-bottom:1px solid var(--border);
+      transition: var(--transition);
     }
-    .header-content {
+    .header-content { 
       display:flex; justify-content:space-between; align-items:center;
+      transition: var(--transition);
     }
     .logo { display:flex; align-items:center; gap:12px; }
     .logo-icon {
-      background:var(--accent); color:white;
+      background: linear-gradient(135deg, var(--accent), var(--accent-light)); 
+      color:white;
       width:40px;height:40px;border-radius:10px;
       display:flex;align-items:center;justify-content:center;
       font-size:20px;font-weight:700;
+      box-shadow: 0 4px 8px rgba(46, 139, 87, 0.2);
     }
     .logo-text {
       font-family:'Playfair Display',serif;font-weight:800;font-size:28px;
-      color:var(--accent);
+      background: linear-gradient(135deg, var(--accent), #2e8b57);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
     nav ul { display:flex; list-style:none; gap:30px; }
     nav a {
       color:var(--text); text-decoration:none;
       font-weight:500; font-size:16px; position:relative;
-      transition:color .3s;
+      transition: var(--transition);
+      padding: 8px 0;
     }
     nav a:hover, nav a.active { color:var(--accent); }
     nav a.active::after {
-      content:''; position:absolute; bottom:-5px; left:0;
-      width:100%; height:2px; background:var(--accent);
+      content:''; position:absolute; bottom:0; left:0;
+      width:100%; height:3px; background:var(--accent);
+      border-radius: 2px;
     }
     .user-actions { display:flex; gap:15px; align-items:center; }
     .btn {
       padding:10px 24px; border-radius:8px; font-weight:600;
-      cursor:pointer; transition:all .3s; border:none; font-size:16px;
+      cursor:pointer; transition: var(--transition); border:none; font-size:16px;
     }
     .btn-primary {
-      background:var(--accent); color:white;
+      background: linear-gradient(135deg, var(--accent), var(--accent-light));
+      color:white;
+      box-shadow: 0 4px 12px rgba(46, 139, 87, 0.25);
     }
     .btn-primary:hover {
-      background:#388e3c; transform:translateY(-2px);
-      box-shadow:0 4px 15px rgba(76, 175, 80, 0.3);
+      background: linear-gradient(135deg, #2e7d32, #2e8b57);
+      transform:translateY(-2px);
+      box-shadow: 0 6px 20px rgba(46, 139, 87, 0.35);
     }
     .btn-outline {
       background:transparent; border:2px solid var(--accent);
       color:var(--accent);
     }
-    .btn-outline:hover { background:rgba(76, 175, 80, .1); }
+    .btn-outline:hover { 
+      background: rgba(60, 179, 113, 0.1); 
+      transform: translateY(-2px);
+    }
 
-    /* HERO & COUNTDOWN */
-    .hero { padding:80px 0 40px; text-align:center; }
-    .hero h1 {
-      font-family:'Playfair Display',serif;font-size:4.5rem;font-weight:800;
-      margin-bottom:20px; line-height:1.1;
-      color:var(--accent);
+    /* HERO */
+    .hero {
+      padding:100px 0 80px;
+      background: linear-gradient(135deg, #f0faf0 0%, #e6f7e6 100%);
+      position: relative;
+      overflow: hidden;
     }
-    .hero p {
-      font-size:1.25rem; max-width:700px; margin:0 auto 40px;
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background: linear-gradient(90deg, var(--accent-light), var(--accent));
+      z-index: 1;
+    }
+    .grid-2 {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:50px;
+      align-items:center;
+    }
+    .hero-content h1 {
+      font-family:'Playfair Display',serif;
+      font-size:3.2rem;
+      color:var(--text);
+      margin-bottom:25px;
+      line-height: 1.2;
+    }
+    .hero-content h1 span {
+      background: linear-gradient(135deg, var(--accent), #2e8b57);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-content p {
+      font-size:1.15rem;
+      margin-bottom:30px;
       color:var(--text-light);
+      max-width: 90%;
     }
-    .countdown-section {
-      background:white; border-radius:16px;
-      padding:30px; max-width:800px; margin:0 auto 60px;
-      box-shadow:0 10px 25px rgba(0,0,0,.05);
-      border:1px solid var(--border);
+    .hero-features {
+      list-style:none;
+      margin-bottom:40px;
     }
-    .countdown-title {
-      text-align:center; margin-bottom:25px; font-size:1.5rem;
+    .hero-features li {
+      margin-bottom:16px;
+      font-size:1.05rem;
+      display: flex;
+      align-items: center;
+    }
+    .hero-features li i {
       color:var(--accent);
+      margin-right:12px;
+      background: rgba(60, 179, 113, 0.15);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
     }
-    .countdown {
-      display:flex; justify-content:center; gap:20px;
+    .hero-features li:hover i {
+      background: rgba(60, 179, 113, 0.25);
+      transform: scale(1.1);
+    }
+    .hero-cta {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .hero-cta .btn-lg {
+      padding:14px 32px;
+      font-size:1.1rem;
+      border-radius: 10px;
+    }
+    .hero-carousel {
+      background:var(--secondary);
+      border-radius:16px;
+      padding:25px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+      z-index: 2;
+    }
+    .hero-carousel:hover {
+      box-shadow: 0 10px 25px rgba(46, 139, 87, 0.15);
+    }
+    .hero-carousel h2 {
       margin-bottom:20px;
+      font-size:1.4rem;
+      color:var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    .countdown-item {
-      background:var(--primary); border-radius:12px;
-      padding:20px 10px; min-width:100px; text-align:center;
-      box-shadow:0 4px 10px rgba(0,0,0,.05);
-      border:1px solid var(--border);
+    .hero-carousel h2::before {
+      content: '';
+      display: block;
+      width: 6px;
+      height: 24px;
+      background: var(--accent);
+      border-radius: 3px;
     }
-    .countdown-number {
-      font-size:2.5rem; font-weight:700; color:var(--accent);
-      margin-bottom:5px;
+    .carousel-items {
+      display:flex;
+      gap:15px;
+      overflow-x:auto;
+      padding-bottom:15px;
     }
-    .countdown-label {
-      font-size:.9rem; text-transform:uppercase;
-      letter-spacing:1px; color:var(--text-light);
+    .carousel-items::-webkit-scrollbar {
+      height: 6px;
     }
-    .next-auction {
-      text-align:center; font-size:1.1rem; color:var(--text-light);
+    .carousel-items::-webkit-scrollbar-thumb {
+      background: var(--accent-light);
+      border-radius: 10px;
     }
-    .next-auction strong { color:var(--accent); }
+    .carousel-items::-webkit-scrollbar-track {
+      background: var(--border);
+      border-radius: 10px;
+    }
+    .carousel-card {
+      display:block;
+      position:relative;
+      min-width:160px;
+      border-radius:12px;
+      overflow:hidden;
+      flex-shrink:0;
+      text-decoration:none;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      transition: var(--transition);
+    }
+    .carousel-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 15px rgba(46, 139, 87, 0.2);
+    }
+    .carousel-card img {
+      width:100%;
+      height:120px;
+      object-fit:cover;
+      display:block;
+      transition: var(--transition);
+    }
+    .carousel-card:hover img {
+      transform: scale(1.05);
+    }
+    .card-overlay {
+      position:absolute; bottom:0; width:100%;
+      background: linear-gradient(to top, rgba(46,125,50,0.95), transparent);
+      color:white; padding:15px 12px 12px; 
+      font-size:0.9rem;
+    }
+    .card-overlay h3, .card-overlay p, .card-overlay .bid {
+      margin:0;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .card-overlay h3 {
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+    .card-overlay p {
+      font-size: 0.8rem;
+      opacity: 0.9;
+    }
+    .card-overlay .bid {
+      font-weight: 700;
+      margin-top: 5px;
+      font-size: 1.1rem;
+    }
+    .view-all-small {
+      display:block;
+      margin-top:15px;
+      text-align:right;
+      font-size:1rem;
+      color:var(--accent);
+      text-decoration:none;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+    .view-all-small:hover { 
+      text-decoration:underline;
+      color: var(--accent-light);
+    }
 
     /* AUCTIONS + CATEGORY FILTER */
-    .auction-listings { padding:40px 0 80px; }
+    .auction-listings { 
+      padding:60px 0 100px; 
+      background: linear-gradient(to bottom, var(--primary) 0%, #f5fbf5 100%);
+    }
     .section-header {
       display:flex; justify-content:space-between; align-items:center;
-      margin-bottom:20px;
+      margin-bottom:30px;
+      flex-wrap: wrap;
+      gap: 20px;
     }
     .section-title {
-      font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:700;
+      font-family:'Playfair Display',serif;font-size:2.6rem;font-weight:700;
       color:var(--accent);
+      position: relative;
+      display: inline-block;
+    }
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: 5px;
+      left: 0;
+      width: 50%;
+      height: 4px;
+      background: var(--accent-light);
+      border-radius: 2px;
     }
     .view-all {
       color:var(--accent); text-decoration:none;font-weight:600;
       display:flex; align-items:center; gap:8px;
+      transition: var(--transition);
     }
-
-    /* Category dropdown */
+    .view-all:hover {
+      color: var(--accent-light);
+      gap: 12px;
+    }
     #cat-filter {
-      padding:8px 12px; border-radius:6px; border:1px solid var(--border);
+      padding:10px 15px; border-radius:8px; border:1px solid var(--border);
       background:white; color:var(--text);
       margin-left:20px; font-size:1rem;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 2px 8px rgba(46, 139, 87, 0.1);
     }
-
+    #cat-filter:hover, #cat-filter:focus {
+      border-color: var(--accent-light);
+      box-shadow: 0 4px 12px rgba(46, 139, 87, 0.15);
+      outline: none;
+    }
     .auction-grid {
       display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
-      gap:30px;
-      margin-top:20px;
+      grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+      gap:35px;
+      margin-top:30px;
     }
     .auction-card {
-      background:white; border-radius:16px; overflow:hidden;
-      transition:transform .3s,box-shadow .3s;
-      box-shadow:0 8px 20px rgba(0,0,0,.05);
+      background:white; border-radius:18px; overflow:hidden;
+      transition: var(--transition);
+      box-shadow: var(--shadow);
       border:1px solid var(--border);
-      position: relative; /* Added for live badge positioning */
+      position:relative;
     }
     .auction-card:hover {
-      transform:translateY(-5px);
-      box-shadow:0 15px 30px rgba(0,0,0,.1);
+      transform:translateY(-8px);
+      box-shadow: 0 15px 35px rgba(46, 139, 87, 0.2);
     }
     .card-image {
-      height:220px; overflow:hidden; position:relative;
+      height:240px; overflow:hidden; position:relative;
     }
     .card-image img {
       width:100%; height:100%; object-fit:cover;
-      transition:transform .5s;
+      transition: var(--transition);
     }
     .auction-card:hover .card-image img {
-      transform:scale(1.05);
+      transform:scale(1.08);
     }
     .time-left {
       position:absolute; top:15px; right:15px;
-      background:rgba(232, 245, 233, 0.9); color:var(--accent);
-      padding:6px 12px; border-radius:20px;
+      background:rgba(255, 255, 255, 0.95); color:var(--accent);
+      padding:8px 15px; border-radius:20px;
       font-size:.9rem; font-weight:600;
       border:1px solid var(--border);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      z-index: 2;
     }
-    .card-content { padding:25px; }
+    .card-content { padding:30px; }
     .card-title {
-      font-size:1.3rem; margin-bottom:12px; font-weight:600;
+      font-size:1.4rem; margin-bottom:15px; font-weight:700;
       color:var(--text);
+      line-height: 1.3;
     }
     .card-description {
-      color:var(--text-light); margin-bottom:20px; font-size:.95rem;
+      color:var(--text-light); margin-bottom:25px; font-size:1rem;
+      line-height: 1.5;
     }
     .bid-info {
       display:flex; justify-content:space-between;
-      margin-bottom:20px; padding-bottom:20px;
+      margin-bottom:20px; padding-bottom:25px;
       border-bottom:1px solid var(--border);
     }
     .current-bid .label, .bids .label {
-      font-size:.9rem; color:var(--text-light); margin-bottom:5px;
+      font-size:.95rem; color:var(--text-light); margin-bottom:8px;
     }
     .current-bid .amount {
-      font-size:1.5rem; font-weight:700; color:var(--accent);
+      font-size:1.6rem; font-weight:700; color:var(--accent);
     }
     .bids .count {
-      font-size:1.2rem; font-weight:600; color:var(--text);
+      font-size:1.3rem; font-weight:700; color:var(--text);
       text-align:right;
     }
     .card-footer {
       display:flex; justify-content:space-between; align-items:center;
     }
     .btn-bid {
-      background:var(--accent); color:white;
-      padding:10px 20px; border-radius:8px; font-weight:600;
-      cursor:pointer; border:none; transition:background .3s;
+      background: linear-gradient(135deg, var(--accent), var(--accent-light)); 
+      color:white;
+      padding:12px 28px; border-radius:10px; font-weight:600;
+      cursor:pointer; border:none; transition: var(--transition);
+      box-shadow: 0 4px 10px rgba(46, 139, 87, 0.25);
     }
-    .btn-bid:hover { background:#388e3c; }
+    .btn-bid:hover { 
+      background: linear-gradient(135deg, #2e7d32, #2e8b57);
+      box-shadow: 0 6px 15px rgba(46, 139, 87, 0.35);
+      transform: translateY(-2px);
+    }
     .watchlist {
-      color:var(--text-light); cursor:pointer; transition:color .3s;
+      color:var(--text-light); cursor:pointer; transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
     }
-    .watchlist:hover { color:var(--accent); }
+    .watchlist:hover { 
+      color:var(--accent); 
+      transform: scale(1.05);
+    }
 
     /* FOOTER */
     footer {
-      background:white; padding:60px 0 30px;
+      background:var(--secondary); padding:70px 0 40px;
       border-top:1px solid var(--border);
     }
+    .footer-content {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 40px;
+      margin-bottom: 50px;
+    }
     .footer-column h3 {
-      font-size:1.3rem; margin-bottom:20px;
-      color:var(--text); position:relative; padding-bottom:10px;
+      font-size:1.4rem; margin-bottom:25px;
+      color:var(--text); position:relative; padding-bottom:12px;
+      font-weight: 700;
     }
     .footer-column h3::after {
       content:''; position:absolute; bottom:0; left:0;
-      width:50px; height:2px; background:var(--accent);
+      width:40px; height:3px; background:var(--accent);
+      border-radius: 2px;
     }
     .footer-links { list-style:none; }
-    .footer-links li { margin-bottom:12px; }
+    .footer-links li { margin-bottom:15px; }
     .footer-links a {
       color:var(--text-light); text-decoration:none;
-      transition:color .3s;
+      transition: var(--transition);
+      display: inline-block;
     }
-    .footer-links a:hover { color:var(--accent); }
-    .social-links { display:flex; gap:15px; margin-top:20px; }
+    .footer-links a:hover { 
+      color:var(--accent); 
+      transform: translateX(5px);
+    }
+    .social-links { display:flex; gap:15px; margin-top:25px; }
     .social-links a {
       display:flex; align-items:center; justify-content:center;
-      width:40px; height:40px; border-radius:50%;
+      width:42px; height:42px; border-radius:50%;
       background:var(--primary); color:var(--accent);
-      border:1px solid var(--border);
-      transition:all .3s;
+      border:1px solid var(--border); transition: var(--transition);
+      font-size: 18px;
     }
     .social-links a:hover {
       background:var(--accent); color:white; transform:translateY(-3px);
+      box-shadow: 0 5px 12px rgba(46, 139, 87, 0.25);
     }
     .copyright {
       text-align:center; padding-top:30px;
       border-top:1px solid var(--border);
-      color:var(--text-light); font-size:.9rem;
+      color:var(--text-light); font-size:1rem;
+    }
+
+    /* LIVE BADGE */
+    .live-indicator {
+      position:absolute; top:15px; left:15px;
+      display:flex; align-items:center; font-size:.9rem;
+      color:#2e7d32; font-weight:600;
+      background:rgba(255, 255, 255, 0.95);
+      padding:6px 14px; border-radius:20px; z-index:2;
+      border:1px solid var(--border);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+    }
+    .live-indicator .dot {
+      width:10px; height:10px; background:var(--accent);
+      border-radius:50%; margin-right:8px;
+      animation:pulse 1.2s infinite ease-in-out;
+    }
+    @keyframes pulse {
+      0%,100%{transform:scale(1);opacity:1;}
+      50%{transform:scale(1.4);opacity:0.7;}
     }
 
     /* RESPONSIVE */
-    @media(max-width:992px){ .hero h1{ font-size:3.5rem; } }
+    @media(max-width:1200px){
+      .footer-content {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media(max-width:992px){
+      .grid-2{grid-template-columns:1fr;}
+      .hero-carousel{margin-top:50px;}
+      .hero-content { text-align: center; }
+      .hero-content p { max-width: 100%; }
+      .hero-features { max-width: 500px; margin: 0 auto 40px; }
+      .hero-cta { justify-content: center; }
+    }
     @media(max-width:768px){
-      .header-content{ flex-direction:column; gap:20px; }
-      nav ul{ gap:15px; }
-      .hero h1{ font-size:2.8rem; }
-      .countdown{ gap:10px; }
-      .countdown-item{ min-width:80px; padding:15px 5px; }
-      .countdown-number{ font-size:2rem; }
+      .header-content{flex-direction:column;gap:20px;}
+      nav ul{gap:15px; justify-content: center;}
+      .section-header { flex-direction: column; align-items: flex-start; }
+      .section-header .view-all { align-self: flex-end; }
+      #cat-filter { margin-left: 0; margin-top: 10px; }
     }
     @media(max-width:576px){
-      nav ul{ flex-wrap:wrap; justify-content:center; }
-      .hero h1{ font-size:2.2rem; }
-      .countdown{ flex-wrap:wrap; }
-      .countdown-item{ min-width:70px; }
-      .section-header{ flex-direction:column; align-items:flex-start; gap:15px; }
-    }
-
-    /* RESTORED LIVE BADGE STYLES */
-    .live-indicator {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      display: flex;
-      align-items: center;
-      font-size: 0.85rem;
-      color: #2e7d32;                 /* dark green text */
-      font-weight: 600;
-      background: rgba(232, 245, 233, 0.9); /* light green semi-opaque */
-      padding: 4px 8px;
-      border-radius: 12px;
-      z-index: 2;
-      border: 1px solid var(--border);
-    }
-
-    .live-indicator .dot {
-      width: 8px;
-      height: 8px;
-      background: #2e7d32;
-      border-radius: 50%;
-      margin-right: 6px;
-      animation: pulse 1.2s infinite ease-in-out;
-    }
-
-    @keyframes pulse {
-      0%, 100% {
-        transform: scale(1);
-        opacity: 1;
+      nav ul{flex-wrap:wrap;justify-content:center;}
+      .hero { padding: 70px 0 50px; }
+      .hero-content h1 { font-size: 2.5rem; }
+      .auction-grid {
+        grid-template-columns: 1fr;
       }
-      50% {
-        transform: scale(1.4);
-        opacity: 0.7;
+      .footer-content {
+        grid-template-columns: 1fr;
+      }
+      .hero-cta {
+        flex-direction: column;
+        gap: 12px;
+      }
+      .hero-cta .btn-lg {
+        width: 100%;
       }
     }
   </style>
@@ -333,107 +556,127 @@
     </div>
   </header>
 
-  <!-- HERO & COUNTDOWN -->
+  <!-- NEW HERO SECTION -->
   <section class="hero">
-    <div class="container">
-      <h1>Live <span>Auctioning</span></h1>
-      <p>Bid on exclusive items right now—no waiting for Friday!</p>
-
-      <div class="countdown-section">
-        <h2 class="countdown-title">Next Auction Starts In:</h2>
-        <div class="countdown">
-          <div class="countdown-item"><div class="countdown-number" id="days">00</div><div class="countdown-label">Days</div></div>
-          <div class="countdown-item"><div class="countdown-number" id="hours">00</div><div class="countdown-label">Hours</div></div>
-          <div class="countdown-item"><div class="countdown-number" id="minutes">00</div><div class="countdown-label">Minutes</div></div>
-          <div class="countdown-item"><div class="countdown-number" id="seconds">00</div><div class="countdown-label">Seconds</div></div>
+    <div class="container grid-2">
+      <!-- Left: Value Props + CTA -->
+      <div class="hero-content">
+        <h1>Schedule Your Auction on <span>AuctionHub</span></h1>
+        <p>Pick your own start &amp; end times (1–14 days, 08:00–22:00), or grab a featured promo slot—we've got you covered.</p>
+        <ul class="hero-features">
+          <li><i class="fas fa-clock"></i> Fully flexible 1–14 day windows</li>
+          <li><i class="fas fa-chart-line"></i> Suggested high‑traffic slots</li>
+          <li><i class="fas fa-users"></i> Reach thousands of bidders</li>
+        </ul>
+        <div class="hero-cta">
+          <a href="/sell" class="btn btn-primary btn-lg">
+            <i class="fas fa-calendar-plus"></i> Schedule Your Auction
+          </a>
+          <a href="/auctions" class="btn btn-outline btn-lg">
+            <i class="fas fa-gavel"></i> Browse Live Auctions
+          </a>
         </div>
-        <p class="next-auction"><strong id="soonest-end">Auction ends soon!</strong></p>
+      </div>
+
+      <!-- Right: Small "Ending Soon" Carousel -->
+      <div class="hero-carousel">
+        <h2>Ending Soon</h2>
+        <div class="carousel-items">
+          {% for item in items[:3] %}
+            {% if item.is_open %}
+              <a href="{{ url_for('auction_show', auction_id=item.id) }}" class="carousel-card">
+                <img src="{{ url_for('static', filename='images/' ~ item.image1) }}"
+                     alt="{{ item.title }}">
+                <div class="card-overlay">
+                  <h3>{{ item.title|truncate(25) }}</h3>
+                  <p><small>Ends in {{ get_time_left(item.end_time) }}</small></p>
+                  <p class="bid">₵{{ "{:,.2f}".format(item.current_bid) }}</p>
+                </div>
+              </a>
+            {% endif %}
+          {% endfor %}
+        </div>
+        <a href="/auctions" class="view-all-small">View All →</a>
       </div>
     </div>
   </section>
 
   <!-- AUCTION SECTION WITH CATEGORY FILTER -->
-<section class="auction-listings">
-  <div class="container">
-    <div class="section-header">
-      <h2 class="section-title">Featured Auctions</h2>
-      <select id="cat-filter">
-        <option value="all">All Categories</option>
-        {% for cat in categories %}
-          <option value="{{ cat }}">{{ cat }}</option>
-        {% endfor %}
-      </select>
-      <a href="/auctions" class="view-all">
-        View All Auctions&nbsp;<i class="fas fa-arrow-right"></i>
-      </a>
-    </div>
-
-    <div class="auction-grid">
-      {% for item in items %}
-        <div class="auction-card"
-             data-end="{{ item.end_time_iso }}"
-             data-cat="{{ item.category }}">
-
-          <!-- RESTORED LIVE BADGE -->
-          <div class="live-indicator">
-            <span class="dot"></span>
-            Live
-          </div>
-
-          <!-- Image + Countdown -->
-          <div class="card-image">
-            <img
-              src="{{ url_for('static', filename='images/' ~ item.image1) }}"
-              alt="{{ item.title }}"
-            >
-            <div class="time-left">…</div>
-          </div>
-
-          <!-- Content -->
-          <div class="card-content">
-            <h3 class="card-title">{{ item.title }}</h3>
-            <p class="card-description">{{ item.description|truncate(100) }}</p>
-
-            <div class="bid-info">
-              <div class="current-bid">
-                <div class="label">
-                  {% if item.bid_count == 0 %}
-                    Starting Price
-                  {% else %}
-                    Highest Bid
-                  {% endif %}
-                </div>
-                <div class="amount">
-                  ₵{{ '%.2f' % item.current_bid }}
-                </div>
-              </div>
-
-              <div class="bids">
-                <div class="label">Bids</div>
-                <div class="count">{{ item.bid_count }}</div>
-              </div>
-            </div>
-
-            <!-- Footer -->
-            <div class="card-footer">
-              <a
-                href="{{ url_for('auction_show', auction_id=item.id) }}"
-                class="btn-bid"
-              >Place Bid</a>
-              <div class="watchlist"><i class="far fa-heart"></i> Watch</div>
-            </div>
-          </div>
+  <section class="auction-listings">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Featured Auctions</h2>
+        <div>
+          <select id="cat-filter">
+            <option value="all">All Categories</option>
+            {% for cat in categories %}
+              <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+          </select>
+          <a href="/auctions" class="view-all">
+            View All Auctions&nbsp;<i class="fas fa-arrow-right"></i>
+          </a>
         </div>
-      {% endfor %}
-    </div>
-  </div>
-</section>
+      </div>
 
+      <div class="auction-grid">
+        {% for item in items %}
+          <div class="auction-card"
+               data-end="{{ item.end_time_iso }}"
+               data-cat="{{ item.category }}">
+
+            {% if item.is_open %}
+              <div class="live-indicator">
+                <span class="dot"></span> Live
+              </div>
+            {% endif %}
+
+            <div class="card-image">
+              <img src="{{ url_for('static', filename='images/' ~ item.image1) }}"
+                   alt="{{ item.title }}">
+              <div class="time-left">…</div>
+            </div>
+
+            <div class="card-content">
+              <h3 class="card-title">{{ item.title }}</h3>
+              <p class="card-description">{{ item.description|truncate(100) }}</p>
+
+              <div class="bid-info">
+                <div class="current-bid">
+                  <div class="label">
+                    {% if item.bid_count == 0 %}
+                      Starting Price
+                    {% else %}
+                      Highest Bid
+                    {% endif %}
+                  </div>
+                  <div class="amount">
+                    ₵{{ "{:,.2f}".format(item.current_bid) }}
+                  </div>
+                </div>
+                <div class="bids">
+                  <div class="label">Bids</div>
+                  <div class="count">{{ item.bid_count }}</div>
+                </div>
+              </div>
+
+              <div class="card-footer">
+                <a href="{{ url_for('auction_show', auction_id=item.id) }}"
+                   class="btn-bid">Place Bid</a>
+                <div class="watchlist"><i class="far fa-heart"></i> Watch</div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
 
   <!-- FOOTER -->
   <footer>
     <div class="container">
       <div class="footer-content">
+        <!-- About -->
         <div class="footer-column">
           <div class="logo">
             <div class="logo-icon">AH</div>
@@ -449,6 +692,7 @@
             <a href="#"><i class="fab fa-linkedin-in"></i></a>
           </div>
         </div>
+        <!-- Quick Links -->
         <div class="footer-column">
           <h3>Quick Links</h3>
           <ul class="footer-links">
@@ -458,6 +702,7 @@
             <li><a href="/about">About</a></li>
           </ul>
         </div>
+        <!-- Customer Service -->
         <div class="footer-column">
           <h3>Customer Service</h3>
           <ul class="footer-links">
@@ -468,6 +713,7 @@
             <li><a href="/contact">Contact Us</a></li>
           </ul>
         </div>
+        <!-- Newsletter -->
         <div class="footer-column">
           <h3>Newsletter</h3>
           <p style="color:var(--text-light);margin-bottom:20px;">
@@ -491,49 +737,17 @@
 
   <!-- SCRIPTS -->
   <script>
-    // 1) Countdown to next Friday 7pm
-    function nextFridaySeven() {
-      const now = new Date();
-      let days = (5 - now.getDay() + 7) % 7;
-      if (days === 0 && now.getHours() >= 19) days = 7;
-      const tgt = new Date(now);
-      tgt.setDate(now.getDate() + days);
-      tgt.setHours(19,0,0,0);
-      return tgt;
-    }
+    // Per‑card & "soonest" countdown
     function pad(n){ return n.toString().padStart(2,'0'); }
-
-    function updateGlobalCountdown() {
-      const end = nextFridaySeven();
-      let diff = end - new Date();
-      if (diff < 0) diff = 0;
-      const total = Math.floor(diff/1000);
-      const d = Math.floor(total/86400);
-      const h = Math.floor((total%86400)/3600);
-      const m = Math.floor((total%3600)/60);
-      const s = total % 60;
-      document.getElementById('days').textContent    = pad(d);
-      document.getElementById('hours').textContent   = pad(h);
-      document.getElementById('minutes').textContent = pad(m);
-      document.getElementById('seconds').textContent = pad(s);
-      document.querySelector('.next-auction').innerHTML =
-        diff===0
-          ? 'Auction is live now!'
-          : 'Next Auction: <strong>'+end.toLocaleString()+'</strong>';
-    }
-    setInterval(updateGlobalCountdown,1000);
-    updateGlobalCountdown();
-
-    // 2) Per‑card & “soonest” countdown
     function updateAll() {
       const cards = document.querySelectorAll('.auction-card');
-      let soonest=Infinity;
-      cards.forEach(c=>{
+      let soonest = Infinity;
+      cards.forEach(c => {
         const end = new Date(c.dataset.end);
-        const diff= end - new Date();
+        const diff = end - new Date();
         const el = c.querySelector('.time-left');
-        if (diff>0) {
-          soonest = Math.min(soonest,diff);
+        if (diff > 0) {
+          soonest = Math.min(soonest, diff);
           const T = Math.floor(diff/1000);
           const D = Math.floor(T/86400);
           const H = Math.floor((T%86400)/3600);
@@ -543,37 +757,68 @@
           el.textContent = 'Closed';
         }
       });
-      if(soonest<Infinity) {
-        const D = Math.floor(soonest/86400000);
-        document.getElementById('soonest-end').textContent = `Next ends in ${pad(D)}d`;
-      }
     }
-    setInterval(updateAll,1000);
+    setInterval(updateAll, 1000);
     updateAll();
 
-    // 3) Watchlist toggle
-    document.querySelectorAll('.watchlist').forEach(btn=>{
-      btn.onclick = ()=>{
+    // Watchlist toggle
+    document.querySelectorAll('.watchlist').forEach(btn => {
+      btn.onclick = () => {
         const i = btn.querySelector('i');
         i.classList.toggle('far'); i.classList.toggle('fas');
-        btn.style.color = i.classList.contains('fas')
-          ? 'var(--accent)' : 'var(--text-light)';
+        btn.style.color = i.classList.contains('fas') ? 'var(--accent)' : 'var(--text-light)';
       };
     });
 
-    // 4) Dummy bid alert
-    document.querySelectorAll('.btn-bid').forEach(b=>{
-      b.onclick = ()=> alert('Bid modal would open here.');
+    // Bid button interaction
+    document.querySelectorAll('.btn-bid').forEach(b => {
+      b.onclick = () => {
+        const card = b.closest('.auction-card');
+        card.style.boxShadow = '0 0 0 3px var(--accent-light)';
+        setTimeout(() => {
+          card.style.boxShadow = '';
+        }, 1000);
+      };
     });
 
-    // 5) Category filter
+    // Category filter
     document.getElementById('cat-filter').onchange = function(){
       const sel = this.value;
-      document.querySelectorAll('.auction-card').forEach(c=>{
-        c.style.display = (sel==='all' || c.dataset.cat===sel)
-          ? 'block' : 'none';
+      document.querySelectorAll('.auction-card').forEach(c => {
+        c.style.display = (sel==='all' || c.dataset.cat===sel) ? 'block' : 'none';
       });
     };
+    
+    // Hero carousel scroll enhancement
+    const carousel = document.querySelector('.carousel-items');
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+    
+    carousel.addEventListener('mousedown', (e) => {
+      isDown = true;
+      carousel.classList.add('active');
+      startX = e.pageX - carousel.offsetLeft;
+      scrollLeft = carousel.scrollLeft;
+    });
+    
+    carousel.addEventListener('mouseleave', () => {
+      isDown = false;
+      carousel.classList.remove('active');
+    });
+    
+    carousel.addEventListener('mouseup', () => {
+      isDown = false;
+      carousel.classList.remove('active');
+    });
+    
+    carousel.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - carousel.offsetLeft;
+      const walk = (x - startX) * 2;
+      carousel.scrollLeft = scrollLeft - walk;
+    });
   </script>
 </body>
 </html>
