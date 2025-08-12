@@ -595,6 +595,257 @@
       </div>
     </div>
 
+
+
+
+<!-- Your Listings Section -->
+<section>
+  <div class="section-header">
+    <h2 class="section-title">
+      <i class="fas fa-box-open"></i>
+      Your Auction Listings
+    </h2>
+    <a href="{{ url_for('sell') }}" class="btn-primary">
+      <i class="fas fa-plus"></i> New Listing
+    </a>
+  </div>
+
+  {% if listings %}
+    <!-- Mobile Card View -->
+    <div class="mobile-cards">
+      {% for it in listings %}
+      <div class="card-item">
+        <div class="card-header">
+          <div class="card-title">{{ it.title }}</div>
+          <div class="card-status status-{{ it.display_status }}">
+            {{ it.display_status|capitalize }}
+          </div>
+        </div>
+
+        <div class="card-details">
+          <div class="detail-item">
+            <div class="detail-label">Date</div>
+            <div class="detail-value">
+              {% if it.auction_start %}
+                {{ it.auction_start.strftime('%Y-%m-%d') }}
+              {% else %}
+                —
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <div class="detail-label">Ends At</div>
+            <div class="detail-value">
+              {% if it.end_time %}
+                {{ it.end_time.strftime('%Y-%m-%d %H:%M') }}
+              {% elif it.auction_end %}
+                {{ it.auction_end }}
+              {% else %}
+                —
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <div class="detail-label">Winner</div>
+            <div class="detail-value">
+              {% if it.display_status == 'closed' and it.winner_username %}
+                <div class="winner-info">
+                  <strong>{{ it.winner_username }}</strong><br>
+                  <small>{{ it.winner_email }}</small><br>
+                  <small>{{ it.winner_contact }}</small>
+                </div>
+              {% else %}
+                —
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <a href="{{ url_for('auction_show', auction_id=it.id) }}" class="action-btn">
+            <i class="fas fa-eye"></i> View
+          </a>
+
+          <a href="{{ url_for('auction_edit', auction_id=it.id) }}" class="action-btn">
+            <i class="fas fa-edit"></i> Edit
+          </a>
+
+          <form method="post" action="{{ url_for('auction_delete', auction_id=it.id) }}" style="display:inline" onsubmit="return confirm('Delete this listing? This cannot be undone.');">
+            <button type="submit" class="action-btn danger">
+              <i class="fas fa-trash"></i> Delete
+            </button>
+          </form>
+
+          {% if it.display_status != 'closed' or (it.id, 'buyer') in existing_ratings %}
+            <button class="action-btn" disabled>
+              <i class="fas fa-star"></i> Rated
+            </button>
+          {% else %}
+            <button class="action-btn rate-trigger" data-listing="{{ it.id }}">
+              <i class="fas fa-star"></i> Rate Buyer
+            </button>
+          {% endif %}
+        </div>
+
+        {% if it.display_status == 'closed' and it.winner_username and not (it.id, 'buyer') in existing_ratings %}
+        <div class="rating-container" id="rating-listing-{{ it.id }}">
+          <form method="POST" class="inline-rating-form">
+            <input type="hidden" name="auction_id" value="{{ it.id }}">
+            <input type="hidden" name="role" value="buyer">
+            <input type="hidden" name="rated_user_id" value="{{ it.winner_id }}">
+
+            <div class="star-rating">
+              {% for i in range(1,6) %}
+              <label>
+                <input type="radio" name="rating" value="{{ i }}" required>
+                <span class="star">★</span>
+                <span class="rating-value">{{ i }}</span>
+              </label>
+              {% endfor %}
+            </div>
+
+            <textarea name="comment" rows="3" placeholder="Share your experience with this buyer..."></textarea>
+            <button type="submit" class="btn-primary small">
+              <i class="fas fa-check"></i> Submit Rating
+            </button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Desktop Table View -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Ends At</th>
+            <th>Winner</th>
+            <th>View</th>
+            <th>Edit</th>
+            <th>Delete</th>
+            <th>Rate Buyer</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for it in listings %}
+          <tr>
+            <td>
+              <a href="{{ url_for('auction_show', auction_id=it.id) }}" class="auction-link">
+                <i class="fas fa-arrow-right"></i>
+                {{ it.title }}
+              </a>
+            </td>
+            <td>
+              <span class="status-badge status-{{ it.display_status }}">
+                {{ it.display_status|capitalize }}
+              </span>
+            </td>
+            <td>
+              {% if it.auction_start %}
+                {{ it.auction_start.strftime('%Y-%m-%d') }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td>
+              {% if it.end_time %}
+                {{ it.end_time.strftime('%Y-%m-%d %H:%M') }}
+              {% elif it.auction_end %}
+                {{ it.auction_end }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td>
+              {% if it.display_status == 'closed' and it.winner_username %}
+                <div class="winner-info">
+                  <strong>{{ it.winner_username }}</strong><br>
+                  <small>{{ it.winner_email }}</small><br>
+                  <small>{{ it.winner_contact }}</small>
+                </div>
+              {% else %}
+                <span class="gray-text">—</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{{ url_for('auction_show', auction_id=it.id) }}" class="action-btn">
+                <i class="fas fa-eye"></i> View
+              </a>
+            </td>
+            <td>
+              <a href="{{ url_for('auction_edit', auction_id=it.id) }}" class="action-btn small">
+                <i class="fas fa-edit"></i> Edit
+              </a>
+            </td>
+            <td>
+              <form method="post" action="{{ url_for('auction_delete', auction_id=it.id) }}" onsubmit="return confirm('Delete this listing? This cannot be undone.');">
+                <button type="submit" class="action-btn small danger">
+                  <i class="fas fa-trash"></i> Delete
+                </button>
+              </form>
+            </td>
+            <td>
+              {% if it.display_status != 'closed' or (it.id, 'buyer') in existing_ratings %}
+                <span class="gray-text">—</span>
+              {% else %}
+                <details class="desktop-rating-widget">
+                  <summary><i class="fas fa-star"></i> Rate Buyer</summary>
+                  <form method="POST" class="inline-rating-form">
+                    <input type="hidden" name="auction_id" value="{{ it.id }}">
+                    <input type="hidden" name="role" value="buyer">
+                    <input type="hidden" name="rated_user_id" value="{{ it.winner_id }}">
+
+                    <div class="star-rating">
+                      {% for i in range(1,6) %}
+                      <label>
+                        <input type="radio" name="rating" value="{{ i }}" required>
+                        <span class="star">★</span>
+                        <span class="rating-value">{{ i }}</span>
+                      </label>
+                      {% endfor %}
+                    </div>
+
+                    <textarea name="comment" rows="3" placeholder="Share your experience with this buyer..."></textarea>
+                    <button type="submit" class="btn-primary small">
+                      <i class="fas fa-check"></i> Submit Rating
+                    </button>
+                  </form>
+                </details>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">
+        <i class="fas fa-box"></i>
+      </div>
+      <p>You haven't created any auction listings yet.</p>
+      <a href="{{ url_for('sell') }}" class="btn-primary">
+        <i class="fas fa-plus"></i> Create Your First Listing
+      </a>
+    </div>
+  {% endif %}
+</section>
+
+
+
+
+
+
+
+
     <!-- Bid History Section -->
 <section>
   <div class="section-header">
@@ -632,9 +883,7 @@
             <td><strong>GHS {{ '%.2f'|format(bid.bid_amount) }}</strong></td>
             <td>{{ bid.bid_time.strftime('%Y-%m-%d %H:%M') }}</td>
             <td>
-              <span class="status-badge status-{{ bid.auction_status }}">
-                {{ bid.auction_status|capitalize }}
-              </span>
+
             </td>
             <td>
               {% if bid.auction_status == 'closed' %}
@@ -693,9 +942,7 @@
       <div class="card-item">
         <div class="card-header">
           <div class="card-title">{{ bid.auction_title }}</div>
-          <div class="card-status status-{{ bid.auction_status }}">
-            {{ bid.auction_status|capitalize }}
-          </div>
+
         </div>
 
         <!-- Result badge -->
@@ -750,196 +997,6 @@
     </div>
   {% endif %}
 </section>
-
-
-    <!-- Your Listings Section -->
-    <!-- Your Listings Section -->
-    <section>
-      <div class="section-header">
-        <h2 class="section-title">
-          <i class="fas fa-box-open"></i>
-          Your Auction Listings
-        </h2>
-        <a href="{{ url_for('sell') }}" class="btn-primary">
-          <i class="fas fa-plus"></i> New Listing
-        </a>
-      </div>
-      
-      {% if listings %}
-        <!-- Mobile Card View -->
-        <div class="mobile-cards">
-          {% for it in listings %}
-          <div class="card-item">
-            <div class="card-header">
-              <div class="card-title">{{ it.title }}</div>
-              <div class="card-status status-{{ it.status }}">
-                {{ it.status|capitalize }}
-              </div>
-            </div>
-            
-            <div class="card-details">
-              <div class="detail-item">
-                <div class="detail-label">Date</div>
-                <div class="detail-value">{{ it.auction_start.strftime('%Y-%m-%d') }}</div>
-              </div>
-              
-              <div class="detail-item">
-                <div class="detail-label">Ends At</div>
-                <div class="detail-value">{{ it.end_time.strftime('%H:%M') }}</div>
-              </div>
-              
-              <div class="detail-item">
-                <div class="detail-label">Winner</div>
-                <div class="detail-value">
-                  {% if it.status == 'closed' and it.winner_username %}
-                    <div class="winner-info">
-                      <strong>{{ it.winner_username }}</strong><br>
-                      <small>{{ it.winner_email }}</small><br>
-                      <small>{{ it.winner_contact }}</small>
-                    </div>
-                  {% else %}
-                    —
-                  {% endif %}
-                </div>
-              </div>
-            </div>
-            
-            <div class="card-actions">
-              <a href="{{ url_for('auction_show', auction_id=it.id) }}" class="action-btn">
-                <i class="fas fa-eye"></i> View
-              </a>
-              
-              {% if it.status != 'closed' or (it.id, 'buyer') in existing_ratings %}
-                <button class="action-btn" disabled>
-                  <i class="fas fa-star"></i> Rated
-                </button>
-              {% else %}
-                <button class="action-btn rate-trigger" data-listing="{{ it.id }}">
-                  <i class="fas fa-star"></i> Rate Buyer
-                </button>
-              {% endif %}
-            </div>
-            
-            {% if it.status == 'closed' and it.winner_username and not (it.id, 'buyer') in existing_ratings %}
-            <div class="rating-container" id="rating-listing-{{ it.id }}">
-              <form method="POST" class="inline-rating-form">
-                <input type="hidden" name="auction_id" value="{{ it.id }}">
-               Rate                <input type="hidden" name="role" value="buyer">
-                <input type="hidden" name="rated_user_id" value="{{ it.winner_id }}">
-                
-                <div class="star-rating">
-                  {% for i in range(1,6) %}
-                  <label>
-                    <input type="radio" name="rating" value="{{ i }}" required>
-                    <span class="star">★</span>
-                    <span class="rating-value">{{ i }}</span>
-                  </label>
-                  {% endfor %}
-                </div>
-                
-                <textarea name="comment" rows="3" placeholder="Share your experience with this buyer..."></textarea>
-                <button type="submit" class="btn-primary small">
-                  <i class="fas fa-check"></i> Submit Rating
-                </button>
-              </form>
-            </div>
-            {% endif %}
-          </div>
-          {% endfor %}
-        </div>
-        
-        <!-- Desktop Table View -->
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Ends At</th>
-                <th>Winner</th>
-                <th>View</th>
-                <th>Rate Buyer</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for it in listings %}
-              <tr>
-                <td>
-                  <a href="{{ url_for('auction_show', auction_id=it.id) }}" class="auction-link">
-                    <i class="fas fa-arrow-right"></i>
-                    {{ it.title }}
-                  </a>
-                </td>
-                <td>
-                  <span class="status-badge status-{{ it.status }}">
-                    {{ it.status|capitalize }}
-                  </span>
-                </td>
-                <td>{{ it.auction_start.strftime('%Y-%m-%d') }}</td>
-                <td>{{ it.end_time.strftime('%H:%M') }}</td>
-                <td>
-                  {% if it.status == 'closed' and it.winner_username %}
-                    <div class="winner-info">
-                      <strong>{{ it.winner_username }}</strong><br>
-                      <small>{{ it.winner_email }}</small><br>
-                      <small>{{ it.winner_contact }}</small>
-                    </div>
-                  {% else %}
-                    <span class="gray-text">—</span>
-                  {% endif %}
-                </td>
-                <td>
-                  <a href="{{ url_for('auction_show', auction_id=it.id) }}" class="action-btn">
-                    <i class="fas fa-eye"></i> View
-                  </a>
-                </td>
-                <td>
-                  {% if it.status != 'closed' or (it.id, 'buyer') in existing_ratings %}
-                    <span class="gray-text">—</span>
-                  {% else %}
-                    <details class="desktop-rating-widget">
-                      <summary><i class="fas fa-star"></i> Rate Buyer</summary>
-                      <form method="POST" class="inline-rating-form">
-                        <input type="hidden" name="auction_id" value="{{ it.id }}">
-                        <input type="hidden" name="role" value="buyer">
-                        <input type="hidden" name="rated_user_id" value="{{ it.winner_id }}">
-                        
-                        <div class="star-rating">
-                          {% for i in range(1,6) %}
-                          <label>
-                            <input type="radio" name="rating" value="{{ i }}" required>
-                            <span class="star">★</span>
-                            <span class="rating-value">{{ i }}</span>
-                          </label>
-                          {% endfor %}
-                        </div>
-                        
-                        <textarea name="comment" rows="3" placeholder="Share your experience with this buyer..."></textarea>
-                        <button type="submit" class="btn-primary small">
-                          <i class="fas fa-check"></i> Submit Rating
-                        </button>
-                      </form>
-                    </details>
-                  {% endif %}
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      {% else %}
-        <div class="empty-state">
-          <div class="empty-icon">
-            <i class="fas fa-box"></i>
-          </div>
-          <p>You haven't created any auction listings yet.</p>
-          <a href="{{ url_for('sell') }}" class="btn-primary">
-            <i class="fas fa-plus"></i> Create Your First Listing
-          </a>
-        </div>
-      {% endif %}
-    </section>
 
     <footer>
       &copy; {{ current_year }} AuctionHub. All rights reserved.

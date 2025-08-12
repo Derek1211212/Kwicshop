@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Edit Auction — AuctionHub</title>
+
+  <!-- Minimal inline CSS: light green + white theme -->
+  <style>
+    :root{
+      --green: #bfeecb;
+      --accent: #6fcf97;
+      --accent-dark: #32a37a;
+      --muted: #6b7280;
+      --bg: #ffffff;
+      --card: #ffffff;
+      --danger: #e05b5b;
+      --radius: 10px;
+      --max-width: 980px;
+    }
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg, #f6fff7 0%, #ffffff 100%);
+      color:#0f172a;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:24px;
+      display:flex;
+      justify-content:center;
+    }
+    .container{
+      width:100%;
+      max-width:var(--max-width);
+      background:var(--bg);
+      border-radius:12px;
+      box-shadow:0 6px 24px rgba(16,24,40,0.06);
+      padding:20px;
+      box-sizing:border-box;
+    }
+
+    header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:18px;
+    }
+    .logo{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      text-decoration:none;
+      color:var(--accent-dark);
+    }
+    .logo-icon{
+      background:var(--accent);
+      width:44px;height:44px;border-radius:8px;
+      display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;
+      box-shadow:0 3px 8px rgba(47,163,119,0.18);
+    }
+    h1{font-size:20px;margin:0;color:#0b3b2a}
+    .sub{color:var(--muted);font-size:13px;margin-top:4px}
+
+    form { margin-top: 8px; }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 340px;
+      gap:20px;
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:0 2px 12px rgba(16,24,40,0.04);
+    }
+
+    .left .field, .right .field { margin-bottom:14px; }
+    label{display:block;font-weight:600;margin-bottom:6px}
+    input[type="text"], input[type="date"], input[type="time"], input[type="number"], textarea, select {
+      width:100%;
+      box-sizing:border-box;
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid #e6f0ea;
+      background: #fbfffb;
+      outline:none;
+      font-size:14px;
+    }
+    textarea{min-height:120px; resize:vertical}
+    .small{font-size:13px;color:var(--muted); margin-top:6px}
+
+    .images-grid{
+      display:grid;
+      grid-template-columns:repeat(2, 1fr);
+      gap:10px;
+    }
+    .img-cell{
+      position:relative;
+      border:1px dashed #e6f0ea;
+      border-radius:8px;
+      padding:8px;
+      min-height:100px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#fcfffc;
+    }
+    .img-cell img{max-width:100%; max-height:120px; display:block; border-radius:6px}
+    .img-actions{
+      position:absolute; top:8px; right:8px; display:flex; gap:6px;
+    }
+    .btn{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 12px;border-radius:8px;border:0;background:var(--accent);color:white;font-weight:600;
+      text-decoration:none; cursor:pointer;
+    }
+    .btn.secondary{
+      background:#f7fff8;color:var(--accent-dark);border:1px solid #dff3e6;
+    }
+    .btn.danger{background:var(--danger);}
+
+    .actions-row{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
+    .muted{color:var(--muted);font-size:13px}
+
+    .footer-note{font-size:13px;color:var(--muted);margin-top:10px}
+
+    /* Responsive */
+    @media (max-width: 860px){
+      .grid{grid-template-columns:1fr; }
+      .right{order:-1}
+      .img-cell{min-height:84px}
+    }
+
+    /* tiny helpers */
+    .row{display:flex;gap:10px;align-items:center}
+    .col-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .file-input{display:block;margin-top:6px}
+    .remove-checkbox{font-size:13px;color:#a42b2b}
+    .notice{background:#f2fff6;border-left:4px solid var(--accent);padding:10px;border-radius:6px;color:#064a36}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <a class="logo" href="{{ url_for('auctions') }}">
+          <div class="logo-icon">A</div>
+          <div>
+            <h1>Edit Listing</h1>
+            <div class="sub">Update your auction details — changes will be saved after you submit.</div>
+          </div>
+        </a>
+      </div>
+      <div>
+        <a href="{{ url_for('auction_profile') }}" class="btn secondary">← Back to Profile</a>
+      </div>
+    </header>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div style="margin-bottom:14px;">
+          {% for category, msg in messages %}
+            <div class="notice" style="margin-bottom:6px;">{{ msg }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <form id="editForm" action="{{ url_for('auction_edit', auction_id=item.id) }}" method="post" enctype="multipart/form-data" novalidate>
+      <div class="grid">
+        <!-- LEFT: main fields -->
+        <div class="left">
+          <div class="card">
+            <div class="field">
+              <label for="title">Item Title</label>
+              <input id="title" name="title" type="text" required maxlength="255" value="{{ item.title or '' }}">
+            </div>
+
+            <div class="field">
+              <label for="description">Description</label>
+              <textarea id="description" name="description" required>{{ item.description or '' }}</textarea>
+              <div class="small">Be specific about flaws, dimensions, and condition — it helps buyers trust the listing.</div>
+            </div>
+
+            <div class="field">
+              <label>Images (you can replace or remove)</label>
+              <div class="images-grid">
+                {% for i in range(1,5) %}
+                {% set key = 'image' ~ i %}
+                <div class="img-cell" data-slot="{{ i }}">
+                  {% if images[key] %}
+                    <img src="{{ url_for('static', filename='images/' ~ images[key]) }}" alt="Image {{ i }}" id="existing-img-{{ i }}">
+                  {% else %}
+                    <div class="muted">No image</div>
+                  {% endif %}
+                  <div class="img-actions">
+                    <label class="btn secondary">
+                      <input type="file" name="images" accept="image/*" class="file-input" data-slot="{{ i }}" style="display:none">
+                      Replace
+                    </label>
+                  </div>
+                  <div style="position:absolute;left:8px;bottom:8px;">
+                    <label class="remove-checkbox">
+                      <input type="checkbox" name="remove_image_{{ i }}" value="1"> Remove
+                    </label>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+
+              <div class="small">Up to 4 images. Replacing an image will overwrite the stored file. Check Remove to delete the image.</div>
+            </div>
+
+            <div class="field">
+              <label for="starting_bid">Starting Bid (USD)</label>
+              <input id="starting_bid" name="starting_bid" type="text" required value="{{ item.starting_bid }}">
+              <div class="small">Enter numbers only. Use 2 decimal places if needed (e.g. 250.00).</div>
+            </div>
+
+            <div class="field">
+              <label for="reserve_price">Reserve Price (optional)</label>
+              <input id="reserve_price" name="reserve_price" type="text" value="{{ item.reserve_price or '' }}">
+            </div>
+
+            <div class="field col-2">
+              <div>
+                <label for="auction_start">Auction Start (date)</label>
+                <input id="auction_start" name="auction_start" type="date" required value="{{ item.auction_start if item.auction_start else '' }}">
+              </div>
+              <div>
+                <label for="auction_end">Auction End (date)</label>
+                <input id="auction_end" name="auction_end" type="date" required value="{{ item.auction_end if item.auction_end else '' }}">
+              </div>
+            </div>
+
+            <div class="field col-2">
+              <div>
+                <label for="start_time">Start Time</label>
+                <input id="start_time" name="start_time" type="time" required value="{{ item.start_time.strftime('%H:%M') if item.start_time else '19:00' }}">
+              </div>
+              <div>
+                <label for="end_time">End Time</label>
+                <input id="end_time" name="end_time" type="time" required value="{{ item.end_time.strftime('%H:%M') if item.end_time else '21:00' }}">
+              </div>
+            </div>
+
+            <div class="field row" style="justify-content:space-between;align-items:center;">
+              <div style="flex:1">
+                <label for="category">Category</label>
+                <select id="category" name="category" required>
+                  <option value="">Select category</option>
+                  <optgroup label="Electronics & Tech">
+                      <option value="phones-tablets" {% if item.category == 'phones-tablets' %}selected{% endif %}>Phones & Tablets</option>
+                      <option value="computers-accessories" {% if item.category == 'computers-accessories' %}selected{% endif %}>Computers & Accessories</option>
+                      <option value="gaming" {% if item.category == 'gaming' %}selected{% endif %}>Gaming & Consoles</option>
+                      <option value="audio-video" {% if item.category == 'audio-video' %}selected{% endif %}>Audio, Video & Cameras</option>
+                      <option value="home-appliances" {% if item.category == 'home-appliances' %}selected{% endif %}>Home Appliances</option>
+                  </optgroup>
+                  <optgroup label="Fashion & Accessories">
+                      <option value="clothing" {% if item.category == 'clothing' %}selected{% endif %}>Clothing & Apparel</option>
+                      <option value="shoes" {% if item.category == 'shoes' %}selected{% endif %}>Shoes</option>
+                      <option value="bags" {% if item.category == 'bags' %}selected{% endif %}>Bags & Luggage</option>
+                      <option value="jewelry" {% if item.category == 'jewelry' %}selected{% endif %}>Jewelry & Watches</option>
+                  </optgroup>
+                  <optgroup label="Other">
+                      <option value="other" {% if item.category == 'other' %}selected{% endif %}>Other</option>
+                  </optgroup>
+                </select>
+              </div>
+
+              <div style="width:160px">
+                <label for="condition">Condition</label>
+                <select id="condition" name="condition" required>
+                  <option value="">Select</option>
+                  <option value="new" {% if item.item_condition == 'new' %}selected{% endif %}>Brand New</option>
+                  <option value="excellent" {% if item.item_condition == 'excellent' %}selected{% endif %}>Like New / Excellent</option>
+                  <option value="good" {% if item.item_condition == 'good' %}selected{% endif %}>Good</option>
+                  <option value="fair" {% if item.item_condition == 'fair' %}selected{% endif %}>Fair</option>
+                  <option value="poor" {% if item.item_condition == 'poor' %}selected{% endif %}>Poor / For Parts</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="location">Location</label>
+              <input id="location" name="location" type="text" value="{{ item.location or '' }}">
+            </div>
+
+            <div class="actions-row">
+              <button type="submit" class="btn">Save Changes</button>
+              <a href="{{ url_for('auction_profile') }}" class="btn secondary">Cancel</a>
+              <div class="footer-note">Note: Editing is blocked for live/closed auctions.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: summary / tips -->
+        <div class="right">
+          <div class="card">
+            <h3 style="margin-top:0">Listing Summary</h3>
+            <p class="muted">Below is a quick preview of key listing fields. Make sure end date/time is later than start.</p>
+
+            <div style="margin-top:12px">
+              <strong>Current status:</strong>
+              <div style="margin-top:6px">
+                <span style="display:inline-block;padding:6px 10px;border-radius:8px;background:var(--green);font-weight:700;color:#064a36">
+                  {{ item.status|capitalize }}
+                </span>
+              </div>
+            </div>
+
+            <div style="margin-top:12px">
+              <strong>Start:</strong>
+              <div class="small">{{ item.auction_start or '—' }} {{ item.start_time.strftime('%H:%M') if item.start_time else '' }}</div>
+            </div>
+
+            <div style="margin-top:8px">
+              <strong>End:</strong>
+              <div class="small">{{ item.auction_end or '—' }} {{ item.end_time.strftime('%H:%M') if item.end_time else '' }}</div>
+            </div>
+
+            <div style="margin-top:14px">
+              <strong>Starting bid</strong>
+              <div style="font-weight:700;font-size:18px">${{ item.starting_bid }}</div>
+            </div>
+
+            <div style="margin-top:16px" class="small muted">
+              <strong>Pro tips</strong>
+              <ul style="padding-left:18px;margin:8px 0 0 0">
+                <li>Use clear photos and accurate condition</li>
+                <li>Set reserve carefully — too high reduces bids</li>
+                <li>Auctions between Tue–Thu tend to get more views</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <footer style="margin-top:18px;text-align:center;color:var(--muted);font-size:13px">
+      © {{ current_year }} AuctionHub — edit listing
+    </footer>
+  </div>
+
+  <!-- Inline JS: preview + validation -->
+  <script>
+    (function(){
+      const form = document.getElementById('editForm');
+      const startDateInput = document.getElementById('auction_start');
+      const endDateInput = document.getElementById('auction_end');
+      const startTimeInput = document.getElementById('start_time');
+      const endTimeInput = document.getElementById('end_time');
+
+      // file inputs: we created hidden file inputs inside the Replace button labels.
+      // Let's bind change events for any file inputs (they have class .file-input)
+      document.querySelectorAll('.file-input').forEach(inp => {
+        inp.addEventListener('change', (e) => {
+          const slot = inp.dataset.slot;
+          const cell = document.querySelector('.img-cell[data-slot="'+slot+'"]');
+          if (!cell) return;
+          const file = inp.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = function(ev){
+            // remove existing image preview if any
+            let existing = cell.querySelector('img');
+            if (!existing) {
+              existing = document.createElement('img');
+              existing.alt = 'Preview';
+              existing.style.maxHeight = '120px';
+              cell.insertBefore(existing, cell.firstChild);
+            }
+            existing.src = ev.target.result;
+            // uncheck remove checkbox if user added file
+            const cb = cell.querySelector('input[type="checkbox"]');
+            if (cb) cb.checked = false;
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+
+      // Client-side validation before submit
+      form.addEventListener('submit', function(ev){
+        // validate money: ensure numeric-ish
+        const moneyFields = ['starting_bid','reserve_price'];
+        for (let name of moneyFields){
+          const el = form.querySelector('[name="'+name+'"]');
+          if (!el) continue;
+          const v = el.value.trim().replace(/,/g,'');
+          if (v === '') {
+            if (name === 'starting_bid') {
+              alert('Please enter a starting bid.');
+              ev.preventDefault(); return;
+            }
+            continue;
+          }
+          if (isNaN(Number(v))) {
+            alert('Please enter a valid numeric value for ' + name.replace('_',' ') + '.');
+            ev.preventDefault(); return;
+          }
+        }
+
+        // parse datetimes
+        const sDate = startDateInput.value;
+        const eDate = endDateInput.value;
+        const sTime = startTimeInput.value;
+        const eTime = endTimeInput.value;
+        if (!sDate || !eDate || !sTime || !eTime) {
+          alert('Please fill start/end dates and times.');
+          ev.preventDefault(); return;
+        }
+        const start = new Date(sDate + 'T' + sTime + ':00');
+        const end   = new Date(eDate + 'T' + eTime + ':00');
+
+        if (end <= start) {
+          alert('End datetime must come after start datetime.');
+          ev.preventDefault(); return;
+        }
+        const diffHrs = (end - start) / (1000*60*60);
+        if (diffHrs < 24) {
+          alert('Auctions must run at least 24 hours.');
+          ev.preventDefault(); return;
+        }
+        if (diffHrs > 14*24) {
+          alert('Auctions can run for at most 14 days.');
+          ev.preventDefault(); return;
+        }
+
+        // Hours restriction 08:00 - 22:00
+        const sh = start.getHours(), eh = end.getHours();
+        if (sh < 8 || sh > 22 || eh < 8 || eh > 22) {
+          alert('Auctions may only start/end between 08:00 and 22:00.');
+          ev.preventDefault(); return;
+        }
+
+        // confirm if user tries to remove all images (optional)
+        const removeChecks = form.querySelectorAll('input[type="checkbox"][name^="remove_image_"]');
+        let willRemoveAll = true;
+        removeChecks.forEach((cb, idx) => {
+          // there might be existing images — check if any image remains or being replaced
+          const slot = idx+1;
+          const cell = document.querySelector('.img-cell[data-slot="'+slot+'"]');
+          const hasExisting = cell && !!cell.querySelector('img') && !cb.checked;
+          const fileInput = cell && cell.querySelector('input[type="file"]');
+          const willReplace = fileInput && fileInput.files && fileInput.files.length;
+          if (hasExisting || willReplace) willRemoveAll = false;
+        });
+        // if removing all, warn
+        if (willRemoveAll && confirm('You are about to remove all images from this listing. Continue?') === false) {
+          ev.preventDefault(); return;
+        }
+      });
+
+      // set min/max for dates
+      (function setDateBounds(){
+        const today = new Date();
+        const iso = d => d.toISOString().split('T')[0];
+        startDateInput.min = iso(today);
+        startDateInput.max = iso(new Date(today.getTime() + 14*24*3600*1000));
+        // when start changes adjust end min
+        startDateInput.addEventListener('change', () => {
+          const sd = new Date(startDateInput.value);
+          if (isNaN(sd)) return;
+          const minEnd = new Date(sd.getTime() + 24*3600*1000);
+          const maxEnd = new Date(sd.getTime() + 14*24*3600*1000);
+          endDateInput.min = minEnd.toISOString().split('T')[0];
+          endDateInput.max = maxEnd.toISOString().split('T')[0];
+          if (!endDateInput.value) endDateInput.value = endDateInput.min;
+        });
+      })();
+    })();
+  </script>
+</body>
+</html>

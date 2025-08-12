@@ -35,6 +35,8 @@ import threading
 from datetime import datetime, date
 from mysql.connector import connect, Error
 import string
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+
 
 
 
@@ -3539,30 +3541,54 @@ def sell():
         conn = cur = None
         try:
             # 1) Pull in all form fields
-            title          = request.form['title'].strip()
-            description    = request.form['description'].strip()
-            category       = request.form['category'].strip()
-            item_condition = request.form['condition'].strip()
-            starting_bid   = float(request.form['starting_bid'])
-            reserve_price  = float(request.form.get('reserve_price') or 0.0)
+            title = request.form.get('title', '').strip()
+            description = request.form.get('description', '').strip()
+            category = request.form.get('category', '').strip()
+            item_condition = request.form.get('condition', '').strip()
+
+            # ---------- Money parsing with Decimal (safe) ----------
+            def parse_money(s):
+                s = (s or '').strip().replace(',', '')  # remove thousands separators
+                if s == '':
+                    return Decimal('0.00')
+                try:
+                    d = Decimal(s)
+                except InvalidOperation:
+                    raise ValueError("Invalid money amount")
+                return d.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+            try:
+                starting_bid = parse_money(request.form.get('starting_bid'))
+                reserve_price = parse_money(request.form.get('reserve_price') or '0')
+            except ValueError:
+                flash("Please enter valid numeric amounts for starting/reserve price.", "danger")
+                return redirect(url_for('sell'))
 
             # 2) Dates & times
-            start_date = datetime.strptime(
-                request.form['auction_start'], '%Y-%m-%d'
-            ).date()
-            end_date = datetime.strptime(
-                request.form['auction_end'], '%Y-%m-%d'
-            ).date()
-            start_time = datetime.strptime(
-                request.form['start_time'], '%H:%M'
-            ).time()
-            end_time = datetime.strptime(
-                request.form['end_time'], '%H:%M'
-            ).time()
+            # Accept both 'auction_start' (new) or 'auction_date' (old)
+            start_date_str = request.form.get('auction_start') or request.form.get('auction_date')
+            end_date_str   = request.form.get('auction_end')   or request.form.get('auction_end_date')
+            if not start_date_str or not end_date_str:
+                flash("Please provide auction start and end dates.", "danger")
+                return redirect(url_for('sell'))
+
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            end_date   = datetime.strptime(end_date_str,   '%Y-%m-%d').date()
+
+            # times
+            start_time_str = request.form.get('start_time')
+            end_time_str   = request.form.get('end_time')
+            if not start_time_str or not end_time_str:
+                flash("Please provide auction start and end times.", "danger")
+                return redirect(url_for('sell'))
+
+            start_time = datetime.strptime(start_time_str, '%H:%M').time()
+            end_time   = datetime.strptime(end_time_str,   '%H:%M').time()
 
             start_dt = datetime.combine(start_date, start_time)
             end_dt   = datetime.combine(end_date,   end_time)
-            # ensure end > start
+
+            # validations
             if end_dt <= start_dt:
                 flash("End datetime must come after start datetime.", "error")
                 return redirect(url_for('sell'))
@@ -3591,7 +3617,7 @@ def sell():
             # 4) Insert
             conn = get_db_connection()
             cur = conn.cursor()
-            # replace your current INSERT with this (minimal, backwards-compatible)
+
             cur.execute("""
                 INSERT INTO auction_items (
                     user_id, title, description,
@@ -3613,26 +3639,25 @@ def sell():
             """, (
                 session['user_id'], title, description,
                 image_paths[0], image_paths[1], image_paths[2], image_paths[3],
-                starting_bid, reserve_price,
-                start_date, end_date,                  # DATE
-                start_dt, end_dt,                      # DATETIME
+                starting_bid, reserve_price,   # Decimal objects accepted by connector
+                start_date, end_date,          # DATE
+                start_dt, end_dt,              # DATETIME
                 'pending', 0,
                 category, item_condition
             ))
 
-            # commit, then optional debug:
             conn.commit()
-            print("[DEBUG] inserted id:", getattr(cur, 'lastrowid', None))
-
-
-            conn.commit()
+            inserted_id = getattr(cur, 'lastrowid', None)
+            print("[DEBUG] inserted id:", inserted_id)
 
             flash("Your item has been submitted and is pending approval.", "success")
             return redirect(url_for('auctions'))
 
         except Exception as e:
-            # log so you see it in console
+            # log the full stack so you can see the problem
+            import traceback
             print("[ERROR creating auction]", e)
+            traceback.print_exc()
             flash(f"Error creating auction: {e}", "danger")
             if conn:
                 conn.rollback()
@@ -3861,6 +3886,36 @@ def auction_profile():
     """, (user_id,))
     listings = cur.fetchall()
 
+    now = datetime.utcnow()
+
+    for it in listings:
+        # Prefer full datetime end_time if present
+        et = it.get('end_time')  # DATETIME column
+        if et:
+            end_dt = et
+        else:
+            # fallback to auction_end (DATE) if present → treat as end of day
+            ae = it.get('auction_end')
+            if ae:
+                try:
+                    # ae may be date object or string
+                    if isinstance(ae, str):
+                        d = datetime.strptime(ae, "%Y-%m-%d").date()
+                    else:
+                        d = ae
+                    end_dt = datetime.combine(d, dtime(23, 59, 59))
+                except Exception:
+                    end_dt = None
+            else:
+                end_dt = None
+
+        # Decide display status
+        if end_dt:
+            it['display_status'] = 'closed' if end_dt < now else 'live'
+        else:
+            # if we can't determine end datetime, fall back to DB status
+            it['display_status'] = it.get('status', 'pending')
+
     cur.close()
     cnx.close()
 
@@ -4005,6 +4060,186 @@ def verify_email(user_id):
         conn.close()
 
     return render_template("verify_email.html", user_id=user_id)
+
+
+
+
+def parse_money_str(s):
+    s = (s or '').strip().replace(',', '')
+    if s == '':
+        return Decimal('0.00')
+    try:
+        d = Decimal(s)
+    except InvalidOperation:
+        raise ValueError("Invalid money amount")
+    return d.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+@app.route('/auction_edit/<int:auction_id>', methods=['GET', 'POST'])
+def auction_edit(auction_id):
+    if 'user_id' not in session:
+        flash("Please log in to edit auctions.", "warning")
+        return redirect(url_for('sign_in'))
+
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    try:
+        cur.execute("SELECT * FROM auction_items WHERE id = %s AND user_id = %s", (auction_id, session['user_id']))
+        item = cur.fetchone()
+
+        if not item:
+            flash("Auction not found or you do not have permission to edit it.", "danger")
+            return redirect(url_for('auction_profile'))
+
+        # allow editing for 'live' but block only 'closed'
+        if item.get('status') == 'closed':
+            flash("Closed auctions cannot be edited.", "warning")
+            return redirect(url_for('auction_profile'))
+
+        if request.method == 'POST':
+            # Basic fields
+            title = request.form.get('title', '').strip()
+            description = request.form.get('description', '').strip()
+            category = request.form.get('category', '').strip()
+            # frontend uses name="condition" -> we map to DB item_condition
+            item_condition = request.form.get('condition', '').strip()
+            location = request.form.get('location', '').strip()
+
+            # Money parsing (safe)
+            try:
+                starting_bid = parse_money_str(request.form.get('starting_bid'))
+                reserve_price = parse_money_str(request.form.get('reserve_price') or '0')
+            except ValueError:
+                flash("Please enter valid numeric amounts for starting/reserve price.", "danger")
+                return redirect(url_for('auction_edit', auction_id=auction_id))
+
+            # Dates & times
+            try:
+                start_date = datetime.strptime(request.form.get('auction_start'), '%Y-%m-%d').date()
+                end_date = datetime.strptime(request.form.get('auction_end'), '%Y-%m-%d').date()
+                start_time = datetime.strptime(request.form.get('start_time'), '%H:%M').time()
+                end_time = datetime.strptime(request.form.get('end_time'), '%H:%M').time()
+            except Exception:
+                flash("Invalid date/time format. Please use the provided controls.", "danger")
+                return redirect(url_for('auction_edit', auction_id=auction_id))
+
+            start_dt = datetime.combine(start_date, start_time)
+            end_dt = datetime.combine(end_date, end_time)
+
+            # validations (same as sell)
+            if end_dt <= start_dt:
+                flash("End datetime must come after start datetime.", "error")
+                return redirect(url_for('auction_edit', auction_id=auction_id))
+            span = end_dt - start_dt
+            if span < timedelta(hours=24):
+                flash("Auctions must run at least 24 hours.", "error")
+                return redirect(url_for('auction_edit', auction_id=auction_id))
+            if span > timedelta(days=14):
+                flash("Auctions can run at most 14 days.", "error")
+                return redirect(url_for('auction_edit', auction_id=auction_id))
+            if not (8 <= start_dt.hour <= 22 and 8 <= end_dt.hour <= 22):
+                flash("Auctions must start/end between 08:00 and 22:00.", "error")
+                return redirect(url_for('auction_edit', auction_id=auction_id))
+
+            # Images: preserve existing filenames unless removed/replaced
+            image_slots = [
+                item.get('image1'), item.get('image2'),
+                item.get('image3'), item.get('image4')
+            ]
+
+            # removals: checkboxes named remove_image_1 .. remove_image_4
+            for i in range(4):
+                if request.form.get(f'remove_image_{i+1}') in ('1', 'on', 'true'):
+                    # optionally delete file from disk here if you want cleanup
+                    image_slots[i] = None
+
+            # uploaded replacements: files come in request.files.getlist('images')
+            uploaded_files = request.files.getlist('images') or []
+            # Fill slots in order with uploaded files — replace first available slot
+            upload_idx = 0
+            for i in range(4):
+                if upload_idx >= len(uploaded_files):
+                    break
+                f = uploaded_files[upload_idx]
+                upload_idx += 1
+                if f and allowed_file(f.filename):
+                    filename = secure_filename(f.filename)
+                    dest = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    f.save(dest)
+                    image_slots[i] = filename
+
+            # Update DB
+            cur.execute("""
+                UPDATE auction_items
+                SET title=%s, description=%s,
+                    image1=%s, image2=%s, image3=%s, image4=%s,
+                    starting_bid=%s, reserve_price=%s,
+                    auction_start=%s, auction_end=%s,
+                    start_time=%s, end_time=%s,
+                    category=%s, item_condition=%s, location=%s
+                WHERE id=%s AND user_id=%s
+            """, (
+                title, description,
+                image_slots[0], image_slots[1], image_slots[2], image_slots[3],
+                starting_bid, reserve_price,
+                start_date, end_date,
+                start_dt, end_dt,
+                category, item_condition, location,
+                auction_id, session['user_id']
+            ))
+            conn.commit()
+            flash("Auction updated successfully.", "success")
+            return redirect(url_for('auction_profile'))
+
+        # GET: prepare explicit images dict and render template
+        images = {
+            'image1': item.get('image1'),
+            'image2': item.get('image2'),
+            'image3': item.get('image3'),
+            'image4': item.get('image4')
+        }
+        return render_template('auction_edit.html', item=item, images=images, current_year=datetime.now().year)
+
+    finally:
+        cur.close()
+        conn.close()
+
+
+
+
+@app.route('/auction_delete/<int:auction_id>', methods=['POST'])
+def auction_delete(auction_id):
+    if 'user_id' not in session:
+        flash("Please log in first", "warning")
+        return redirect(url_for('sign_in'))
+
+    user_id = session['user_id']
+    cnx = get_db_connection()
+    cur = cnx.cursor(dictionary=True)
+
+    try:
+        cur.execute("SELECT id, status FROM auction_items WHERE id = %s AND user_id = %s", (auction_id, user_id))
+        row = cur.fetchone()
+        if not row:
+            flash("Auction not found or you are not the owner.", "danger")
+            return redirect(url_for('auction_profile'))
+
+        if row['status'] in ('live', 'closed'):
+            flash("Cannot delete auctions that are live or closed.", "warning")
+            return redirect(url_for('auction_profile'))
+
+        # safe delete: delete row (or you can soft-delete by updating status)
+        cur.execute("DELETE FROM auction_items WHERE id = %s AND user_id = %s", (auction_id, user_id))
+        cnx.commit()
+        flash("Auction deleted.", "success")
+        return redirect(url_for('auction_profile'))
+
+    except Exception as e:
+        cnx.rollback()
+        import traceback; traceback.print_exc()
+        flash(f"Error deleting auction: {e}", "danger")
+        return redirect(url_for('auction_profile'))
+    finally:
+        cur.close(); cnx.close()
 
 
 
