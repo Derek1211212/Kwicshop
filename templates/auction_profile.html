@@ -239,54 +239,36 @@
       margin-top: 10px;
     }
     
-    .action-btn {
-      background: transparent;
-      border: 1px solid var(--primary);
-      color: var(--primary);
-      padding: 6px 12px;
-      border-radius: 6px;
-      text-decoration: none;
-      font-size: 0.85rem;
-      transition: var(--transition);
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      flex: 1;
-      justify-content: center;
-      text-align: center;
-    }
-    
-    .action-btn:hover {
-      background: var(--primary);
-      color: white;
-    }
-    
-    /* Rating Widget */
-    .rating-container {
-      margin-top: 15px;
-      padding-top: 15px;
-      border-top: 1px dashed #e2e8f0;
-    }
-    
-    .rating-widget {
-      position: relative;
-    }
-    
-    .rate-button {
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 20px;
-      padding: 8px 15px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      cursor: pointer;
-      width: 100%;
-      justify-content: center;
-    }
+.card-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 columns */
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.action-btn {
+  background: transparent;
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  font-size: 0.85rem;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  text-align: center;
+  
+  /* Force equal sizes */
+  height: 45px;           /* Equal height for all */
+  width: 100%;            /* Fill column width */
+  box-sizing: border-box; /* Ensure padding doesn't mess size */
+}
+
+.action-btn:hover {
+  background: var(--primary);
+  color: white;
+}
+
     
     .inline-rating-form {
       background: white;
