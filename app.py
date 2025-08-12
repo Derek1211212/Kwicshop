@@ -590,7 +590,9 @@ def login_required(f):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    # Determine where to go after login: first from query, then form, then home
     next_url = request.args.get('next') or request.form.get('next') or url_for('home')
+
     # Initialize or retrieve the per-email failure counts
     session.setdefault('failed_logins', {})
 
@@ -602,11 +604,7 @@ def login():
             flash('Please enter both email and password', 'danger')
             return redirect(url_for('login', next=next_url))
 
-        # Check how many times this email has failed so far
-        failed = session['failed_logins'].get(email, 0)
-
-        # If already suspended by prior logic, block immediately
-        # (In case they cleared session but DB is suspended)
+        # Check account suspension status
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute("SELECT account_status FROM users WHERE email = %s", (email,))
@@ -614,28 +612,36 @@ def login():
         cur.close()
         conn.close()
         if row and row[0] == 'Suspended':
-            flash('Your account is suspended. Please email swapsphere@gmail.com to request reactivation.', 'danger')
+            flash(
+                'Your account is suspended. Please email swapsphere@gmail.com to request reactivation.',
+                'danger'
+            )
             return redirect(url_for('login', next=next_url))
 
-        # Authenticate
+        # Authenticate credentials
         user = authenticate_user(email, password)
         if user:
-            # Successful login: clear fail count and log in
+            # Successful login
             session['failed_logins'].pop(email, None)
             session['user_id'] = user['id']
             session.permanent = True
+
+            # If there's a post-login message, flash it now
+            post_msg = session.pop('post_login_message', None)
+            if post_msg:
+                flash(post_msg, 'success')
+
             logging.info(f"User {user['id']} logged in successfully")
             return redirect(next_url)
         else:
-            # Increment fail count
-            failed += 1
+            # Failed login: increment count
+            failed = session['failed_logins'].get(email, 0) + 1
             session['failed_logins'][email] = failed
             logging.warning(f"Failed login attempt {failed} for email: {email}")
 
-            # On 3rd failure, warn that next will lock
+            # Provide warnings or suspend as needed
             if failed == 3:
                 flash('Warning: One more failed attempt will lock your account.', 'warning')
-            # On 4th failure, suspend account and instruct
             elif failed >= 4:
                 try:
                     conn = get_db_connection()
@@ -656,11 +662,14 @@ def login():
                     'danger'
                 )
             else:
-                # Standard invalid credentials message
                 flash('Invalid email or password', 'danger')
 
-    # GET or after POST
+        # On any failure, stay on login
+        return redirect(url_for('login', next=next_url))
+
+    # GET request: render form. post‑login message will NOT appear here.
     return render_template('login.html', next_url=next_url)
+
 
 # ─── 2) Kick‐off Google OAuth Flow ────────────────────────────────────────────
 @app.route('/login/google')
@@ -3163,7 +3172,7 @@ def auctions():
     cnx = get_db_connection()
     cur = cnx.cursor(dictionary=True)
 
-    # 1. Distinct categories (unchanged)
+    # 1. Distinct categories
     cur.execute("""
         SELECT DISTINCT category
         FROM auction_items
@@ -3176,9 +3185,9 @@ def auctions():
 
     # 2. Read filters from query string
     selected_cat = request.args.get('category', 'all')
-    q           = request.args.get('q', '').strip()
+    q = request.args.get('q', '').strip()
 
-    # 3. Build SQL
+    # 3. Build SQL — order by end_time (DATETIME) if present, else auction_end (DATE)
     sql = """
         SELECT
             ai.*,
@@ -3204,18 +3213,33 @@ def auctions():
         like_q = f"%{q}%"
         params.extend([like_q, like_q])
 
-    sql += " ORDER BY ai.end_time ASC"
+    sql += " ORDER BY COALESCE(ai.end_time, ai.auction_end) ASC"
 
     cur.execute(sql, params)
     items = cur.fetchall()
-
     now = datetime.utcnow()
+
+    # Process items safely
     for item in items:
-        et = item['end_time']
-        if isinstance(et, str):
-            et = datetime.strptime(et, '%Y-%m-%d %H:%M:%S')
-        item['end_time_iso'] = et.isoformat()
-        item['is_open']      = (et > now)
+        et = item.get('end_time')
+
+        # If end_time is missing, try auction_end (DATE)
+        if not et and item.get('auction_end'):
+            if isinstance(item['auction_end'], datetime):
+                et = item['auction_end']
+            else:
+                try:
+                    et = datetime.strptime(str(item['auction_end']), "%Y-%m-%d")
+                except ValueError:
+                    et = None
+
+        # Final assignment (avoid isoformat on None)
+        if isinstance(et, datetime):
+            item['end_time_iso'] = et.isoformat()
+            item['is_open'] = (et > now)
+        else:
+            item['end_time_iso'] = None
+            item['is_open'] = False
 
     cur.close()
     cnx.close()
@@ -3228,6 +3252,7 @@ def auctions():
         q=q,
         current_year=now.year
     )
+
 
 
 
@@ -3350,17 +3375,21 @@ def auction_show(auction_id):
         bid_amount = request.form.get('bid_amount', type=float)
         bidder_id  = session.get('user_id')
         if not bidder_id:
-            flash("You must be logged in to bid", "warning")
-            cur.close()
-            cnx.close()
-            return redirect(url_for('sign_in'))
+            # Instead of flash(), stash it in session and redirect
+            session['post_login_message'] = "Please go ahead and place your bid now"
+            return redirect(url_for('login', next=request.url))
 
+
+        # Insert the bid
         cur.execute("""
-            INSERT INTO auction_bids (auction_item_id, bidder_id, bid_amount, bid_time)
+            INSERT INTO auction_bids
+              (auction_item_id, bidder_id, bid_amount, bid_time)
             VALUES (%s, %s, %s, UTC_TIMESTAMP())
         """, (auction_id, bidder_id, bid_amount))
         cnx.commit()
         flash("Your bid was placed!", "success")
+        cur.close()
+        cnx.close()
         return redirect(url_for('auction_show', auction_id=auction_id))
 
     # 3. Compute current bid & count
@@ -3388,15 +3417,16 @@ def auction_show(auction_id):
 
     # 5. Recent bids for initial page render
     cur.execute("""
-        SELECT b.bid_amount,
-               b.bid_time,
-               u.username,
-               DATE_FORMAT(b.bid_time, '%%Y-%%m-%%d %%H:%%i') AS bid_time_display
-          FROM auction_bids b
-          JOIN users u ON u.id = b.bidder_id
-         WHERE b.auction_item_id = %s
-         ORDER BY b.bid_time DESC
-         LIMIT 10
+        SELECT
+          b.bid_amount,
+          b.bid_time,
+          u.username,
+          DATE_FORMAT(b.bid_time, '%%Y-%%m-%%d %%H:%%i') AS bid_time_display
+        FROM auction_bids b
+        JOIN users u ON u.id = b.bidder_id
+       WHERE b.auction_item_id = %s
+       ORDER BY b.bid_time DESC
+       LIMIT 10
     """, (auction_id,))
     recent_bids = cur.fetchall()
 
@@ -3412,7 +3442,15 @@ def auction_show(auction_id):
 
     # 7. ISO timestamp for countdown
     end_time = item['end_time']
-    item['end_time_iso'] = end_time.isoformat() if isinstance(end_time, datetime) else ''
+    if isinstance(end_time, datetime):
+        item['end_time_iso'] = end_time.isoformat()
+    else:
+        # assume string
+        try:
+            dt = datetime.strptime(str(end_time), '%Y-%m-%d %H:%M:%S')
+            item['end_time_iso'] = dt.isoformat()
+        except:
+            item['end_time_iso'] = ''
 
     # 8. Determine if auction has ended
     now = datetime.utcnow()
@@ -3430,7 +3468,6 @@ def auction_show(auction_id):
         current_year=date.today().year,
         is_ended=is_ended
     )
-
 
 
 @app.route('/categories')
@@ -3511,10 +3548,10 @@ def sell():
 
             # 2) Dates & times
             start_date = datetime.strptime(
-                request.form['auction_date'], '%Y-%m-%d'
+                request.form['auction_start'], '%Y-%m-%d'
             ).date()
             end_date = datetime.strptime(
-                request.form['auction_end_date'], '%Y-%m-%d'
+                request.form['auction_end'], '%Y-%m-%d'
             ).date()
             start_time = datetime.strptime(
                 request.form['start_time'], '%H:%M'
@@ -3554,38 +3591,43 @@ def sell():
             # 4) Insert
             conn = get_db_connection()
             cur = conn.cursor()
+            # replace your current INSERT with this (minimal, backwards-compatible)
             cur.execute("""
                 INSERT INTO auction_items (
-                  user_id, title, description,
-                  image1, image2, image3, image4,
-                  starting_bid, reserve_price,
-                  auction_date, auction_end_date,
-                  start_time, end_time,
-                  status, paid_fee,
-                  category, item_condition
+                    user_id, title, description,
+                    image1, image2, image3, image4,
+                    starting_bid, reserve_price,
+                    auction_start, auction_end,  -- DATE columns
+                    start_time, end_time,        -- DATETIME columns
+                    status, paid_fee,
+                    category, item_condition
                 ) VALUES (
-                  %s, %s, %s,
-                  %s, %s, %s, %s,
-                  %s, %s,
-                  %s, %s,
-                  %s, %s,
-                  %s, %s,
-                  %s, %s
+                    %s, %s, %s,
+                    %s, %s, %s, %s,
+                    %s, %s,
+                    %s, %s,
+                    %s, %s,
+                    %s, %s,
+                    %s, %s
                 )
             """, (
                 session['user_id'], title, description,
-                image_paths[0], image_paths[1],
-                image_paths[2], image_paths[3],
+                image_paths[0], image_paths[1], image_paths[2], image_paths[3],
                 starting_bid, reserve_price,
-                start_date, end_date,
-                start_dt,    # full datetime now
-                end_dt,      # full datetime now
+                start_date, end_date,                  # DATE
+                start_dt, end_dt,                      # DATETIME
                 'pending', 0,
                 category, item_condition
             ))
+
+            # commit, then optional debug:
+            conn.commit()
+            print("[DEBUG] inserted id:", getattr(cur, 'lastrowid', None))
+
+
             conn.commit()
 
-            flash("Auction listing created successfully!", "success")
+            flash("Your item has been submitted and is pending approval.", "success")
             return redirect(url_for('auctions'))
 
         except Exception as e:
@@ -3815,7 +3857,7 @@ def auction_profile():
             ) AS winner_id
         FROM auction_items ai
         WHERE ai.user_id = %s
-        ORDER BY ai.auction_date DESC, ai.start_time DESC
+        ORDER BY ai.auction_start DESC, ai.start_time DESC
     """, (user_id,))
     listings = cur.fetchall()
 
@@ -3851,37 +3893,59 @@ def send_otp(to_email, code):
 @app.route("/signup_auction", methods=["GET", "POST"])
 def signup_auction():
     if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        email    = request.form.get("email", "").strip().lower()
-        password = request.form.get("password", "")
-        contact  = request.form.get("contact", "").strip()
-        name     = request.form.get("name", "").strip()
+        # collect form data
+        username         = request.form.get("username", "").strip()
+        name             = request.form.get("name", "").strip()
+        email            = request.form.get("email", "").strip().lower()
+        contact          = request.form.get("contact", "").strip()
+        location         = request.form.get("location", "").strip()
+        password         = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
 
-        # Validate presence
-        missing = [fld for fld, val in
-                   [("Username", username), ("Email", email),
-                    ("Password", password), ("Contact", contact),
-                    ("Name", name)] if not val]
+        # check required fields
+        missing = [
+            fld for fld, val in
+            [("Username", username), ("Full Name", name),
+             ("Email", email), ("Contact", contact),
+             ("Location", location),
+             ("Password", password), ("Confirm Password", confirm_password)]
+            if not val
+        ]
         if missing:
-            flash(f"Missing required field(s): {', '.join(missing)}", "danger")
-            return render_template("signup_auction.html",
-                                   username=username, email=email,
-                                   contact=contact, name=name)
+            flash(f"Missing field(s): {', '.join(missing)}", "danger")
+            return render_template("signup_auction.html")
 
-        # Hash the password before storing
+        # enforce password length
+        if len(password) < 10:
+            flash("Password must be at least 10 characters long.", "danger")
+            return render_template("signup_auction.html")
+
+        # confirm passwords match
+        if password != confirm_password:
+            flash("Passwords do not match.", "danger")
+            return render_template("signup_auction.html")
+
         pw_hash = generate_password_hash(password)
 
-        # Insert user & OTP logic
         try:
             conn = get_db_connection()
             cur  = conn.cursor()
+
+            # check for existing email
+            cur.execute("SELECT 1 FROM users WHERE email = %s LIMIT 1", (email,))
+            if cur.fetchone():
+                flash("An account with that email already exists.", "warning")
+                return render_template("signup_auction.html")
+
+            # insert user (note the added 'location' column)
             cur.execute("""
                 INSERT INTO users
-                  (username, email, password, contact, name, account_status, verified)
-                VALUES (%s,%s,%s,%s,%s,'pending',0)
-            """, (username, email, pw_hash, contact, name))
+                  (username, name, email, contact, location, password, account_status, verified)
+                VALUES (%s,%s,%s,%s,%s,%s,'pending',0)
+            """, (username, name, email, contact, location, pw_hash))
             user_id = cur.lastrowid
 
+            # create and send OTP
             code       = ''.join(random.choices(string.digits, k=6))
             expires_at = datetime.utcnow() + timedelta(minutes=15)
             cur.execute("""
@@ -3892,7 +3956,7 @@ def signup_auction():
             conn.commit()
             send_otp(email, code)
 
-            flash("A verification code has been sent to your e‑mail.", "info")
+            flash("A verification code has been sent to your e-mail.", "info")
             return redirect(url_for("verify_email", user_id=user_id))
 
         except Error as e:
@@ -3902,8 +3966,11 @@ def signup_auction():
             cur.close()
             conn.close()
 
+    # GET or on error
     return render_template("signup_auction.html")
 
+
+    
 # --- Verification route ---
 @app.route("/verify-email/<int:user_id>", methods=["GET", "POST"])
 def verify_email(user_id):

@@ -713,25 +713,20 @@
               <span class="currency-symbol">$</span>
             </div>
             
-            <div class="form-group">
-              <label for="auction_date">Auction Date <span>*</span></label>
-              <input id="auction_date" name="auction_date" type="date" required>
-              <div class="suggestions">
-                Suggested slots:
-                <span data-day-offset="2">This Tuesday</span>
-                <span data-day-offset="4">This Thursday</span>
-                <span data-day-offset="9">Next Tuesday</span>
-              </div>
-            </div>
+<div class="form-group">
+  <label for="auction_date">Auction Start Date <span>*</span></label>
+  <input id="auction_date" name="auction_start" type="date" required>
+  <div class="suggestions">
+    Suggested slots:
+    <span data-day-offset="2">This Tuesday</span>
+    <span data-day-offset="4">This Thursday</span>
+    <span data-day-offset="9">Next Tuesday</span>
+  </div>
+</div>
 
-
-            <div class="form-group">
+<div class="form-group">
   <label for="auction_end_date">Auction End Date <span>*</span></label>
-  <input
-    id="auction_end_date"
-    name="auction_end_date"
-    type="date"
-    required>
+  <input id="auction_end_date" name="auction_end" type="date" required>
 </div>
 
             <div class="form-group">
@@ -747,15 +742,61 @@
             <div class="form-group">
               <label for="category">Category <span>*</span></label>
               <select id="category" name="category" required>
-                <option value="">Select a category</option>
-                <option value="electronics">Electronics</option>
-                <option value="art">Art & Collectibles</option>
-                <option value="jewelry">Jewelry & Watches</option>
-                <option value="furniture">Home & Furniture</option>
-                <option value="vehicles">Vehicles</option>
-                <option value="clothing">Clothing & Accessories</option>
-                <option value="sports">Sports & Outdoors</option>
-                <option value="other">Other</option>
+<option value="">Select a category</option>
+
+<optgroup label="Electronics & Tech">
+    <option value="phones-tablets">Phones & Tablets</option>
+    <option value="computers-accessories">Computers & Accessories</option>
+    <option value="gaming">Gaming & Consoles</option>
+    <option value="audio-video">Audio, Video & Cameras</option>
+    <option value="home-appliances">Home Appliances</option>
+</optgroup>
+
+<optgroup label="Fashion & Accessories">
+    <option value="clothing">Clothing & Apparel</option>
+    <option value="shoes">Shoes</option>
+    <option value="bags">Bags & Luggage</option>
+    <option value="jewelry">Jewelry & Watches</option>
+    <option value="fashion-accessories">Fashion Accessories</option>
+</optgroup>
+
+<optgroup label="Vehicles & Transport">
+    <option value="cars">Cars</option>
+    <option value="motorcycles">Motorcycles & Scooters</option>
+    <option value="bicycles">Bicycles</option>
+    <option value="auto-parts">Auto Parts & Accessories</option>
+</optgroup>
+
+<optgroup label="Home, Garden & Living">
+    <option value="furniture">Furniture</option>
+    <option value="home-decor">Home Décor</option>
+    <option value="kitchen-dining">Kitchen & Dining</option>
+    <option value="garden-outdoor">Garden & Outdoor</option>
+</optgroup>
+
+<optgroup label="Collectibles & Hobbies">
+    <option value="art">Art & Collectibles</option>
+    <option value="antiques">Antiques</option>
+    <option value="musical-instruments">Musical Instruments</option>
+    <option value="books-media">Books, Movies & Music</option>
+    <option value="toys-games">Toys & Games</option>
+    <option value="memorabilia">Memorabilia</option>
+</optgroup>
+
+<optgroup label="Sports & Outdoors">
+    <option value="sports-equipment">Sports Equipment</option>
+    <option value="fitness">Fitness Equipment</option>
+    <option value="camping-hiking">Camping & Hiking</option>
+</optgroup>
+
+<optgroup label="Specialty & Other">
+    <option value="tickets-vouchers">Tickets & Vouchers</option>
+    <option value="pet-supplies">Pet Supplies</option>
+    <option value="industrial-tools">Industrial Tools & Machinery</option>
+    <option value="services">Services</option>
+    <option value="other">Other</option>
+</optgroup>
+
               </select>
             </div>
             
@@ -919,7 +960,7 @@
   <script>
 document.addEventListener('DOMContentLoaded', () => {
   const startDateInput = document.getElementById('auction_date');
-  const endDateInput   = document.getElementById('auction_end_date');
+  const endDateInput = document.getElementById('auction_end_date');
 
   // Initialize min/max on load
   const today = new Date();

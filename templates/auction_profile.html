@@ -780,7 +780,7 @@
             <div class="card-details">
               <div class="detail-item">
                 <div class="detail-label">Date</div>
-                <div class="detail-value">{{ it.auction_date.strftime('%Y-%m-%d') }}</div>
+                <div class="detail-value">{{ it.auction_start.strftime('%Y-%m-%d') }}</div>
               </div>
               
               <div class="detail-item">
@@ -876,7 +876,7 @@
                     {{ it.status|capitalize }}
                   </span>
                 </td>
-                <td>{{ it.auction_date.strftime('%Y-%m-%d') }}</td>
+                <td>{{ it.auction_start.strftime('%Y-%m-%d') }}</td>
                 <td>{{ it.end_time.strftime('%H:%M') }}</td>
                 <td>
                   {% if it.status == 'closed' and it.winner_username %}

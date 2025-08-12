@@ -1,59 +1,555 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sign Up for Auctions | SwapHub</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - AuctionHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, sans-serif; background: #f3f5f7; }
-    .container { max-width: 400px; margin: 80px auto; background: #fff;
-      padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);}
-    h2 { text-align:center; margin-bottom:20px; color:#2f855a; }
-    .flash { margin-bottom:15px; padding:10px; border-radius:4px; }
-    .flash.success { background:#c6f6d5; color:#2f855a;}
-    .flash.info    { background:#bee3f8; color:#2b6cb0;}
-    .flash.warning { background:#faf089; color:#975a16;}
-    .flash.danger  { background:#fed7d7; color:#9b2c2c;}
-    label { display:block; margin-bottom:5px; font-weight:bold; }
-    input { width:100%; padding:10px; margin-bottom:15px;
-      border:1px solid #cbd5e0; border-radius:4px; }
-    input:focus { border-color:#48bb78; outline:none; box-shadow:0 0 0 2px rgba(72,184,120,0.3); }
-    button { width:100%; padding:12px; background:#48bb78; color:#fff;
-      border:none; border-radius:4px; font-size:1em; cursor:pointer; }
-    button:hover { background:#38a169; }
-    .footer { margin-top:15px; text-align:center; font-size:0.9em; }
-    .footer a { color:#48bb78; text-decoration:none; }
-    .footer a:hover { text-decoration:underline; }
+    :root {
+      --bg-start: #e0fdf4;
+      --bg-end: #ffffff;
+      --accent: #10b981;
+      --accent-dark: #059669;
+      --text: #064e3b;
+      --text-light: #6b7280;
+      --success: #10b981;
+      --info: #3b82f6;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+      color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 500px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    }
+    
+    .header {
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: white;
+      padding: 25px;
+      text-align: center;
+    }
+    
+    .header h2 {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+    
+    .login-box {
+      padding: 30px;
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    
+    .input-group {
+      position: relative;
+    }
+    
+    input {
+      width: 100%;
+      padding: 16px 16px 16px 48px;
+      border: 2px solid #d1fae5;
+      border-radius: 8px;
+      background: #f0fdf4;
+      color: var(--text);
+      font-size: 1rem;
+      transition: all .3s;
+    }
+    
+    input:focus {
+      border-color: var(--accent);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+      outline: none;
+    }
+    
+    .input-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--accent);
+      font-size: 1.2rem;
+    }
+    
+    .show-password,
+    .btn-primary,
+    .link {
+      grid-column: 1 / -1;
+    }
+    
+    .show-password {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-light);
+      font-size: 0.95rem;
+    }
+    
+    .btn-primary {
+      padding: 16px;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all .3s;
+      position: relative;
+      box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .btn-primary:hover {
+      background: var(--accent-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+    }
+    
+    .btn-primary:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .link {
+      text-align: center;
+      font-size: 1rem;
+      margin-top: 20px;
+    }
+    
+    .link a {
+      color: var(--text-light);
+      text-decoration: none;
+      transition: color .3s;
+      position: relative;
+      padding-bottom: 2px;
+    }
+    
+    .link a:hover {
+      color: var(--accent);
+    }
+    
+    .link a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 2px;
+      width: 0;
+      background: var(--accent);
+      transition: width .3s;
+    }
+    
+    .link a:hover::after {
+      width: 100%;
+    }
+    
+    /* Location input specific styles */
+    .location-input-group {
+      position: relative;
+      grid-column: 1 / -1;
+      margin-top: 10px;
+    }
+    
+    .location-input-group input {
+      padding-right: 50px;
+    }
+    
+    .location-button {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      padding: 5px;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .location-button:hover {
+      background: rgba(16, 185, 129, 0.1);
+    }
+    
+    .location-button:active {
+      transform: translateY(-50%) scale(0.95);
+    }
+    
+    .location-instruction {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      margin-top: 5px;
+      margin-left: 10px;
+    }
+    
+    .location-example {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      margin-top: 5px;
+      margin-left: 10px;
+    }
+    
+    .location-example i {
+      color: var(--accent);
+      margin-right: 5px;
+    }
+    
+    .flash {
+      margin-bottom: 20px;
+      padding: 15px 20px;
+      border-radius: 8px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: fadeIn 0.5s ease;
+      border-left: 4px solid;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .flash.success {
+      background: rgba(209, 250, 229, 0.7);
+      color: var(--success);
+      border-left-color: var(--success);
+    }
+    
+    .flash.info {
+      background: rgba(191, 219, 254, 0.7);
+      color: var(--info);
+      border-left-color: var(--info);
+    }
+    
+    .flash.warning {
+      background: rgba(254, 243, 199, 0.7);
+      color: var(--warning);
+      border-left-color: var(--warning);
+    }
+    
+    .flash.danger {
+      background: rgba(254, 226, 226, 0.7);
+      color: var(--danger);
+      border-left-color: var(--danger);
+    }
+    
+    .privacy-note {
+      background: rgba(191, 219, 254, 0.2);
+      border-left: 4px solid var(--info);
+      padding: 12px;
+      border-radius: 0 8px 8px 0;
+      margin-top: 15px;
+      font-size: 0.85rem;
+      grid-column: 1 / -1;
+    }
+    
+    .privacy-note p {
+      margin-bottom: 5px;
+    }
+    
+    .privacy-note i {
+      color: var(--info);
+      margin-right: 8px;
+    }
+    
+    /* Responsive styles */
+    @media (max-width: 480px) {
+      .login-box {
+        padding: 20px 15px;
+      }
+      
+      .header {
+        padding: 20px 15px;
+      }
+      
+      .header h2 {
+        font-size: 1.6rem;
+      }
+      
+      input {
+        padding: 14px 14px 14px 42px;
+      }
+      
+      .input-icon {
+        font-size: 1.1rem;
+        left: 14px;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Create Your Auction Account</h2>
+    <div class="header">
+      <h2>Create Your AuctionHub Account</h2>
+      <p>Join thousands of buyers and sellers in Ghana's premier auction platform</p>
+    </div>
+    
+    <div class="login-box">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for cat, msg in messages %}
+            <div class="flash {{ cat }}">
+              {% if cat == 'success' %}
+                <i class="fas fa-check-circle"></i>
+              {% elif cat == 'info' %}
+                <i class="fas fa-info-circle"></i>
+              {% elif cat == 'warning' %}
+                <i class="fas fa-exclamation-triangle"></i>
+              {% else %}
+                <i class="fas fa-exclamation-circle"></i>
+              {% endif %}
+              {{ msg }}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
 
-
-    <form id="signupForm" action="{{ url_for('signup_auction') }}" method="POST">
-      <label for="username">Username</label>
-      <input type="text" id="username" name="username" required/>
-
-      <label for="email">Email Address</label>
-      <input type="email" id="email" name="email" required/>
-
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" required minlength="6"/>
-
-      <label for="contact">Phone Number</label>
-      <input type="text" id="contact" name="contact" required />
-
-      <label for="name">Full Name</label>
-      <input type="text" id="name" name="name" required />
-
-      <button type="submit">Sign Up</button>
-    </form>
-
-    <div class="footer">
-      Already have an account? <a href="{{ url_for('sign_in') }}">Log in here</a>.
+      <form action="{{ url_for('signup_auction') }}" method="post" id="signupForm">
+        <div class="form-grid">
+          <div class="input-group">
+            <i class="fas fa-user input-icon"></i>
+            <input type="text" name="username" placeholder="Username" required value="{{ request.form.username if request.form }}">
+          </div>
+          
+          <div class="input-group">
+            <i class="fas fa-id-card input-icon"></i>
+            <input type="text" name="name" placeholder="Full Name" required value="{{ request.form.name if request.form }}">
+          </div>
+          
+          <div class="input-group">
+            <i class="fas fa-envelope input-icon"></i>
+            <input type="email" name="email" placeholder="Email Address" required value="{{ request.form.email if request.form }}">
+          </div>
+          
+          <div class="input-group">
+            <i class="fas fa-phone input-icon"></i>
+            <input type="text" name="contact" placeholder="Phone / Contact" required value="{{ request.form.contact if request.form }}">
+          </div>
+          
+          <!-- Location Field -->
+          <div class="location-input-group">
+            <div class="input-group">
+              <i class="fas fa-map-marker-alt input-icon"></i>
+              <input type="text" id="location" name="location" placeholder="Enter your location" required value="{{ request.form.location if request.form }}">
+              <button type="button" onclick="getUserLocation()" id="locate-btn" class="location-button">
+                <span id="locate-icon"><i class="fas fa-crosshairs"></i></span>
+              </button>
+            </div>
+            <div class="location-instruction">Click the <i class="fas fa-crosshairs"></i> icon to detect your location automatically</div>
+            <div class="location-example"><i class="fas fa-info-circle"></i> Example: Adenta, Greater Accra or Kumasi, Ashanti Region</div>
+          </div>
+          
+          <div class="input-group">
+            <i class="fas fa-lock input-icon"></i>
+            <input type="password" id="password" name="password" placeholder="Password (min 10 chars)" required minlength="10">
+          </div>
+          
+          <div class="input-group">
+            <i class="fas fa-lock input-icon"></i>
+            <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm Password" required minlength="10">
+          </div>
+          
+          <div class="show-password">
+            <input type="checkbox" id="togglePassword">
+            <label for="togglePassword">Show Passwords</label>
+          </div>
+          
+          <div class="privacy-note">
+            <p><i class="fas fa-shield-alt"></i> Your location is only used to show nearby auctions and will never be shared without your permission.</p>
+          </div>
+          
+          <button type="submit" class="btn-primary" id="submitBtn">
+            <i class="fas fa-user-plus"></i> Create Account
+          </button>
+        </div>
+      </form>
+      
+      <div class="link">
+        <a href="{{ url_for('sign_in') }}">
+          <i class="fas fa-sign-in-alt"></i> Already have an account? Sign In
+        </a>
+      </div>
     </div>
   </div>
+
+  <script>
+    // Password toggle functionality
+    const toggle = document.getElementById('togglePassword');
+    const pwd = document.getElementById('password');
+    const cpwd = document.getElementById('confirm_password');
+    
+    toggle.addEventListener('change', () => {
+      const t = toggle.checked ? 'text' : 'password';
+      pwd.type = t;
+      cpwd.type = t;
+    });
+    
+    // Form validation
+    document.getElementById('signupForm').addEventListener('submit', function(e) {
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
+    });
+    
+    // Get user location with real geolocation API
+    function getUserLocation() {
+      const iconSpan = document.getElementById("locate-icon");
+      const originalIcon = iconSpan.innerHTML;
+      iconSpan.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      
+      if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        iconSpan.innerHTML = originalIcon;
+        return;
+      }
+      
+      // Get current position
+      navigator.geolocation.getCurrentPosition(
+        // Success callback
+        position => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          
+          // Use OpenStreetMap Nominatim for reverse geocoding
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=16`)
+            .then(response => response.json())
+            .then(data => {
+              const address = data.address;
+              let locationStr = '';
+              
+              // Prefer town, then city, then village, etc.
+              if (address.town) locationStr += address.town;
+              else if (address.city) locationStr += address.city;
+              else if (address.village) locationStr += address.village;
+              else if (address.suburb) locationStr += address.suburb;
+              
+              // Add region if available
+              if (address.state) {
+                if (locationStr) locationStr += ', ';
+                locationStr += address.state;
+              }
+              
+              if (!locationStr) {
+                throw new Error("Could not determine location name");
+              }
+              
+              document.getElementById('location').value = locationStr;
+              iconSpan.innerHTML = originalIcon;
+              
+              // Show success notification
+              showFlashNotification(`Location detected: ${locationStr}`, 'success');
+            })
+            .catch(error => {
+              console.error('Reverse geocoding error:', error);
+              alert("Could not retrieve location name. Please enter manually.");
+              iconSpan.innerHTML = originalIcon;
+            });
+        },
+        // Error callback
+        error => {
+          console.error('Geolocation error:', error);
+          let errorMessage = "Could not get your location.";
+          
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = "Location permission denied. Please allow location access in your browser settings.";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = "Location information is unavailable. Please try again later.";
+              break;
+            case error.TIMEOUT:
+              errorMessage = "The request to get location timed out. Please try again.";
+              break;
+          }
+          
+          alert(errorMessage);
+          iconSpan.innerHTML = originalIcon;
+        },
+        // Options
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    }
+    
+    // Show flash notification (for UI feedback)
+    function showFlashNotification(message, type) {
+      // Remove any existing notifications
+      const existingFlash = document.querySelector('.flash');
+      if (existingFlash) existingFlash.remove();
+      
+      // Create new notification
+      const flash = document.createElement('div');
+      flash.className = `flash ${type}`;
+      
+      // Add icon based on type
+      let icon = '';
+      if (type === 'success') icon = '<i class="fas fa-check-circle"></i>';
+      else if (type === 'info') icon = '<i class="fas fa-info-circle"></i>';
+      else if (type === 'warning') icon = '<i class="fas fa-exclamation-triangle"></i>';
+      else icon = '<i class="fas fa-exclamation-circle"></i>';
+      
+      flash.innerHTML = `${icon} ${message}`;
+      
+      // Add to form
+      const formGrid = document.querySelector('.form-grid');
+      formGrid.insertBefore(flash, formGrid.firstChild);
+      
+      // Auto remove after 5 seconds
+      setTimeout(() => {
+        flash.style.opacity = 0;
+        setTimeout(() => flash.remove(), 300);
+      }, 5000);
+    }
+  </script>
 </body>
 </html>
