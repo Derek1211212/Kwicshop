@@ -3174,22 +3174,21 @@ def auctions():
     cnx = get_db_connection()
     cur = cnx.cursor(dictionary=True)
 
-    # 1. Distinct categories
+    # 1. Distinct categories (only from live items for menu)
     cur.execute("""
         SELECT DISTINCT category
         FROM auction_items
-        WHERE status = 'live'
-          AND category IS NOT NULL
+        WHERE category IS NOT NULL
           AND category <> ''
         ORDER BY category
     """)
     categories = [row['category'] for row in cur.fetchall()]
 
-    # 2. Read filters from query string
+    # 2. Read filters
     selected_cat = request.args.get('category', 'all')
     q = request.args.get('q', '').strip()
 
-    # 3. Build SQL — order by end_time (DATETIME) if present, else auction_end (DATE)
+    # 3. Build SQL — include both live & closed, sort with CASE
     sql = """
         SELECT
             ai.*,
@@ -3202,7 +3201,7 @@ def auctions():
                 WHERE b.auction_item_id = ai.id
             ) AS bid_count
         FROM auction_items ai
-        WHERE ai.status = 'live'
+        WHERE 1=1
     """
     params = []
 
@@ -3215,7 +3214,12 @@ def auctions():
         like_q = f"%{q}%"
         params.extend([like_q, like_q])
 
-    sql += " ORDER BY COALESCE(ai.end_time, ai.auction_end) ASC"
+    # Sorting: live first, then closed, each sorted by created_at DESC
+    sql += """
+        ORDER BY 
+            CASE WHEN ai.status = 'live' THEN 0 ELSE 1 END,
+            ai.created_at DESC
+    """
 
     cur.execute(sql, params)
     items = cur.fetchall()
@@ -3225,7 +3229,6 @@ def auctions():
     for item in items:
         et = item.get('end_time')
 
-        # If end_time is missing, try auction_end (DATE)
         if not et and item.get('auction_end'):
             if isinstance(item['auction_end'], datetime):
                 et = item['auction_end']
@@ -3235,7 +3238,6 @@ def auctions():
                 except ValueError:
                     et = None
 
-        # Final assignment (avoid isoformat on None)
         if isinstance(et, datetime):
             item['end_time_iso'] = et.isoformat()
             item['is_open'] = (et > now)
@@ -3254,6 +3256,7 @@ def auctions():
         q=q,
         current_year=now.year
     )
+
 
 
 

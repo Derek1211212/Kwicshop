@@ -1791,8 +1791,14 @@ body .mobile-bottom-nav {
 <div class="mobile-bottom-nav">
   <div class="nav-items">
       <a href="/auctions" class="nav-item">
-        <i class="fas fa-exchange-alt nav-icon"></i>
-        <span class="nav-label">Auctions</span>
+      
+        <span class="nav-label" style="display: flex; flex-direction: column; align-items: center; font-size: 0.85rem;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+    <path d="M1 21h22v2H1v-2zm4.24-3.54l1.42-1.42L5.1 14.5l4.95-4.95 1.41 1.41-4.95 4.95 1.41 1.41 4.95-4.95 1.41 1.41L8.93 20.4l-1.42-1.42zm11.31-11.32l1.41 1.42-4.95 4.95-1.41-1.41 4.95-4.96zm3.54-3.54l2.12 2.12-4.95 4.95-2.12-2.12 4.95-4.95z"/>
+  </svg>
+  <span>Auctions</span>
+</span>
+
       </a>
     {% if session.get('user_id') %}
 
