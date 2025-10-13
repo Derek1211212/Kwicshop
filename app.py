@@ -2247,115 +2247,160 @@ def submit_review(listing_id):
 
 
 # Configure Flask-Mail (add to config)
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'blaqprophet112@gmail.com'
-app.config['MAIL_PASSWORD'] = 'zwce pmol jnvm vbtz'
-app.config['SECRET_KEY'] = 'fa470fe714e44404511cbad16224f52777068d05bb5c29ed'
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True').lower() in ('1','true','yes')
+app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL', 'False').lower() in ('1','true','yes')
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 mail = Mail(app)
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
+def _send_async_email(app, msg):
+    """Background worker for sending email — logs exceptions."""
+    try:
+        with app.app_context():
+            mail.send(msg)
+            logging.info("Email sent to %s", getattr(msg, "recipients", None))
+    except Exception:
+        logging.exception("Background email send failed")
+
+def send_email_background(subject, sender, recipients, body):
+    """Prepare Message and send in a background thread (fire-and-forget)."""
+    msg = Message(subject=subject, sender=sender, recipients=recipients)
+    msg.body = body
+    thread = threading.Thread(target=_send_async_email, args=(app, msg), daemon=True)
+    thread.start()
+    return thread
+
+# -------------------------
+# Routes: forgot & reset password
+# -------------------------
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
-        email = request.form['email']
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        
-        # Check if email exists
-        cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
-        user = cursor.fetchone()
-        
-        if user:
-            # Generate token
+        email = request.form.get('email', '').strip().lower()
+        conn = None
+        cursor = None
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+
+            cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
+            user = cursor.fetchone()
+
+            if not user:
+                flash('No account found with that email address.', 'danger')
+                return redirect(url_for('forgot_password'))
+
+            # Generate token and store in DB
             token = secrets.token_urlsafe(32)
-            expires_at = datetime.now() + timedelta(hours=1)
-            
-            # Store token in database
-            cursor.execute("""
-                INSERT INTO password_reset_tokens (user_id, token, expires_at)
-                VALUES (%s, %s, %s)
-            """, (user['id'], token, expires_at))
+            expires_at = datetime.utcnow() + timedelta(hours=1)
+
+            cursor.execute(
+                "INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (%s, %s, %s)",
+                (user['id'], token, expires_at)
+            )
             conn.commit()
-            
-            # Send email
+
+            # Build reset URL
             reset_url = url_for('reset_password', token=token, _external=True)
-            msg = Message('Password Reset Request',
-                          sender='blaqprophet112@gmail.com',
-                          recipients=[email])
-            msg.body = f'''To reset your password, visit the following link:
+            body = f"""To reset your password, visit the following link:
 {reset_url}
 
-This link will expire in 1 hour.'''
-            mail.send(msg)
-            
-            flash('Password reset email sent! Check your inbox.', 'success')
-        else:
-            flash('No account found with that email address.', 'danger')
-        
-        cursor.close()
-        conn.close()
-        return redirect(url_for('forgot_password'))
-    
+This link will expire in 1 hour.
+If you did not request a password reset, ignore this email.
+"""
+
+            # Validate mail config before trying to send
+            if not app.config['MAIL_USERNAME'] or not app.config['MAIL_PASSWORD']:
+                logging.error("Mail credentials missing in environment variables.")
+                flash('Email service not configured. Contact admin.', 'danger')
+                return redirect(url_for('forgot_password'))
+
+            # Send in background; we do not block the request
+            try:
+                send_email_background(
+                    subject='Password Reset Request',
+                    sender=app.config['MAIL_USERNAME'],
+                    recipients=[email],
+                    body=body
+                )
+                flash('Password reset email queued. Check your inbox.', 'success')
+            except Exception:
+                logging.exception("Failed to queue background email.")
+                flash('Could not send reset email at this time. Try again later.', 'danger')
+
+            return redirect(url_for('forgot_password'))
+
+        except Exception:
+            if conn:
+                conn.rollback()
+            logging.exception("Error in forgot_password")
+            flash('An error occurred. Please try again later.', 'danger')
+            return redirect(url_for('forgot_password'))
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
     return render_template('forgot_password.html')
+
 
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    
+    conn = None
+    cursor = None
     try:
-        # Verify token
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Fetch a valid, unexpired token
         cursor.execute("""
-            SELECT * FROM password_reset_tokens 
-            WHERE token = %s AND expires_at > NOW()
+            SELECT * FROM password_reset_tokens
+            WHERE token = %s AND expires_at > UTC_TIMESTAMP()
         """, (token,))
         token_record = cursor.fetchone()
-        
+
         if not token_record:
             flash('Invalid or expired token.', 'danger')
             return redirect(url_for('forgot_password'))
-        
+
         if request.method == 'POST':
-            new_password = request.form['password']
-            confirm_password = request.form['confirm_password']
-            
+            new_password = request.form.get('password', '')
+            confirm_password = request.form.get('confirm_password', '')
+
             if new_password != confirm_password:
                 flash('Passwords do not match.', 'danger')
                 return redirect(request.url)
-            
-            # Hash new password (using your existing password hashing method)
-            hashed_password = generate_password_hash(new_password)
-            
-            # Update password
-            cursor.execute("""
-                UPDATE users 
-                SET password = %s 
-                WHERE id = %s
-            """, (hashed_password, token_record['user_id']))
-            
-            # Delete used token
-            cursor.execute("""
-                DELETE FROM password_reset_tokens 
-                WHERE token = %s
-            """, (token,))
-            
-            conn.commit()
-            flash('Password updated successfully! You can now login.', 'success')
-            return redirect(url_for('login'))
-        
-    except Exception as e:
-        conn.rollback()
-        logging.error("Password reset error: %s", e)
-        flash('Error resetting password. Please try again.', 'danger')
-    finally:
-        cursor.close()
-        conn.close()
-    
-    return render_template('reset_password.html', token=token)
 
+            hashed_password = generate_password_hash(new_password)
+
+            cursor.execute("UPDATE users SET password = %s WHERE id = %s",
+                           (hashed_password, token_record['user_id']))
+            cursor.execute("DELETE FROM password_reset_tokens WHERE token = %s", (token,))
+            conn.commit()
+
+            flash('Password updated successfully! You can now log in.', 'success')
+            return redirect(url_for('login'))
+
+        # GET -> show reset form
+        return render_template('reset_password.html', token=token)
+
+    except Exception:
+        if conn:
+            conn.rollback()
+        logging.exception("Error in reset_password")
+        flash('Error resetting password. Please try again.', 'danger')
+        return redirect(url_for('forgot_password'))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 
