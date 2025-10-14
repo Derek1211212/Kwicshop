@@ -4,6 +4,12 @@ flask.Markup = markupsafe.Markup
 
 # Now import the rest of your modules
 import os
+import threading
+import logging
+from mailersend import Email  # Correct import for v2.0.0 SDK
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 from dotenv import load_dotenv
 from flask import Flask, render_template, url_for, abort, request, session, redirect, flash, jsonify, current_app
@@ -19,7 +25,7 @@ import requests
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 from notifications import send_push
@@ -36,6 +42,8 @@ from datetime import datetime, date
 from mysql.connector import connect, Error
 import string
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+
+
 
 
 
@@ -62,6 +70,15 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__, template_folder=os.path.join(BASE_DIR, 'templates'))
 
 app.config['SECRET_KEY'] = 'fa470fe714e44404511cbad16224f52777068d05bb5c29ed'
+app.config['SMTP_SERVER'] = os.getenv('SMTP_SERVER', 'in-v3.mailjet.com')
+app.config['SMTP_PORT'] = int(os.getenv('SMTP_PORT', 587))
+app.config['SMTP_USERNAME'] = os.getenv('SMTP_USERNAME', '')
+app.config['SMTP_PASSWORD'] = os.getenv('SMTP_PASSWORD', '')
+app.config['FROM_EMAIL'] = os.getenv('FROM_EMAIL', '')
+
+
+serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+
 
 app.config.from_pyfile('config.py')
 
@@ -2245,39 +2262,60 @@ def submit_review(listing_id):
 
 
 
-
-# Configure Flask-Mail (add to config)
-app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
-app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
-app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True').lower() in ('1','true','yes')
-app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL', 'False').lower() in ('1','true','yes')
-app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-
-mail = Mail(app)
-serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
-
-def _send_async_email(app, msg):
-    """Background worker for sending email — logs exceptions."""
+def _send_async_email(to_email, subject, body):
+    """Background worker for sending email via Mailjet SMTP."""
     try:
-        with app.app_context():
-            mail.send(msg)
-            logging.info("Email sent to %s", getattr(msg, "recipients", None))
-    except Exception:
-        logging.exception("Background email send failed")
+        # Create MIME message
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = app.config['FROM_EMAIL']
+        msg['To'] = to_email
+
+        # Extract reset URL for HTML
+        reset_url = body.split('link:\n')[1].split('\n')[0] if 'link:\n' in body else body
+
+        # Plain text part
+        text_part = MIMEText(body, 'plain')
+
+        # HTML part for better deliverability
+        html_body = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <p>Hi,</p>
+            <p>Click below to reset your password:</p>
+            <a href="{reset_url}" style="display: inline-block; padding: 10px 20px; color: #fff; background-color: #007bff; text-decoration: none; border-radius: 5px;">Reset Password</a>
+            <p style="margin-top: 20px;">This link expires in 1 hour.</p>
+            <p>If you did not request this, ignore this email.</p>
+        </body>
+        </html>
+        """
+        html_part = MIMEText(html_body, 'html')
+
+        # Attach parts
+        msg.attach(text_part)
+        msg.attach(html_part)
+
+        # Connect to Mailjet SMTP server
+        with smtplib.SMTP(app.config['SMTP_SERVER'], app.config['SMTP_PORT']) as server:
+            server.starttls()  # Enable TLS for Mailjet
+            server.login(app.config['SMTP_USERNAME'], app.config['SMTP_PASSWORD'])
+            server.send_message(msg)
+            logging.info(f"Email sent to {to_email} via Mailjet SMTP")
+    except smtplib.SMTPDataError as e:
+        logging.exception(f"Mailjet SMTP email send failed: Code {e.smtp_code}, Message {e.smtp_error.decode()}")
+    except Exception as e:
+        logging.exception(f"Mailjet SMTP email send failed: {e}")
 
 def send_email_background(subject, sender, recipients, body):
-    """Prepare Message and send in a background thread (fire-and-forget)."""
-    msg = Message(subject=subject, sender=sender, recipients=recipients)
-    msg.body = body
-    thread = threading.Thread(target=_send_async_email, args=(app, msg), daemon=True)
+    """Prepare message and send in a background thread (fire-and-forget)."""
+    email = recipients[0] if recipients else None
+    if not email:
+        logging.error("No recipient provided for email.")
+        return None
+    thread = threading.Thread(target=_send_async_email, args=(email, subject, body), daemon=True)
     thread.start()
     return thread
 
-# -------------------------
-# Routes: forgot & reset password
-# -------------------------
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
@@ -2285,7 +2323,7 @@ def forgot_password():
         conn = None
         cursor = None
         try:
-            conn = get_db_connection()
+            conn = get_db_connection()  # Assumes this is defined elsewhere
             cursor = conn.cursor(dictionary=True)
 
             cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
@@ -2297,7 +2335,7 @@ def forgot_password():
 
             # Generate token and store in DB
             token = secrets.token_urlsafe(32)
-            expires_at = datetime.utcnow() + timedelta(hours=1)
+            expires_at = datetime.now(UTC) + timedelta(hours=1)
 
             cursor.execute(
                 "INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (%s, %s, %s)",
@@ -2314,23 +2352,27 @@ This link will expire in 1 hour.
 If you did not request a password reset, ignore this email.
 """
 
-            # Validate mail config before trying to send
-            if not app.config['MAIL_USERNAME'] or not app.config['MAIL_PASSWORD']:
-                logging.error("Mail credentials missing in environment variables.")
+            # Validate Mailjet config
+            if not all([
+                app.config['SMTP_USERNAME'],
+                app.config['SMTP_PASSWORD'],
+                app.config['FROM_EMAIL']
+            ]):
+                logging.error("Mailjet SMTP credentials or sender email missing.")
                 flash('Email service not configured. Contact admin.', 'danger')
                 return redirect(url_for('forgot_password'))
 
-            # Send in background; we do not block the request
+            # Send in background
             try:
                 send_email_background(
                     subject='Password Reset Request',
-                    sender=app.config['MAIL_USERNAME'],
+                    sender=app.config['FROM_EMAIL'],
                     recipients=[email],
                     body=body
                 )
                 flash('Password reset email queued. Check your inbox.', 'success')
-            except Exception:
-                logging.exception("Failed to queue background email.")
+            except Exception as e:
+                logging.exception(f"Failed to queue email: {e}")
                 flash('Could not send reset email at this time. Try again later.', 'danger')
 
             return redirect(url_for('forgot_password'))
@@ -2349,7 +2391,6 @@ If you did not request a password reset, ignore this email.
 
     return render_template('forgot_password.html')
 
-
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     conn = None
@@ -2358,11 +2399,10 @@ def reset_password(token):
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Fetch a valid, unexpired token
         cursor.execute("""
             SELECT * FROM password_reset_tokens
-            WHERE token = %s AND expires_at > UTC_TIMESTAMP()
-        """, (token,))
+            WHERE token = %s AND expires_at > %s
+        """, (token, datetime.now(UTC)))
         token_record = cursor.fetchone()
 
         if not token_record:
@@ -2387,7 +2427,6 @@ def reset_password(token):
             flash('Password updated successfully! You can now log in.', 'success')
             return redirect(url_for('login'))
 
-        # GET -> show reset form
         return render_template('reset_password.html', token=token)
 
     except Exception:
@@ -2402,6 +2441,8 @@ def reset_password(token):
         if conn:
             conn.close()
 
+
+            
 
 
 def flush_impressions():
