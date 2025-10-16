@@ -2343,6 +2343,7 @@ def forgot_password():
             )
             conn.commit()
 
+
             # Build reset URL
             reset_url = url_for('reset_password', token=token, _external=True)
             body = f"""To reset your password, visit the following link:
