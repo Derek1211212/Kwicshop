@@ -280,334 +280,20 @@ scheduler.start()
 # 3) The home route
 @app.route('/')
 def home():
-    # --- Read incoming params ---
-    search = request.args.get('search', '').strip()
+    # Read search & pagination params
+    search            = request.args.get('search', '').strip()
     selected_category = request.args.get('category', 'All')
-    deal_type_filter = request.args.get('deal_type', 'All')
-    location_q = request.args.get('location', '').strip()
-    page = request.args.get('page', 1, type=int)
-    per_page = 50
-    offset = (page - 1) * per_page
+    deal_type_filter  = request.args.get('deal_type', 'All')
+    location_q        = request.args.get('location', '').strip()
+    page              = request.args.get('page', 1, type=int)
+    per_page          = 1000
+    offset            = (page - 1) * per_page
 
-    user_logged_in = 'user_id' in session
-    user_id = session.get('user_id')
-
-    # --- Cache keys ---
-    key_suffix = f"{search}:{selected_category}:{deal_type_filter}:{location_q}:{page}"
-    cache_key_full = f"grid:public:full:{key_suffix}"
-    cache_key_light = f"grid:public:light:{key_suffix}"
-    cache_key_carousel = "carousel:latest"
-    cache_key_cnt = f"cnt:public:{search}:{selected_category}:{deal_type_filter}"
-
-    # --- Try caches (defensive) ---
-    try:
-        full_listings = cache.get(cache_key_full)
-    except Exception:
-        full_listings = None
-    try:
-        carousel_listings = cache.get(cache_key_carousel)
-    except Exception:
-        carousel_listings = None
-    try:
-        total_listings = cache.get(cache_key_cnt)
-    except Exception:
-        total_listings = None
-
-    if carousel_listings is None:
-        carousel_listings = []
-
-    # 1) FULL cached path
-    if full_listings is not None and total_listings is not None:
-        total_pages = (total_listings + per_page - 1) // per_page
-        featured = full_listings[0] if full_listings else None
-        return render_template(
-            'home.html',
-            carousel_listings=carousel_listings or [],
-            listings=full_listings,
-            featured_listing=featured,
-            search=search,
-            selected_category=selected_category,
-            deal_type_filter=deal_type_filter,
-            location=location_q,
-            user_logged_in=user_logged_in,
-            user_subscribed=False,
-            vapid_public_key=app.config.get('VAPID_PUBLIC_KEY', ''),
-            page=page,
-            total_pages=total_pages,
-            listings_mode='full'
-        )
-
-    # 2) LIGHT cache path (ensure carousel) - add cheap carousel fill if needed
-    try:
-        light_listings = cache.get(cache_key_light)
-    except Exception:
-        light_listings = None
-
-    if light_listings is not None and total_listings is not None:
-        # Ensure carousel exists (cheap fill)
-        if not carousel_listings:
-            try:
-                conn_tmp = get_db_connection()
-                cur_tmp = conn_tmp.cursor(dictionary=True)
-                cur_tmp.execute("""
-                    SELECT listing_id, image1, title, `Plan`
-                    FROM listings
-                    ORDER BY created_at DESC
-                    LIMIT 8
-                """)
-                raw_carousel = cur_tmp.fetchall() or []
-                base_img = url_for('static', filename='images/', _external=True)
-                carousel_pop = []
-                for rec in raw_carousel:
-                    carousel_pop.append({
-                        'listing_id': rec.get('listing_id'),
-                        'title': rec.get('title') or '',
-                        'image1': rec.get('image1') or None,
-                        'banner_image': base_img + (rec.get('image1') or 'placeholder.jpg'),
-                        'Plan': rec.get('Plan') or 'Free'
-                    })
-                try:
-                    cache.set(cache_key_carousel, carousel_pop, timeout=60)
-                except Exception:
-                    logging.debug("Failed to set carousel cache (non-fatal)", exc_info=True)
-                carousel_listings = carousel_pop
-            except Exception:
-                logging.debug("Carousel cheap populate failed (non-fatal)", exc_info=True)
-            finally:
-                try:
-                    cur_tmp.close()
-                    conn_tmp.close()
-                except Exception:
-                    pass
-
-        total_pages = (total_listings + per_page - 1) // per_page
-        featured = light_listings[0] if light_listings else None
-        return render_template(
-            'home.html',
-            carousel_listings=carousel_listings or [],
-            listings=light_listings,
-            featured_listing=featured,
-            search=search,
-            selected_category=selected_category,
-            deal_type_filter=deal_type_filter,
-            location=location_q,
-            user_logged_in=user_logged_in,
-            user_subscribed=False,
-            vapid_public_key=app.config.get('VAPID_PUBLIC_KEY', ''),
-            page=page,
-            total_pages=total_pages,
-            listings_mode='light'
-        )
-
-    # 3) Cold path: build a fast light_list from DB, then rotate by Plan weights, cache, return
-    conn = None
-    cursor = None
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-
-        light_q = """
-            SELECT l.listing_id, l.title, l.image1, l.price, l.deal_type, l.required_cash,
-                   l.additional_cash, l.location, l.`Plan`, COALESCE(l.description, '') as description,
-                   COALESCE(l.contact, '') as contact
-            FROM listings l
-            WHERE 1=1
-        """
-        params = []
-        if search:
-            like = f"%{search}%"
-            light_q += " AND (l.title LIKE %s OR l.description LIKE %s OR l.category LIKE %s)"
-            params += [like, like, like]
-        if selected_category != 'All':
-            light_q += " AND l.category=%s"
-            params.append(selected_category)
-        if deal_type_filter != 'All':
-            light_q += " AND l.deal_type=%s"
-            params.append(deal_type_filter)
-
-        light_q += " ORDER BY l.created_at DESC LIMIT %s OFFSET %s"
-        params += [per_page, offset]
-
-        cursor.execute(light_q, tuple(params))
-        rows = cursor.fetchall() or []
-
-        base_img = url_for('static', filename='images/', _external=True)
-        light_list = []
-        for r in rows:
-            light_list.append({
-                'listing_id': r.get('listing_id'),
-                'title': r.get('title') or '',
-                'description': r.get('description') or '',
-                'image1': r.get('image1') or None,
-                'image_url': base_img + (r.get('image1') or 'placeholder.jpg'),
-                'banner_image': base_img + (r.get('image1') or 'placeholder.jpg'),
-                'price': r.get('price'),
-                'deal_type': r.get('deal_type') or '',
-                'required_cash': r.get('required_cash') or 0,
-                'additional_cash': r.get('additional_cash') or 0,
-                'desired_swap': r.get('desired_swap') or '',
-                'location': r.get('location') or '',
-                'Plan': r.get('Plan') or 'Free',
-                'username': '',
-                'impressions': 0,
-                'offers': [],
-                'contact': r.get('contact') or '',
-                'is_wishlisted': False
-            })
-
-        # Rotation step for light_list: weighted by Plan
-        if light_list:
-            weights = {'Diamond': 5, 'Gold': 4, 'Silver': 3, 'Bronze': 2, 'Free': 1}
-            weighted_idxs = [i for i, l in enumerate(light_list) for _ in range(weights.get(l.get('Plan'), 1))]
-            if weighted_idxs:
-                jitter = random.randrange(len(weighted_idxs))
-                grid_offset = (read_offset() + jitter) % len(weighted_idxs)
-                write_offset((grid_offset + 1) % len(weighted_idxs))
-                seen, rotated = set(), []
-                for idx in weighted_idxs[grid_offset:] + weighted_idxs[:grid_offset]:
-                    if idx not in seen:
-                        seen.add(idx)
-                        rotated.append(light_list[idx])
-                    if len(rotated) == len(light_list):
-                        break
-                light_list = rotated
-
-        # Ensure carousel is populated cheaply if missing
-        if not carousel_listings:
-            try:
-                cur_tmp = conn.cursor(dictionary=True)
-                cur_tmp.execute("""
-                    SELECT listing_id, image1, title, `Plan`
-                    FROM listings
-                    ORDER BY created_at DESC
-                    LIMIT 8
-                """)
-                raw_carousel = cur_tmp.fetchall() or []
-                carousel_pop = []
-                for rec in raw_carousel:
-                    carousel_pop.append({
-                        'listing_id': rec.get('listing_id'),
-                        'title': rec.get('title') or '',
-                        'image1': rec.get('image1') or None,
-                        'banner_image': base_img + (rec.get('image1') or 'placeholder.jpg'),
-                        'Plan': rec.get('Plan') or 'Free'
-                    })
-                try:
-                    cache.set(cache_key_carousel, carousel_pop, timeout=60)
-                except Exception:
-                    logging.debug("Failed to set carousel cache (non-fatal)", exc_info=True)
-                carousel_listings = carousel_pop
-                try:
-                    cur_tmp.close()
-                except Exception:
-                    pass
-            except Exception:
-                logging.debug("Carousel cheap populate during cold path failed (non-fatal)", exc_info=True)
-
-        # Cache the light grid
-        try:
-            cache.set(cache_key_light, light_list, timeout=15)
-        except Exception:
-            logging.debug("Failed to set light cache (non-fatal)", exc_info=True)
-
-        # Fast count
-        count_q = "SELECT COUNT(*) AS total FROM listings WHERE 1=1"
-        count_params = []
-        if search:
-            like = f"%{search}%"
-            count_q += " AND (title LIKE %s OR description LIKE %s OR category LIKE %s)"
-            count_params += [like, like, like]
-        if selected_category != 'All':
-            count_q += " AND category=%s"
-            count_params.append(selected_category)
-        if deal_type_filter != 'All':
-            count_q += " AND deal_type=%s"
-            count_params.append(deal_type_filter)
-
-        cursor.execute(count_q, tuple(count_params))
-        cnt_row = cursor.fetchone() or {}
-        total_listings = cnt_row.get('total', 0)
-        try:
-            cache.set(cache_key_cnt, total_listings, timeout=15)
-        except Exception:
-            logging.debug("Failed to set count cache (non-fatal)", exc_info=True)
-
-        total_pages = (total_listings + per_page - 1) // per_page
-        featured = light_list[0] if light_list else None
-
-        return render_template(
-            'home.html',
-            carousel_listings=carousel_listings or [],
-            listings=light_list,
-            featured_listing=featured,
-            search=search,
-            selected_category=selected_category,
-            deal_type_filter=deal_type_filter,
-            location=location_q,
-            user_logged_in=user_logged_in,
-            user_subscribed=False,
-            vapid_public_key=app.config.get('VAPID_PUBLIC_KEY', ''),
-            page=page,
-            total_pages=total_pages,
-            listings_mode='light'
-        )
-
-    except Exception as e:
-        logging.error("Error building light listings in home(): %s", e, exc_info=True)
-        if conn:
-            conn.rollback()
-        return render_template(
-            'home.html',
-            carousel_listings=carousel_listings or [],
-            listings=[],
-            featured_listing=None,
-            search=search,
-            selected_category=selected_category,
-            deal_type_filter=deal_type_filter,
-            location=location_q,
-            user_logged_in=user_logged_in,
-            user_subscribed=False,
-            vapid_public_key=app.config.get('VAPID_PUBLIC_KEY', ''),
-            page=page,
-            total_pages=0,
-            listings_mode='light'
-        )
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-
-
-@app.route('/api/listings/full')
-def api_listings_full():
-    """
-    Returns the full public listing payload (offers, impressions, etc.) as JSON.
-    Accepts same query params as home() so it can populate the full public cache.
-    """
-    search = request.args.get('search', '').strip()
-    selected_category = request.args.get('category', 'All')
-    deal_type_filter = request.args.get('deal_type', 'All')
-    location_q = request.args.get('location', '').strip()
-    page = request.args.get('page', 1, type=int)
-    per_page = 50
-    offset = (page - 1) * per_page
-
-    key_suffix = f"{search}:{selected_category}:{deal_type_filter}:{location_q}:{page}"
-    cache_key_full = f"grid:public:full:{key_suffix}"
-    cache_key_light = f"grid:public:light:{key_suffix}"
-    cache_key_cnt = f"cnt:public:{search}:{selected_category}:{deal_type_filter}"
-    cache_key_carousel = "carousel:latest"
-
-    # Try full cache first
-    try:
-        cached = cache.get(cache_key_full)
-    except Exception:
-        cached = None
-
-    if cached is not None:
-        total_listings = cache.get(cache_key_cnt) or 0
-        return jsonify({'listings': cached, 'total': total_listings}), 200
+    user_logged_in  = 'user_id' in session
+    user_subscribed = False
+    carousel_listings = []
+    listings = []
+    total_pages = 0
 
     conn = None
     cursor = None
@@ -615,11 +301,39 @@ def api_listings_full():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
+        # ✅ 1) Carousel listings (public data)
+        cursor.execute("""
+            SELECT listing_id, image1, title, `Plan`
+            FROM listings
+            ORDER BY created_at DESC
+            LIMIT 20
+        """)
+        raw = cursor.fetchall()
+
+        PLAN_WEIGHTS = {'Diamond':5,'Gold':4,'Silver':3,'Bronze':2,'Free':1}
+        weighted = [idx for idx, rec in enumerate(raw) for _ in range(PLAN_WEIGHTS.get(rec['Plan'],1))]
+        if weighted:
+            jitter = random.randrange(len(weighted))
+            carousel_offset = (read_offset() + jitter) % len(weighted)
+            write_offset((carousel_offset + 1) % len(weighted))
+            seen, ordered = set(), []
+            for idx in weighted[carousel_offset:] + weighted[:carousel_offset]:
+                if idx not in seen:
+                    seen.add(idx)
+                    ordered.append(raw[idx])
+                if len(ordered) == 5:
+                    break
+            base_img = url_for('static', filename='images/', _external=True)
+            for c in ordered:
+                c['banner_image'] = base_img + (c.get('image1') or 'placeholder.jpg')
+            carousel_listings = ordered
+
+        # ✅ 2) Listings grid (public, cacheable)
         base_q = """
             SELECT 
                 l.listing_id, l.title, l.description, l.category, l.deal_type, l.`Plan`,
                 l.image1, l.price, l.required_cash, l.additional_cash, l.desired_swap,
-                l.location, l.contact, u.username, IFNULL(m.impressions, 0) AS impressions
+                l.location, l.contact, u.username, IFNULL(m.impressions,0) AS impressions
             FROM listings l
             JOIN users u ON l.user_id = u.id
             LEFT JOIN listing_metrics m ON l.listing_id = m.listing_id
@@ -643,36 +357,42 @@ def api_listings_full():
         )
         if location_q:
             base_q += " AND l.location IS NOT NULL"
-            plan_case = (
-                plan_case + ", (l.location=%s) DESC, (SOUNDEX(l.location)=SOUNDEX(%s)) DESC, (l.location LIKE %s) DESC"
+            plan_case += (
+                ", (l.location=%s) DESC, "
+                "(SOUNDEX(l.location)=SOUNDEX(%s)) DESC, "
+                "(l.location LIKE %s) DESC"
             )
             params += [location_q, location_q, f"%{location_q}%"]
 
-        base_q += " ORDER BY " + plan_case + " DESC, l.created_at DESC LIMIT %s OFFSET %s"
-        params += [per_page, offset]
+        cache_key_grid = f"grid:{search}:{selected_category}:{deal_type_filter}:{location_q}:{page}"
+        listings = cache.get(cache_key_grid)
+        if listings is None:
+            cursor.execute(
+                base_q + " ORDER BY " + plan_case + " DESC, l.created_at DESC"
+                + " LIMIT %s OFFSET %s",
+                tuple(params + [per_page, offset])
+            )
+            listings = cursor.fetchall()
+            cache.set(cache_key_grid, listings, timeout=60)
 
-        cursor.execute(base_q, tuple(params))
-        listings = cursor.fetchall() or []
+        # ✅ 3) Rotate grid listings (still public)
+        weights = {'Diamond':5,'Gold':4,'Silver':3,'Free':1}
+        weighted_idxs = [i for i, l in enumerate(listings) for _ in range(weights.get(l['Plan'],1))]
+        if weighted_idxs:
+            jitter = random.randrange(len(weighted_idxs))
+            grid_offset = (read_offset() + jitter) % len(weighted_idxs)
+            write_offset((grid_offset + 1) % len(weighted_idxs))
+            seen, rotated = set(), []
+            for idx in weighted_idxs[grid_offset:] + weighted_idxs[:grid_offset]:
+                if idx not in seen:
+                    seen.add(idx)
+                    rotated.append(listings[idx])
+                if len(rotated) == len(listings):
+                    break
+            listings = rotated
 
-        # Rotation by plan weight (already present)
-        if listings:
-            weights = {'Diamond': 5, 'Gold': 4, 'Silver': 3, 'Free': 1}
-            weighted_idxs = [i for i, l in enumerate(listings) for _ in range(weights.get(l.get('Plan'), 1))]
-            if weighted_idxs:
-                jitter = random.randrange(len(weighted_idxs))
-                grid_offset = (read_offset() + jitter) % len(weighted_idxs)
-                write_offset((grid_offset + 1) % len(weighted_idxs))
-                seen, rotated = set(), []
-                for idx in weighted_idxs[grid_offset:] + weighted_idxs[:grid_offset]:
-                    if idx not in seen:
-                        seen.add(idx)
-                        rotated.append(listings[idx])
-                    if len(rotated) == len(listings):
-                        break
-                listings = rotated
-
-        # Fetch offered items for swap deals (single query)
-        swap_ids = [l['listing_id'] for l in listings if l.get('deal_type') == 'Swap Deal']
+        # ✅ 4) Fetch offered items (public)
+        swap_ids = [l['listing_id'] for l in listings if l['deal_type'] == 'Swap Deal']
         offers = {}
         if swap_ids:
             ph = ','.join(['%s'] * len(swap_ids))
@@ -684,92 +404,88 @@ def api_listings_full():
                 ORDER BY listing_id, item_id
                 """, tuple(swap_ids)
             )
+            base_img = url_for('static', filename='images/', _external=True)
             for o in cursor.fetchall():
+                o['image1'] = base_img + (o['image1'] or 'placeholder.jpg')
                 offers.setdefault(o['listing_id'], []).append(o)
 
         base_img = url_for('static', filename='images/', _external=True)
-        final_listings = []
         for l in listings:
-            final = {
-                'listing_id': l.get('listing_id'),
-                'title': l.get('title') or '',
-                'description': l.get('description') or '',
-                'category': l.get('category') or '',
-                'deal_type': l.get('deal_type') or '',
-                'Plan': l.get('Plan') or 'Free',
-                'image1': l.get('image1') or None,
-                'image_url': base_img + (l.get('image1') or 'placeholder.jpg'),
-                'banner_image': base_img + (l.get('image1') or 'placeholder.jpg'),
-                'price': l.get('price'),
-                'required_cash': l.get('required_cash') or 0,
-                'additional_cash': l.get('additional_cash') or 0,
-                'desired_swap': l.get('desired_swap') or '',
-                'location': l.get('location') or '',
-                'contact': l.get('contact') or '',
-                'username': l.get('username') or '',
-                'impressions': l.get('impressions') or 0,
-                'offers': offers.get(l.get('listing_id'), []),
-                'is_wishlisted': False
-            }
-            final_listings.append(final)
+            l['image_url']    = base_img + (l.get('image1') or 'placeholder.jpg')
+            l['banner_image'] = l['image_url']
+            l['offers']       = offers.get(l['listing_id'], [])
+            l.setdefault('required_cash', 0)
+            l.setdefault('additional_cash', 0)
+            l.setdefault('desired_swap', '')
+            l.setdefault('price', l.get('price'))
+            l.setdefault('location', l.get('location', ''))
+            l.setdefault('contact', l.get('contact', ''))
 
-        # Cache the full grid
-        try:
-            cache.set(cache_key_full, final_listings, timeout=60)
-        except Exception:
-            logging.debug("Failed to set full cache (non-fatal)", exc_info=True)
+        # ✅ 5) Only now: small per-user queries
+        if user_logged_in:
+            # Check push subscription
+            cursor.execute(
+                "SELECT 1 FROM push_subscriptions WHERE user_id=%s",
+                (session['user_id'],)
+            )
+            user_subscribed = cursor.fetchone() is not None
 
-        # Ensure count cached
+            # Fetch wishlisted listing_ids
+            cursor.execute(
+                "SELECT listing_id FROM wishlists WHERE user_id=%s",
+                (session['user_id'],)
+            )
+            wish_ids = {r['listing_id'] for r in cursor.fetchall()}
+            for l in listings:
+                l['is_wishlisted'] = (l['listing_id'] in wish_ids)
+
+        # ✅ 6) Pagination total count (public, cacheable)
+        count_q = "SELECT COUNT(*) AS total FROM listings WHERE 1=1"
+        count_p = []
+        if search:
+            like = f"%{search}%"
+            count_q += " AND (title LIKE %s OR description LIKE %s OR category LIKE %s)"
+            count_p += [like, like, like]
+        if selected_category != 'All':
+            count_q += " AND category=%s"; count_p.append(selected_category)
+        if deal_type_filter != 'All':
+            count_q += " AND deal_type=%s"; count_p.append(deal_type_filter)
+
+        cache_key_cnt = f"cnt:{search}:{selected_category}:{deal_type_filter}"
         total_listings = cache.get(cache_key_cnt)
         if total_listings is None:
-            cursor.execute("SELECT COUNT(*) AS total FROM listings WHERE 1=1")
-            total_listings = cursor.fetchone().get('total', 0)
-            try:
-                cache.set(cache_key_cnt, total_listings, timeout=60)
-            except Exception:
-                logging.debug("Failed to set count cache (non-fatal)", exc_info=True)
+            cursor.execute(count_q, tuple(count_p))
+            total_listings = cursor.fetchone()['total']
+            cache.set(cache_key_cnt, total_listings, timeout=60)
 
-        # Populate carousel if missing (best-effort)
-        try:
-            if cache.get(cache_key_carousel) is None:
-                cursor.execute("""
-                    SELECT listing_id, image1, title, `Plan`
-                    FROM listings
-                    ORDER BY created_at DESC
-                    LIMIT 20
-                """)
-                raw = cursor.fetchall() or []
-                PLAN_WEIGHTS = {'Diamond': 5, 'Gold': 4, 'Silver': 3, 'Bronze': 2, 'Free': 1}
-                weighted = [idx for idx, rec in enumerate(raw) for _ in range(PLAN_WEIGHTS.get(rec.get('Plan'), 1))]
-                ordered = []
-                if weighted:
-                    jitter = random.randrange(len(weighted))
-                    carousel_offset = (read_offset() + jitter) % len(weighted)
-                    write_offset((carousel_offset + 1) % len(weighted))
-                    seen = set()
-                    for idx in weighted[carousel_offset:] + weighted[:carousel_offset]:
-                        if idx not in seen:
-                            seen.add(idx)
-                            ordered.append(raw[idx])
-                        if len(ordered) == 5:
-                            break
-                for c in ordered:
-                    c['banner_image'] = base_img + (c.get('image1') or 'placeholder.jpg')
-                cache.set(cache_key_carousel, ordered, timeout=60)
-        except Exception:
-            logging.debug("Failed to build carousel in full API (non-fatal)", exc_info=True)
-
-        return jsonify({'listings': final_listings, 'total': total_listings}), 200
+        total_pages = (total_listings + per_page - 1) // per_page
 
     except Exception as e:
-        logging.error("Error building full listings in api_listings_full(): %s", e, exc_info=True)
-        return jsonify({'listings': [], 'total': 0}), 500
+        logging.error("Error in home(): %s", e, exc_info=True)
+        if conn:
+            conn.rollback()
     finally:
         if cursor:
             cursor.close()
         if conn:
             conn.close()
 
+    featured = listings[0] if listings else None
+    return render_template(
+        'home.html',
+        carousel_listings=carousel_listings,
+        listings=listings,
+        featured_listing=featured,
+        search=search,
+        selected_category=selected_category,
+        deal_type_filter=deal_type_filter,
+        location=location_q,
+        user_logged_in=user_logged_in,
+        user_subscribed=user_subscribed,
+        vapid_public_key=app.config.get('VAPID_PUBLIC_KEY',''),
+        page=page,
+        total_pages=total_pages
+    )
 
 
 

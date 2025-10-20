@@ -2005,7 +2005,7 @@ document.addEventListener('DOMContentLoaded', () => {
   id="search-form"
   method="get"
   action="{{ url_for('home') }}"
-  style="margin-bottom: 1rem;"
+  style="margin-bottom: 1.5rem;"
 >
   <!-- Hidden fields that your JS will populate -->
   <input
@@ -2021,242 +2021,281 @@ document.addEventListener('DOMContentLoaded', () => {
     value="{{ selected_category }}"
   />
 
-  <!-- 2) DEAL‑TYPE FILTERS -->
-  <div
-    class="filters-scroll deal-filter-row"
-    style="display: flex; gap: 0.75rem; overflow-x: auto; padding: 0.75rem 2rem; margin-bottom: 0.5rem; background: var(--surface); box-shadow: var(--shadow-sm);"
-  >
-    {% set deal_types = ['All', 'Swap Deal', 'Outright Sales'] %}
-    {% for deal in deal_types %}
+  <!-- DEAL‑TYPE FILTERS -->
+  <div class="filter-section">
+    <div class="section-label">Deal Type</div>
+    <div class="deal-filter-row">
+      {% set deal_types = ['All', 'Swap Deal', 'Outright Sales'] %}
+      {% for deal in deal_types %}
+        <button
+          type="button"
+          class="filter-button deal-filter{% if deal_type_filter == deal %} active{% endif %}"
+          data-value="{{ deal }}"
+        >
+          {{ deal }}
+        </button>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- CATEGORY FILTERS SECTION -->
+  <div class="filter-section">
+    <div class="section-label">Categories</div>
+    <div class="category-filter-grid">
+      <!-- All -->
       <button
         type="button"
-        class="filter-button deal-filter{% if deal_type_filter == deal %} active{% endif %}"
-        data-value="{{ deal }}"
-        style="flex: 0 0 auto; background: {{ 'var(--primary)' if deal_type_filter == deal else '#f0f0f0' }}; color: {{ '#fff' if deal_type_filter == deal else '#333' }}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
+        class="filter-button category-filter{% if selected_category=='All' %} active{% endif %}"
+        data-value="All"
       >
-        {{ deal }}
+        <span class="category-icon-container">
+          <img
+            src="https://api.iconify.design/mdi:format-list-bulleted.svg"
+            alt="All"
+            class="category-icon"
+            onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';"
+          >
+        </span>
+        <span class="category-name">All</span>
       </button>
-    {% endfor %}
+
+      <!-- Electronics -->
+      <button type="button" class="filter-button category-filter{% if selected_category=='Electronics' %} active{% endif %}" data-value="Electronics">
+        <span class="category-icon-container">
+          <img src="https://api.iconify.design/mdi:television.svg" alt="Electronics" class="category-icon"
+            onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
+        </span>
+        <span class="category-name">Electronics</span>
+      </button>
+
+      <!-- Mobile Phones & Accessories -->
+      <button type="button" class="filter-button category-filter{% if selected_category=='Mobile Phones & Accessories' %} active{% endif %}" data-value="Mobile Phones & Accessories">
+        <span class="category-icon-container">
+          <img src="https://api.iconify.design/mdi:cellphone.svg" alt="Mobile Phones & Accessories" class="category-icon"
+            onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
+        </span>
+        <span class="category-name">Phones</span>
+      </button>
+
+      <!-- Computers & Networking -->
+      <button type="button" class="filter-button category-filter{% if selected_category=='Computers & Networking' %} active{% endif %}" data-value="Computers & Networking">
+        <span class="category-icon-container">
+          <img src="https://api.iconify.design/mdi:desktop-classic.svg" alt="Computers & Networking" class="category-icon"
+            onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
+        </span>
+        <span class="category-name">Computers</span>
+      </button>
+
+      <!-- Sports & Outdoors -->
+      <button type="button" class="filter-button category-filter{% if selected_category=='Sports & Outdoors' %} active{% endif %}" data-value="Sports & Outdoors">
+        <span class="category-icon-container">
+          <img src="https://api.iconify.design/mdi:basketball.svg" alt="Sports & Outdoors" class="category-icon"
+            onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
+        </span>
+        <span class="category-name">Sports</span>
+      </button>
+
+      <!-- Toys & Games -->
+      <button type="button" class="filter-button category-filter{% if selected_category=='Toys & Games' %} active{% endif %}" data-value="Toys & Games">
+        <span class="category-icon-container">
+          <img src="https://api.iconify.design/mdi:puzzle.svg" alt="Toys & Games" class="category-icon"
+            onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
+        </span>
+        <span class="category-name">Toys</span>
+      </button>
+
+      <!-- Automobile & Vehicles -->
+      <button type="button" class="filter-button category-filter{% if selected_category=='Automobile & Vehicles' %} active{% endif %}" data-value="Automobile & Vehicles">
+        <span class="category-icon-container">
+          <img src="https://api.iconify.design/mdi:car.svg" alt="Automobile & Vehicles" class="category-icon"
+            onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
+        </span>
+        <span class="category-name">Auto</span>
+      </button>
+    </div>
   </div>
 
-<!-- CATEGORY FILTERS SECTION -->
-<!-- COMPACT CATEGORY FILTERS SECTION -->
-<div class="category-filters-container">
-  <div class="category-filter-grid">
-    <!-- All -->
-    <button
-      type="button"
-      class="filter-button category-filter{% if selected_category=='All' %} active{% endif %}"
-      data-value="All"
-      style="flex: 0 0 auto; background: {{ 'var(--primary)' if selected_category=='All' else '#f0f0f0' }}; color: {{ '#fff' if selected_category=='All' else '#333' }}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
-    >
-      <span class="category-icon-container">
-        <img
-          src="https://api.iconify.design/mdi:format-list-bulleted.svg"
-          alt="All"
-          class="category-icon"
-          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';"
-        >
-      </span>
-      <span class="category-name">All</span>
-    </button>
+  <style>
 
-    <!-- Electronics -->
-    <button type="button" class="filter-button category-filter{% if selected_category=='Electronics' %} active{% endif %}" data-value="Electronics"
-      style="flex: 0 0 auto; background: {{ 'var(--primary)' if selected_category=='Electronics' else '#f0f0f0' }}; color: {{ '#fff' if selected_category=='Electronics' else '#333' }}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
-    >
-      <span class="category-icon-container">
-        <img src="https://api.iconify.design/mdi:television.svg" alt="Electronics" class="category-icon"
-          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
-      </span>
-      <span class="category-name">Electronics</span>
-    </button>
+    .filter-section {
+      margin-bottom: 1.25rem;
+      padding: 1rem 1.25rem;
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+    }
 
-    <!-- Mobile Phones & Accessories -->
-    <button type="button" class="filter-button category-filter{% if selected_category=='Mobile Phones & Accessories' %} active{% endif %}" data-value="Mobile Phones & Accessories"
-      style="flex: 0 0 auto; background: {{ 'var(--primary)' if selected_category=='Mobile Phones & Accessories' else '#f0f0f0' }}; color: {{ '#fff' if selected_category=='Mobile Phones & Accessories' else '#333' }}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
-    >
-      <span class="category-icon-container">
-        <img src="https://api.iconify.design/mdi:cellphone.svg" alt="Mobile Phones & Accessories" class="category-icon"
-          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
-      </span>
-      <span class="category-name">Phones</span>
-    </button>
+    .section-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
 
-    <!-- Computers & Networking -->
-    <button type="button" class="filter-button category-filter{% if selected_category=='Computers & Networking' %} active{% endif %}" data-value="Computers & Networking"
-      style="flex: 0 0 auto; background: {{ 'var(--primary)' if selected_category=='Computers & Networking' else '#f0f0f0' }}; color: {{ '#fff' if selected_category=='Computers & Networking' else '#333' }}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
-    >
-      <span class="category-icon-container">
-        <img src="https://api.iconify.design/mdi:desktop-classic.svg" alt="Computers & Networking" class="category-icon"
-          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
-      </span>
-      <span class="category-name">Computers</span>
-    </button>
+    /* Deal Type Filter Styles */
+    .deal-filter-row {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
+    }
 
+    .deal-filter-row::-webkit-scrollbar {
+      height: 4px;
+    }
 
-    <!-- Sports & Outdoors -->
-    <button type="button" class="filter-button category-filter{% if selected_category=='Sports & Outdoors' %} active{% endif %}" data-value="Sports & Outdoors"
-      style="flex: 0 0 auto; background: {{ 'var(--primary)' if selected_category=='Sports & Outdoors' else '#f0f0f0' }}; color: {{ '#fff' if selected_category=='Sports & Outdoors' else '#333' }}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
-    >
-      <span class="category-icon-container">
-        <img src="https://api.iconify.design/mdi:basketball.svg" alt="Sports & Outdoors" class="category-icon"
-          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
-      </span>
-      <span class="category-name">Sports</span>
-    </button>
+    .deal-filter-row::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
 
+    .deal-filter-row::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 10px;
+    }
 
-    <!-- Toys & Games -->
-    <button type="button" class="filter-button category-filter{% if selected_category=='Toys & Games' %} active{% endif %}" data-value="Toys & Games"
-      style="flex: 0 0 auto; background: {{ 'var(--primary)' if selected_category=='Toys & Games' else '#f0f0f0' }}; color: {{ '#fff' if selected_category=='Toys & Games' else '#333' }}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
-    >
-      <span class="category-icon-container">
-        <img src="https://api.iconify.design/mdi:puzzle.svg" alt="Toys & Games" class="category-icon"
-          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
-      </span>
-      <span class="category-name">Toys</span>
-    </button>
+    .filter-button {
+      flex: 0 0 auto;
+      background: white;
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.875rem;
+    }
 
-    <!-- Automobile & Vehicles -->
-    <button type="button" class="filter-button category-filter{% if selected_category=='Automobile & Vehicles' %} active{% endif %}" data-value="Automobile & Vehicles"
-      style="flex: 0 0 auto; background: {{ 'var(--primary)' if selected_category=='Automobile & Vehicles' else '#f0f0f0' }}; color: {{ '#fff' if selected_category=='Automobile & Vehicles' else '#333' }}; border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 500; cursor: pointer; transition: background 0.3s, color 0.3s;"
-    >
-      <span class="category-icon-container">
-        <img src="https://api.iconify.design/mdi:car.svg" alt="Automobile & Vehicles" class="category-icon"
-          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
-      </span>
-      <span class="category-name">Auto</span>
-    </button>
-  </div>
-</div>
+    .filter-button:hover {
+      background: #f8f9fa;
+      border-color: var(--primary);
+    }
 
-<style>
-  /* Base Styles */
-  .category-filters-container {
-    width: 100%;
-    padding: 0 0.5rem;
-    margin-bottom: 1rem;
-  }
-  
-  .category-filter-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-    gap: 0.5rem;
-    width: 100%;
-  }
-  
-  .filter-button {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem 0.25rem;
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
-    background: white;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    height: 100%;
-    min-height: 60px;
-  }
-  
-  .filter-button:hover {
-    background-color: #f5f5f5;
-  }
-  
-  .filter-button.active {
-    border: 2px solid var(--primary);
-    background-color: rgba(var(--primary-rgb), 0.1);
-    font-weight: 500;
-  }
-  
-  .category-icon-container {
-    width: 18px;
-    height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 4px;
-  }
-  
-  .category-icon {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-  
-  .category-name {
-    font-size: 0.65rem;
-    font-weight: 500;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-  }
-  
-  /* Tablet and Desktop Enhancements */
-  @media (min-width: 640px) {
+    .filter-button.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* Category Filter Styles */
     .category-filter-grid {
-      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
       gap: 0.75rem;
     }
-    
-    .filter-button {
-      min-height: 70px;
-      padding: 0.5rem 0.3rem;
-    }
-    
-    .category-icon-container {
-      width: 20px;
-      height: 20px;
-    }
-    
-    .category-name {
-      font-size: 0.7rem;
-    }
-  }
-  
-  @media (min-width: 1024px) {
-    .category-filter-grid {
-      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-      gap: 1rem;
-    }
-    
-    .filter-button {
+
+    .category-filter-button {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem 0.5rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      height: 100%;
       min-height: 75px;
     }
-    
+
+    .category-filter-button:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+      border-color: var(--primary);
+    }
+
+    .category-filter-button.active {
+      border: 2px solid var(--primary);
+      background-color: var(--primary-light);
+      font-weight: 500;
+    }
+
+    .category-icon-container {
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .category-icon {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
     .category-name {
       font-size: 0.75rem;
+      font-weight: 500;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
     }
-  }
-</style>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  // Deal‑type buttons
-  document.querySelectorAll('.deal-filter').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.deal-filter').forEach(t => t.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('selected-deal-type').value = btn.dataset.value;
-      document.getElementById('search-form').submit();
-    });
-  });
+    /* Responsive Adjustments */
+    @media (max-width: 640px) {
+      .filter-section {
+        padding: 0.875rem 1rem;
+        margin-bottom: 1rem;
+      }
+      
+      .category-filter-grid {
+        grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+        gap: 0.5rem;
+      }
+      
+      .category-filter-button {
+        min-height: 70px;
+        padding: 0.5rem 0.25rem;
+      }
+      
+      .category-icon-container {
+        width: 20px;
+        height: 20px;
+        margin-bottom: 0.375rem;
+      }
+    }
 
-  // Category buttons
-  document.querySelectorAll('.category-filter').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.category-filter').forEach(t => t.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('selected-category').value = btn.dataset.value;
-      document.getElementById('search-form').submit();
+    @media (min-width: 1024px) {
+      .category-filter-grid {
+        grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+        gap: 1rem;
+      }
+    }
+  </style>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Deal‑type buttons
+      document.querySelectorAll('.deal-filter').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.deal-filter').forEach(t => t.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById('selected-deal-type').value = btn.dataset.value;
+          document.getElementById('search-form').submit();
+        });
+      });
+
+      // Category buttons
+      document.querySelectorAll('.category-filter').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.category-filter').forEach(t => t.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById('selected-category').value = btn.dataset.value;
+          document.getElementById('search-form').submit();
+        });
+      });
     });
-  });
-});
-</script>
+  </script>
+</form>
 
 <!-- ===== LISTINGS GRID ===== -->
 <section class="listings-container">
