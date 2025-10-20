@@ -779,6 +779,7 @@ def api_listings_full():
 
 
 
+
 @app.route('/listing/<int:listing_id>', methods=['GET', 'POST'])
 def listing_details(listing_id):
     conn = None
