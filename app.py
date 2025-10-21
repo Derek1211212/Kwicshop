@@ -285,9 +285,13 @@ def home():
     selected_category = request.args.get('category', 'All')
     deal_type_filter  = request.args.get('deal_type', 'All')
     location_q        = request.args.get('location', '').strip()
-    page              = request.args.get('page', 1, type=int)
-    per_page          = 1000
-    offset            = (page - 1) * per_page
+    page              = max(1, request.args.get('page', 1, type=int))
+
+    # Enforce a reasonable per-page and max to avoid huge payloads
+    DEFAULT_PER_PAGE = 40
+    MAX_PER_PAGE = 200
+    per_page = min(MAX_PER_PAGE, request.args.get('per_page', DEFAULT_PER_PAGE, type=int))
+    offset   = (page - 1) * per_page
 
     user_logged_in  = 'user_id' in session
     user_subscribed = False
@@ -301,7 +305,7 @@ def home():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # ✅ 1) Carousel listings (public data)
+        # 1) Carousel - keep as before (cache if you want)
         cursor.execute("""
             SELECT listing_id, image1, title, `Plan`
             FROM listings
@@ -328,7 +332,7 @@ def home():
                 c['banner_image'] = base_img + (c.get('image1') or 'placeholder.jpg')
             carousel_listings = ordered
 
-        # ✅ 2) Listings grid (public, cacheable)
+        # 2) Listings grid (with safer per_page)
         base_q = """
             SELECT 
                 l.listing_id, l.title, l.description, l.category, l.deal_type, l.`Plan`,
@@ -356,6 +360,7 @@ def home():
             "WHEN 'Silver' THEN 3 ELSE 1 END"
         )
         if location_q:
+            # Note: SOUNDEX and LIKE are DB-expensive; consider replacing with fulltext or precomputed tokens.
             base_q += " AND l.location IS NOT NULL"
             plan_case += (
                 ", (l.location=%s) DESC, "
@@ -364,7 +369,7 @@ def home():
             )
             params += [location_q, location_q, f"%{location_q}%"]
 
-        cache_key_grid = f"grid:{search}:{selected_category}:{deal_type_filter}:{location_q}:{page}"
+        cache_key_grid = f"grid:{search}:{selected_category}:{deal_type_filter}:{location_q}:{page}:{per_page}"
         listings = cache.get(cache_key_grid)
         if listings is None:
             cursor.execute(
@@ -375,7 +380,7 @@ def home():
             listings = cursor.fetchall()
             cache.set(cache_key_grid, listings, timeout=60)
 
-        # ✅ 3) Rotate grid listings (still public)
+        # 3) Rotate grid listings - unchanged
         weights = {'Diamond':5,'Gold':4,'Silver':3,'Free':1}
         weighted_idxs = [i for i, l in enumerate(listings) for _ in range(weights.get(l['Plan'],1))]
         if weighted_idxs:
@@ -391,7 +396,7 @@ def home():
                     break
             listings = rotated
 
-        # ✅ 4) Fetch offered items (public)
+        # 4) Fetch offered items for visible listings only
         swap_ids = [l['listing_id'] for l in listings if l['deal_type'] == 'Swap Deal']
         offers = {}
         if swap_ids:
@@ -421,25 +426,38 @@ def home():
             l.setdefault('location', l.get('location', ''))
             l.setdefault('contact', l.get('contact', ''))
 
-        # ✅ 5) Only now: small per-user queries
-        if user_logged_in:
-            # Check push subscription
+        # 5) SMALL per-user queries - OPTIMIZED!
+        if user_logged_in and listings:
+            uid = session['user_id']
+
+            # a) push subscription - use EXISTS / LIMIT
             cursor.execute(
-                "SELECT 1 FROM push_subscriptions WHERE user_id=%s",
-                (session['user_id'],)
+                "SELECT 1 FROM push_subscriptions WHERE user_id=%s LIMIT 1",
+                (uid,)
             )
             user_subscribed = cursor.fetchone() is not None
 
-            # Fetch wishlisted listing_ids
-            cursor.execute(
-                "SELECT listing_id FROM wishlists WHERE user_id=%s",
-                (session['user_id'],)
-            )
-            wish_ids = {r['listing_id'] for r in cursor.fetchall()}
+            # b) wishlist: only for visible listing_ids (fast even if user has many wishlist rows)
+            visible_ids = [l['listing_id'] for l in listings]
+            if visible_ids:
+                ph = ','.join(['%s'] * len(visible_ids))
+                cursor.execute(
+                    f"SELECT listing_id FROM wishlists WHERE user_id=%s AND listing_id IN ({ph})",
+                    tuple([uid] + visible_ids)
+                )
+                wish_ids = {r['listing_id'] for r in cursor.fetchall()}
+            else:
+                wish_ids = set()
+
+            # annotate listings
             for l in listings:
                 l['is_wishlisted'] = (l['listing_id'] in wish_ids)
+        else:
+            # ensure key exists for templates
+            for l in listings:
+                l['is_wishlisted'] = False
 
-        # ✅ 6) Pagination total count (public, cacheable)
+        # 6) Pagination total count (public, cached)
         count_q = "SELECT COUNT(*) AS total FROM listings WHERE 1=1"
         count_p = []
         if search:
@@ -488,6 +506,62 @@ def home():
     )
 
 
+
+
+
+@app.route('/api/me/home-meta')
+def home_meta():
+    """
+    Returns per-user small data for the home page for the visible listings.
+    Query param: ids=1,2,3 (comma-separated listing_ids)
+    If user not logged in, returns safe defaults.
+    """
+    user_id = session.get('user_id')
+    ids_param = request.args.get('ids', '')
+    # parse ints safely
+    try:
+        listing_ids = [int(x) for x in ids_param.split(',') if x.strip().isdigit()]
+    except Exception:
+        listing_ids = []
+
+    # default response for anonymous users (so front-end can still call this safely)
+    if not user_id or not listing_ids:
+        return jsonify({
+            "user_subscribed": False,
+            "wishlisted_ids": []
+        })
+
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Check push subscription (fast with LIMIT 1)
+        cursor.execute(
+            "SELECT 1 FROM push_subscriptions WHERE user_id=%s LIMIT 1",
+            (user_id,)
+        )
+        user_subscribed = cursor.fetchone() is not None
+
+        # Wishlists only for the visible listing ids
+        ph = ','.join(['%s'] * len(listing_ids))
+        query = f"SELECT listing_id FROM wishlists WHERE user_id=%s AND listing_id IN ({ph})"
+        cursor.execute(query, tuple([user_id] + listing_ids))
+        wishlisted = [row['listing_id'] for row in cursor.fetchall()]
+
+        return jsonify({
+            "user_subscribed": bool(user_subscribed),
+            "wishlisted_ids": wishlisted
+        })
+    except Exception as e:
+        app.logger.exception("Error in /api/me/home-meta")
+        return jsonify({"user_subscribed": False, "wishlisted_ids": []}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 
