@@ -1064,115 +1064,191 @@
 
 
 /* ======= MOBILE BOTTOM NAVIGATION BAR ======= */
-/* Mobile Bottom Navigation Bar */
+/* Base: hidden on larger screens */
 .mobile-bottom-nav {
-  display: none !important; /* Hidden by default on all screens */
+  display: none; /* default hidden on desktop */
   position: fixed;
-  bottom: 0;
   left: 0;
   right: 0;
-  background: var(--surface); /* Falls back to #fff if undefined */
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+  bottom: 0;
   z-index: 1000;
-  padding: 8px 0;
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
+  background: var(--surface, #ffffff);
+  box-shadow: 0 -6px 18px rgba(0,0,0,0.08);
+  padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+  max-width: 1100px;
+  margin: 0 auto;
+  transition: transform .18s ease, opacity .18s ease;
 }
 
-/* Show on small screens (≤768px) */
-@media only screen and (max-width: 768px) {
-  .mobile-bottom-nav {
-    display: flex !important;
-    justify-content: space-around;
-    align-items: center;
-  }
-  body {
-    padding-bottom: 70px !important;
-  }
-  .hamburger,
-  .nav-links {
-    display: none !important;
-  }
-}
-
-/* Explicitly hide on large screens (≥769px) */
-@media only screen and (min-width: 769px) {
-  .mobile-bottom-nav {
-    display: none !important;
-  }
-}
-
-/* Inner items styling (applies when visible) */
+/* Items container */
 .mobile-bottom-nav .nav-items {
   display: flex;
-  justify-content: space-around;
+  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
   width: 100%;
 }
 
+/* If you keep a wrapper, ensure it fills */
+.mobile-bottom-nav .nav-item-wrapper {
+  flex: 1 1 0;
+  display: flex;
+  justify-content: center;
+}
+
+/* Single nav item: large hit area for thumbs */
 .mobile-bottom-nav .nav-item {
-  flex: 1;
+  flex: 1 1 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 8px 0;
+  justify-content: center;
+  min-height: 56px;            /* comfortable touch target */
+  padding: 8px 6px;
   text-decoration: none;
-  color: #6b7280;
+  color: #6b7280;              /* neutral text color */
+  font-family: inherit;
+  border-radius: 12px;
   position: relative;
-  transition: background 0.3s, color 0.3s;
+  transition: background .18s ease, color .18s ease, transform .12s ease;
+  -webkit-tap-highlight-color: transparent;
+  overflow: visible;
 }
 
-.mobile-bottom-nav .nav-item:hover {
-  background: rgba(129, 199, 132, 0.05);
+/* Tap feedback */
+.mobile-bottom-nav .nav-item:active {
+  transform: translateY(1px);
 }
 
-.mobile-bottom-nav .nav-item.active {
-  color: #81C784;
-  background: rgba(129, 199, 132, 0.1);
+/* Hover (for devices that support hover) */
+@media (hover: hover) {
+  .mobile-bottom-nav .nav-item:hover {
+    background: rgba(129,199,132,0.04);
+  }
 }
 
+/* Icon + label styling */
 .mobile-bottom-nav .nav-icon {
-  font-size: 1.4rem;
+  font-size: 1.35rem;
+  line-height: 1;
   margin-bottom: 4px;
+  display: inline-block;
 }
-
 .mobile-bottom-nav .nav-label {
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 68px;
+  text-align: center;
 }
 
-.mobile-bottom-nav .active-indicator {
+/* Active state */
+.mobile-bottom-nav .nav-item.active {
+  color: #2e7d32; /* darker green for accessibility */
+  background: rgba(129,199,132,0.12);
+  box-shadow: 0 6px 14px rgba(129,199,132,0.06);
+}
+
+/* Bottom dot indicator for active item */
+.mobile-bottom-nav .nav-item .active-indicator {
+  display: none;
+}
+.mobile-bottom-nav .nav-item.active .active-indicator {
+  display: block;
   position: absolute;
-  top: 4px;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
   width: 6px;
   height: 6px;
   background: #81C784;
   border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
 }
 
-body .mobile-bottom-nav {
-  display: none !important;
+/* Wishlist count badge */
+.mobile-bottom-nav .nav-badge,
+#wishlist-count-mobile {
+  position: absolute;
+  top: 6px;
+  right: 14px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  font-size: 0.65rem;
+  line-height: 18px;
+  text-align: center;
+  border-radius: 9px;
+  background: #ef4444;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  display: inline-block;
 }
 
+/* Tooltips: hide on small screens, show on hover on desktop */
+.mobile-bottom-nav .tooltip {
+  display: none; /* default hidden (we don't want tooltips cluttering mobile) */
+}
+@media (min-width: 769px) {
+  .mobile-bottom-nav .tooltip {
+    display: inline-block;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    color: #fff;
+    padding: 6px 8px;
+    font-size: 0.75rem;
+    border-radius: 6px;
+    white-space: nowrap;
+    z-index: 1050;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .12s ease;
+  }
+  .mobile-bottom-nav .nav-item:hover .tooltip {
+    opacity: 1;
+  }
+}
+
+/* Responsive: show on small screens (<=768px) */
 @media only screen and (max-width: 768px) {
-  body .mobile-bottom-nav {
-    display: flex !important;
-    justify-content: space-around;
+  .mobile-bottom-nav {
+    display: flex;
     align-items: center;
+    justify-content: center;
+    padding-left: 10px;
+    padding-right: 10px;
   }
+
+  /* Ensure body content doesn't hide behind nav */
   body {
-    padding-bottom: 70px !important;
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
   }
+
+  /* Hide desktop nav controls if present */
   .hamburger,
   .nav-links {
     display: none !important;
   }
 }
 
+/* Explicitly hide on larger screens */
 @media only screen and (min-width: 769px) {
-  body .mobile-bottom-nav {
-    display: none !important;
+  .mobile-bottom-nav {
+    display: none;
+  }
+  body {
+    padding-bottom: 0;
   }
 }
+
   </style>
 
 <!-- ===== REQUIRED CSS (add these rules at the bottom of your stylesheet) ===== -->
@@ -1808,95 +1884,8 @@ body .mobile-bottom-nav {
       border-color: var(--primary);
     }
 
-    /* Category Filter Styles */
-    .category-filter-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
-      gap: 0.75rem;
-    }
 
-    .category-filter-button {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 0.75rem 0.5rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: white;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      height: 100%;
-      min-height: 75px;
-    }
 
-    .category-filter-button:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-sm);
-      border-color: var(--primary);
-    }
-
-    .category-filter-button.active {
-      border: 2px solid var(--primary);
-      background-color: var(--primary-light);
-      font-weight: 500;
-    }
-
-    .category-icon-container {
-      width: 22px;
-      height: 22px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 0.5rem;
-    }
-
-    .category-icon {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-
-    .category-name {
-      font-size: 0.75rem;
-      font-weight: 500;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 100%;
-    }
-
-    /* Responsive Adjustments */
-    @media (max-width: 640px) {
-      .filter-section {
-        padding: 0.875rem 1rem;
-        margin-bottom: 1rem;
-      }
-      
-      .category-filter-grid {
-        grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
-        gap: 0.5rem;
-      }
-      
-      .category-filter-button {
-        min-height: 70px;
-        padding: 0.5rem 0.25rem;
-      }
-      
-      .category-icon-container {
-        width: 20px;
-        height: 20px;
-        margin-bottom: 0.375rem;
-      }
-    }
-
-    @media (min-width: 1024px) {
-      .category-filter-grid {
-        grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
-        gap: 1rem;
-      }
-    }
   </style>
 
 
@@ -1947,40 +1936,32 @@ body .mobile-bottom-nav {
 </nav>
 
 <!-- ===== MOBILE BOTTOM NAVIGATION ===== -->
-<div class="mobile-bottom-nav">
+<div class="mobile-bottom-nav" role="navigation" aria-label="Mobile bottom navigation">
   <div class="nav-items">
-      <a href="/auctions" class="nav-item">
-      
-        <span class="nav-label" style="display: flex; flex-direction: column; align-items: center; font-size: 0.85rem;">
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-    <path d="M1 21h22v2H1v-2zm4.24-3.54l1.42-1.42L5.1 14.5l4.95-4.95 1.41 1.41-4.95 4.95 1.41 1.41 4.95-4.95 1.41 1.41L8.93 20.4l-1.42-1.42zm11.31-11.32l1.41 1.42-4.95 4.95-1.41-1.41 4.95-4.96zm3.54-3.54l2.12 2.12-4.95 4.95-2.12-2.12 4.95-4.95z"/>
-  </svg>
-  <span>Auctions</span>
-</span>
-
-      </a>
     {% if session.get('user_id') %}
 
     <div class="nav-item-wrapper">
 
-  <a href="/dashboard" class="nav-item">
-    <i class="fas fa-user nav-icon"></i>
-    <span class="nav-label">Dashboard</span>
-    <span class="tooltip">Click here to upload an item for swap</span>
-  </a>
-  
-</div>
-
-      <a href="/my-proposals" class="nav-item">
-        <i class="fas fa-exchange-alt nav-icon"></i>
-        <span class="nav-label">Sent Offers</span>
+      <a href="/dashboard" class="nav-item">
+        <i class="fas fa-user nav-icon"></i>
+        <span class="nav-label">Dashboard</span>
+        <span class="tooltip">Click here to upload an item for swap</span>
       </a>
 
-      <a href="{{ url_for('view_wishlist') }}" class="nav-item wishlist-link">
-        <i class="fas fa-heart nav-icon"></i>
-        <span class="nav-label">Wishlist</span>
-        <span id="wishlist-count-mobile">{{ session.get('wishlist_count', 0) }}</span>
-      </a>
+    </div>
+
+    <a href="/my-proposals" class="nav-item">
+      <i class="fas fa-exchange-alt nav-icon"></i>
+      <span class="nav-label">Sent Offers</span>
+    </a>
+
+<a href="{{ url_for('view_wishlist') }}" class="nav-item wishlist-link">
+  <i class="fas fa-heart nav-icon" aria-hidden="true"></i>
+  <span class="nav-label">Wishlist</span>
+  <span id="wishlist-count-mobile" class="nav-badge" aria-live="polite">{{ session.get('wishlist_count', 0) }}</span>
+</a>
+
+
     {% else %}
       <a href="/login" class="nav-item">
         <i class="fas fa-sign-in-alt nav-icon"></i>
@@ -2064,6 +2045,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('load', updateMobileNav);
   window.addEventListener('resize', updateMobileNav);
 </script>
+
 
 <!-- ===== HERO + SEARCH + FILTERS SECTION ===== -->
 <section class="hero-search-filters">
@@ -2197,108 +2179,376 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
   </div>
 
-  <!-- CATEGORY FILTERS SECTION -->
-  <div class="filter-section">
-    <div class="section-label">Categories</div>
-    <div class="category-filter-grid">
-      <!-- All -->
-      <button
-        type="button"
-        class="filter-button category-filter{% if selected_category=='All' %} active{% endif %}"
-        data-value="All"
-      >
-        <span class="category-icon-container">
-          <img
-            src="https://api.iconify.design/mdi:format-list-bulleted.svg"
-            alt="All"
-            class="category-icon"
-            onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';"
-          >
-        </span>
-        <span class="category-name">All</span>
-      </button>
+<style>
+:root{
+  --primary: #81C784;
+  --primary-dark: #2e7d32;
+  --primary-light: rgba(129,199,132,0.12);
+  --bg: #ffffff;
+  --muted: #6b7280;
+  --border: white;
+  --radius: 12px;
+  --shadow-sm: 0 6px 18px rgba(0,0,0,0.06);
+}
 
-      <!-- Electronics -->
-      <button type="button" class="filter-button category-filter{% if selected_category=='Electronics' %} active{% endif %}" data-value="Electronics">
-        <span class="category-icon-container">
-          <img src="https://api.iconify.design/mdi:television.svg" alt="Electronics" class="category-icon"
-            onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
-        </span>
-        <span class="category-name">Electronics</span>
-      </button>
+/* Container + label */
+.filter-section { 
+  padding: 1rem;
+}
+.section-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--primary-dark);
+  margin-bottom: 0.5rem;
+}
 
-      <!-- Mobile Phones & Accessories -->
-      <button type="button" class="filter-button category-filter{% if selected_category=='Mobile Phones & Accessories' %} active{% endif %}" data-value="Mobile Phones & Accessories">
-        <span class="category-icon-container">
-          <img src="https://api.iconify.design/mdi:cellphone.svg" alt="Mobile Phones & Accessories" class="category-icon"
-            onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
-        </span>
-        <span class="category-name">Phones</span>
-      </button>
+/* MOBILE: horizontal scroll pills */
+.category-filter-grid {
+  display: flex;
+  gap: 0.6rem;
+  align-items: stretch;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.category-filter-grid::-webkit-scrollbar { height: 8px; }
+.category-filter-grid::-webkit-scrollbar-thumb { background: transparent; border-radius: 6px; }
+.category-filter-grid { scrollbar-width: thin; }
 
-      <!-- Computers & Networking -->
-      <button type="button" class="filter-button category-filter{% if selected_category=='Computers & Networking' %} active{% endif %}" data-value="Computers & Networking">
-        <span class="category-icon-container">
-          <img src="https://api.iconify.design/mdi:desktop-classic.svg" alt="Computers & Networking" class="category-icon"
-            onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
-        </span>
-        <span class="category-name">Computers</span>
-      </button>
+/* Single pill/button */
+.category-filter-button,
+.filter-button.category-filter {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 88px;
+  max-width: 180px;
+  flex: 0 0 auto;
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .18s ease, border-color .15s ease, background .15s ease;
+  text-decoration: none;
+  color: var(--muted);
+  scroll-snap-align: start;
+  position: relative;
+  vertical-align: middle;
+  box-shadow: none;
+  font: inherit;
+  line-height: 1;
+}
 
-      <!-- Sports & Outdoors -->
-      <button type="button" class="filter-button category-filter{% if selected_category=='Sports & Outdoors' %} active{% endif %}" data-value="Sports & Outdoors">
-        <span class="category-icon-container">
-          <img src="https://api.iconify.design/mdi:basketball.svg" alt="Sports & Outdoors" class="category-icon"
-            onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
-        </span>
-        <span class="category-name">Sports</span>
-      </button>
+/* icon circle */
+.category-icon-container {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.03);
+  border: 1px solid rgba(0,0,0,0.03);
+  transition: background .15s ease, transform .12s ease;
+  flex-shrink: 0;
+}
+.category-icon { width: 60%; height: 60%; object-fit: contain; display: block; }
 
-      <!-- Toys & Games -->
-      <button type="button" class="filter-button category-filter{% if selected_category=='Toys & Games' %} active{% endif %}" data-value="Toys & Games">
-        <span class="category-icon-container">
-          <img src="https://api.iconify.design/mdi:puzzle.svg" alt="Toys & Games" class="category-icon"
-            onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
-        </span>
-        <span class="category-name">Toys</span>
-      </button>
+/* label */
+.category-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 120px;
+  color: inherit;
+}
 
-      <!-- Automobile & Vehicles -->
-      <button type="button" class="filter-button category-filter{% if selected_category=='Automobile & Vehicles' %} active{% endif %}" data-value="Automobile & Vehicles">
-        <span class="category-icon-container">
-          <img src="https://api.iconify.design/mdi:car.svg" alt="Automobile & Vehicles" class="category-icon"
-            onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
-        </span>
-        <span class="category-name">Auto</span>
-      </button>
-    </div>
+/* press/hover/active */
+.category-filter-button:active { transform: translateY(1px) scale(.995); }
+@media (hover: hover) {
+  .category-filter-button:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-sm);
+    border-color: rgba(129,199,132,0.4);
+  }
+}
+.category-filter-button.active,
+.filter-button.category-filter.active {
+  border-color: var(--primary);
+  background: linear-gradient(180deg, rgba(129,199,132,0.08), rgba(129,199,132,0.04));
+  color: var(--primary-dark);
+  box-shadow: 0 8px 24px rgba(129,199,132,0.08);
+  transform: translateY(-2px);
+}
+.category-filter-button.active .category-icon-container,
+.filter-button.category-filter.active .category-icon-container {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.category-filter-button.active .category-icon,
+.filter-button.category-filter.active .category-icon {
+  filter: brightness(0) invert(1);
+  mix-blend-mode: normal;
+}
+
+/* focus visible */
+.category-filter-button:focus-visible,
+.filter-button.category-filter:focus-visible {
+  outline: 3px solid rgba(129,199,132,0.22);
+  outline-offset: 2px;
+  border-radius: calc(var(--radius) + 6px);
+}
+
+/* TABLET / DESKTOP: grid */
+@media (min-width: 641px) {
+  .category-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+  .category-filter-button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0.9rem 0.6rem;
+    border-radius: var(--radius);
+  }
+  .category-icon-container { width: 34px; height: 34px; border-radius: 8px; }
+  .category-name { font-size: 0.85rem; max-width: 100%; }
+}
+@media (min-width: 1024px) {
+  .category-filter-grid { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; }
+  .category-filter-button { padding: 1rem 0.75rem; }
+  .category-icon-container { width: 42px; height: 42px; }
+  .category-name { font-size: 0.90rem; }
+}
+@media (max-width: 420px) {
+  .category-filter-button { min-width: 78px; padding: 0.45rem 0.6rem; }
+  .category-icon-container { width: 34px; height: 34px; }
+  .category-name { font-size: 0.72rem; max-width: 100px;}
+}
+
+/* optional: visually hide the native focus ring for mouse users but keep for keyboard */
+.filter-button:focus { outline: none; }
+</style>
+
+<!-- ===== CATEGORY FILTERS SECTION (aligned) ===== -->
+<div class="filter-section">
+  <div class="section-label">Categories</div>
+
+  <div class="category-filter-grid" role="tablist" aria-label="Category filters">
+    <!-- All -->
+    <button
+      type="button"
+      class="filter-button category-filter{% if selected_category=='All' %} active{% endif %}"
+      data-value="All"
+      role="tab"
+      aria-pressed="{% if selected_category=='All' %}true{% else %}false{% endif %}"
+    >
+      <span class="category-icon-container" aria-hidden="true">
+        <img
+          src="https://api.iconify.design/mdi:format-list-bulleted.svg"
+          alt="All"
+          class="category-icon"
+          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';"
+        >
+      </span>
+      <span class="category-name">All</span>
+    </button>
+
+    <!-- Electronics -->
+    <button
+      type="button"
+      class="filter-button category-filter{% if selected_category=='Electronics' %} active{% endif %}"
+      data-value="Electronics"
+      role="tab"
+      aria-pressed="{% if selected_category=='Electronics' %}true{% else %}false{% endif %}"
+    >
+      <span class="category-icon-container" aria-hidden="true">
+        <img src="https://api.iconify.design/mdi:television.svg" alt="Electronics" class="category-icon"
+          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
+      </span>
+      <span class="category-name">Electronics</span>
+    </button>
+
+    <!-- Mobile Phones & Accessories -->
+    <button
+      type="button"
+      class="filter-button category-filter{% if selected_category=='Mobile Phones & Accessories' %} active{% endif %}"
+      data-value="Mobile Phones & Accessories"
+      role="tab"
+      aria-pressed="{% if selected_category=='Mobile Phones & Accessories' %}true{% else %}false{% endif %}"
+    >
+      <span class="category-icon-container" aria-hidden="true">
+        <img src="https://api.iconify.design/mdi:cellphone.svg" alt="Mobile Phones & Accessories" class="category-icon"
+          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
+      </span>
+      <span class="category-name">Phones</span>
+    </button>
+
+    <!-- Computers & Networking -->
+    <button
+      type="button"
+      class="filter-button category-filter{% if selected_category=='Computers & Networking' %} active{% endif %}"
+      data-value="Computers & Networking"
+      role="tab"
+      aria-pressed="{% if selected_category=='Computers & Networking' %}true{% else %}false{% endif %}"
+    >
+      <span class="category-icon-container" aria-hidden="true">
+        <img src="https://api.iconify.design/mdi:desktop-classic.svg" alt="Computers & Networking" class="category-icon"
+          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
+      </span>
+      <span class="category-name">Computers</span>
+    </button>
+
+    <!-- Sports & Outdoors -->
+    <button
+      type="button"
+      class="filter-button category-filter{% if selected_category=='Sports & Outdoors' %} active{% endif %}"
+      data-value="Sports & Outdoors"
+      role="tab"
+      aria-pressed="{% if selected_category=='Sports & Outdoors' %}true{% else %}false{% endif %}"
+    >
+      <span class="category-icon-container" aria-hidden="true">
+        <img src="https://api.iconify.design/mdi:basketball.svg" alt="Sports & Outdoors" class="category-icon"
+          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
+      </span>
+      <span class="category-name">Sports</span>
+    </button>
+
+    <!-- Toys & Games -->
+    <button
+      type="button"
+      class="filter-button category-filter{% if selected_category=='Toys & Games' %} active{% endif %}"
+      data-value="Toys & Games"
+      role="tab"
+      aria-pressed="{% if selected_category=='Toys & Games' %}true{% else %}false{% endif %}"
+    >
+      <span class="category-icon-container" aria-hidden="true">
+        <img src="https://api.iconify.design/mdi:puzzle.svg" alt="Toys & Games" class="category-icon"
+          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
+      </span>
+      <span class="category-name">Toys</span>
+    </button>
+
+    <!-- Automobile & Vehicles -->
+    <button
+      type="button"
+      class="filter-button category-filter{% if selected_category=='Automobile & Vehicles' %} active{% endif %}"
+      data-value="Automobile & Vehicles"
+      role="tab"
+      aria-pressed="{% if selected_category=='Automobile & Vehicles' %}true{% else %}false{% endif %}"
+    >
+      <span class="category-icon-container" aria-hidden="true">
+        <img src="https://api.iconify.design/mdi:car.svg" alt="Automobile & Vehicles" class="category-icon"
+          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
+      </span>
+      <span class="category-name">Auto</span>
+    </button>
   </div>
+</div>
 
-  
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Category buttons
+  const categoryButtons = Array.from(document.querySelectorAll('.category-filter'));
+  if (!categoryButtons.length) return;
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Deal‑type buttons
-      document.querySelectorAll('.deal-filter').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.deal-filter').forEach(t => t.classList.remove('active'));
-          btn.classList.add('active');
-          document.getElementById('selected-deal-type').value = btn.dataset.value;
-          document.getElementById('search-form').submit();
-        });
+  // Try to get the main search form if it exists
+  const searchForm = document.getElementById('search-form');
+
+  // Helper: get or create a hidden input (id=selected-category, name=category)
+  function ensureHiddenCategoryInput(form) {
+    if (!form) return null;
+    let input = form.querySelector('#selected-category');
+    if (!input) {
+      input = form.querySelector('input[name="category"]');
+    }
+    if (!input) {
+      input = document.createElement('input');
+      input.type = 'hidden';
+      input.id = 'selected-category';
+      input.name = 'category';
+      form.appendChild(input);
+    } else {
+      // normalize id if it exists by name
+      if (!input.id) input.id = 'selected-category';
+    }
+    return input;
+  }
+
+  // Pre-cache input: prefer searchForm, else nearest form of the first button
+  const preferForm = searchForm || categoryButtons[0].closest('form') || null;
+  const hiddenInput = ensureHiddenCategoryInput(preferForm);
+
+  categoryButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+
+      // Visual updates
+      categoryButtons.forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
       });
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
 
-      // Category buttons
-      document.querySelectorAll('.category-filter').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.category-filter').forEach(t => t.classList.remove('active'));
-          btn.classList.add('active');
-          document.getElementById('selected-category').value = btn.dataset.value;
-          document.getElementById('search-form').submit();
-        });
-      });
+      // Update hidden input if possible
+      const val = btn.dataset.value || btn.getAttribute('data-value') || btn.textContent.trim();
+      if (hiddenInput) {
+        hiddenInput.value = val;
+      } else {
+        // If no preferForm existed, try to create inside closest form now
+        const nearestForm = btn.closest('form');
+        const created = ensureHiddenCategoryInput(nearestForm);
+        if (created) created.value = val;
+      }
+
+      // Submit the form if #search-form exists (keeps server-side behavior)
+      if (searchForm) {
+        searchForm.submit();
+      }
+      // If you want auto-submit for other forms, adapt here.
     });
-  </script>
+  });
+
+  // Keyboard navigation for the horizontal list
+  const grid = document.querySelector('.category-filter-grid');
+  if (grid) {
+    grid.addEventListener('keydown', (e) => {
+      const keys = ['ArrowLeft','ArrowRight','Home','End'];
+      if (!keys.includes(e.key)) return;
+      const items = Array.from(grid.querySelectorAll('.category-filter'));
+      if (!items.length) return;
+      const currentIndex = items.indexOf(document.activeElement);
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const prev = items[(currentIndex - 1 + items.length) % items.length];
+        prev.focus();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const next = items[(currentIndex + 1) % items.length];
+        next.focus();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        items[0].focus();
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        items[items.length - 1].focus();
+      }
+    });
+  }
+});
+</script>
+
 </form>
 
 <!-- ===== LISTINGS GRID ===== -->
