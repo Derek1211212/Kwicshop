@@ -2638,8 +2638,8 @@ def flush_clicks():
 
 
 # Schedule it to run every hour (or every minute for testing)
-scheduler.add_job(func=flush_impressions, trigger='interval', hours=1, next_run_time=datetime.utcnow())
-scheduler.add_job(func=flush_clicks, trigger='interval', hours=1, next_run_time=datetime.utcnow())
+scheduler.add_job(func=flush_impressions, trigger='interval', minutes=10, next_run_time=datetime.utcnow())
+scheduler.add_job(func=flush_clicks, trigger='interval', minutes=10, next_run_time=datetime.utcnow())
 
 
 
