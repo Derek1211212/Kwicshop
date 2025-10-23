@@ -963,174 +963,166 @@ def logout():
 
 
 import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from twilio.rest import Client
+import socket
+from email.message import EmailMessage
 
 def send_email_notification(recipient_email, subject, body):
     """
-    Sends an email notification to the specified recipient.
-    
-    Configuration:
-      - Replace 'your_email@example.com' and 'your_email_password' with your email credentials.
-      - Set 'smtp.example.com' and port 587 (or another port as needed) to match your SMTP server.
+    Send email using SendGrid's SMTP relay (TLS on port 587).
+    Returns True on success, False on failure. Does not raise.
+    NOTE: Credentials are embedded for testing only — remove/rotate before production.
     """
-    sender_email = "Derickbill3@gmail.com"
-    sender_password = "bxyw odgw iwvl tpad"
-    smtp_server = "smtp.gmail.com"
-    smtp_port = 587  # or use 465 for SSL if needed
+    if not recipient_email:
+        app.logger.warning("send_email_notification called without recipient_email")
+        return False
 
-    # Create a multipart message
-    message = MIMEMultipart()
-    message["From"] = sender_email
-    message["To"] = recipient_email
-    message["Subject"] = subject
-    message.attach(MIMEText(body, "plain"))
+    SMTP_SERVER = "smtp.sendgrid.net"
+    SMTP_PORT = 587
+    SMTP_USER = "apikey"  # per SendGrid SMTP usage
+    SMTP_PASSWORD = "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"  # test password you provided
+
+    sender_email = "blaqprophet112@gmail.com"  # use a sender verified in your SendGrid account
+
+    msg = EmailMessage()
+    msg["From"] = sender_email
+    msg["To"] = recipient_email
+    msg["Subject"] = subject
+    msg.set_content(body)
 
     try:
-        # Connect to the SMTP server and send the email
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
-            server.starttls()  # Secure the connection
-            server.login(sender_email, sender_password)
-            server.send_message(message)
-        print(f"Email sent successfully to {recipient_email}")
+        # create SMTP connection with an explicit socket timeout
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10) as server:
+            server.ehlo()
+            # Upgrade connection to TLS
+            server.starttls()
+            server.ehlo()
+            # Login with SendGrid SMTP credentials (username 'apikey' and the API key as password)
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.send_message(msg)
+
+        app.logger.info("SendGrid SMTP: email sent to %s", recipient_email)
+        return True
+
+    except (smtplib.SMTPException, socket.timeout, ConnectionRefusedError) as e:
+        app.logger.error("SendGrid SMTP error sending to %s: %s", recipient_email, e, exc_info=True)
+        return False
     except Exception as e:
-        print("Error sending email:", e)
-        raise e
-
-def send_text_notification(recipient_contact, body):
-    """
-    Sends a text message notification using the Twilio API.
-    
-    Configuration:
-      - Replace 'your_twilio_account_sid', 'your_twilio_auth_token', and 'your_twilio_phone_number'
-        with your Twilio account details.
-      - Ensure that recipient_contact is in the proper format (e.g., '+1234567890').
-    """
-    account_sid = "AC51155da53026cb7d1bc0f7bd7512c764"
-    auth_token = "7e2c3ce168d8790f799f5f5d59087408"
-    from_number = "+13252406425"  # Your Twilio phone number
-
-    client = Client(account_sid, auth_token)
-
-    try:
-        message = client.messages.create(
-            body=body,
-            from_=from_number,
-            to=recipient_contact
-        )
-        print(f"Text message sent successfully to {recipient_contact}, SID: {message.sid}")
-    except Exception as e:
-        print("Error sending text message:", e)
-        raise e
+        app.logger.exception("Unexpected error sending email to %s: %s", recipient_email, e)
+        return False
 
 
 
 
 
 
-
-
-# Proposal Creation Route
 @app.route('/create_proposal/<int:listing_id>', methods=['GET', 'POST'])
 @login_required
 def create_proposal(listing_id):
-    if request.method == 'POST':
-        conn = None
-        cursor = None
-        try:
-            # Initialize database connection
-            conn = get_db_connection()
-            cursor = conn.cursor(dictionary=True)
+    if request.method != 'POST':
+        return redirect(url_for('listing_details', listing_id=listing_id))
 
-            # Verify proposals table exists
-            cursor.execute("SHOW TABLES LIKE 'proposals'")
-            if not cursor.fetchone():
-                app.logger.error("Proposals table does not exist")
-                flash('Server error: Proposals table missing.', 'danger')
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Ensure proposals table exists
+        cursor.execute("SHOW TABLES LIKE 'proposals'")
+        if not cursor.fetchone():
+            app.logger.error("Proposals table does not exist")
+            flash('Server error: Proposals table missing.', 'danger')
+            return redirect(url_for('listing_details', listing_id=listing_id))
+
+        # Validate listing exists
+        cursor.execute("SELECT user_id, title FROM listings WHERE listing_id = %s", (listing_id,))
+        listing = cursor.fetchone()
+        if not listing:
+            app.logger.error("Listing ID %s does not exist", listing_id)
+            flash('Invalid listing ID.', 'danger')
+            return redirect(url_for('listing_details', listing_id=listing_id))
+
+        owner_id = listing['user_id']
+        listing_title = listing['title']
+
+        # Gather form data
+        proposer_id = session.get('user_id')
+        proposed_item = request.form.get('proposed_item', '').strip()
+        additional_cash_raw = request.form.get('additional_cash', '').strip()
+        message = request.form.get('message', '').strip()
+        detailed_description = request.form.get('detailed_description', '').strip()
+        condition = request.form.get('condition', '').strip()
+        phone_number = request.form.get('phone_number', '').strip()
+        email_address = request.form.get('email_address', '').strip()
+
+        # Validate required fields
+        if not all([proposed_item, detailed_description, condition, phone_number, email_address]):
+            flash('All required fields must be filled.', 'danger')
+            return redirect(url_for('listing_details', listing_id=listing_id))
+
+        # Safe parse for additional_cash
+        additional_cash = None
+        if additional_cash_raw:
+            try:
+                additional_cash = float(additional_cash_raw.replace(',', '').strip())
+            except ValueError:
+                flash('Invalid value for additional cash.', 'danger')
                 return redirect(url_for('listing_details', listing_id=listing_id))
 
-            # Validate listing exists
-            cursor.execute(
-                "SELECT user_id, title FROM listings WHERE listing_id = %s",
-                (listing_id,)
-            )
-            listing = cursor.fetchone()
-            if not listing:
-                app.logger.error(f"Listing ID {listing_id} does not exist")
-                flash('Invalid listing ID.', 'danger')
-                return redirect(url_for('listing_details', listing_id=listing_id))
+        # Handle image uploads
+        upload_folder = app.config.get('UPLOAD_FOLDER', '/tmp/uploads')
+        os.makedirs(upload_folder, exist_ok=True)
+        image_filenames = []
+        for i in range(1, 5):
+            file = request.files.get(f'image{i}')
+            if file and file.filename and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                path = os.path.join(upload_folder, filename)
+                file.save(path)
+                image_filenames.append(filename)
+            else:
+                image_filenames.append(None)
 
-            owner_id = listing['user_id']
-            listing_title = listing['title']
+        # Insert into proposals (use exact column names from your schema)
+        insert_query = '''
+            INSERT INTO proposals (
+                listing_id, user_id, proposed_item,
+                additional_cash, message, status,
+                detailed_description, `condition`,
+                `Phone_number`, `Email_address`,
+                image1, image2, image3, image4
+            ) VALUES (%s, %s, %s, %s, %s, 'pending', %s, %s, %s, %s, %s, %s, %s, %s)
+        '''
+        params = (
+            listing_id, proposer_id, proposed_item,
+            additional_cash, message,
+            detailed_description, condition,
+            phone_number, email_address,
+            *image_filenames
+        )
+        cursor.execute(insert_query, params)
+        conn.commit()
 
-            # Gather form data
-            proposer_id = session['user_id']
-            proposed_item = request.form.get('proposed_item', '').strip()
-            additional_cash_raw = request.form.get('additional_cash', '').strip()
-            additional_cash = float(additional_cash_raw) if additional_cash_raw else None
-            message = request.form.get('message', '').strip()
-            detailed_description = request.form.get('detailed_description', '').strip()
-            condition = request.form.get('condition', '').strip()
-            phone_number = request.form.get('phone_number', '').strip()
-            email_address = request.form.get('email_address', '').strip()
+        # Lookup owner using users.id
+        cursor.execute("SELECT email, contact FROM users WHERE id = %s", (owner_id,))
+        owner = cursor.fetchone()
+        if owner:
+            owner_email = owner.get('email')
 
-            # Validate required fields
-            if not all([proposed_item, detailed_description, condition, phone_number, email_address]):
-                flash('All required fields must be filled.', 'danger')
-                return redirect(url_for('listing_details', listing_id=listing_id))
-
-            # Handle image uploads
-            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-            image_filenames = []
-            for i in range(1, 5):
-                file = request.files.get(f'image{i}')
-                if file and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
-                    path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                    file.save(path)
-                    image_filenames.append(filename)
-                else:
-                    image_filenames.append(None)
-
-            # Insert the proposal
-            insert_query = '''
-                INSERT INTO proposals (
-                    listing_id, user_id, proposed_item,
-                    additional_cash, message, status,
-                    detailed_description, `condition`,
-                    phone_number, Email_address,
-                    image1, image2, image3, image4
-                ) VALUES (%s, %s, %s, %s, %s, 'pending', %s, %s, %s, %s, %s, %s, %s, %s)
-            '''
-            params = (
-                listing_id, proposer_id, proposed_item,
-                additional_cash, message,
-                detailed_description, condition,
-                phone_number, email_address,
-                *image_filenames
-            )
-            cursor.execute(insert_query, params)
-            conn.commit()
-
-            # Send email + SMS notifications
-            cursor.execute("SELECT email, contact FROM users WHERE id = %s", (owner_id,))
-            owner = cursor.fetchone()
-            if owner:
+            # Send email notification (non-fatal)
+            if owner_email:
                 try:
-                    send_email_notification(
-                        owner['email'],
+                    ok = send_email_notification(
+                        owner_email,
                         "New Proposal Received",
                         f"Someone just sent you a swap proposal for your listing: {listing_title}."
                     )
-                    send_text_notification(
-                        owner['contact'],
-                        f"New proposal for {listing_title}. Check your dashboard."
-                    )
-                except Exception as notify_err:
-                    app.logger.error("Email/SMS error: %s", notify_err)
+                    if not ok:
+                        app.logger.warning("Email notification failed for user id=%s", owner_id)
+                except Exception as e:
+                    app.logger.exception("Unexpected error in send_email_notification: %s", e)
 
-            # Send web-push notification
+            # Web-push notification (still wrapped)
             try:
                 send_push(
                     owner_id,
@@ -1138,31 +1130,27 @@ def create_proposal(listing_id):
                     f"Someone just sent you a swap proposal for your listing: {listing_title}.",
                     url_for('dashboard')
                 )
-                app.logger.info(
-                    "Push notification sent to user %s for listing %s",
-                    owner_id, listing_id
-                )
+                app.logger.info("Push notification sent to user %s for listing %s", owner_id, listing_id)
             except Exception as push_err:
-                app.logger.error("Push notification error: %s", push_err)
+                app.logger.error("Push notification error: %s", push_err, exc_info=True)
 
-            flash('Your swap proposal has been submitted successfully!', 'success')
-            return redirect(url_for('listing_details', listing_id=listing_id))
+        flash('Your swap proposal has been submitted successfully!', 'success')
+        return redirect(url_for('listing_details', listing_id=listing_id))
 
-        except Exception as e:
-            if conn:
-                conn.rollback()
-            app.logger.error(f"Error creating proposal: {e}", exc_info=True)
-            flash('Error submitting proposal. Please try again.', 'danger')
-            return redirect(url_for('listing_details', listing_id=listing_id))
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        app.logger.exception("Error creating proposal: %s", e)
+        flash('Error submitting proposal. Please try again.', 'danger')
+        return redirect(url_for('listing_details', listing_id=listing_id))
 
-        finally:
-            if cursor:
-                cursor.close()
-            if conn:
-                conn.close()
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
-    # GET or other methods
-    return redirect(url_for('listing_details', listing_id=listing_id))
+
 
 
 
