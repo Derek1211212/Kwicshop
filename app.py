@@ -976,38 +976,52 @@ def send_email_notification(recipient_email, subject, body):
         app.logger.warning("send_email_notification called without recipient_email")
         return False
 
+    # ==============================
+    # 🔐 SENDGRID SMTP SETTINGS
+    # ==============================
     SMTP_SERVER = "smtp.sendgrid.net"
     SMTP_PORT = 587
-    SMTP_USER = "apikey"  # per SendGrid SMTP usage
-    SMTP_PASSWORD = "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"  # test password you provided
+    SMTP_USER = "apikey"  # This must remain literally 'apikey'
+    SMTP_PASSWORD = "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"  # TEST KEY ONLY
 
-    sender_email = "blaqprophet112@gmail.com"  # use a sender verified in your SendGrid account
+    # ==============================
+    # 📧 SENDER ADDRESS
+    # ==============================
+    # Use a domain-based or verified sender email in your SendGrid account.
+    # Once domain authentication is verified, use:
+    # sender_email = "no-reply@tghenterprise.net"
+    sender_email = "no-reply@tghenterprise.net"
 
+    # ==============================
+    # ✉️ BUILD THE EMAIL MESSAGE
+    # ==============================
     msg = EmailMessage()
-    msg["From"] = sender_email
+    msg["From"] = f"SwapHub Notifications <{sender_email}>"
     msg["To"] = recipient_email
     msg["Subject"] = subject
     msg.set_content(body)
 
     try:
-        # create SMTP connection with an explicit socket timeout
+        # Create SMTP connection with explicit socket timeout
+        app.logger.info("Connecting to SendGrid SMTP server...")
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10) as server:
             server.ehlo()
             # Upgrade connection to TLS
             server.starttls()
             server.ehlo()
-            # Login with SendGrid SMTP credentials (username 'apikey' and the API key as password)
+            # Login with SendGrid SMTP credentials
             server.login(SMTP_USER, SMTP_PASSWORD)
+            # Send the email message
             server.send_message(msg)
 
-        app.logger.info("SendGrid SMTP: email sent to %s", recipient_email)
+        app.logger.info("✅ SendGrid SMTP: Email successfully sent to %s", recipient_email)
         return True
 
     except (smtplib.SMTPException, socket.timeout, ConnectionRefusedError) as e:
-        app.logger.error("SendGrid SMTP error sending to %s: %s", recipient_email, e, exc_info=True)
+        app.logger.error("❌ SendGrid SMTP error sending to %s: %s", recipient_email, e, exc_info=True)
         return False
     except Exception as e:
-        app.logger.exception("Unexpected error sending email to %s: %s", recipient_email, e)
+        app.logger.exception("❌ Unexpected error sending email to %s: %s", recipient_email, e)
         return False
 
 
@@ -1104,18 +1118,53 @@ def create_proposal(listing_id):
         conn.commit()
 
         # Lookup owner using users.id
-        cursor.execute("SELECT email, contact FROM users WHERE id = %s", (owner_id,))
+        cursor.execute("SELECT email, contact, name FROM users WHERE id = %s", (owner_id,))
         owner = cursor.fetchone()
+
+        # Lookup proposer name for friendly email (best effort)
+        proposer_name = "A user"
+        if proposer_id:
+            try:
+                cursor.execute("SELECT name, email FROM users WHERE id = %s", (proposer_id,))
+                proposer = cursor.fetchone()
+                if proposer:
+                    proposer_name = proposer.get('name') or proposer.get('email') or proposer_name
+            except Exception:
+                app.logger.debug("Could not fetch proposer name for user id=%s", proposer_id, exc_info=True)
+
         if owner:
             owner_email = owner.get('email')
+
+            # Prepare friendly, inbox-friendly subject and body
+            listing_url = url_for('listing_details', listing_id=listing_id, _external=True)
+            friendly_subject = f"New proposal for your listing: {listing_title}"
+            friendly_body = f"""Hi there,
+
+{proposer_name} has sent you a new swap proposal for your listing "{listing_title}" on SwapHub.
+
+Proposal summary:
+- Offered item: {proposed_item}
+- Condition: {condition}
+- Additional cash offered: {"GH₵{:,.2f}".format(additional_cash) if additional_cash is not None else "N/A"}
+
+Message from {proposer_name}:
+{message if message else 'No additional message provided.'}
+
+View the proposal and respond: {listing_url}
+
+If you no longer want to receive these notifications, please update your notification settings in your dashboard.
+
+Thanks for being on SwapHub!
+The SwapHub Team
+"""
 
             # Send email notification (non-fatal)
             if owner_email:
                 try:
                     ok = send_email_notification(
                         owner_email,
-                        "New Proposal Received",
-                        f"Someone just sent you a swap proposal for your listing: {listing_title}."
+                        friendly_subject,
+                        friendly_body
                     )
                     if not ok:
                         app.logger.warning("Email notification failed for user id=%s", owner_id)
@@ -1124,17 +1173,19 @@ def create_proposal(listing_id):
 
             # Web-push notification (still wrapped)
             try:
+                push_title = "New proposal received"
+                push_body = f"{proposer_name} sent a proposal for \"{listing_title}\"."
                 send_push(
                     owner_id,
-                    "New proposal received",
-                    f"Someone just sent you a swap proposal for your listing: {listing_title}.",
+                    push_title,
+                    push_body,
                     url_for('dashboard')
                 )
                 app.logger.info("Push notification sent to user %s for listing %s", owner_id, listing_id)
             except Exception as push_err:
                 app.logger.error("Push notification error: %s", push_err, exc_info=True)
 
-        flash('Your swap proposal has been submitted successfully!', 'success')
+        flash('Your swap proposal has been submitted successfully! The owner will be notified.', 'success')
         return redirect(url_for('listing_details', listing_id=listing_id))
 
     except Exception as e:
@@ -1149,6 +1200,7 @@ def create_proposal(listing_id):
             cursor.close()
         if conn:
             conn.close()
+
 
 
 
