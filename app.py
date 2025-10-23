@@ -42,8 +42,8 @@ from datetime import datetime, date
 from mysql.connector import connect, Error
 import string
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
-
-
+import socket
+from email.message import EmailMessage
 
 
 
@@ -962,9 +962,7 @@ def logout():
 
 
 
-import smtplib
-import socket
-from email.message import EmailMessage
+
 
 def send_email_notification(recipient_email, subject, body):
     """
@@ -1023,6 +1021,7 @@ def send_email_notification(recipient_email, subject, body):
     except Exception as e:
         app.logger.exception("❌ Unexpected error sending email to %s: %s", recipient_email, e)
         return False
+
 
 
 
