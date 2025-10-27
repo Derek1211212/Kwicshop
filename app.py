@@ -1328,17 +1328,93 @@ def dashboard():
 
 
 
+UPLOAD_FOLDER = "static/images"  
+
 @app.route('/listings/<int:listing_id>', methods=['DELETE'])
 @login_required
 def delete_listing(listing_id):
     conn = get_db_connection()
-    cursor = conn.cursor()
-    
+    cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute("DELETE FROM listings WHERE listing_id=%s AND user_id=%s", 
-                      (listing_id, session['user_id']))
+        # 1) Confirm listing exists and belongs to the user
+        cursor.execute("SELECT * FROM listings WHERE listing_id = %s", (listing_id,))
+        listing = cursor.fetchone()
+        if not listing:
+            return jsonify({'success': False, 'error': 'Listing not found'}), 404
+        if listing['user_id'] != session['user_id']:
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+
+        # Helper to delete a local file if exists
+        def delete_image_file(image_path):
+            if not image_path:
+                return
+            # protect against absolute path deletion attacks by only allowing relative within UPLOAD_FOLDER
+            full_path = os.path.normpath(os.path.join(UPLOAD_FOLDER, image_path))
+            if not full_path.startswith(os.path.normpath(UPLOAD_FOLDER)):
+                # don't delete paths that attempt to escape the upload folder
+                print(f"Skipping unsafe path: {image_path}")
+                return
+            if os.path.exists(full_path):
+                try:
+                    os.remove(full_path)
+                except Exception as e:
+                    # non-fatal: log and continue (DB delete still in transaction)
+                    print(f"Warning deleting file {full_path}: {e}")
+
+        # 2) Fetch offered_items to delete their images
+        cursor.execute("SELECT * FROM offered_items WHERE listing_id = %s", (listing_id,))
+        offered_items = cursor.fetchall()
+
+        # 3) Fetch proposals to delete their images
+        cursor.execute("SELECT * FROM proposals WHERE listing_id = %s", (listing_id,))
+        proposals = cursor.fetchall()
+
+        # 4) Delete images from offered_items
+        for item in offered_items:
+            for field in ['image_url', 'image1', 'image2', 'image3', 'image4']:
+                # item may be a dict due to dictionary=True
+                delete_image_file(item.get(field))
+
+        # 5) Delete images from proposals
+        for p in proposals:
+            for field in ['image1', 'image2', 'image3', 'image4']:
+                delete_image_file(p.get(field))
+
+        # 6) Delete images from main listing
+        for field in ['image_url', 'image1', 'image2', 'image3', 'image4']:
+            delete_image_file(listing.get(field))
+
+        # 7) Delete dependent rows (order matters because of FK constraints)
+        # Delete offered_items first
+        cursor.execute("DELETE FROM offered_items WHERE listing_id = %s", (listing_id,))
+
+        # Delete proposals next
+        cursor.execute("DELETE FROM proposals WHERE listing_id = %s", (listing_id,))
+
+        # Delete listing metrics (impressions/clicks)
+        cursor.execute("DELETE FROM listing_metrics WHERE listing_id = %s", (listing_id,))
+
+        # 8) Delete the listing row (double-checking user_id to be safe)
+        cursor.execute("DELETE FROM listings WHERE listing_id = %s AND user_id = %s",
+                       (listing_id, session['user_id']))
+
+        # ensure the delete actually affected a row (defense-in-depth)
+        if cursor.rowcount == 0:
+            conn.rollback()
+            return jsonify({'success': False, 'error': 'Delete failed or unauthorized'}), 400
+
         conn.commit()
-        return jsonify({'success': True})
+        return jsonify({'success': True, 'message': 'Listing and related data deleted successfully'}), 200
+
+    except mysql.connector.Error as e:
+        conn.rollback()
+        return jsonify({'success': False, 'error': f"DB error: {str(e)}"}), 500
+
+    except Exception as e:
+        conn.rollback()
+        # catch unexpected errors (like filesystem errors) and return 500
+        return jsonify({'success': False, 'error': f"Server error: {str(e)}"}), 500
+
     finally:
         cursor.close()
         conn.close()
