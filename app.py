@@ -2451,60 +2451,111 @@ def submit_review(listing_id):
 
 
 
-def _send_async_email(to_email, subject, body):
-    """Background worker for sending email via Mailjet SMTP."""
-    try:
-        # Create MIME message
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From'] = app.config['FROM_EMAIL']
-        msg['To'] = to_email
 
-        # Extract reset URL for HTML
-        reset_url = body.split('link:\n')[1].split('\n')[0] if 'link:\n' in body else body
 
-        # Plain text part
-        text_part = MIMEText(body, 'plain')
 
-        # HTML part for better deliverability
-        html_body = f"""
-        <html>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-            <p>Hi,</p>
-            <p>Click below to reset your password:</p>
-            <a href="{reset_url}" style="display: inline-block; padding: 10px 20px; color: #fff; background-color: #007bff; text-decoration: none; border-radius: 5px;">Reset Password</a>
-            <p style="margin-top: 20px;">This link expires in 1 hour.</p>
-            <p>If you did not request this, ignore this email.</p>
-        </body>
-        </html>
+
+
+# ========== Ensure send_email_notification exists (guarded) ==========
+# If your codebase already defines `send_email_notification`, this block will NOT override it.
+if 'send_email_notification' not in globals():
+    def send_email_notification(recipient_email, subject, body):
         """
-        html_part = MIMEText(html_body, 'html')
+        Send email using SendGrid's SMTP relay (TLS on port 587).
+        Returns True on success, False on failure. Does not raise.
+        NOTE: Credentials are embedded for testing only — remove/rotate before production.
+        """
+        if not recipient_email:
+            app.logger.warning("send_email_notification called without recipient_email")
+            return False
 
-        # Attach parts
-        msg.attach(text_part)
-        msg.attach(html_part)
+        # ==============================
+        # 🔐 SENDGRID SMTP SETTINGS
+        # ==============================
+        SMTP_SERVER = "smtp.sendgrid.net"
+        SMTP_PORT = 587
+        SMTP_USER = "apikey"  # This must remain literally 'apikey'
+        SMTP_PASSWORD = "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"  # TEST KEY ONLY
 
-        # Connect to Mailjet SMTP server
-        with smtplib.SMTP(app.config['SMTP_SERVER'], app.config['SMTP_PORT']) as server:
-            server.starttls()  # Enable TLS for Mailjet
-            server.login(app.config['SMTP_USERNAME'], app.config['SMTP_PASSWORD'])
-            server.send_message(msg)
-            logging.info(f"Email sent to {to_email} via Mailjet SMTP")
-    except smtplib.SMTPDataError as e:
-        logging.exception(f"Mailjet SMTP email send failed: Code {e.smtp_code}, Message {e.smtp_error.decode()}")
-    except Exception as e:
-        logging.exception(f"Mailjet SMTP email send failed: {e}")
+        # ==============================
+        # 📧 SENDER ADDRESS
+        # ==============================
+        # Use a domain-based or verified sender email in your SendGrid account.
+        sender_email = app.config.get('FROM_EMAIL', "no-reply@tghenterprise.net")
 
-def send_email_background(subject, sender, recipients, body):
-    """Prepare message and send in a background thread (fire-and-forget)."""
-    email = recipients[0] if recipients else None
-    if not email:
-        logging.error("No recipient provided for email.")
+        # ==============================
+        # ✉️ BUILD THE EMAIL MESSAGE
+        # ==============================
+        msg = EmailMessage()
+        msg["From"] = f"SwapHub Notifications <{sender_email}>"
+        msg["To"] = recipient_email
+        msg["Subject"] = subject
+        msg.set_content(body)
+
+        try:
+            # Create SMTP connection with explicit socket timeout
+            app.logger.info("Connecting to SendGrid SMTP server...")
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10) as server:
+                server.ehlo()
+                # Upgrade connection to TLS
+                server.starttls()
+                server.ehlo()
+                # Login with SendGrid SMTP credentials
+                server.login(SMTP_USER, SMTP_PASSWORD)
+                # Send the email message
+                server.send_message(msg)
+
+            app.logger.info("✅ SendGrid SMTP: Email successfully sent to %s", recipient_email)
+            return True
+
+        except (smtplib.SMTPException, socket.timeout, ConnectionRefusedError) as e:
+            app.logger.error("❌ SendGrid SMTP error sending to %s: %s", recipient_email, e, exc_info=True)
+            return False
+        except Exception as e:
+            app.logger.exception("❌ Unexpected error sending email to %s: %s", recipient_email, e)
+            return False
+
+# ========== Password-reset SendGrid wrapper (named uniquely to avoid conflicts) ==========
+def _send_password_email_worker(recipient_email, subject, body):
+    """
+    Worker function that calls the existing send_email_notification helper.
+    Kept separate so we never redefine the project's primary send_email_notification.
+    """
+    try:
+        ok = send_email_notification(recipient_email, subject, body)
+        if ok:
+            logging.info("Password reset email sent to %s", recipient_email)
+        else:
+            logging.error("Password reset email failed (send_email_notification returned False) for %s", recipient_email)
+    except Exception:
+        logging.exception("Exception while sending password reset email to %s", recipient_email)
+
+def send_password_reset_via_sendgrid(recipient_email, reset_url):
+    """
+    Public helper to queue a password reset email using SendGrid (via send_email_notification).
+    Uses a unique function name to avoid any collisions with other senders.
+    """
+    if not recipient_email:
+        logging.error("send_password_reset_via_sendgrid called without recipient_email")
         return None
-    thread = threading.Thread(target=_send_async_email, args=(email, subject, body), daemon=True)
+
+    subject = "SwapHub — Password Reset Request"
+    body = (
+        "To reset your password, visit the following link:\n"
+        f"{reset_url}\n\n"
+        "This link will expire in 1 hour.\n"
+        "If you did not request a password reset, ignore this email."
+    )
+
+    thread = threading.Thread(
+        target=_send_password_email_worker,
+        args=(recipient_email, subject, body),
+        daemon=True
+    )
     thread.start()
     return thread
 
+# ========== Routes: forgot-password and reset-password (using SendGrid wrapper) ==========
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
@@ -2512,7 +2563,7 @@ def forgot_password():
         conn = None
         cursor = None
         try:
-            conn = get_db_connection()  # Assumes this is defined elsewhere
+            conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
 
             cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
@@ -2532,37 +2583,15 @@ def forgot_password():
             )
             conn.commit()
 
-
             # Build reset URL
             reset_url = url_for('reset_password', token=token, _external=True)
-            body = f"""To reset your password, visit the following link:
-{reset_url}
 
-This link will expire in 1 hour.
-If you did not request a password reset, ignore this email.
-"""
-
-            # Validate Mailjet config
-            if not all([
-                app.config['SMTP_USERNAME'],
-                app.config['SMTP_PASSWORD'],
-                app.config['FROM_EMAIL']
-            ]):
-                logging.error("Mailjet SMTP credentials or sender email missing.")
-                flash('Email service not configured. Contact admin.', 'danger')
-                return redirect(url_for('forgot_password'))
-
-            # Send in background
+            # Queue SendGrid email using the uniquely named helper
             try:
-                send_email_background(
-                    subject='Password Reset Request',
-                    sender=app.config['FROM_EMAIL'],
-                    recipients=[email],
-                    body=body
-                )
+                send_password_reset_via_sendgrid(email, reset_url)
                 flash('Password reset email queued. Check your inbox.', 'success')
-            except Exception as e:
-                logging.exception(f"Failed to queue email: {e}")
+            except Exception:
+                logging.exception("Failed to queue password reset email for %s", email)
                 flash('Could not send reset email at this time. Try again later.', 'danger')
 
             return redirect(url_for('forgot_password'))
@@ -2580,6 +2609,7 @@ If you did not request a password reset, ignore this email.
                 conn.close()
 
     return render_template('forgot_password.html')
+
 
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
@@ -2602,6 +2632,10 @@ def reset_password(token):
         if request.method == 'POST':
             new_password = request.form.get('password', '')
             confirm_password = request.form.get('confirm_password', '')
+
+            if not new_password:
+                flash('Password cannot be empty.', 'danger')
+                return redirect(request.url)
 
             if new_password != confirm_password:
                 flash('Passwords do not match.', 'danger')
@@ -2630,6 +2664,7 @@ def reset_password(token):
             cursor.close()
         if conn:
             conn.close()
+
 
 
             
