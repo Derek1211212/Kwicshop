@@ -45,6 +45,7 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import socket
 from email.message import EmailMessage
 import re
+import redis
 
 
 
@@ -2731,56 +2732,169 @@ def reset_password(token):
             
 
 
-def flush_impressions():
-    global impressions_cache
-    now = datetime.utcnow()
-    logging.info(f"Flushing impressions at {now}. Cache size: {len(impressions_cache)}")
+_redis_client = None
+_redis_lock = threading.Lock()
 
-    with cache_lock:
-        to_flush = impressions_cache.copy()
-        impressions_cache.clear()
+def get_redis():
+    """Return a shared redis.StrictRedis instance or None."""
+    global _redis_client
+    if _redis_client is not None:
+        return _redis_client
 
-    if not to_flush:
-        logging.info("No impressions to flush.")
+    with _redis_lock:
+        if _redis_client is None:
+            url = os.getenv('REDIS_URL')
+            if not url:
+                logging.warning("REDIS_URL not set – using in-memory fallback")
+                return None
+            try:
+                _redis_client = redis.from_url(url, decode_responses=False)
+                logging.info("Connected to Redis: %s", url.split('@')[-1])
+            except Exception as e:
+                logging.error("Redis connection failed: %s", e)
+                _redis_client = None
+    return _redis_client
+
+# --------------------------------------------------------------
+# 3. TRACKING ENDPOINTS (unchanged public contract)
+# --------------------------------------------------------------
+@app.route('/api/track_impression', methods=['POST'])
+def track_impression():
+    data = request.get_json() or {}
+    lid = str(data.get('listing_id', '')).strip()
+    source = data.get('source', 'grid')
+
+    if not lid:
+        return jsonify(success=False, error='Missing listing_id'), 400
+
+    r = get_redis()
+    if not r:                     # ---- local fallback ----
+        with cache_lock:
+            impressions_cache.setdefault(lid, {'impressions': 0, 'carousel_impressions': 0})
+            impressions_cache[lid]['impressions'] += 1
+            if source == 'carousel':
+                impressions_cache[lid]['carousel_impressions'] += 1
+    else:                         # ---- Redis ----
+        key = f"imp:{lid}"
+        r.hincrby(key, 'impressions', 1)
+        if source == 'carousel':
+            r.hincrby(key, 'carousel_impressions', 1)
+
+    logging.info(f"Impression tracked: listing_id={lid}, source={source}")
+    return jsonify(success=True)
+
+
+@app.route('/api/track_click', methods=['POST'])
+def track_click():
+    data = request.get_json() or {}
+    lid = str(data.get('listing_id', '')).strip()
+    source = data.get('source', 'grid')
+
+    if not lid:
+        return jsonify(success=False, error='Missing listing_id'), 400
+
+    r = get_redis()
+    if not r:                     # ---- local fallback ----
+        with clicks_cache_lock:
+            clicks_cache.setdefault(lid, {'clicks': 0, 'carousel_clicks': 0})
+            clicks_cache[lid]['clicks'] += 1
+            if source == 'carousel':
+                clicks_cache[lid]['carousel_clicks'] += 1
+    else:                         # ---- Redis ----
+        key = f"clk:{lid}"
+        r.hincrby(key, 'clicks', 1)
+        if source == 'carousel':
+            r.hincrby(key, 'carousel_clicks', 1)
+
+    return jsonify(success=True)
+
+# --------------------------------------------------------------
+# 4. FLUSH FUNCTIONS (run inside app context)
+# --------------------------------------------------------------
+def _flush_impressions_redis(r):
+    keys = r.keys("imp:*")
+    if not keys:
+        logging.info("No impression keys in Redis.")
         return
 
     conn = cur = None
     try:
         conn = get_db_connection()
         cur = conn.cursor()
+        for key in keys:
+            lid = key.decode().split(':', 1)[1]
+            data = r.hgetall(key)
+            impressions = int(data.get(b'impressions', 0))
+            carousel = int(data.get(b'carousel_impressions', 0))
 
-        for lid, counts in to_flush.items():
-            sql = """
+            cur.execute("""
                 INSERT INTO listing_metrics (listing_id, impressions, carousel_impressions)
                 VALUES (%s, %s, %s)
                 ON DUPLICATE KEY UPDATE
-                  impressions = impressions + VALUES(impressions),
-                  carousel_impressions = carousel_impressions + VALUES(carousel_impressions)
-            """
-            cur.execute(sql, (lid, counts['impressions'], counts['carousel_impressions']))
+                  impressions = impressions + %s,
+                  carousel_impressions = carousel_impressions + %s
+            """, (lid, impressions, carousel, impressions, carousel))
+            r.delete(key)
 
         conn.commit()
-        logging.info(f"Flushed {len(to_flush)} impression records.")
-
+        logging.info(f"Flushed {len(keys)} impression records from Redis.")
     except Exception as e:
-        logging.exception("Failed to flush impressions:")
+        logging.exception("Redis impression flush error")
         if conn: conn.rollback()
     finally:
         if cur: cur.close()
         if conn: conn.close()
 
 
-def flush_clicks():
-    global clicks_cache
-    now = datetime.utcnow()
-    logging.info(f"Flushing clicks at {now}. Cache size: {len(clicks_cache)}")
-
-    with clicks_cache_lock:
-        to_flush = clicks_cache.copy()
-        clicks_cache.clear()
+def _flush_impressions_memory():
+    with cache_lock:
+        to_flush = impressions_cache
+        impressions_cache = {}
 
     if not to_flush:
-        logging.info("No clicks to flush.")
+        logging.info("No in-memory impressions to flush.")
+        return
+
+    conn = cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        for lid, counts in to_flush.items():
+            cur.execute("""
+                INSERT INTO listing_metrics (listing_id, impressions, carousel_impressions)
+                VALUES (%s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                  impressions = impressions + %s,
+                  carousel_impressions = carousel_impressions + %s
+            """, (lid, counts['impressions'], counts['carousel_impressions'],
+                  counts['impressions'], counts['carousel_impressions']))
+        conn.commit()
+        logging.info(f"Flushed {len(to_flush)} in-memory impression records.")
+    except Exception as e:
+        logging.exception("Memory impression flush error")
+        if conn: conn.rollback()
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
+
+
+def flush_impressions():
+    """Public flush – called by scheduler."""
+    global impressions_cache               # <-- ADD THIS LINE
+    now = datetime.utcnow()
+    logging.info(f"Flushing impressions at {now}")
+
+    r = get_redis()
+    if r:
+        _flush_impressions_redis(r)
+    else:
+        _flush_impressions_memory()
+
+
+def _flush_clicks_redis(r):
+    keys = r.keys("clk:*")
+    if not keys:
+        logging.info("No click keys in Redis.")
         return
 
     conn = cur = None
@@ -2788,12 +2902,17 @@ def flush_clicks():
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # Check if carousel_clicks column exists
+        # Detect column once per flush
         cur.execute("SHOW COLUMNS FROM listing_metrics LIKE 'carousel_clicks'")
-        has_carousel_clicks = cur.fetchone() is not None
+        has_cc = cur.fetchone() is not None
 
-        for lid, counts in to_flush.items():
-            if has_carousel_clicks:
+        for key in keys:
+            lid = key.decode().split(':', 1)[1]
+            data = r.hgetall(key)
+            clicks = int(data.get(b'clicks', 0))
+            carousel = int(data.get(b'carousel_clicks', 0))
+
+            if has_cc:
                 sql = """
                     INSERT INTO listing_metrics (listing_id, clicks, carousel_clicks)
                     VALUES (%s, %s, %s)
@@ -2801,91 +2920,85 @@ def flush_clicks():
                         clicks = clicks + VALUES(clicks),
                         carousel_clicks = carousel_clicks + VALUES(carousel_clicks)
                 """
-                cur.execute(sql, (lid, counts['clicks'], counts['carousel_clicks']))
+                cur.execute(sql, (lid, clicks, carousel))
             else:
                 sql = """
                     INSERT INTO listing_metrics (listing_id, clicks)
                     VALUES (%s, %s)
                     ON DUPLICATE KEY UPDATE clicks = clicks + VALUES(clicks)
                 """
-                cur.execute(sql, (lid, counts['clicks']))
+                cur.execute(sql, (lid, clicks))
+
+            r.delete(key)
 
         conn.commit()
-        logging.info(f"Flushed {len(to_flush)} click records.")
-
+        logging.info(f"Flushed {len(keys)} click records from Redis.")
     except Exception as e:
-        logging.exception("Failed to flush clicks:")
+        logging.exception("Redis click flush error")
         if conn: conn.rollback()
     finally:
         if cur: cur.close()
         if conn: conn.close()
 
 
-# ——————————————————————————— TRACKING ENDPOINTS ———————————————————————————
-@app.route('/api/track_impression', methods=['POST'])
-def track_impression():
-    data = request.get_json() or {}
-    lid = str(data.get('listing_id'))
-    source = data.get('source', 'grid')
+def _flush_clicks_memory():
+    with clicks_cache_lock:
+        to_flush = clicks_cache
+        clicks_cache = {}
 
-    if not lid:
-        return jsonify(success=False, error='Missing listing_id'), 400
+    if not to_flush:
+        logging.info("No in-memory clicks to flush.")
+        return
 
+    conn = cur = None
     try:
-        with cache_lock:
-            if lid not in impressions_cache:
-                impressions_cache[lid] = {'impressions': 0, 'carousel_impressions': 0}
-            impressions_cache[lid]['impressions'] += 1
-            if source == 'carousel':
-                impressions_cache[lid]['carousel_impressions'] += 1
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SHOW COLUMNS FROM listing_metrics LIKE 'carousel_clicks'")
+        has_cc = cur.fetchone() is not None
 
-        logging.info(f"Impression: ID={lid}, source={source}")
-        return jsonify(success=True)
+        for lid, counts in to_flush.items():
+            clicks = counts['clicks']
+            carousel = counts['carousel_clicks']
 
+            if has_cc:
+                sql = """
+                    INSERT INTO listing_metrics (listing_id, clicks, carousel_clicks)
+                    VALUES (%s, %s, %s)
+                    ON DUPLICATE KEY UPDATE
+                        clicks = clicks + VALUES(clicks),
+                        carousel_clicks = carousel_clicks + VALUES(carousel_clicks)
+                """
+                cur.execute(sql, (lid, clicks, carousel))
+            else:
+                sql = """
+                    INSERT INTO listing_metrics (listing_id, clicks)
+                    VALUES (%s, %s)
+                    ON DUPLICATE KEY UPDATE clicks = clicks + VALUES(clicks)
+                """
+                cur.execute(sql, (lid, clicks))
+
+        conn.commit()
+        logging.info(f"Flushed {len(to_flush)} in-memory click records.")
     except Exception as e:
-        logging.exception("Impression error:")
-        return jsonify(success=False, error=str(e)), 500
+        logging.exception("Memory click flush error")
+        if conn: conn.rollback()
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
 
 
-@app.route('/api/track_click', methods=['POST'])
-def track_click():
-    data = request.get_json() or {}
-    lid = str(data.get('listing_id'))
-    source = data.get('source', 'grid')
+def flush_clicks():
+    """Public flush – called by scheduler."""
+    global clicks_cache                    # <-- ADD THIS LINE
+    now = datetime.utcnow()
+    logging.info(f"Flushing clicks at {now}")
 
-    if not lid:
-        return jsonify(success=False, error='Missing listing_id'), 400
-
-    try:
-        with clicks_cache_lock:
-            if lid not in clicks_cache:
-                clicks_cache[lid] = {'clicks': 0, 'carousel_clicks': 0}
-            clicks_cache[lid]['clicks'] += 1
-            if source == 'carousel':
-                clicks_cache[lid]['carousel_clicks'] += 1
-
-        logging.info(f"Click: ID={lid}, source={source}")
-        return jsonify(success=True)
-
-    except Exception as e:
-        logging.exception("Click error:")
-        return jsonify(success=False, error=str(e)), 500
-
-
-# ——————————————————————————— DEBUG / FLUSH ROUTES ———————————————————————————
-@app.route('/flush')
-def force_flush():
-    flush_impressions()
-    flush_clicks()
-    return f"Flushed! Impressions: {len(impressions_cache)}, Clicks: {len(clicks_cache)}", 200
-
-
-@app.route('/debug/cache')
-def debug_cache():
-    return jsonify({
-        'impressions': impressions_cache,
-        'clicks': clicks_cache
-    })
+    r = get_redis()
+    if r:
+        _flush_clicks_redis(r)
+    else:
+        _flush_clicks_memory()
 
 
 
@@ -4627,6 +4740,19 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from jobs import check_ad_performance_alerts
 
 scheduler = BackgroundScheduler()
+
+def _run_with_context(job_func):
+    """Wrap any job so it runs inside Flask app context."""
+    def wrapper():
+        with app.app_context():
+            job_func()
+    return wrapper
+
+# ------------------------------------------------------------------
+# 5a – Existing job (keep exactly as you had it)
+# ------------------------------------------------------------------
+from jobs import check_ad_performance_alerts
+
 scheduler.add_job(
     check_ad_performance_alerts,
     'interval',
@@ -4634,11 +4760,33 @@ scheduler.add_job(
     id='ad_metrics_alerts',
     replace_existing=True
 )
-scheduler.start()
 
-# Schedule it to run every hour (or every minute for testing)
-scheduler.add_job(func=flush_impressions, trigger='interval', minutes=2, next_run_time=datetime.utcnow())
-scheduler.add_job(func=flush_clicks, trigger='interval', minutes=2, next_run_time=datetime.utcnow())
+# ------------------------------------------------------------------
+# 5b – Impression / Click flush jobs (wrapped for context)
+# ------------------------------------------------------------------
+scheduler.add_job(
+    _run_with_context(flush_impressions),
+    trigger='interval',
+    minutes=2,
+    id='flush_impressions',
+    replace_existing=True,
+    next_run_time=datetime.utcnow()
+)
+
+scheduler.add_job(
+    _run_with_context(flush_clicks),
+    trigger='interval',
+    minutes=2,
+    id='flush_clicks',
+    replace_existing=True,
+    next_run_time=datetime.utcnow()
+)
+
+# ------------------------------------------------------------------
+# 5c – Start the scheduler **once** (after app is created)
+# ------------------------------------------------------------------
+scheduler.start()
+logging.info("BackgroundScheduler started with all jobs.")
 
 
 
