@@ -2597,7 +2597,7 @@ document.addEventListener('click', function (ev) {
         <strong>No exact matches for “{{ search }}” — here are some suggestions:</strong>
       </div>
     {% endif %}
-    
+
 <section class="listings-container">
   {% set ns = namespace(idx=0) %}
 
@@ -3188,30 +3188,37 @@ document.addEventListener('DOMContentLoaded', () => {
   const carouselItems = Array.from(document.querySelectorAll('.multi-carousel-item'));
   const gridLinks     = Array.from(document.querySelectorAll('.listing-card-link'));
 
-  const allTrackables = carouselItems.concat(gridLinks);
+  const allTrackables = document.querySelectorAll('a[data-listing-id]');
 
-  // 1) IntersectionObserver for impressions
   const observer = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (!entry.isIntersecting) return;
-      const el  = entry.target;
-      const id  = el.dataset.listingId;   // matches data-listing-id
+
+      const el = entry.target;
+      const id = el.dataset.listingId;   // ← matches data-listing-id
       const src = el.dataset.source || 'grid';
-      if (!id) return console.warn('Missing listingId on', el);
+
+      if (!id) {
+        console.warn('Missing listingId on', el);
+        return;
+      }
 
       fetch('/api/track_impression', {
         method: 'POST',
-        headers: {'Content-Type':'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ listing_id: id, source: src })
       })
       .then(r => r.json())
-      .then(j => { if (!j.success) console.error('Impression error', j); })
-      .catch(console.error);
+      .then(j => {
+        if (!j.success) console.error('Impression failed:', j);
+      })
+      .catch(err => console.error('Impression error:', err));
 
-      observer.unobserve(el);
+      observer.unobserve(el); // Only count once
     });
-  }, { threshold: 0.2 });
+  }, { threshold: 0.5 }); // 50% visible = impression
 
+  // Observe all cards
   allTrackables.forEach(el => observer.observe(el));
 
   // 2) Click handler for both grid & carousel

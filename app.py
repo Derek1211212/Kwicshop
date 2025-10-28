@@ -2859,8 +2859,8 @@ scheduler.add_job(func=flush_clicks, trigger='interval', minutes=2, next_run_tim
 # --- Impression & Click Tracking Endpoints ---
 @app.route('/api/track_impression', methods=['POST'])
 def track_impression():
-    data   = request.get_json() or {}
-    lid    = str(data.get('listing_id'))
+    data = request.get_json() or {}
+    lid = str(data.get('listing_id'))
     source = data.get('source', 'grid')
 
     if not lid:
@@ -2870,10 +2870,13 @@ def track_impression():
         with cache_lock:
             if lid not in impressions_cache:
                 impressions_cache[lid] = {'impressions': 0, 'carousel_impressions': 0}
-
+            
             impressions_cache[lid]['impressions'] += 1
             if source == 'carousel':
                 impressions_cache[lid]['carousel_impressions'] += 1
+
+        # ADD LOGGING
+        logging.info(f"Impression tracked: listing_id={lid}, source={source}")
 
         return jsonify(success=True)
 
