@@ -2891,6 +2891,7 @@ def debug_cache():
 
 
 
+
 # Add this to your Flask app
 @app.template_filter('humanize_number')
 def humanize_number(value):
