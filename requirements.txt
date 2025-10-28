@@ -8,22 +8,20 @@ Jinja2==3.1.4
 MarkupSafe==3.0.1
 packaging==24.2
 PyMySQL==1.1.1
-Werkzeug==2.0.3
 mysql-connector-python==8.4.0
 pandas
-apscheduler
+APScheduler==3.10.4
 requests
 geopy
 psycopg2-binary
-flask-mail
+Flask-Mail
 python-dotenv
 Flask-WTF==1.1.1
-flask-bcrypt
+Flask-Bcrypt
 twilio
 pywebpush>=1.9.4
 Authlib>=1.2.0
 Flask-Caching>=2.0
 mailersend>=2.0.0
 flask-apscheduler==1.13.1
-
 
