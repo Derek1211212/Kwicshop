@@ -2338,6 +2338,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* optional: visually hide the native focus ring for mouse users but keep for keyboard */
 .filter-button:focus { outline: none; }
+
+
+
+
+.alert-info {
+    background: #e3f2fd;
+    border: 1px solid #bbdefb;
+    color: #1565c0;
+    padding: 0.75rem 1.25rem;
+    border-radius: .35rem;
+    font-size: 0.95rem;
+}
 </style>
 
 <!-- ===== CATEGORY FILTERS SECTION (aligned) ===== -->
@@ -2577,97 +2589,131 @@ document.addEventListener('click', function (ev) {
 
 </form>
 
-<!-- ===== LISTINGS GRID ===== -->
+<!-- ===== LISTINGS GRID + FALLBACK ===== -->
+
+    <!-- BANNER: Only when showing suggestions -->
+    {% if show_suggestions %}
+      <div class="alert alert-info text-center" style="margin:2rem 0;padding:1rem;background:#e3f2fd;border:1px solid #bbdefb;border-radius:.35rem;">
+        <strong>No exact matches for “{{ search }}” — here are some suggestions:</strong>
+      </div>
+    {% endif %}
+    
 <section class="listings-container">
-  <div class="listings-grid">
-    {% set ns = namespace(outer_idx=0) %}
-    {% for listing in listings %}
-      {% set ns.outer_idx = loop.index0 %}
+  {% set ns = namespace(idx=0) %}
 
-      <a
-        href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
-        class="listing-card-link"
-        data-listing-id="{{ listing.listing_id }}"
-        data-source="grid"
-      >
-        <div class="listing-card {% if listing.deal_type == 'Swap Deal' %}swap-card{% else %}sale-card{% endif %}" data-listing-id="{{ listing.listing_id }}">
+  {% if listings or suggestion_listings %}
+    <div class="listings-grid">
+      {% set display_list = listings if listings else suggestion_listings %}
+      {% for listing in display_list %}
+        {% set ns.idx = loop.index0 %}
 
-          <!-- Deal‑type Badge + Wishlist -->
-          <div class="deal-type-badge">{{ listing.deal_type }}</div>
-          {% if user_logged_in %}
-            <button
-              class="wishlist-btn"
-              data-listing-id="{{ listing.listing_id }}"
-              aria-pressed="{{ listing.is_wishlisted|lower }}"
-            >
-              <i class="fas fa-heart {{ listing.is_wishlisted and 'wishlisted' or '' }}"></i>
-            </button>
-          {% endif %}
+        <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
+           class="listing-card-link"
+           data-listing-id="{{ listing.listing_id }}"
+           data-source="grid">
+          <div class="listing-card {% if listing.deal_type == 'Swap Deal' %}swap-card{% else %}sale-card{% endif %}"
+               data-listing-id="{{ listing.listing_id }}">
 
-          <!-- Photos -->
-          {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 1 %}
-            <div class="swap-photo-row">
-              {% for o in listing.offers[:3] %}
-                <div class="swap-photo">
-                  <img src="{{ o.image1 }}" alt="{{ o.title }}"
-                       {% if ns.outer_idx < 6 %}
-                          loading="eager" fetchpriority="high"
-                       {% else %}
-                          loading="lazy"
-                       {% endif %}>
-                </div>
-              {% endfor %}
-            </div>
-          {% else %}
-            <div class="card-image">
-              <img src="{{ listing.image_url }}" alt="{{ listing.title }}"
-                   {% if ns.outer_idx < 6 %}
-                      loading="eager" fetchpriority="high"
-                   {% else %}
-                      loading="lazy"
-                   {% endif %}>
-            </div>
-          {% endif %}
+            <div class="deal-type-badge">{{ listing.deal_type }}</div>
+            {% if user_logged_in %}
+              <button class="wishlist-btn"
+                      data-listing-id="{{ listing.listing_id }}"
+                      aria-pressed="{{ 'true' if listing.is_wishlisted else 'false' }}">
+                <i class="fas fa-heart {{ 'wishlisted' if listing.is_wishlisted else '' }}"></i>
+              </button>
+            {% endif %}
 
-          <!-- Content -->
-          <div class="card-content">
-            {% if listing.deal_type == 'Swap Deal' %}
-              {% set titles = listing.offers | map(attribute='title') | list %}
-              <div class="swap-offer-line">
-                <span class="detail-label">Offer:</span>
-                <span>
-                  {{ titles | join(' + ') }}{% if listing.additional_cash|float > 0 %} + ₵{{ "{:,.2f}".format(listing.additional_cash|float) }}{% endif %}
-                </span>
+            <!-- Photos -->
+            {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 1 %}
+              <div class="swap-photo-row">
+                {% for o in listing.offers[:3] %}
+                  <div class="swap-photo">
+                    <img src="{{ o.image1 }}" alt="{{ o.title }}"
+                         {% if ns.idx < 6 %}loading="eager" fetchpriority="high"
+                         {% else %}loading="lazy"{% endif %}>
+                  </div>
+                {% endfor %}
               </div>
-              <hr class="swap-divider">
-              <div class="swap-wants-line">
-                <span class="detail-label">Wants:</span>
-                <span>{{ listing.desired_swap }}</span>
-              </div>
-              {% if listing.required_cash|float > 0 %}
-                <div class="swap-plus-cash-line">
-                  <span class="detail-label">Plus Cash:</span>
-                  <span>+ ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span>
-                </div>
-              {% endif %}
-
             {% else %}
-              {# — OUTRIGHT SALE: title + required_cash — #}
-              <h3 class="listing-title">
-                {{ listing.title }}
-                {% if listing.required_cash|float > 0 %}
-                  <span class="required-cash">+ ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span>
-                {% endif %}
-              </h3>
-              <div class="price-display">
-                ₵{{ "{:,.2f}".format(listing.price|float) }}
+              <div class="card-image">
+                <img src="{{ listing.image_url }}" alt="{{ listing.title }}"
+                     {% if ns.idx < 6 %}loading="eager" fetchpriority="high"
+                     {% else %}loading="lazy"{% endif %}>
               </div>
             {% endif %}
+
+            <!-- Content -->
+            <div class="card-content">
+              {% if listing.deal_type == 'Swap Deal' %}
+                {% set titles = listing.offers | map(attribute='title') | list %}
+                <div class="swap-offer-line">
+                  <span class="detail-label">Offer:</span>
+                  <span>
+                    {{ titles | join(' + ') }}
+                    {% if listing.additional_cash|float > 0 %} + ₵{{ "{:,.2f}".format(listing.additional_cash|float) }}{% endif %}
+                  </span>
+                </div>
+                <hr class="swap-divider">
+                <div class="swap-wants-line">
+                  <span class="detail-label">Wants:</span>
+                  <span>{{ listing.desired_swap }}</span>
+                </div>
+                {% if listing.required_cash|float > 0 %}
+                  <div class="swap-plus-cash-line">
+                    <span class="detail-label">Plus Cash:</span>
+                    <span>+ ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span>
+                  </div>
+                {% endif %}
+              {% else %}
+                <h3 class="listing-title">
+                  {{ listing.title }}
+                  {% if listing.required_cash|float > 0 %}
+                    <span class="required-cash">+ ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span>
+                  {% endif %}
+                </h3>
+                <div class="price-display">
+                  ₵{{ "{:,.2f}".format(listing.price|float) }}
+                </div>
+              {% endif %}
+            </div>
           </div>
-        </div>
-      </a>
-    {% endfor %}
-  </div>
+        </a>
+      {% endfor %}
+    </div>
+
+
+
+    <!-- PAGINATION: Only for real results -->
+    {% if listings and total_pages > 1 %}
+      <div class="pagination" style="display:flex;justify-content:center;gap:.5rem;margin:2rem 0;">
+        {% if page > 1 %}
+          <a href="?page={{page-1}}&search={{search}}&category={{selected_category}}&deal_type={{deal_type_filter}}&location={{location}}"
+             style="padding:.5rem 1rem;border:1px solid #ddd;border-radius:6px;text-decoration:none;color:#333;">Previous</a>
+        {% else %}
+          <span style="padding:.5rem 1rem;color:#aaa;">Previous</span>
+        {% endif %}
+
+        {% for p in range(1, total_pages + 1) %}
+          {% if p == page %}
+            <span style="padding:.5rem 1rem;background:#1976d2;color:white;border-radius:6px;">{{p}}</span>
+          {% else %}
+            <a href="?page={{p}}&search={{search}}&category={{selected_category}}&deal_type={{deal_type_filter}}&location={{location}}"
+               style="padding:.5rem 1rem;border:1px solid #ddd;border-radius:6px;text-decoration:none;color:#333;">{{p}}</a>
+          {% endif %}
+        {% endfor %}
+
+        {% if page < total_pages %}
+          <a href="?page={{page+1}}&search={{search}}&category={{selected_category}}&deal_type={{deal_type_filter}}&location={{location}}"
+             style="padding:.5rem 1rem;border:1px solid #ddd;border-radius:6px;text-decoration:none;color:#333;">Next</a>
+        {% else %}
+          <span style="padding:.5rem 1rem;color:#aaa;">Next</span>
+        {% endif %}
+      </div>
+    {% endif %}
+
+  {% else %}
+    <p style="text-align:center;padding:3rem;color:#777;">No listings available right now.</p>
+  {% endif %}
 </section>
 
 
