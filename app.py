@@ -2810,7 +2810,6 @@ def track_click():
 
 # --------------------------------------------------------------
 # 4. FLUSH FUNCTIONS (run inside app context)
-# --------------------------------------------------------------
 def _flush_impressions_redis(r):
     keys = r.keys("imp:*")
     if not keys:
@@ -2821,11 +2820,28 @@ def _flush_impressions_redis(r):
     try:
         conn = get_db_connection()
         cur = conn.cursor()
+
+        # 1. Get all valid listing_ids from DB
+        cur.execute("SELECT listing_id FROM listings")
+        valid_ids = {row[0] for row in cur.fetchall()}
+
+        flushed = 0
+        skipped = 0
         for key in keys:
             lid = key.decode().split(':', 1)[1]
+            if lid not in valid_ids:
+                logging.debug(f"Skipping impression for deleted listing_id={lid}")
+                r.delete(key)
+                skipped += 1
+                continue
+
             data = r.hgetall(key)
             impressions = int(data.get(b'impressions', 0))
             carousel = int(data.get(b'carousel_impressions', 0))
+
+            if impressions == 0 and carousel == 0:
+                r.delete(key)
+                continue
 
             cur.execute("""
                 INSERT INTO listing_metrics (listing_id, impressions, carousel_impressions)
@@ -2835,9 +2851,11 @@ def _flush_impressions_redis(r):
                   carousel_impressions = carousel_impressions + %s
             """, (lid, impressions, carousel, impressions, carousel))
             r.delete(key)
+            flushed += 1
 
         conn.commit()
-        logging.info(f"Flushed {len(keys)} impression records from Redis.")
+        logging.info(f"Flushed {flushed} impression records from Redis. Skipped {skipped} deleted listings.")
+
     except Exception as e:
         logging.exception("Redis impression flush error")
         if conn: conn.rollback()
@@ -2902,15 +2920,31 @@ def _flush_clicks_redis(r):
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # Detect column once per flush
+        # 1. Get all valid listing_ids
+        cur.execute("SELECT listing_id FROM listings")
+        valid_ids = {row[0] for row in cur.fetchall()}
+
+        # 2. Detect carousel_clicks column
         cur.execute("SHOW COLUMNS FROM listing_metrics LIKE 'carousel_clicks'")
         has_cc = cur.fetchone() is not None
 
+        flushed = 0
+        skipped = 0
         for key in keys:
             lid = key.decode().split(':', 1)[1]
+            if lid not in valid_ids:
+                logging.debug(f"Skipping click for deleted listing_id={lid}")
+                r.delete(key)
+                skipped += 1
+                continue
+
             data = r.hgetall(key)
             clicks = int(data.get(b'clicks', 0))
             carousel = int(data.get(b'carousel_clicks', 0))
+
+            if clicks == 0 and (not has_cc or carousel == 0):
+                r.delete(key)
+                continue
 
             if has_cc:
                 sql = """
@@ -2930,9 +2964,11 @@ def _flush_clicks_redis(r):
                 cur.execute(sql, (lid, clicks))
 
             r.delete(key)
+            flushed += 1
 
         conn.commit()
-        logging.info(f"Flushed {len(keys)} click records from Redis.")
+        logging.info(f"Flushed {flushed} click records from Redis. Skipped {skipped} deleted listings.")
+
     except Exception as e:
         logging.exception("Redis click flush error")
         if conn: conn.rollback()
