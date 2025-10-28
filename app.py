@@ -111,7 +111,7 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'avif'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -2849,8 +2849,8 @@ def flush_clicks():
 
 
 # Schedule it to run every hour (or every minute for testing)
-scheduler.add_job(func=flush_impressions, trigger='interval', minutes=10, next_run_time=datetime.utcnow())
-scheduler.add_job(func=flush_clicks, trigger='interval', minutes=10, next_run_time=datetime.utcnow())
+scheduler.add_job(func=flush_impressions, trigger='interval', minutes=2, next_run_time=datetime.utcnow())
+scheduler.add_job(func=flush_clicks, trigger='interval', minutes=2, next_run_time=datetime.utcnow())
 
 
 
