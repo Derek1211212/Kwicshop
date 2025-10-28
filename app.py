@@ -2732,33 +2732,24 @@ def reset_password(token):
 
 
 def flush_impressions():
-    """
-    Merge cached impressions into listing_metrics table,
-    then clear the in-memory cache. Runs every hour.
-    """
     global impressions_cache
     now = datetime.utcnow()
-    logging.info(f"⏱ Flushing impressions at {now}. Cache size: {len(impressions_cache)}")
+    logging.info(f"Flushing impressions at {now}. Cache size: {len(impressions_cache)}")
 
-    # Step 1: Copy & clear cache under lock
     with cache_lock:
-        to_flush = impressions_cache
-        impressions_cache = {}
+        to_flush = impressions_cache.copy()
+        impressions_cache.clear()
 
     if not to_flush:
-        logging.info("Nothing to flush. Skipping DB update.")
+        logging.info("No impressions to flush.")
         return
 
-    conn = None
-    cur = None
+    conn = cur = None
     try:
         conn = get_db_connection()
         cur = conn.cursor()
 
         for lid, counts in to_flush.items():
-            impressions = counts['impressions']
-            carousel = counts['carousel_impressions']
-
             sql = """
                 INSERT INTO listing_metrics (listing_id, impressions, carousel_impressions)
                 VALUES (%s, %s, %s)
@@ -2766,54 +2757,43 @@ def flush_impressions():
                   impressions = impressions + VALUES(impressions),
                   carousel_impressions = carousel_impressions + VALUES(carousel_impressions)
             """
-            cur.execute(sql, (lid, impressions, carousel))
+            cur.execute(sql, (lid, counts['impressions'], counts['carousel_impressions']))
 
         conn.commit()
-        logging.info(f"✅ Successfully flushed {len(to_flush)} items to DB.")
+        logging.info(f"Flushed {len(to_flush)} impression records.")
 
     except Exception as e:
-        logging.exception("❌ Failed to flush impressions to DB:")
-        if conn:
-            conn.rollback()
+        logging.exception("Failed to flush impressions:")
+        if conn: conn.rollback()
     finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+        if cur: cur.close()
+        if conn: conn.close()
 
 
 def flush_clicks():
-    """
-    Flush cached click counts to listing_metrics table every hour.
-    """
     global clicks_cache
     now = datetime.utcnow()
-    logging.info(f"⏱ Flushing clicks at {now}. Cache size: {len(clicks_cache)}")
+    logging.info(f"Flushing clicks at {now}. Cache size: {len(clicks_cache)}")
 
-    # Copy and clear the cache safely
     with clicks_cache_lock:
-        to_flush = clicks_cache
-        clicks_cache = {}
+        to_flush = clicks_cache.copy()
+        clicks_cache.clear()
 
     if not to_flush:
-        logging.info("Nothing to flush. Skipping DB update.")
+        logging.info("No clicks to flush.")
         return
 
-    conn = None
-    cur = None
+    conn = cur = None
     try:
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # check once if carousel_clicks column exists
+        # Check if carousel_clicks column exists
         cur.execute("SHOW COLUMNS FROM listing_metrics LIKE 'carousel_clicks'")
-        has_cc = cur.fetchone() is not None
+        has_carousel_clicks = cur.fetchone() is not None
 
         for lid, counts in to_flush.items():
-            clicks = counts['clicks']
-            carousel = counts['carousel_clicks']
-
-            if has_cc:
+            if has_carousel_clicks:
                 sql = """
                     INSERT INTO listing_metrics (listing_id, clicks, carousel_clicks)
                     VALUES (%s, %s, %s)
@@ -2821,42 +2801,27 @@ def flush_clicks():
                         clicks = clicks + VALUES(clicks),
                         carousel_clicks = carousel_clicks + VALUES(carousel_clicks)
                 """
-                params = (lid, clicks, carousel)
+                cur.execute(sql, (lid, counts['clicks'], counts['carousel_clicks']))
             else:
                 sql = """
                     INSERT INTO listing_metrics (listing_id, clicks)
                     VALUES (%s, %s)
                     ON DUPLICATE KEY UPDATE clicks = clicks + VALUES(clicks)
                 """
-                params = (lid, clicks)
-
-            cur.execute(sql, params)
+                cur.execute(sql, (lid, counts['clicks']))
 
         conn.commit()
-        logging.info(f"✅ Successfully flushed {len(to_flush)} click items to DB.")
+        logging.info(f"Flushed {len(to_flush)} click records.")
 
     except Exception as e:
-        logging.exception("❌ Failed to flush clicks to DB:")
-        if conn:
-            conn.rollback()
+        logging.exception("Failed to flush clicks:")
+        if conn: conn.rollback()
     finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+        if cur: cur.close()
+        if conn: conn.close()
 
 
-
-
-# Schedule it to run every hour (or every minute for testing)
-scheduler.add_job(func=flush_impressions, trigger='interval', minutes=2, next_run_time=datetime.utcnow())
-scheduler.add_job(func=flush_clicks, trigger='interval', minutes=2, next_run_time=datetime.utcnow())
-
-
-
-
-
-# --- Impression & Click Tracking Endpoints ---
+# ——————————————————————————— TRACKING ENDPOINTS ———————————————————————————
 @app.route('/api/track_impression', methods=['POST'])
 def track_impression():
     data = request.get_json() or {}
@@ -2870,18 +2835,15 @@ def track_impression():
         with cache_lock:
             if lid not in impressions_cache:
                 impressions_cache[lid] = {'impressions': 0, 'carousel_impressions': 0}
-            
             impressions_cache[lid]['impressions'] += 1
             if source == 'carousel':
                 impressions_cache[lid]['carousel_impressions'] += 1
 
-        # ADD LOGGING
-        logging.info(f"Impression tracked: listing_id={lid}, source={source}")
-
+        logging.info(f"Impression: ID={lid}, source={source}")
         return jsonify(success=True)
 
     except Exception as e:
-        logging.exception("Error tracking impression")
+        logging.exception("Impression error:")
         return jsonify(success=False, error=str(e)), 500
 
 
@@ -2890,6 +2852,7 @@ def track_click():
     data = request.get_json() or {}
     lid = str(data.get('listing_id'))
     source = data.get('source', 'grid')
+
     if not lid:
         return jsonify(success=False, error='Missing listing_id'), 400
 
@@ -2897,16 +2860,32 @@ def track_click():
         with clicks_cache_lock:
             if lid not in clicks_cache:
                 clicks_cache[lid] = {'clicks': 0, 'carousel_clicks': 0}
-
             clicks_cache[lid]['clicks'] += 1
             if source == 'carousel':
                 clicks_cache[lid]['carousel_clicks'] += 1
 
+        logging.info(f"Click: ID={lid}, source={source}")
         return jsonify(success=True)
 
     except Exception as e:
-        logging.exception("Error tracking click")
+        logging.exception("Click error:")
         return jsonify(success=False, error=str(e)), 500
+
+
+# ——————————————————————————— DEBUG / FLUSH ROUTES ———————————————————————————
+@app.route('/flush')
+def force_flush():
+    flush_impressions()
+    flush_clicks()
+    return f"Flushed! Impressions: {len(impressions_cache)}, Clicks: {len(clicks_cache)}", 200
+
+
+@app.route('/debug/cache')
+def debug_cache():
+    return jsonify({
+        'impressions': impressions_cache,
+        'clicks': clicks_cache
+    })
 
 
 
@@ -4637,10 +4616,7 @@ def keepalive():
 
 
 
-@app.route('/flush')
-def force_flush():
-    flush_impressions()
-    return "Flushed!"
+
 
 
 
@@ -4659,6 +4635,10 @@ scheduler.add_job(
     replace_existing=True
 )
 scheduler.start()
+
+# Schedule it to run every hour (or every minute for testing)
+scheduler.add_job(func=flush_impressions, trigger='interval', minutes=2, next_run_time=datetime.utcnow())
+scheduler.add_job(func=flush_clicks, trigger='interval', minutes=2, next_run_time=datetime.utcnow())
 
 
 
