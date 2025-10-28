@@ -2821,14 +2821,21 @@ def _flush_impressions_redis(r):
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # 1. Get all valid listing_ids from DB
+        # 1. Get valid listing_ids as INTEGERS
         cur.execute("SELECT listing_id FROM listings")
-        valid_ids = {row[0] for row in cur.fetchall()}
+        valid_ids = {int(row[0]) for row in cur.fetchall()}  # ← int()
 
         flushed = 0
         skipped = 0
         for key in keys:
-            lid = key.decode().split(':', 1)[1]
+            raw_lid = key.decode().split(':', 1)[1]
+            try:
+                lid = int(raw_lid)  # ← Convert Redis string to int
+            except ValueError:
+                logging.warning(f"Invalid listing_id in Redis key: {key.decode()}")
+                r.delete(key)
+                continue
+
             if lid not in valid_ids:
                 logging.debug(f"Skipping impression for deleted listing_id={lid}")
                 r.delete(key)
@@ -2920,9 +2927,9 @@ def _flush_clicks_redis(r):
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # 1. Get all valid listing_ids
+        # 1. Get valid listing_ids as INTEGERS
         cur.execute("SELECT listing_id FROM listings")
-        valid_ids = {row[0] for row in cur.fetchall()}
+        valid_ids = {int(row[0]) for row in cur.fetchall()}  # ← int()
 
         # 2. Detect carousel_clicks column
         cur.execute("SHOW COLUMNS FROM listing_metrics LIKE 'carousel_clicks'")
@@ -2931,7 +2938,14 @@ def _flush_clicks_redis(r):
         flushed = 0
         skipped = 0
         for key in keys:
-            lid = key.decode().split(':', 1)[1]
+            raw_lid = key.decode().split(':', 1)[1]
+            try:
+                lid = int(raw_lid)  # ← Convert Redis string to int
+            except ValueError:
+                logging.warning(f"Invalid listing_id in Redis key: {key.decode()}")
+                r.delete(key)
+                continue
+
             if lid not in valid_ids:
                 logging.debug(f"Skipping click for deleted listing_id={lid}")
                 r.delete(key)
