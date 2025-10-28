@@ -2549,6 +2549,32 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+<script>
+/* Deal type filter: update URL query params and reload (preserve other params) */
+document.addEventListener('click', function (ev) {
+  const btn = ev.target.closest('.deal-filter');
+  if (!btn) return;
+
+  const value = btn.dataset.value;
+  const url = new URL(window.location.href);
+
+  // If 'All' chosen remove the param so server uses 'All' default,
+  // otherwise set the deal_type param
+  if (value === 'All') {
+    url.searchParams.delete('deal_type');
+  } else {
+    url.searchParams.set('deal_type', value);
+  }
+
+  // reset page to 1 when changing filters
+  url.searchParams.delete('page');
+
+  // navigate to the updated url
+  window.location.href = url.toString();
+});
+</script>
+
+
 </form>
 
 <!-- ===== LISTINGS GRID ===== -->
