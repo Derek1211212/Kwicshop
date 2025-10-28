@@ -4637,6 +4637,10 @@ def keepalive():
 
 
 
+@app.route('/flush')
+def force_flush():
+    flush_impressions()
+    return "Flushed!"
 
 
 
@@ -4650,7 +4654,7 @@ scheduler = BackgroundScheduler()
 scheduler.add_job(
     check_ad_performance_alerts,
     'interval',
-    hours=1,
+    minutes=2,
     id='ad_metrics_alerts',
     replace_existing=True
 )
