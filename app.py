@@ -46,6 +46,9 @@ import socket
 from email.message import EmailMessage
 import re
 import redis
+import time
+import fnmatch
+from collections import defaultdict
 
 
 
@@ -1323,8 +1326,9 @@ def dashboard():
             else:
                 l['offered_items'] = []
 
-        # 5) Bulk‑fetch wishlist counts
+        # 5) Bulk-fetch wishlist counts
         listing_ids = [l['listing_id'] for l in listings]
+        wl_counts = {}
         if listing_ids:
             ph = ','.join(['%s'] * len(listing_ids))
             cursor.execute(
@@ -1332,8 +1336,6 @@ def dashboard():
                 tuple(listing_ids)
             )
             wl_counts = {r['listing_id']: r['cnt'] for r in cursor.fetchall()}
-        else:
-            wl_counts = {}
 
         # 6) Compute days_active & attach wishlist_count
         today = datetime.utcnow().date()
@@ -1348,7 +1350,24 @@ def dashboard():
             else:
                 l['days_active'] = 0
 
-        # 7) Fetch proposals for the dashboard
+        # 7) Calculate TOTAL VIEWS and TOTAL FAVORITES
+        total_views = 0
+        total_favorites = 0
+
+        if listing_ids:
+            ph = ','.join(['%s'] * len(listing_ids))
+
+            # Total Views = SUM of impressions
+            cursor.execute(
+                f"SELECT COALESCE(SUM(impressions), 0) AS total FROM listing_metrics WHERE listing_id IN ({ph})",
+                tuple(listing_ids)
+            )
+            total_views = cursor.fetchone()['total']
+
+            # Total Favorites = SUM of wishlist entries
+            total_favorites = sum(wl_counts.get(lid, 0) for lid in listing_ids)
+
+        # 8) Fetch proposals for the dashboard
         cursor.execute("""
             SELECT p.*, l.title AS listing_title, u.username AS sender_username, u.contact AS sender_contact
             FROM proposals p
@@ -1360,7 +1379,7 @@ def dashboard():
 
         unique_titles = list({p['listing_title'] for p in proposals})
 
-        # 8) Promotion plan prices (for sidebar or modal)
+        # 9) Promotion plan prices (for sidebar or modal)
         plan_prices = {
             'Diamond': 100,
             'Gold':     70,
@@ -1368,14 +1387,16 @@ def dashboard():
             'Bronze':   20
         }
 
-        # 9) Render
+        # 10) Render
         return render_template(
             'dashboard.html',
             user=user,
             listings=listings,
             proposals=proposals,
             unique_titles=unique_titles,
-            plan_prices=plan_prices
+            plan_prices=plan_prices,
+            total_views=total_views,          # ← NOW PASSED
+            total_favorites=total_favorites   # ← NOW PASSED
         )
 
     except Exception as e:
@@ -1386,7 +1407,6 @@ def dashboard():
             cursor.close()
         if conn:
             conn.close()
-
 
 
 
@@ -2732,27 +2752,192 @@ def reset_password(token):
             
 
 
-_redis_client = None
-_redis_lock = threading.Lock()
+_redis_client = None          # real redis.StrictRedis or InMemoryRedis
+_redis_lock   = threading.Lock()
 
+
+# ----------------------------------------------------------------------
+# In-memory fallback (now with hash support)
+# ----------------------------------------------------------------------
+class InMemoryRedis:
+    """
+    Tiny Redis-compatible shim that stores everything in a dict.
+    Supports the subset used by the app:
+        set, get, delete, incr, decr, expire, keys
+        hset, hget, hincrby, hdel, hgetall, hexists
+        pipeline (no-op)
+    """
+    def __init__(self):
+        self._store   = {}      # key → value  (strings)
+        self._hashes  = defaultdict(dict)   # key → {field: value}
+        self._expires = {}      # key → expiry timestamp
+        self._lock    = threading.RLock()
+
+    # ------------------------------------------------------------------
+    # String commands
+    # ------------------------------------------------------------------
+    def set(self, key, value, ex=None, **kw):
+        with self._lock:
+            self._store[key] = value
+            if ex is not None:
+                self._expires[key] = time.time() + ex
+            elif key in self._expires:
+                del self._expires[key]
+        return True
+
+    def get(self, key):
+        with self._lock:
+            self._expire_if_needed(key)
+            return self._store.get(key)
+
+    def delete(self, *keys):
+        with self._lock:
+            deleted = 0
+            for k in keys:
+                if k in self._store:
+                    self._store.pop(k, None)
+                    self._expires.pop(k, None)
+                    deleted += 1
+                if k in self._hashes:
+                    self._hashes.pop(k, None)
+                    deleted += 1
+            return deleted
+
+    def incr(self, key, amount=1):
+        with self._lock:
+            self._expire_if_needed(key)
+            val = int(self._store.get(key, 0)) + amount
+            self._store[key] = str(val)
+            return val
+
+    def decr(self, key, amount=1):
+        return self.incr(key, -amount)
+
+    def expire(self, key, seconds):
+        with self._lock:
+            if key not in self._store and key not in self._hashes:
+                return False
+            self._expires[key] = time.time() + seconds
+            return True
+
+    def keys(self, pattern="*"):
+        with self._lock:
+            self._clean_expired()
+            if pattern == "*":
+                return list(self._store.keys()) + list(self._hashes.keys())
+            return [k for k in set(self._store) | set(self._hashes)
+                    if fnmatch.fnmatch(k, pattern)]
+
+    # ------------------------------------------------------------------
+    # Hash commands (the ones you hit)
+    # ------------------------------------------------------------------
+    def hset(self, name, key, value):
+        """hset hash field value"""
+        with self._lock:
+            self._expire_if_needed(name)
+            self._hashes[name][key] = value
+            return 1
+
+    def hget(self, name, key):
+        with self._lock:
+            self._expire_if_needed(name)
+            return self._hashes[name].get(key)
+
+    def hincrby(self, name, key, increment=1):
+        """hincrby hash field amount"""
+        with self._lock:
+            self._expire_if_needed(name)
+            cur = int(self._hashes[name].get(key, 0))
+            new = cur + increment
+            self._hashes[name][key] = str(new)
+            return new
+
+    def hdel(self, name, *keys):
+        with self._lock:
+            self._expire_if_needed(name)
+            deleted = 0
+            for k in keys:
+                if k in self._hashes[name]:
+                    del self._hashes[name][k]
+                    deleted += 1
+            return deleted
+
+    def hgetall(self, name):
+        with self._lock:
+            self._expire_if_needed(name)
+            return dict(self._hashes[name])
+
+    def hexists(self, name, key):
+        with self._lock:
+            self._expire_if_needed(name)
+            return key in self._hashes[name]
+
+    # ------------------------------------------------------------------
+    # Helper: expire handling
+    # ------------------------------------------------------------------
+    def _expire_if_needed(self, key):
+        if key in self._expires and self._expires[key] < time.time():
+            self._store.pop(key, None)
+            self._hashes.pop(key, None)
+            self._expires.pop(key, None)
+
+    def _clean_expired(self):
+        now = time.time()
+        for k, ts in list(self._expires.items()):
+            if ts < now:
+                self._store.pop(k, None)
+                self._hashes.pop(k, None)
+                self._expires.pop(k, None)
+
+    # ------------------------------------------------------------------
+    # Pipeline (no-op)
+    # ------------------------------------------------------------------
+    def pipeline(self):
+        return self
+
+    def execute(self):
+        return []
+
+    def __repr__(self):
+        return f"<InMemoryRedis keys={len(self._store)+len(self._hashes)}>"
+
+# ----------------------------------------------------------------------
+# Public accessor
+# ----------------------------------------------------------------------
 def get_redis():
-    """Return a shared redis.StrictRedis instance or None."""
+    """
+    Return a shared redis client.
+    * Real redis.StrictRedis when REDIS_URL works
+    * InMemoryRedis fallback otherwise (local dev, broken server, etc.)
+    """
     global _redis_client
+
     if _redis_client is not None:
         return _redis_client
 
     with _redis_lock:
         if _redis_client is None:
             url = os.getenv('REDIS_URL')
+
+            # 1. No URL → in-memory
             if not url:
-                logging.warning("REDIS_URL not set – using in-memory fallback")
-                return None
+                logging.info("REDIS_URL not set – using in-memory cache")
+                _redis_client = InMemoryRedis()
+                return _redis_client
+
+            # 2. URL present → try real Redis
             try:
-                _redis_client = redis.from_url(url, decode_responses=False)
+                client = redis.from_url(url, decode_responses=False)
+                client.ping()                     # verify connectivity
                 logging.info("Connected to Redis: %s", url.split('@')[-1])
-            except Exception as e:
-                logging.error("Redis connection failed: %s", e)
-                _redis_client = None
+                _redis_client = client
+            except Exception as exc:               # pragma: no cover
+                logging.error(
+                    "Redis connection failed (%s) – falling back to in-memory cache",
+                    exc
+                )
+                _redis_client = InMemoryRedis()
+
     return _redis_client
 
 # --------------------------------------------------------------
