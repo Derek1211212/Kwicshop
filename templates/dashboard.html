@@ -125,9 +125,9 @@ img {
 }
 
 .user-profile {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    display: block;
+    align-items: right;
+    gap: 0rem;
 }
 
 .user-avatar {
@@ -1472,6 +1472,27 @@ select.form-control {
 
 
     </style>
+
+
+
+    <style>
+/* FINAL OVERRIDE – FORCE 2-COLUMN MOBILE STATS GRID */
+@media (min-width: 480px) and (max-width: 768px) {
+    .stats-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 1.25rem !important;
+    }
+}
+@media (max-width: 479px) {
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+    .stat-card {
+        padding: 1rem !important;
+    }
+}
+</style>
 </head>
 <body>
     <div class="dashboard-container">

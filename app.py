@@ -3534,8 +3534,10 @@ def toggle_wishlist():
 @login_required
 def view_wishlist():
     user_id = session['user_id']
-    conn   = get_db_connection()
+    conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
+
+    # 1. Wishlist
     cursor.execute("""
         SELECT l.*, w.created_at AS wishlisted_at
           FROM wishlists w
@@ -3543,10 +3545,77 @@ def view_wishlist():
          WHERE w.user_id = %s
          ORDER BY w.created_at DESC
     """, (user_id,))
-    items = cursor.fetchall()
+    wishlist_items = cursor.fetchall()
+
+    # 2. Similar items for each
+    similar_listings = {}
+    for item in wishlist_items:
+        listing_id = item['listing_id']
+
+        # Try same category
+        cursor.execute("""
+            SELECT l.*
+              FROM listings l
+             WHERE l.category = %s
+               AND l.listing_id != %s
+               AND l.user_id != %s
+               AND l.listing_id NOT IN (SELECT listing_id FROM wishlists WHERE user_id = %s)
+             ORDER BY RAND()
+             LIMIT 3
+        """, (item['category'], listing_id, user_id, user_id))
+        sim = cursor.fetchall()
+
+        # Fallback: random
+        if not sim:
+            cursor.execute("""
+                SELECT l.*
+                  FROM listings l
+                 WHERE l.user_id != %s
+                   AND l.listing_id NOT IN (SELECT listing_id FROM wishlists WHERE user_id = %s)
+                 ORDER BY RAND()
+                 LIMIT 3
+            """, (user_id, user_id))
+            sim = cursor.fetchall()
+
+        similar_listings[listing_id] = sim
+
     cursor.close()
     conn.close()
-    return render_template('wishlist.html', listings=items)
+
+    return render_template(
+        'wishlist.html',
+        listings=wishlist_items,
+        similar_listings=similar_listings
+    )
+
+
+
+@app.route('/wishlist/remove', methods=['POST'])
+@login_required
+def remove_from_wishlist():
+    user_id = session['user_id']
+    listing_id = request.form.get('listing_id')
+    if not listing_id:
+        flash('Invalid request.', 'danger')
+        return redirect(url_for('view_wishlist'))
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            "DELETE FROM wishlists WHERE user_id = %s AND listing_id = %s",
+            (user_id, listing_id)
+        )
+        conn.commit()
+        flash('Item removed from wishlist.', 'success')
+    except Exception as e:
+        conn.rollback()
+        flash('Could not remove item.', 'danger')
+    finally:
+        cur.close()
+        conn.close()
+    return redirect(url_for('view_wishlist'))
+
 
 
 
