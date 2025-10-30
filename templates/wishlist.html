@@ -735,34 +735,6 @@
       </div>
     </div>
 
-    {% if listings %}
-    <div class="wishlist-controls">
-      <div class="filter-group">
-        <button class="filter-btn active" data-filter="all">
-          <i class="fas fa-layer-group"></i>
-          All Items
-        </button>
-        <button class="filter-btn" data-filter="outright">
-          <i class="fas fa-tag"></i>
-          For Sale
-        </button>
-        <button class="filter-btn" data-filter="swap">
-          <i class="fas fa-exchange-alt"></i>
-          For Swap
-        </button>
-      </div>
-      <div class="sort-group">
-        <label for="sort-select">Sort by:</label>
-        <select id="sort-select" class="sort-select">
-          <option value="date-added">Date Added</option>
-          <option value="price-low">Price: Low to High</option>
-          <option value="price-high">Price: High to Low</option>
-          <option value="name">Name</option>
-        </select>
-      </div>
-    </div>
-    {% endif %}
-
     <!-- WISHLIST WITH SIMILAR ITEMS -->
 {% if listings %}
 <div class="wishlist-grid">
