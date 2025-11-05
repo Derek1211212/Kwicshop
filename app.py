@@ -2053,6 +2053,7 @@ def delete_proposal(proposal_id):
 
 
 
+
 from flask import (
     request, session, redirect, url_for,
     flash, jsonify
