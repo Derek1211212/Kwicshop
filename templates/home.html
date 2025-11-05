@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Open Graph meta tags -->
-{% if featured_listing %}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  {% if featured_listing %}
+  <!-- Open Graph / Twitter -->
   <meta property="og:title" content="{{ featured_listing.title }}">
   <meta property="og:description" content="{{ featured_listing.description[:150] }}{% if featured_listing.description|length > 150 %}...{% endif %}">
   <meta property="og:image" content="{{ featured_listing.banner_image }}">
@@ -14,3302 +15,597 @@
   <meta name="twitter:title" content="{{ featured_listing.title }}">
   <meta name="twitter:description" content="{{ featured_listing.description[:150] }}{% if featured_listing.description|length > 150 %}...{% endif %}">
   <meta name="twitter:image" content="{{ featured_listing.banner_image }}">
-{% endif %}
+  {% endif %}
 
   <title>SwapHub | Modern Trading Platform</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="apple-touch-icon" href="/static/icons/ss.png">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
   <style>
-    :root {
-      --primary: #81C784;
-      --primary-light: #A5D6A7;
-      --primary-dark: #66BB6A;
-      --secondary: #374151;
-      --accent: #f59e0b;
-      --text: #4b5563;
-      --text-light: #6b7280;
-      --surface: #ffffff;
-      --background: #f9fafb;
-      --border: #e5e7eb;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --error: #ef4444;
-      --radius: 12px;
-      --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
-      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-      --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { 
-      font-family: 'Inter', sans-serif; 
-      background-color: var(--background); 
-      color: var(--text); 
-      line-height: 1.6; 
-      -webkit-font-smoothing: antialiased;
-      padding-bottom: 0 !important;
-    }
-    a { text-decoration: none; color: inherit; }
-    .listing-card-link { text-decoration: none; }
-
-
-        /* Listing Grid */
-    .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
-
-
-
-    /* Enhanced Navigation */
-    .navbar {
-      background: var(--surface);
-      padding: 1rem 2rem;
-      box-shadow: var(--shadow-sm);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .brand {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--primary);
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .brand-logo {
-      width: 32px;
-      height: 32px;
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 1.5rem;
-      align-items: center;
-    }
-
-    .nav-links a {
-      color: var(--secondary);
-      text-decoration: none;
-      font-weight: 500;
-      font-size: 0.95rem;
-      transition: color 0.2s ease;
-      position: relative;
-    }
-
-    .nav-links a:hover {
-      color: var(--primary);
-    }
-
-
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0.75rem 1.5rem;
-      border-radius: var(--radius);
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      border: none;
-      font-size: 0.95rem;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-dark);
-      transform: translateY(-1px);
-      box-shadow: var(--shadow);
-    }
-
-    .btn-outline {
-      background: transparent;
-      color: var(--primary);
-      border: 1px solid var(--primary);
-    }
-
-    .btn-outline:hover {
-      background: rgba(37, 99, 235, 0.05);
-    }
-
-    .hamburger {
-      display: none;
-      cursor: pointer;
-      z-index: 1001;
-    }
-
-    .hamburger div {
-      width: 25px;
-      height: 3px;
-      background-color: var(--secondary);
-      margin: 5px;
-      transition: all 0.3s ease;
-    }
-
-    /* Modern Search Section */
-    .search-section {
-      padding: 3rem 2rem;
-      background: linear-gradient(135deg, #f0f7ff 0%, #e6f0ff 100%);
-      margin-bottom: 2rem;
-    }
-
-    .search-container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .search-header {
-      margin-bottom: 2rem;
-      text-align: center;
-    }
-
-    .search-header h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: var(--secondary);
-      margin-bottom: 1rem;
-    }
-
-    .search-header p {
-      color: var(--text-light);
-      max-width: 700px;
-      margin: 0 auto;
-    }
-
-    .search-bar {
-      display: flex;
-      max-width: 800px;
-      margin: 0 auto;
-      position: relative;
-    }
-
-    .search-input {
-      flex: 1;
-      padding: 1rem 1.5rem 1rem 3.5rem;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-size: 1rem;
-      transition: all 0.2s ease;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .search-input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 1.25rem;
-      top: 26%;
-      transform: translateY(-50%);
-      color: var(--text-light);
-    }
-
-    .search-btn {
-      position: absolute;
-      right: 0.5rem;
-      top: 50%;
-      transform: translateY(-50%);
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 8px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.2s ease;
-    }
-
-    .search-btn:hover {
-      background: var(--primary-dark);
-    }
-
-
-
-    /* Professional Listings Grid */
-    .listings-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 2rem 3rem;
-    }
-
-    .listings-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-    }
-
-    .listings-header h2 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--secondary);
-    }
-
-    .sort-options {
-      position: relative;
-    }
-
-    .sort-toggle {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: var(--surface);
-      padding: 0.5rem 1rem;
-      border-radius: var(--radius);
-      cursor: pointer;
-      font-weight: 500;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .listings-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1.5rem;
-    }
-
-    /* Enhanced Listing Card */
-  .listing-card { background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); transition: transform 0.3s ease, box-shadow 0.3s ease; }
-  .listing-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
-
-    .card-badge {
-      position: absolute;
-      top: 1rem;
-      left: 1rem;
-      background: var(--primary);
-      color: white;
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      z-index: 2;
-    }
-
-    .card-badge.sale {
-      background: var(--error);
-    }
-
-    .card-badge.swap {
-      background: var(--success);
-    }
-
-    .card-image { position: relative; height: 200px; overflow: hidden; }
-    .card-image img { width: 100%; height: 100%; object-fit: cover; }
-
-    .listing-card:hover .card-image img {
-      transform: scale(1.05);
-    }
-
-    .card-content {
-      padding: 1.25rem;
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 0.75rem;
-    }
-
-    .listing-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--secondary);
-      margin-bottom: 0.25rem;
-    }
-
-    .listing-category {
-      font-size: 0.8rem;
-      color: var(--text-light);
-      margin-bottom: 0.5rem;
-    }
-
-    .listing-description {
-      text-decoration: none;
-      font-size: 0.9rem;
-      color: var(--text-light);
-      margin-bottom: 1rem;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-
-        /* Hide sort feature */
-    .sort-options { display: none !important; }
-
-    /* Hide username info */
-    .user-info { display: none !important; }
-
-    /* Adjust card footer layout */
-    .card-footer { justify-content: flex-end; }
-
-
-    /* Empty State */
-    .empty-state { text-align: center; padding: 2rem; }
-    .empty-state img { max-width: 150px; margin-bottom: 1rem; }
-    .empty-state h3 { font-size: 1.5rem; margin-bottom: 0.5rem; }
-    .empty-state p { color: var(--text-light); margin-bottom: 1rem; }
-    .empty-state .floating-action { background: var(--primary); color: #fff; border: none; border-radius: 50%; width: 48px; height: 48px; font-size: 1.5rem; cursor: pointer; }
-
-    .price {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--primary);
-      margin: 0.5rem 0;
-    }
-
-    .price-adjustment {
-      font-size: 0.9rem;
-      color: var(--success);
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-    }
-
-    .card-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--border);
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .user-avatar {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .username {
-      font-size: 0.85rem;
-      font-weight: 500;
-    }
-
-    .listing-meta {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .meta-item {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      font-size: 0.8rem;
-      color: var(--text-light);
-    }
-
-    /* Professional Footer */
-    .site-footer {
-      background: var(--secondary);
-      color: white;
-      padding: 4rem 0 2rem;
-    }
-
-    .footer-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 2rem;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 3rem;
-    }
-
-    .footer-logo {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .footer-logo img {
-      width: 36px;
-      height: 36px;
-    }
-
-    .footer-logo span {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: white;
-    }
-
-    .footer-about p {
-      color: #d1d5db;
-      margin-bottom: 1.5rem;
-      line-height: 1.6;
-    }
-
-    .footer-social {
-      display: flex;
-      gap: 1rem;
-    }
-
-    .footer-social a {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.1);
-      color: white;
-      transition: all 0.2s ease;
-    }
-
-    .footer-social a:hover {
-      background: var(--primary);
-      transform: translateY(-2px);
-    }
-
-    .footer-section h3 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 1.5rem;
-      color: white;
-    }
-
-    .footer-links {
-      list-style: none;
-    }
-
-    .footer-links li {
-      margin-bottom: 0.75rem;
-    }
-
-    .footer-links a {
-      color: #d1d5db;
-      text-decoration: none;
-      transition: color 0.2s ease;
-      font-size: 0.95rem;
-    }
-
-    .footer-links a:hover {
-      color: white;
-    }
-
-    .footer-contact p {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      color: #d1d5db;
-      margin-bottom: 1rem;
-      font-size: 0.95rem;
-    }
-
-    .footer-bottom {
-      text-align: center;
-      padding-top: 3rem;
-      margin-top: 2rem;
-      border-top: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .footer-bottom p {
-      color: #9ca3af;
-      font-size: 0.9rem;
-    }
-
-    /* Responsive Adjustments */
-    @media (max-width: 1024px) {
-      .listings-grid {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    :root{
+      --primary:#81C784; --primary-dark:#2e7d32; --primary-light:#A5D6A7;
+      --success:#10b981; --warning:#f59e0b; --error:#ef4444;
+      --secondary:#111827; --text:#374151; --text-light:#6b7280;
+      --surface:#fff; --background:#f9fafb; --border:#e5e7eb;
+      --radius:12px; --shadow-xs:0 1px 2px rgba(0,0,0,.06);
+      --shadow-sm:0 4px 12px rgba(0,0,0,.08); --shadow-md:0 10px 24px rgba(0,0,0,.1);
+      --focus:0 0 0 3px rgba(129,199,132,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--text);background:var(--background);line-height:1.55}
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+    .visually-hidden{position:absolute!important;clip:rect(1px,1px,1px,1px);height:1px;width:1px;overflow:hidden}
+
+    /* NAV */
+    .navbar{position:sticky;top:0;z-index:1000;background:var(--surface);box-shadow:var(--shadow-xs);padding:.75rem 1rem}
+    .nav-wrap{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:1rem;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:.6rem;font-weight:800;color:var(--primary)}
+    .brand .brand-logo{width:30px;height:30px}
+    .nav-links{display:flex;align-items:center;gap:1rem}
+    .nav-links a{padding:.5rem .75rem;border-radius:10px;font-weight:600;color:var(--secondary)}
+    .nav-links a:focus-visible{outline:none;box-shadow:var(--focus)}
+    .nav-links a:hover{background:rgba(0,0,0,.04)}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1rem;border-radius:12px;border:1px solid transparent;font-weight:700;cursor:pointer;transition:.15s}
+    .btn-primary{background:var(--primary);color:#fff}
+    .btn-primary:hover{filter:brightness(.95);transform:translateY(-1px)}
+    .btn-outline{background:transparent;color:var(--primary);border-color:var(--primary)}
+    .hamburger{display:none;background:none;border:0;padding:.5rem;border-radius:10px}
+    .hamburger:focus-visible{box-shadow:var(--focus)}
+    .hamburger-bars{width:24px;height:2px;background:var(--secondary);position:relative}
+    .hamburger-bars::before,.hamburger-bars::after{content:"";position:absolute;left:0;right:0;height:2px;background:var(--secondary)}
+    .hamburger-bars::before{top:-7px}.hamburger-bars::after{top:7px}
+
+    /* SEARCH */
+    .search-shell{background:linear-gradient(135deg,#f0f7ff 0%, #e6f0ff 100%);padding:1.25rem 1rem}
+    .search-container{max-width:1200px;margin:0 auto}
+    .search-form{position:relative;background:var(--surface);padding:1rem;border-radius:16px;box-shadow:var(--shadow-xs);display:grid;grid-template-columns:1fr auto;gap:.75rem}
+    .search-input,.location-input{width:100%;padding:.85rem 2.75rem;border:1px solid var(--border);border-radius:12px;font-size:1rem;transition:border-color .15s, box-shadow .15s}
+    .search-input:focus,.location-input:focus{outline:none;border-color:var(--primary);box-shadow:var(--focus)}
+    .input-icon{position:absolute;left:1.25rem;top:50%;transform:translateY(-50%);color:var(--text-light)}
+    .search-row{position:relative}
+    .location-toggle{position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--text-light);cursor:pointer}
+    .search-btn{border:0;border-radius:12px;padding:.9rem 1.1rem;background:var(--primary);color:#fff;font-weight:800}
+    .search-btn:hover{filter:brightness(.95)}
+    .location-input{display:none}
+    .location-input.show{display:block;grid-column:1 / -1}
+
+    /* FILTERS WRAPPER */
+    .filters{max-width:1200px;margin:.75rem auto 1.25rem;padding:0 1rem}
+    .filter-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow-xs);padding:1rem;margin-bottom:.75rem}
+    .filter-title{font-size:.95rem;font-weight:800;color:var(--primary-dark);margin-bottom:.5rem;letter-spacing:.2px;text-transform:uppercase}
+
+    /* Deal Type chips */
+    .chip-row{display:flex;gap:.5rem;overflow:auto;padding-bottom:.25rem;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+    .chip-row::-webkit-scrollbar{height:6px}.chip-row::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:6px}
+    .chip{flex:0 0 auto;border:1px solid var(--border);border-radius:999px;background:#fff;color:var(--text);padding:.45rem .8rem;font-weight:600;cursor:pointer;transition:transform .12s, box-shadow .15s, border-color .15s;white-space:nowrap}
+    .chip:hover{transform:translateY(-2px);box-shadow:var(--shadow-xs);border-color:rgba(129,199,132,.5)}
+    .chip.active{background:linear-gradient(180deg, rgba(129,199,132,.12), rgba(129,199,132,.06));color:var(--primary-dark);border-color:var(--primary)}
+
+    /* CATEGORY SCROLLER — smaller buttons + horizontal scroll */
+    .category-scroller{
+      display:flex;gap:.5rem;overflow-x:auto;overflow-y:hidden;padding:.25rem 0 .35rem;
+      -webkit-overflow-scrolling:touch;scrollbar-width:thin;scroll-snap-type:x mandatory
+    }
+    .category-scroller::-webkit-scrollbar{height:6px}
+    .category-scroller::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:6px}
+    .category-btn{
+      flex:0 0 auto; scroll-snap-align:start;
+      display:flex;flex-direction:row;align-items:center;gap:.45rem;
+      border:1px solid var(--border);border-radius:12px;background:#fff;color:var(--text);
+      padding:.45rem .6rem; cursor:pointer; transition:transform .12s, box-shadow .15s, border-color .15s;
+      white-space:nowrap; min-width:auto; max-width:none;
+      font-weight:700; font-size:.82rem;
+    }
+    .category-btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-xs);border-color:rgba(129,199,132,.5)}
+    .category-btn.active{background:linear-gradient(180deg, rgba(129,199,132,.10), rgba(129,199,132,.04));border-color:var(--primary);color:var(--primary-dark)}
+    .category-icon-box{width:28px;height:28px;border-radius:8px;background:#f3f4f6;display:grid;place-items:center;flex-shrink:0}
+    .category-name{font-size:.8rem;font-weight:700}
+
+    /* HERO CAROUSEL */
+    .multi-wrap{max-width:1200px;margin:0 auto;padding:0 1rem}
+    .multi-carousel{position:relative;overflow:hidden;border-radius:16px}
+    .multi-track{display:flex;transition:transform .5s ease;will-change:transform}
+    .multi-item{flex:0 0 100%;padding:.4rem}
+    @media (min-width:480px){.multi-item{flex-basis:50%}}
+    @media (min-width:768px){.multi-item{flex-basis:33.333%}}
+    @media (min-width:1024px){.multi-item{flex-basis:25%}}
+    .multi-card{position:relative;padding-top:56.25%;border-radius:14px;overflow:hidden;box-shadow:var(--shadow-sm);background:#e5e7eb}
+    .multi-card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.55))}
+    .multi-card>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .3s}
+    .multi-card:hover>img{transform:scale(1.03)}
+    .multi-overlay{position:absolute;left:0;right:0;bottom:0;padding:1rem;color:#fff;display:flex;flex-direction:column;gap:.5rem;z-index:2}
+    .multi-title{font-weight:800}
+    .multi-btn{align-self:flex-start;background:rgba(255,255,255,.9);color:#111827;border-radius:999px;padding:.45rem .9rem;font-weight:700}
+
+    /* LISTINGS */
+    .listings{max-width:1200px;margin:1rem auto;padding:0 1rem}
+    .grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fill, minmax(260px,1fr))}
+    .card{position:relative;background:#fff;border-radius:16px;overflow:hidden;box-shadow:var(--shadow-xs);transition:transform .2s, box-shadow .2s}
+    .card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+    .deal-badge{position:absolute;top:.7rem;left:.7rem;background:var(--primary);color:#fff;border-radius:999px;padding:.25rem .6rem;font-size:.75rem;font-weight:800;z-index:2}
+    .deal-badge.sale{background:var(--error)} .deal-badge.swap{background:var(--success)}
+    .wishlist-btn{position:absolute;top:.5rem;right:.5rem;border:0;background:rgba(255,255,255,.92);border-radius:999px;padding:.4rem;cursor:pointer;z-index:2;box-shadow:var(--shadow-xs)}
+    .wishlist-btn i{font-size:1.1rem;color:#c0c0c0;transition:.2s}
+    .wishlist-btn i.wishlisted{color:#e74c3c}
+    .media{position:relative;height:200px;overflow:hidden;background:#f3f4f6}
+    .media img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+    .card:hover .media img{transform:scale(1.05)}
+    .swap-row{display:flex;gap:2px;height:140px;overflow:hidden}
+    .swap-photo{flex:1;overflow:hidden}
+    .swap-photo img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+    .swap-photo:hover img{transform:scale(1.08)}
+    .content{padding:1rem}
+    .title{font-weight:800;color:#111827;margin:0 0 .4rem;font-size:1.05rem}
+    .price{font-weight:900;color:var(--error);font-size:1.25rem;margin:.25rem 0 .6rem}
+    .meta-line{font-size:.95rem;color:var(--text);display:flex;gap:.4rem;flex-wrap:wrap}
+    .meta-label{font-weight:800;color:var(--primary-dark)}
+
+    /* PAGINATION */
+    .pagination{display:flex;justify-content:center;gap:.35rem;margin:1.5rem 0}
+    .page-link,.page-current{padding:.5rem .9rem;border-radius:10px;border:1px solid var(--border);background:#fff}
+    .page-link:hover{background:#f8fafc}
+    .page-current{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:800}
+
+    /* MOBILE NAV (keep; hamburger hidden on mobile per request) */
+    .mb-nav{display:none}
+    @media (max-width:768px){
+      .nav-links{display:none}   /* Hide desktop links on mobile */
+      .hamburger{display:none}   /* REMOVE hamburger on mobile */
+      .mb-nav{
+        display:flex;position:fixed;left:0;right:0;bottom:0;background:#fff;box-shadow:0 -6px 18px rgba(0,0,0,.08);
+        padding:.5rem .75rem calc(.5rem + env(safe-area-inset-bottom));z-index:999;border-top-left-radius:18px;border-top-right-radius:18px
       }
+      body{padding-bottom:76px}
     }
-
-    @media (max-width: 768px) {
-      .navbar {
-        padding: 1rem;
-      }
-
-      .nav-links {
-        position: fixed;
-        top: 0;
-        right: 0;
-        height: 100vh;
-        width: 70%;
-        background: var(--surface);
-        flex-direction: column;
-        justify-content: center;
-        gap: 2rem;
-        transform: translateX(100%);
-        transition: transform 0.3s ease;
-        box-shadow: -5px 0 15px rgba(0,0,0,0.1);
-        z-index: 1000;
-      }
-
-
-
-      .hamburger {
-        display: block;
-      }
-
-      .hamburger.active div:nth-child(1) {
-        transform: rotate(-45deg) translate(-5px, 6px);
-      }
-
-      .hamburger.active div:nth-child(2) {
-        opacity: 0;
-      }
-
-      .hamburger.active div:nth-child(3) {
-        transform: rotate(45deg) translate(-5px, -6px);
-      }
-
-      .search-section {
-        padding: 2rem 1rem;
-      }
-
-      .search-header h1 {
-        font-size: 2rem;
-      }
-
-      .filter-section,
-      .listings-container {
-        padding: 0 1rem;
-      }
-
-      .footer-container {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .search-bar {
-        flex-direction: column;
-        gap: 0.75rem;
-      }
-
-      .search-input {
-        padding: 1rem 1rem 1rem 3rem;
-      }
-
-      .search-btn {
-        position: static;
-        transform: none;
-        width: 100%;
-        padding: 0.75rem;
-      }
-
-      .filter-tabs {
-        overflow-x: auto;
-        padding-bottom: 0.5rem;
-      }
-
-      .listings-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* Utility Classes */
-    .hidden {
-      display: none !important;
-    }
-
-    .text-primary {
-      color: var(--primary);
-    }
-
-    .text-success {
-      color: var(--success);
-    }
-
-    .text-error {
-      color: var(--error);
-    }
-
-    .text-light {
-      color: var(--text-light);
-    }
-
-    .mt-1 { margin-top: 0.25rem; }
-    .mt-2 { margin-top: 0.5rem; }
-    .mt-3 { margin-top: 1rem; }
-    .mt-4 { margin-top: 1.5rem; }
-    .mt-5 { margin-top: 2rem; }
-
-    .mb-1 { margin-bottom: 0.25rem; }
-    .mb-2 { margin-bottom: 0.5rem; }
-    .mb-3 { margin-bottom: 1rem; }
-    .mb-4 { margin-bottom: 1.5rem; }
-    .mb-5 { margin-bottom: 2rem; }
-
-
-
-    .sale-badge { background: var(--error); }
-    .swap-badge { background: var(--success); }
-
-    .plan-badge { position: absolute; top: 1rem; right: 1rem; padding: 0.25rem 0.75rem; border-radius: var(--radius); color: #fff; font-size: 0.75rem; display: flex; align-items: center; gap: 0.25rem; }
-    .diamond-plan { background: #b9f2ff; color: #000; }
-    .gold-plan { background: #ffd700; }
-    .silver-plan { background: #c0c0c0; }
-    .bronze-plan { background: #cd7f32; }
-
-    .card-content { padding: 1rem; }
-    .listing-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
-    .required-cash { font-size: 0.9rem; color: var(--warning); margin-left: 0.5rem; }
-
-    .price-display { font-size: 1.25rem; font-weight: 700; color: var(--primary); margin-bottom: 0.75rem; }
-
-    .swap-details { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
-    .detail-item { display: flex; justify-content: space-between; font-size: 0.9rem; }
-    .detail-label { font-weight: 500; }
-    .cash-adjustment { color: var(--warning); }
-
-
-.search-bar {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.input-group {
-  position: relative;
-  flex: 1;
-  min-width: 180px;
-}
-
-.input-group i {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #888;
-  pointer-events: none;
-  font-size: 1rem;
-}
-
-.search-input {
-  width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.5rem; /* left padding makes room for icon */
-  border: 1px solid #ccc;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-}
-
-.search-btn {
-  padding: 0.75rem 1.5rem;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 9999px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.search-btn:hover {
-  background-color: #45A049;
-}
-
-
-.listings-grid {
-  display: grid;
-  gap: 1.5rem;
-  grid-template-columns: repeat(auto-fill, minmax(260px,1fr));
-}
-
-.listing-card {
-  position: relative;    /* <-- add this */
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  transition: transform .2s;
-}
-
-.listing-card:hover {
-  transform: translateY(-4px);
-}
-
-.deal-type-badge {
-  position: absolute;
-  top: .75rem;
-  left: .75rem;
-  background: #2ECC71;
-  color: white;
-  padding: .3rem .6rem;
-  border-radius: 20px;
-  font-size: .75rem;
-  z-index: 3;
-}
-
-/* Swap photo row */
-.swap-photo-row {
-  display: flex;
-  gap: 2px;
-  height: 140px; /* adjust as needed */
-  overflow: hidden;
-}
-.swap-photo {
-  flex: 1;
-  overflow: hidden;
-  position: relative;
-}
-.swap-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform .3s;
-}
-.swap-photo:hover img {
-  transform: scale(1.1);
-}
-
-/* Joined titles under photos */
-.swap-offer-line {
-  padding: 0.5rem 1rem 0 1rem;
-  font-size: 0.97rem;
-  font-weight: 500;
-  color: var(--secondary);
-  word-break: break-word;
-}
-.swap-offer-line .detail-label {
-  font-weight: 600;
-  color: var(--primary-dark);
-}
-.swap-wants-line {
-  padding: 0 1rem 0 1rem;
-  font-size: 0.97rem;
-  font-weight: 500;
-  color: var(--secondary);
-  word-break: break-word;
-  margin-bottom: 0.2rem;
-}
-.swap-wants-line .detail-label {
-  font-weight: 600;
-  color: var(--primary-dark);
-}
-.swap-plus-cash-line {
-  padding: 0 1rem 0 1rem;
-  font-size: 0.97rem;
-  font-weight: 500;
-  color: var(--secondary);
-  word-break: break-word;
-  margin-bottom: 0.2rem;
-}
-.swap-plus-cash-line .detail-label {
-  font-weight: 600;
-  color: var(--primary-dark);
-}
-.swap-divider {
-  border: none;
-  border-top: 1px solid #e0e0e0;
-  margin: 0.5rem 1rem 0.5rem 1rem;
-}
-
-/* Card content */
-.card-content {
-  padding: 1rem;
-}
-
-.listing-title {
-  font-size: 1.1rem;
-  margin-bottom: .5rem;
-}
-
-.price-display {
-  font-size: 1.5rem;
-  color: #E74C3C;
-  font-weight: 700;
-}
-
-/* Swap details container: vertical stack, left‑aligned */
-.swap-details {
-  display: flex;
-  flex-direction: column;
-  gap: .4rem;
-  align-items: flex-start;      /* ← ensure children start at left edge */
-  text-align: left;             /* ← fallback for text */
-}
-
-/* Each detail line: inline flex so label/value sit side by side */
-.detail-item {
-  display: flex;
-  align-items: center;
-  gap: .25rem;                  /* optional spacing between label & value */
-  font-size: .9rem;
-  width: 100%;                  /* take full width so text-align works */
-}
-
-/* Label/value styling stays the same */
-.detail-label {
-  font-weight: 500;
-  /* margin-left removed so it truly hugs left */
-  margin-left: 0;
-}
-
-.detail-value {
-  font-weight: 600;
-}
-
-.cash-adjustment {
-  color: #2ECC71;
-}
-
-.hero-search-filters {
-  font-family: Poppins, sans-serif;
-}
-
-
-
-
-
-
-/* =========== FILTER TABS =========== */
-/* Container for both deal‑type & category filters */
-/* Wrapper around both filter groups */
-.filters-container {
-  max-width: 1200px;
-  margin: 0 auto 2rem;
-  padding: 0 1rem;
-}
-
-.filters-scroll {
-  display: flex;
-  flex-wrap: nowrap;              /* Prevent wrapping */
-  overflow-x: auto;               /* Enable horizontal scroll */
-  overflow-y: hidden;
-  gap: 0.75rem;
-  padding-bottom: 0.5rem;
-  -webkit-overflow-scrolling: touch; /* Smooth mobile scrolling */
-}
-
-/* Filter button style */
-.filter-button {
-  flex: 0 0 auto;                  /* Don't shrink */
-  white-space: nowrap;            /* Prevent multi-line */
-  background: #f0f0f0;
-  color: #333;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 50px;
-  cursor: pointer;
-  transition: background 0.3s, color 0.3s;
-}
-
-/* Active state */
-.filter-button.active {
-  background: #2ECC71;
-  color: #fff;
-}
-
-/* Optional scrollbar style */
-.filters-scroll::-webkit-scrollbar {
-  height: 6px;
-}
-.filters-scroll::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
-  border-radius: 3px;
-}
-
-
-
-
-
-
-/* Enhanced Search Bar Styles */
-/* Enhanced Search Bar Styles */
-.search-container {
-  padding: 0 1rem;
-  margin: 2rem auto 2rem;
-  max-width: 1400px;
-}
-
-.search-grid {
-  display: grid;
-  /* make search + location twice as wide as the button */
-  grid-template-columns: 2fr 2fr auto;
-  gap: 1rem;
-  background: white;
-  padding: 1.5rem;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-}
-
-
-
-.search-group {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.search-icon {
-  position: absolute;
-  left: 1rem;
-  color: #666;
-}
-
-.search-input {
-  width: 100%;
-  padding: 1rem 1rem 1rem 2.5rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 1rem;
-}
-
-.search-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background: green;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 1rem;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .hero-carousel {
-    height: 50vh;
-    min-height: 300px;
-    margin: 0;
-    border-radius: 0;
-  }
-
-  .carousel-title {
-    font-size: 1.5rem;
-  }
-
-  .search-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .search-button .button-text {
-    display: none;
-  }
-
-
-}
-
-@media (max-width: 480px) {
-  .carousel-caption {
-    bottom: 10%;
-    left: 5%;
-    right: 5%;
-  }
-
-  .carousel-button {
-    padding: 0.75rem 1.5rem;
-    font-size: 0.9rem;
-  }
-
-
-
-/* Make only the active slide clickable */
-.carousel-item {
-  pointer-events: none;
-}
-.carousel-item.active {
-  pointer-events: auto;
-}
-
-  .filters-container {
-    position: sticky;
-    top: 0;
-    background: white;
-    z-index: 500;
-    padding: 0.5rem 0;
-  }
-  #undo-toast {
-    display: none;
-    position: fixed;
-    bottom: 1rem;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #333;
-    color: #fff;
-    padding: 0.75rem 1.5rem;
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    font-size: 0.9rem;
-    z-index: 1001;
-  }
-  #undo-toast button {
-    background: transparent;
-    border: none;
-    color: #4FC3F7;
-    margin-left: 1rem;
-    cursor: pointer;
-    font-weight: bold;
-  }
-
-
-/* ======= MOBILE BOTTOM NAVIGATION BAR ======= */
-/* Base: hidden on larger screens */
-.mobile-bottom-nav {
-  display: none; /* default hidden on desktop */
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1000;
-  background: var(--surface, #ffffff);
-  box-shadow: 0 -6px 18px rgba(0,0,0,0.08);
-  padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
-  border-top-left-radius: 18px;
-  border-top-right-radius: 18px;
-  max-width: 1100px;
-  margin: 0 auto;
-  transition: transform .18s ease, opacity .18s ease;
-}
-
-/* Items container */
-.mobile-bottom-nav .nav-items {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-/* If you keep a wrapper, ensure it fills */
-.mobile-bottom-nav .nav-item-wrapper {
-  flex: 1 1 0;
-  display: flex;
-  justify-content: center;
-}
-
-/* Single nav item: large hit area for thumbs */
-.mobile-bottom-nav .nav-item {
-  flex: 1 1 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 56px;            /* comfortable touch target */
-  padding: 8px 6px;
-  text-decoration: none;
-  color: #6b7280;              /* neutral text color */
-  font-family: inherit;
-  border-radius: 12px;
-  position: relative;
-  transition: background .18s ease, color .18s ease, transform .12s ease;
-  -webkit-tap-highlight-color: transparent;
-  overflow: visible;
-}
-
-/* Tap feedback */
-.mobile-bottom-nav .nav-item:active {
-  transform: translateY(1px);
-}
-
-/* Hover (for devices that support hover) */
-@media (hover: hover) {
-  .mobile-bottom-nav .nav-item:hover {
-    background: rgba(129,199,132,0.04);
-  }
-}
-
-/* Icon + label styling */
-.mobile-bottom-nav .nav-icon {
-  font-size: 1.35rem;
-  line-height: 1;
-  margin-bottom: 4px;
-  display: inline-block;
-}
-.mobile-bottom-nav .nav-label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  line-height: 1;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  max-width: 68px;
-  text-align: center;
-}
-
-/* Active state */
-.mobile-bottom-nav .nav-item.active {
-  color: #2e7d32; /* darker green for accessibility */
-  background: rgba(129,199,132,0.12);
-  box-shadow: 0 6px 14px rgba(129,199,132,0.06);
-}
-
-/* Bottom dot indicator for active item */
-.mobile-bottom-nav .nav-item .active-indicator {
-  display: none;
-}
-.mobile-bottom-nav .nav-item.active .active-indicator {
-  display: block;
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 6px;
-  height: 6px;
-  background: #81C784;
-  border-radius: 50%;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-}
-
-/* Wishlist count badge */
-.mobile-bottom-nav .nav-badge,
-#wishlist-count-mobile {
-  position: absolute;
-  top: 6px;
-  right: 14px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 6px;
-  font-size: 0.65rem;
-  line-height: 18px;
-  text-align: center;
-  border-radius: 9px;
-  background: #ef4444;
-  color: #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-  display: inline-block;
-}
-
-/* Tooltips: hide on small screens, show on hover on desktop */
-.mobile-bottom-nav .tooltip {
-  display: none; /* default hidden (we don't want tooltips cluttering mobile) */
-}
+    .mb-items{display:flex;gap:6px;align-items:center;justify-content:space-between;width:100%}
+    .mb-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:.55rem;border-radius:12px;color:#6b7280}
+    .mb-item.active{color:var(--primary-dark);background:rgba(129,199,132,.12)}
+    .mb-icon{font-size:1.25rem}
+    .mb-badge{position:absolute;top:6px;right:16px;min-width:18px;height:18px;line-height:18px;text-align:center;border-radius:9px;background:#ef4444;color:#fff;font-size:.65rem}
+
+    /* FOOTER */
+    .site-footer{background:#111827;color:#e5e7eb;margin-top:2rem}
+    .footer-inner{max-width:1200px;margin:0 auto;padding:3rem 1rem 2rem;display:grid;gap:2rem;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+    .footer-logo{display:flex;align-items:center;gap:.6rem;margin-bottom:1rem}
+    .footer-logo span{font-size:1.25rem;font-weight:900;color:#fff}
+    .footer-links{list-style:none;margin:0;padding:0}
+    .footer-links a{display:inline-block;padding:.25rem 0;color:#d1d5db}
+    .footer-links a:hover{color:#fff}
+    .footer-bottom{border-top:1px solid rgba(255,255,255,.12);text-align:center;padding:1rem;color:#9ca3af}
+
+    .alert-info{background:#e3f2fd;border:1px solid #bbdefb;color:#1565c0;padding:.75rem 1rem;border-radius:10px}
+    @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+
+
+    /* Desktop-only placement for the wishlist badge */
 @media (min-width: 769px) {
-  .mobile-bottom-nav .tooltip {
-    display: inline-block;
-    position: absolute;
-    bottom: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,0.8);
-    color: #fff;
-    padding: 6px 8px;
-    font-size: 0.75rem;
-    border-radius: 6px;
-    white-space: nowrap;
-    z-index: 1050;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .12s ease;
-  }
-  .mobile-bottom-nav .nav-item:hover .tooltip {
-    opacity: 1;
-  }
-}
-
-/* Responsive: show on small screens (<=768px) */
-@media only screen and (max-width: 768px) {
-  .mobile-bottom-nav {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-
-  /* Ensure body content doesn't hide behind nav */
-  body {
-    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
-  }
-
-  /* Hide desktop nav controls if present */
-  .hamburger,
-  .nav-links {
-    display: none !important;
-  }
-}
-
-/* Explicitly hide on larger screens */
-@media only screen and (min-width: 769px) {
-  .mobile-bottom-nav {
-    display: none;
-  }
-  body {
-    padding-bottom: 0;
-  }
-}
-
-  </style>
-
-<!-- ===== REQUIRED CSS (add these rules at the bottom of your stylesheet) ===== -->
-<style>
-  /* ===== REDUCED HERO CAROUSEL HEIGHT ===== */
-  .hero-carousel {
-    height: 300px;       /* desktop */
-    margin-bottom: 0;    /* divider handles spacing */
-  }
-  @media (max-width: 768px) {
-    .hero-carousel {
-      height: 200px;     /* mobile */
-    }
-  }
-
- 
-
-  /* ===== MULTI-ITEM CAROUSEL LAYOUT ===== */
-  .multi-carousel-container {
+  .nav-links .wishlist-link {
     position: relative;
-    overflow: hidden;
-    margin: 0.4rem 0.4rem 0.4rem;  /* adjust as needed */
-  }
-  .multi-carousel-track {
-    display: flex;
-    transition: transform 0.5s ease-in-out;
-    will-change: transform;
-  }
-  .multi-carousel-item {
-    flex: 0 0 100%;
-    max-width: 100%;
-    padding: 0 0.5rem;
-    box-sizing: border-box;
-  }
-  .multi-carousel-image {
-    position: relative;
-    width: 100%;
-    padding-top: 56.25%;  /* 16:9 aspect ratio */
-    background-size: cover;
-    background-position: center;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-    transition: transform 0.3s ease;
-  }
-  .multi-carousel-image:hover {
-    transform: scale(1.03);
-  }
-  .multi-carousel-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: linear-gradient(
-      180deg,
-      transparent,
-      rgba(0, 0, 0, 0.6)
-    );
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    color: #fff;
-  }
-  .multi-carousel-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-  }
-  .multi-carousel-button {
     display: inline-flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.9);
-    color: #333;
-    padding: 0.5rem 1rem;
-    border-radius: 999px;
-    font-weight: 500;
-    font-size: 0.9rem;
-    text-decoration: none;
-    transition: background 0.2s ease;
-  }
-  .multi-carousel-button:hover {
-    background: #fff;
+    gap: .45rem;
+    padding: .5rem .9rem;             /* keeps hit area comfy */
   }
 
-  /* ===== RESPONSIVE: CARDS PER VIEW ===== */
-  @media (min-width: 480px) {
-    .multi-carousel-item {
-      flex: 0 0 50%;
-      max-width: 100%;
-    }
-  }
-  @media (min-width: 768px) {
-    .multi-carousel-item {
-      flex: 0 0 33.3333%;
-      max-width: 33.3333%;
-    }
-  }
-  @media (min-width: 1024px) {
-    .multi-carousel-item {
-      flex: 0 0 25%;
-      max-width: 25%;
-    }
-  }
-
-  /* ===== WAVE DIVIDER ===== */
-  .carousel-divider {
-    position: relative;
-    width: 100%;
-    height: 100px;            /* height for wave + text */
-    margin-bottom: 0rem;      /* space before listings */
-    background-color: var(--background);
-    overflow: hidden;
-  }
-  .carousel-divider::before {
-    content: "";
+  .nav-links .wishlist-link #wishlist-count {
     position: absolute;
     top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-image: url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 100' preserveAspectRatio='none'>\
-  <path fill='%23ffffff' d='M0,30 C360,90 720,0 1080,30 C1440,60 1440,100 1440,100 L0,100 Z'/>\
-</svg>\
-");
-  }
-  .carousel-divider .divider-text {
-    position: absolute;
-    top: 12px;                  /* float just above wave crest */
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.9);
-    padding: 0.5rem 1.5rem;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--primary);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border-radius: 999px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    white-space: nowrap;
-  }
-  @media (max-width: 480px) {
-    .carousel-divider {
-      height: 70px;
-    }
-    .carousel-divider::before {
-      background-image: url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 70' preserveAspectRatio='none'>\
-  <path fill='%23ffffff' d='M0,20 C200,60 400,0 600,20 C800,40 900,10 900,70 L0,70 Z'/>\
-</svg>\
-");
-    }
-    .carousel-divider .divider-text {
-      font-size: 1.1rem;
-      top: 20px;
-      padding: 0rem 0rem;
-    }
-  }
-
-  /* ===== LISTINGS GRID STYLING (unchanged) ===== */
-  .listings-container {
-    max-width: 1200px;
-    margin: 0.5 0.6px;
-    padding: 0 2rem 1rem;
-  }
-  .listings-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 1.5rem;
-  }
-  .listing-card-link {
-    text-decoration: none;
-  }
-  .listing-card {
-    position: relative;
-    background: var(--surface);
-    border-radius: var(--radius);
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  .listing-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-md);
-  }
-  .deal-type-badge {
-    position: absolute;
-    top: 1rem;
-    left: 1rem;
-    background: var(--primary);
+    right: 0;
+    transform: translate(50%, -40%);  /* pins it just above the top-right corner */
+    min-width: 18px;
+    height: 18px;
+    line-height: 18px;
+    padding: 0 6px;
+    border-radius: 9999px;
+    background: #ef4444;
     color: #fff;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    z-index: 2;
-  }
-  .deal-type-badge.swap {
-    background: var(--success);
-  }
-  .deal-type-badge.sale {
-    background: var(--error);
-  }
-  .swap-photo-row {
-    display: flex;
-    gap: 2px;
-    height: 140px;
-    overflow: hidden;
-  }
-  .swap-photo {
-    flex: 1;
-    overflow: hidden;
-    position: relative;
-  }
-  .swap-photo img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s;
-  }
-  .swap-photo:hover img {
-    transform: scale(1.1);
-  }
-  .swap-offer-titles {
-    padding: 0.5rem 1rem 0;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--secondary);
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-  }
-  .card-image {
-    position: relative;
-    height: 200px;
-    overflow: hidden;
-  }
-  .card-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    transition: transform 0.3s;
-  }
-  .listing-card:hover .card-image img {
-    transform: scale(1.05);
-  }
-  .card-content {
-    padding: 1.25rem;
-  }
-  .listing-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--secondary);
-    margin-bottom: 0.5rem;
-  }
-  .required-cash {
-    font-size: 0.9rem;
-    color: var(--warning);
-    margin-left: 0.5rem;
-  }
-  .price-display {
-    font-size: 1.5rem;
-    color: var(--error);
-    font-weight: 700;
-    margin-bottom: 0.75rem;
-  }
-  .swap-details {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    margin-bottom: 1rem;
-  }
-  .detail-item {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.9rem;
-  }
-  .detail-label {
-    font-weight: 500;
-  }
-  .detail-value {
-    font-weight: 600;
-  }
-  .cash-adjustment {
-    color: var(--success);
-  }
-
-  /* Style the tooltip */
-.tooltip {
-  position: absolute;
-  top: -40px; /* Positions the tooltip above the menu item */
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: white;
-  color: black;
-  padding: 5px 10px;
-  border-radius: 5px;
-  white-space: nowrap; /* Keeps the message on one line */
-  z-index: 1000;
-  animation: float 2s ease-in-out infinite; /* Floating effect */
-}
-
-/* Add a pointer (arrow) to the tooltip */
-.tooltip::after {
-  content: '';
-  position: absolute;
-  bottom: -10px; /* Places the arrow below the tooltip */
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 5px solid black; /* Matches the tooltip background */
-}
-
-/* Floating animation */
-@keyframes float {
-  0% {
-    transform: translateX(-50%) translateY(0);
-  }
-  50% {
-    transform: translateX(-50%) translateY(-10px);
-  }
-  100% {
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
-/* Adjust tooltip positioning for mobile bottom navigation */
-@media (max-width: 768px) {
-  .mobile-bottom-nav .nav-item .tooltip {
-    top: -50px; /* Ensures visibility above the bottom nav */
-  }
-}
-
-
-
-.nav-links a {
-  position: relative;
-}
-
-.nav-links a .tooltip,
-.mobile-bottom-nav .nav-item .tooltip {
-  position: absolute;
-  background: #333;
-  color: #fff;
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  white-space: nowrap;
-  z-index: 10;
-}
-
-.nav-links a .tooltip {
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.nav-links a .tooltip::before {
-  content: '';
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: #333;
-}
-
-.nav-links a .tooltip::after {
-  content: none;
-}
-
-.nav-links a[href="/login"] .tooltip {
-  display: block;
-}
-
-.nav-links a[href="/dashboard"] .tooltip {
-  display: block;
-}
-
-@media (max-width: 768px) {
-  .mobile-bottom-nav .nav-item .tooltip {
-    font-size: 0.7rem;
-    color: #fff;
-    background: #333;
+    font-size: .7rem;
     text-align: center;
-    position: absolute;
-    top: calc(0% - 8px);
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 4px 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
-
-  .mobile-bottom-nav .nav-item .tooltip::before {
-    content: '';
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 4px solid transparent;
-    border-top-color: #333;
-  }
-
-  .mobile-bottom-nav .nav-item .tooltip::after {
-    content: none;
-  }
-
-  .mobile-bottom-nav .nav-item[href="/login"] .tooltip {
-    display: block;
-  }
-
-  .mobile-bottom-nav .nav-item[href="/dashboard"] .tooltip {
-    display: block;
+    box-shadow: 0 2px 6px rgba(0,0,0,.12);
+    pointer-events: none;             /* badge won't intercept clicks */
+    z-index: 1;
   }
 }
-
-.wishlist-btn {
-  background: rgba(255,255,255,0.9);
-  border: none;
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  font-size: 1.2rem;
-  color: #ccc;
-  padding: 6px;
-  border-radius: 50%;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  cursor: pointer;
-  transition: background 0.2s ease, transform 0.1s ease, color 0.2s ease;
-  z-index: 2;
-}
-
-.wishlist-btn:hover {
-  background: rgba(255,255,255,1);
-  transform: scale(1.1);
-  color: var(--primary);
-}
-
-.wishlist-btn i {
-  pointer-events: none;
-}
-
-.wishlist-btn i.wishlisted {
-  color: #e74c3c;
-}
-
-.nav-item.wishlist-link {
-  position: relative;
-}
-
-#wishlist-count, #wishlist-count-mobile {
-  position: absolute;
-  top: -6px;
-  right: 20px;
-  background: #dc3545;
-  color: #fff;
-  font-size: 0.75rem;
-  width: 18px;
-  height: 18px;
-  line-height: 18px;
-  border-radius: 50%;
-  text-align: center;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-}
-
-.nav-links .wishlist-link {
-  position: relative;
-  margin-left: 1rem;
-}
-
-#wishlist-count {
-  right: -10px;
-  font-size: 0.7rem;
-}
-
-@keyframes pop {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.4);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-.wishlist-btn.animate {
-  animation: pop 0.3s ease;
-}
-
-.tooltip {
-  pointer-events: none;
-}
-
-/* === Listing Container & Grid === */
-.listings-container {
-  width: 100%;
-  max-width: none;
-  padding: 1rem;
-  margin: 0 auto;
-}
-.listings-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px,1fr));
-  gap: 1rem;
-}
-.listing-card-wrapper {
-  position: relative;
-}
-
-/* === Cards & Wishlist Button === */
-.listing-card {
-  background: white;
-  border-radius: var(--border-radius);
-  box-shadow: var(--box-shadow);
-  overflow: hidden;
-  transition: var(--transition);
-  position: relative;
-}
-
-.listing-card:hover {
-  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-}
-
-/* === Nav Wishlist Badge === */
-.nav-links .wishlist-link {
-  position: relative;
-  margin-left: 1rem;
-}
-
-#wishlist-count {
-  position: absolute;
-  top: -6px;
-  right: -10px;
-  background: #dc3545;
-  color: white;
-  font-size: 0.7rem;
-  width: 18px;
-  height: 18px;
-  line-height: 18px;
-  text-align: center;
-  border-radius: 50%;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-}
-
-
-@keyframes pop {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.4); }
-  100% { transform: scale(1); }
-}
-
-.wishlist-btn.animate {
-  animation: pop 0.3s ease;
-}
-
-/* === Deal‑type badge, images, etc… reuse your existing CSS below this line === */
-
-
-</style>
-
-<style>
-
-    .filter-section {
-      margin-bottom: 1.25rem;
-      padding: 1rem 1.25rem;
-      background: white;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border);
-    }
-
-    .section-label {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    /* Deal Type Filter Styles */
-    .deal-filter-row {
-      display: flex;
-      gap: 0.5rem;
-      overflow-x: auto;
-      padding-bottom: 0.25rem;
-    }
-
-    .deal-filter-row::-webkit-scrollbar {
-      height: 4px;
-    }
-
-    .deal-filter-row::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 10px;
-    }
-
-    .deal-filter-row::-webkit-scrollbar-thumb {
-      background: #c1c1c1;
-      border-radius: 10px;
-    }
-
-    .filter-button {
-      flex: 0 0 auto;
-      background: white;
-      color: var(--text-primary);
-      border: 1px solid var(--border);
-      padding: 0.5rem 1rem;
-      border-radius: 50px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-size: 0.875rem;
-    }
-
-    .filter-button:hover {
-      background: #f8f9fa;
-      border-color: var(--primary);
-    }
-
-    .filter-button.active {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-    }
-
-
 
   </style>
 
-
-<script>
-    const USER_LOGGED_IN  = {{ user_logged_in | tojson }};
-    const USER_SUBSCRIBED = {{ user_subscribed | tojson }};
+  <script>
+    window.USER_LOGGED_IN  = {{ user_logged_in | tojson }};
+    window.USER_SUBSCRIBED = {{ user_subscribed | tojson }};
+    window.VAPID_PUBLIC_KEY = {{ vapid_public_key | tojson }};
   </script>
 </head>
 <body>
-<!-- ===== MODERN NAVIGATION ===== -->
-<nav class="navbar">
-  <div class="brand">
-    <svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="var(--primary)">
-      <path d="M11 5h2v14h-2V5zm-4 7h2v7H7v-7zm8-7h2v14h-2V5z"/>
-    </svg>
-    <span>SwapHub</span>
-  </div>
-  <div class="nav-links">
-    <a href="/dashboard" class="active">
-      Dashboard
-      {% if session.get('user_id') %}
-        <span class="tooltip">Click here to upload an item for swap</span>
-      {% endif %}
-    </a>
 
-    {% if session.get('user_id') %}
-      <a href="{{ url_for('view_wishlist') }}" class="nav-item wishlist-link">Wishlist
-        <span id="wishlist-count">{{ session.get('wishlist_count', 0) }}</span>
-      </a>
-    {% endif %}
-    <a href="/auctions">Auctions</a>
-    <a href="/my-proposals">My Offers</a>
-    {% if session.get('user_id') %}
-      <a href="/logout" class="btn btn-outline">Logout</a>
-    {% else %}
-      <a href="/login">
-        Login
-        <span class="tooltip">Login to upload an item for swap or sales</span>
-      </a>
-      <a href="/signup" class="btn btn-primary">Sign Up</a>
-    {% endif %}
-  </div>
-  <div class="hamburger">
-    <div></div>
-    <div></div>
-    <div></div>
-  </div>
-</nav>
-
-<!-- ===== MOBILE BOTTOM NAVIGATION ===== -->
-<div class="mobile-bottom-nav" role="navigation" aria-label="Mobile bottom navigation">
-  <div class="nav-items">
-    {% if session.get('user_id') %}
-
-    <div class="nav-item-wrapper">
-
-      <a href="/dashboard" class="nav-item">
-        <i class="fas fa-user nav-icon"></i>
-        <span class="nav-label">Dashboard</span>
-        <span class="tooltip">Upload an item for swap</span>
+  <!-- NAV -->
+  <nav class="navbar" role="navigation" aria-label="Primary">
+    <div class="nav-wrap">
+      <a href="{{ url_for('home') }}" class="brand" aria-label="SwapHub Home">
+        <svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11 5h2v14h-2V5zm-4 7h2v7H7v-7zm8-7h2v14h-2V5z"/></svg>
+        <span>SwapHub</span>
       </a>
 
-    </div>
-
-    <a href="/my-proposals" class="nav-item">
-      <i class="fas fa-exchange-alt nav-icon"></i>
-      <span class="nav-label">Sent Offers</span>
-    </a>
-
-<a href="{{ url_for('view_wishlist') }}" class="nav-item wishlist-link">
-  <i class="fas fa-heart nav-icon" aria-hidden="true"></i>
-  <span class="nav-label">Wishlist</span>
-  <span id="wishlist-count-mobile" class="nav-badge" aria-live="polite">{{ session.get('wishlist_count', 0) }}</span>
+      <div class="nav-links" id="primary-links">
+        <a href="/dashboard" aria-current="{{ 'page' if request.path=='/dashboard' else 'false' }}">
+          Dashboard
+          {% if session.get('user_id') %}<span class="visually-hidden">Upload an item for swap</span>{% endif %}
+        </a>
+        {% if session.get('user_id') %}
+<!-- Desktop nav: Wishlist link -->
+<a href="{{ url_for('view_wishlist') }}" class="nav-item wishlist-link" aria-label="Wishlist">
+  <i class="fas fa-heart" aria-hidden="true"></i>
+  <span>Wishlist</span>
+  <span id="wishlist-count" aria-live="polite">{{ session.get('wishlist_count', 0) }}</span>
 </a>
 
-
-    {% else %}
-      <a href="/login" class="nav-item">
-        <i class="fas fa-sign-in-alt nav-icon"></i>
-        <span class="nav-label">Login</span>
-        <span class="tooltip">Login to upload a product</span>
-      </a>
-      <a href="/signup" class="nav-item">
-        <i class="fas fa-user-plus nav-icon"></i>
-        <span class="nav-label">Sign Up</span>
-      </a>
-    {% endif %}
-  </div>
-</div>
-
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.matchMedia('(max-width: 768px)').matches) {
-    const navItems = document.querySelectorAll('.mobile-bottom-nav .nav-item');
-    navItems.forEach(item => {
-      item.addEventListener('touchend', e => {
-        e.preventDefault();
-        const tooltip = item.querySelector('.tooltip');
-        const href = item.getAttribute('href');
-        if (tooltip) {
-          tooltip.style.display = 'block';
-        }
-        window.location.href = href;
-      });
-    });
-  }
-});
-</script>
-
-
-  <body>
-  <!-- Your content -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const tooltips = document.querySelectorAll('.nav-links .tooltip, .mobile-bottom-nav .tooltip');
-      tooltips.forEach(tooltip => {
-        setTimeout(() => {
-          tooltip.style.display = 'none';
-        }, 15000);
-      });
-    });
-  </script>
-</body>
-
-
-<script>
-  // Highlight active nav item in mobile bottom nav
-  document.addEventListener('DOMContentLoaded', function() {
-    const navItems = document.querySelectorAll('.nav-item');
-    const currentPath = window.location.pathname;
-    
-    navItems.forEach(item => {
-      const href = item.getAttribute('href');
-      if (currentPath === href) {
-        item.classList.add('active');
-      } else {
-        item.classList.remove('active');
-      }
-      
-      item.addEventListener('click', function() {
-        navItems.forEach(i => i.classList.remove('active'));
-        this.classList.add('active');
-      });
-    });
-  });
-
-  // Toggle mobile bottom nav visibility
-  const nav = document.querySelector('.mobile-bottom-nav');
-  function updateMobileNav() {
-    if (window.innerWidth <= 768) {
-      nav.style.display = 'flex';
-    } else {
-      nav.style.display = 'none';
-    }
-  }
-  window.addEventListener('load', updateMobileNav);
-  window.addEventListener('resize', updateMobileNav);
-</script>
-
-
-<!-- ===== HERO + SEARCH + FILTERS SECTION ===== -->
-<section class="hero-search-filters">
-  
-  <!-- 1) MERGED SEARCH BAR -->
-<!-- ===== ENHANCED SEARCH + FILTER SECTION ===== -->
-
-<!-- 1) SEARCH FORM (with hidden inputs for deal_type & category) -->
-<form id="search-form" action="{{ url_for('home') }}" method="GET">
-  <div class="search-bar" style="padding: 1rem 2rem; background: var(--surface); box-shadow: var(--shadow-sm); margin-bottom: 1rem; position: relative;">
-    <!-- “Search items” input -->
-    <i class="fas fa-search search-icon" style="position: absolute; left: 2.5rem; top: 50%; transform: translateY(-50%); color: var(--text-light);"></i>
-    <input
-      type="text"
-      name="search"
-      class="search-input"
-      placeholder="What are you looking for?"
-      value="{{ search }}"
-      style="width: 100%; padding: 0.75rem 3.5rem 0.75rem 3rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 1rem; color: var(--text); box-shadow: var(--shadow-sm);"
-    />
-
-    <!-- Hidden submit button ensures Enter key submits the form -->
-    <button type="submit" style="display: none;"></button>
-
-    <!-- “Location” input toggled by pin button -->
-    <button type="button" class="location-btn" aria-label="Show Location Search" style="background: none; border: none; position: absolute; right: 2rem; top: 50%; transform: translateY(-50%); font-size: 1.1rem; color: var(--text-light); cursor: pointer; transition: color 0.2s;">
-      <i class="fas fa-map-marker-alt"></i>
-    </button>
-    <input
-      type="text"
-      name="location"
-      class="location-input"
-      placeholder="Location (e.g. Madina…)"
-      value="{{ location }}"
-      style="width: 100%; margin-top: 0.75rem; padding: 0.75rem 2.5rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 1rem; color: var(--text); box-shadow: var(--shadow-sm); display: none;"
-    />
-
-    <!-- HIDDEN INPUTS for deal_type & category -->
-    <input type="hidden" name="deal_type" id="selected-deal-type" value="{{ deal_type_filter }}">
-    <input type="hidden" name="category" id="selected-category" value="{{ selected_category }}">
-  </div>
-</form>
-
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    // Toggle “location” input visibility when pin icon is clicked
-    const locationBtn = document.querySelector(".location-btn");
-    const locationInput = document.querySelector(".location-input");
-
-    locationBtn.addEventListener("click", () => {
-      if (!locationInput.style.display || locationInput.style.display === "none") {
-        locationInput.style.display = "block";
-        locationInput.focus();
-      } else {
-        locationInput.style.display = "none";
-      }
-    });
-  });
-</script>
-
-
-<!-- ===== MULTI-ITEM HERO CAROUSEL ===== -->
-<div class="multi-carousel-container" data-plan="{{ listings.Plan }}">
-  <div class="multi-carousel-track">
-    {% for listing in carousel_listings %}
-      <div
-        class="multi-carousel-item"
-        data-listing-id="{{ listing.listing_id }}"
-        data-source="carousel"
-      >
-        <div
-          class="multi-carousel-image"
-          style="background-image:
-                 
-                 url('{{ listing.banner_image }}')"
-        >
-          <div class="multi-carousel-overlay">
-            <h3 class="multi-carousel-title">{{ listing.title }}</h3>
-            <a
-              href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
-              class="multi-carousel-button"
-              data-listing-id="{{ listing.listing_id }}"
-              data-source="carousel"
-            >
-              View Listing <i class="fas fa-arrow-right"></i>
-            </a>
-          </div>
-        </div>
+        {% endif %}
+        <a href="/auctions">Auctions</a>
+        <a href="/my-proposals">My Offers</a>
+        {% if session.get('user_id') %}
+          <a href="/logout" class="btn btn-outline" data-no-pjax>Logout</a>
+        {% else %}
+          <a href="/login">Login</a>
+          <a href="/signup" class="btn btn-primary">Sign Up</a>
+        {% endif %}
       </div>
-    {% endfor %}
-  </div>
-</div>
 
+      <!-- Hamburger kept in DOM but hidden on mobile; visible on desktop if you want -->
+      <button class="hamburger" id="hamburger" aria-controls="primary-links" aria-expanded="false" aria-label="Toggle navigation" style="display:none;"></button>
+    </div>
+  </nav>
 
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="mb-nav" aria-label="Mobile">
+    <div class="mb-items">
+      {% if session.get('user_id') %}
+        <a href="/dashboard" class="mb-item {% if request.path=='/dashboard' %}active{% endif %}">
+          <i class="fas fa-user mb-icon" aria-hidden="true"></i><span class="nav-label">Dashboard</span>
+        </a>
+        <a href="/my-proposals" class="mb-item {% if request.path=='/my-proposals' %}active{% endif %}">
+          <i class="fas fa-exchange-alt mb-icon" aria-hidden="true"></i><span class="nav-label">Sent Offers</span>
+        </a>
+        <a href="{{ url_for('view_wishlist') }}" class="mb-item position-relative {% if request.path.startswith('/wishlist') %}active{% endif %}">
+          <i class="fas fa-heart mb-icon" aria-hidden="true"></i><span class="nav-label">Wishlist</span>
+          <span id="wishlist-count-mobile" class="mb-badge" aria-live="polite">{{ session.get('wishlist_count', 0) }}</span>
+        </a>
+      {% else %}
+        <a href="/login" class="mb-item"><i class="fas fa-sign-in-alt mb-icon" aria-hidden="true"></i><span class="nav-label">Login</span></a>
+        <a href="/signup" class="mb-item"><i class="fas fa-user-plus mb-icon" aria-hidden="true"></i><span class="nav-label">Sign Up</span></a>
+      {% endif %}
+    </div>
+  </nav>
 
+  <!-- SEARCH -->
+  <section class="search-shell">
+    <div class="search-container">
+      <form id="search-form" class="search-form" method="GET" action="{{ url_for('home') }}" role="search">
+        <div class="search-row">
+          <i class="fas fa-search input-icon" aria-hidden="true"></i>
+          <label for="q" class="visually-hidden">Search items</label>
+          <input id="q" name="search" class="search-input" autocomplete="off" placeholder="What are you looking for?" value="{{ search }}">
+          <button type="button" class="location-toggle" id="location-toggle" aria-controls="location" aria-expanded="false" title="Location search">
+            <i class="fas fa-map-marker-alt"></i>
+          </button>
+        </div>
+        <button class="search-btn" type="submit" aria-label="Search">Search</button>
+        <div class="search-row" style="grid-column:1 / -1">
+          <label for="location" class="visually-hidden">Location</label>
+          <input id="location" name="location" class="location-input" placeholder="Location (e.g., Madina…)" value="{{ location }}">
+        </div>
+        <input type="hidden" name="deal_type" id="deal-type-hidden" value="{{ deal_type_filter }}">
+        <input type="hidden" name="category" id="category-hidden" value="{{ selected_category }}">
+      </form>
+    </div>
+  </section>
 
-<form
-  id="search-form"
-  method="get"
-  action="{{ url_for('home') }}"
-  style="margin-bottom: 1.5rem;"
->
-  <!-- Hidden fields that your JS will populate -->
-  <input
-    type="hidden"
-    id="selected-deal-type"
-    name="deal_type"
-    value="{{ deal_type_filter }}"
-  />
-  <input
-    type="hidden"
-    id="selected-category"
-    name="category"
-    value="{{ selected_category }}"
-  />
+  <!-- FILTERS -->
+  <div class="filters">
+    <!-- Deal Type -->
+    <div class="filter-card">
+      <div class="filter-title">Deal Type</div>
+      <div class="chip-row" id="deal-type-row" role="tablist" aria-label="Deal type">
+        {% set deal_types = ['All','Swap Deal','Outright Sales'] %}
+        {% for deal in deal_types %}
+          <button type="button" class="chip deal-chip{% if deal_type_filter == deal %} active{% endif %}"
+                  data-value="{{ deal }}" role="tab"
+                  aria-pressed="{% if deal_type_filter == deal %}true{% else %}false{% endif %}">
+            {{ deal }}
+          </button>
+        {% endfor %}
+      </div>
+    </div>
 
-  <!-- DEAL‑TYPE FILTERS -->
-  <div class="filter-section">
-    <div class="section-label">Deal Type</div>
-    <div class="deal-filter-row">
-      {% set deal_types = ['All', 'Swap Deal', 'Outright Sales'] %}
-      {% for deal in deal_types %}
-        <button
-          type="button"
-          class="filter-button deal-filter{% if deal_type_filter == deal %} active{% endif %}"
-          data-value="{{ deal }}"
-        >
-          {{ deal }}
+    <!-- Categories (NOW SMALLER + HORIZONTAL SCROLLER) -->
+    <div class="filter-card">
+      <div class="filter-title">Categories</div>
+      <div class="category-scroller" id="category-scroller" role="tablist" aria-label="Categories">
+        {% for value, label, icon in [
+          ('All','All','mdi:format-list-bulleted'),
+          ('Electronics','Electronics','mdi:television'),
+          ('Mobile Phones & Accessories','Phones','mdi:cellphone'),
+          ('Computers & Networking','Computers','mdi:desktop-classic'),
+          ('Sports & Outdoors','Sports','mdi:basketball'),
+          ('Toys & Games','Toys','mdi:puzzle'),
+          ('Automobile & Vehicles','Auto','mdi:car')
+        ] %}
+        <button type="button"
+                class="category-btn{% if selected_category == value %} active{% endif %}"
+                data-value="{{ value }}" role="tab"
+                aria-pressed="{% if selected_category == value %}true{% else %}false{% endif %}">
+          <span class="category-icon-box" aria-hidden="true">
+            <img src="https://api.iconify.design/{{ icon }}.svg" alt="" width="18" height="18"
+                 onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
+          </span>
+          <span class="category-name">{{ label }}</span>
         </button>
-      {% endfor %}
+        {% endfor %}
+      </div>
     </div>
   </div>
 
-<style>
-:root{
-  --primary: #81C784;
-  --primary-dark: #2e7d32;
-  --primary-light: rgba(129,199,132,0.12);
-  --bg: #ffffff;
-  --muted: #6b7280;
-  --border: white;
-  --radius: 12px;
-  --shadow-sm: 0 6px 18px rgba(0,0,0,0.06);
-}
-
-/* Container + label */
-.filter-section { 
-  padding: 1rem;
-}
-.section-label {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--primary-dark);
-  margin-bottom: 0.5rem;
-}
-
-/* MOBILE: horizontal scroll pills */
-.category-filter-grid {
-  display: flex;
-  gap: 0.6rem;
-  align-items: stretch;
-  overflow-x: auto;
-  padding-bottom: 6px;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-}
-.category-filter-grid::-webkit-scrollbar { height: 8px; }
-.category-filter-grid::-webkit-scrollbar-thumb { background: transparent; border-radius: 6px; }
-.category-filter-grid { scrollbar-width: thin; }
-
-/* Single pill/button */
-.category-filter-button,
-.filter-button.category-filter {
-  appearance: none;
-  -webkit-appearance: none;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  padding: 0.55rem 0.9rem;
-  border-radius: 999px;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  min-width: 88px;
-  max-width: 180px;
-  flex: 0 0 auto;
-  cursor: pointer;
-  transition: transform .12s ease, box-shadow .18s ease, border-color .15s ease, background .15s ease;
-  text-decoration: none;
-  color: var(--muted);
-  scroll-snap-align: start;
-  position: relative;
-  vertical-align: middle;
-  box-shadow: none;
-  font: inherit;
-  line-height: 1;
-}
-
-/* icon circle */
-.category-icon-container {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.03);
-  border: 1px solid rgba(0,0,0,0.03);
-  transition: background .15s ease, transform .12s ease;
-  flex-shrink: 0;
-}
-.category-icon { width: 60%; height: 60%; object-fit: contain; display: block; }
-
-/* label */
-.category-name {
-  font-size: 0.78rem;
-  font-weight: 600;
-  text-align: center;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  max-width: 120px;
-  color: inherit;
-}
-
-/* press/hover/active */
-.category-filter-button:active { transform: translateY(1px) scale(.995); }
-@media (hover: hover) {
-  .category-filter-button:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-sm);
-    border-color: rgba(129,199,132,0.4);
-  }
-}
-.category-filter-button.active,
-.filter-button.category-filter.active {
-  border-color: var(--primary);
-  background: linear-gradient(180deg, rgba(129,199,132,0.08), rgba(129,199,132,0.04));
-  color: var(--primary-dark);
-  box-shadow: 0 8px 24px rgba(129,199,132,0.08);
-  transform: translateY(-2px);
-}
-.category-filter-button.active .category-icon-container,
-.filter-button.category-filter.active .category-icon-container {
-  background: var(--primary);
-  border-color: var(--primary);
-}
-.category-filter-button.active .category-icon,
-.filter-button.category-filter.active .category-icon {
-  filter: brightness(0) invert(1);
-  mix-blend-mode: normal;
-}
-
-/* focus visible */
-.category-filter-button:focus-visible,
-.filter-button.category-filter:focus-visible {
-  outline: 3px solid rgba(129,199,132,0.22);
-  outline-offset: 2px;
-  border-radius: calc(var(--radius) + 6px);
-}
-
-/* TABLET / DESKTOP: grid */
-@media (min-width: 641px) {
-  .category-filter-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-    gap: 0.75rem;
-    align-items: stretch;
-  }
-  .category-filter-button {
-    flex: 1 1 0;
-    min-width: 0;
-    padding: 0.9rem 0.6rem;
-    border-radius: var(--radius);
-  }
-  .category-icon-container { width: 34px; height: 34px; border-radius: 8px; }
-  .category-name { font-size: 0.85rem; max-width: 100%; }
-}
-@media (min-width: 1024px) {
-  .category-filter-grid { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; }
-  .category-filter-button { padding: 1rem 0.75rem; }
-  .category-icon-container { width: 42px; height: 42px; }
-  .category-name { font-size: 0.90rem; }
-}
-@media (max-width: 420px) {
-  .category-filter-button { min-width: 78px; padding: 0.45rem 0.6rem; }
-  .category-icon-container { width: 34px; height: 34px; }
-  .category-name { font-size: 0.72rem; max-width: 100px;}
-}
-
-/* optional: visually hide the native focus ring for mouse users but keep for keyboard */
-.filter-button:focus { outline: none; }
-
-
-
-
-.alert-info {
-    background: #e3f2fd;
-    border: 1px solid #bbdefb;
-    color: #1565c0;
-    padding: 0.75rem 1.25rem;
-    border-radius: .35rem;
-    font-size: 0.95rem;
-}
-</style>
-
-<!-- ===== CATEGORY FILTERS SECTION (aligned) ===== -->
-<div class="filter-section">
-  <div class="section-label">Categories</div>
-
-  <div class="category-filter-grid" role="tablist" aria-label="Category filters">
-    <!-- All -->
-    <button
-      type="button"
-      class="filter-button category-filter{% if selected_category=='All' %} active{% endif %}"
-      data-value="All"
-      role="tab"
-      aria-pressed="{% if selected_category=='All' %}true{% else %}false{% endif %}"
-    >
-      <span class="category-icon-container" aria-hidden="true">
-        <img
-          src="https://api.iconify.design/mdi:format-list-bulleted.svg"
-          alt="All"
-          class="category-icon"
-          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';"
-        >
-      </span>
-      <span class="category-name">All</span>
-    </button>
-
-    <!-- Electronics -->
-    <button
-      type="button"
-      class="filter-button category-filter{% if selected_category=='Electronics' %} active{% endif %}"
-      data-value="Electronics"
-      role="tab"
-      aria-pressed="{% if selected_category=='Electronics' %}true{% else %}false{% endif %}"
-    >
-      <span class="category-icon-container" aria-hidden="true">
-        <img src="https://api.iconify.design/mdi:television.svg" alt="Electronics" class="category-icon"
-          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
-      </span>
-      <span class="category-name">Electronics</span>
-    </button>
-
-    <!-- Mobile Phones & Accessories -->
-    <button
-      type="button"
-      class="filter-button category-filter{% if selected_category=='Mobile Phones & Accessories' %} active{% endif %}"
-      data-value="Mobile Phones & Accessories"
-      role="tab"
-      aria-pressed="{% if selected_category=='Mobile Phones & Accessories' %}true{% else %}false{% endif %}"
-    >
-      <span class="category-icon-container" aria-hidden="true">
-        <img src="https://api.iconify.design/mdi:cellphone.svg" alt="Mobile Phones & Accessories" class="category-icon"
-          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
-      </span>
-      <span class="category-name">Phones</span>
-    </button>
-
-    <!-- Computers & Networking -->
-    <button
-      type="button"
-      class="filter-button category-filter{% if selected_category=='Computers & Networking' %} active{% endif %}"
-      data-value="Computers & Networking"
-      role="tab"
-      aria-pressed="{% if selected_category=='Computers & Networking' %}true{% else %}false{% endif %}"
-    >
-      <span class="category-icon-container" aria-hidden="true">
-        <img src="https://api.iconify.design/mdi:desktop-classic.svg" alt="Computers & Networking" class="category-icon"
-          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
-      </span>
-      <span class="category-name">Computers</span>
-    </button>
-
-    <!-- Sports & Outdoors -->
-    <button
-      type="button"
-      class="filter-button category-filter{% if selected_category=='Sports & Outdoors' %} active{% endif %}"
-      data-value="Sports & Outdoors"
-      role="tab"
-      aria-pressed="{% if selected_category=='Sports & Outdoors' %}true{% else %}false{% endif %}"
-    >
-      <span class="category-icon-container" aria-hidden="true">
-        <img src="https://api.iconify.design/mdi:basketball.svg" alt="Sports & Outdoors" class="category-icon"
-          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
-      </span>
-      <span class="category-name">Sports</span>
-    </button>
-
-    <!-- Toys & Games -->
-    <button
-      type="button"
-      class="filter-button category-filter{% if selected_category=='Toys & Games' %} active{% endif %}"
-      data-value="Toys & Games"
-      role="tab"
-      aria-pressed="{% if selected_category=='Toys & Games' %}true{% else %}false{% endif %}"
-    >
-      <span class="category-icon-container" aria-hidden="true">
-        <img src="https://api.iconify.design/mdi:puzzle.svg" alt="Toys & Games" class="category-icon"
-          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
-      </span>
-      <span class="category-name">Toys</span>
-    </button>
-
-    <!-- Automobile & Vehicles -->
-    <button
-      type="button"
-      class="filter-button category-filter{% if selected_category=='Automobile & Vehicles' %} active{% endif %}"
-      data-value="Automobile & Vehicles"
-      role="tab"
-      aria-pressed="{% if selected_category=='Automobile & Vehicles' %}true{% else %}false{% endif %}"
-    >
-      <span class="category-icon-container" aria-hidden="true">
-        <img src="https://api.iconify.design/mdi:car.svg" alt="Automobile & Vehicles" class="category-icon"
-          onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
-      </span>
-      <span class="category-name">Auto</span>
-    </button>
-  </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  // Category buttons
-  const categoryButtons = Array.from(document.querySelectorAll('.category-filter'));
-  if (!categoryButtons.length) return;
-
-  // Try to get the main search form if it exists
-  const searchForm = document.getElementById('search-form');
-
-  // Helper: get or create a hidden input (id=selected-category, name=category)
-  function ensureHiddenCategoryInput(form) {
-    if (!form) return null;
-    let input = form.querySelector('#selected-category');
-    if (!input) {
-      input = form.querySelector('input[name="category"]');
-    }
-    if (!input) {
-      input = document.createElement('input');
-      input.type = 'hidden';
-      input.id = 'selected-category';
-      input.name = 'category';
-      form.appendChild(input);
-    } else {
-      // normalize id if it exists by name
-      if (!input.id) input.id = 'selected-category';
-    }
-    return input;
-  }
-
-  // Pre-cache input: prefer searchForm, else nearest form of the first button
-  const preferForm = searchForm || categoryButtons[0].closest('form') || null;
-  const hiddenInput = ensureHiddenCategoryInput(preferForm);
-
-  categoryButtons.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-
-      // Visual updates
-      categoryButtons.forEach(b => {
-        b.classList.remove('active');
-        b.setAttribute('aria-pressed', 'false');
-      });
-      btn.classList.add('active');
-      btn.setAttribute('aria-pressed', 'true');
-
-      // Update hidden input if possible
-      const val = btn.dataset.value || btn.getAttribute('data-value') || btn.textContent.trim();
-      if (hiddenInput) {
-        hiddenInput.value = val;
-      } else {
-        // If no preferForm existed, try to create inside closest form now
-        const nearestForm = btn.closest('form');
-        const created = ensureHiddenCategoryInput(nearestForm);
-        if (created) created.value = val;
-      }
-
-      // Submit the form if #search-form exists (keeps server-side behavior)
-      if (searchForm) {
-        searchForm.submit();
-      }
-      // If you want auto-submit for other forms, adapt here.
-    });
-  });
-
-  // Keyboard navigation for the horizontal list
-  const grid = document.querySelector('.category-filter-grid');
-  if (grid) {
-    grid.addEventListener('keydown', (e) => {
-      const keys = ['ArrowLeft','ArrowRight','Home','End'];
-      if (!keys.includes(e.key)) return;
-      const items = Array.from(grid.querySelectorAll('.category-filter'));
-      if (!items.length) return;
-      const currentIndex = items.indexOf(document.activeElement);
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        const prev = items[(currentIndex - 1 + items.length) % items.length];
-        prev.focus();
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        const next = items[(currentIndex + 1) % items.length];
-        next.focus();
-      } else if (e.key === 'Home') {
-        e.preventDefault();
-        items[0].focus();
-      } else if (e.key === 'End') {
-        e.preventDefault();
-        items[items.length - 1].focus();
-      }
-    });
-  }
-});
-</script>
-
-<script>
-/* Deal type filter: update URL query params and reload (preserve other params) */
-document.addEventListener('click', function (ev) {
-  const btn = ev.target.closest('.deal-filter');
-  if (!btn) return;
-
-  const value = btn.dataset.value;
-  const url = new URL(window.location.href);
-
-  // If 'All' chosen remove the param so server uses 'All' default,
-  // otherwise set the deal_type param
-  if (value === 'All') {
-    url.searchParams.delete('deal_type');
-  } else {
-    url.searchParams.set('deal_type', value);
-  }
-
-  // reset page to 1 when changing filters
-  url.searchParams.delete('page');
-
-  // navigate to the updated url
-  window.location.href = url.toString();
-});
-</script>
-
-
-</form>
-
-<!-- ===== LISTINGS GRID + FALLBACK ===== -->
-
-    <!-- BANNER: Only when showing suggestions -->
-    {% if show_suggestions %}
-      <div class="alert alert-info text-center" style="margin:2rem 0;padding:1rem;background:#e3f2fd;border:1px solid #bbdefb;border-radius:.35rem;">
-        <strong>No exact matches for “{{ search }}” — here are some suggestions:</strong>
+  <!-- HERO MULTI-ITEM CAROUSEL -->
+  <div class="multi-wrap">
+    <div class="multi-carousel" aria-roledescription="carousel">
+      <div class="multi-track" id="multi-track">
+        {% for listing in carousel_listings %}
+          <div class="multi-item" data-listing-id="{{ listing.listing_id }}" data-source="carousel" data-plan="{{ listing.Plan or 'Free' }}">
+            <div class="multi-card">
+              <img src="{{ listing.banner_image }}" alt="{{ listing.title }}" loading="lazy">
+              <div class="multi-overlay">
+                <h3 class="multi-title">{{ listing.title }}</h3>
+                <a class="multi-btn" href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
+                   data-listing-id="{{ listing.listing_id }}" data-source="carousel">
+                  View Listing <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
       </div>
-    {% endif %}
+    </div>
+  </div>
 
-<section class="listings-container">
-  {% set ns = namespace(idx=0) %}
+  <!-- SUGGESTIONS -->
+  {% if show_suggestions %}
+    <div class="listings" aria-live="polite">
+      <div class="alert-info"><strong>No exact matches for “{{ search }}” — here are some suggestions:</strong></div>
+    </div>
+  {% endif %}
 
-  {% if listings or suggestion_listings %}
-    <div class="listings-grid">
-      {% set display_list = listings if listings else suggestion_listings %}
-      {% for listing in display_list %}
-        {% set ns.idx = loop.index0 %}
+  <!-- LISTINGS GRID -->
+  <section class="listings">
+    {% set ns = namespace(idx=0) %}
+    {% if listings or suggestion_listings %}
+      <div class="grid">
+        {% set display_list = listings if listings else suggestion_listings %}
+        {% for listing in display_list %}
+          {% set ns.idx = loop.index0 %}
+          <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
+             class="card listing-card-link" data-listing-id="{{ listing.listing_id }}" data-source="grid"
+             aria-label="{{ listing.title }}">
+            <span class="deal-badge {{ 'swap' if listing.deal_type=='Swap Deal' else 'sale' }}">{{ listing.deal_type }}</span>
 
-        <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
-           class="listing-card-link"
-           data-listing-id="{{ listing.listing_id }}"
-           data-source="grid">
-          <div class="listing-card {% if listing.deal_type == 'Swap Deal' %}swap-card{% else %}sale-card{% endif %}"
-               data-listing-id="{{ listing.listing_id }}">
-
-            <div class="deal-type-badge">{{ listing.deal_type }}</div>
             {% if user_logged_in %}
-              <button class="wishlist-btn"
-                      data-listing-id="{{ listing.listing_id }}"
-                      aria-pressed="{{ 'true' if listing.is_wishlisted else 'false' }}">
-                <i class="fas fa-heart {{ 'wishlisted' if listing.is_wishlisted else '' }}"></i>
-              </button>
+            <button class="wishlist-btn" type="button" aria-label="Toggle wishlist"
+                    data-listing-id="{{ listing.listing_id }}"
+                    aria-pressed="{{ 'true' if listing.is_wishlisted else 'false' }}">
+              <i class="fas fa-heart {{ 'wishlisted' if listing.is_wishlisted else '' }}"></i>
+            </button>
             {% endif %}
 
-            <!-- Photos -->
             {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 1 %}
-              <div class="swap-photo-row">
+              <div class="swap-row" aria-hidden="true">
                 {% for o in listing.offers[:3] %}
                   <div class="swap-photo">
                     <img src="{{ o.image1 }}" alt="{{ o.title }}"
-                         {% if ns.idx < 6 %}loading="eager" fetchpriority="high"
-                         {% else %}loading="lazy"{% endif %}>
+                         {% if ns.idx < 6 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}>
                   </div>
                 {% endfor %}
               </div>
             {% else %}
-              <div class="card-image">
+              <div class="media">
                 <img src="{{ listing.image_url }}" alt="{{ listing.title }}"
-                     {% if ns.idx < 6 %}loading="eager" fetchpriority="high"
-                     {% else %}loading="lazy"{% endif %}>
+                     {% if ns.idx < 6 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}>
               </div>
             {% endif %}
 
-            <!-- Content -->
-            <div class="card-content">
+            <div class="content">
               {% if listing.deal_type == 'Swap Deal' %}
                 {% set titles = listing.offers | map(attribute='title') | list %}
-                <div class="swap-offer-line">
-                  <span class="detail-label">Offer:</span>
-                  <span>
-                    {{ titles | join(' + ') }}
-                    {% if listing.additional_cash|float > 0 %} + ₵{{ "{:,.2f}".format(listing.additional_cash|float) }}{% endif %}
-                  </span>
-                </div>
-                <hr class="swap-divider">
-                <div class="swap-wants-line">
-                  <span class="detail-label">Wants:</span>
-                  <span>{{ listing.desired_swap }}</span>
-                </div>
+                <div class="meta-line"><span class="meta-label">Offer:</span><span>{{ titles | join(' + ') }}{% if listing.additional_cash|float > 0 %} + ₵{{ "{:,.2f}".format(listing.additional_cash|float) }}{% endif %}</span></div>
+                <div class="meta-line"><span class="meta-label">Wants:</span><span>{{ listing.desired_swap }}</span></div>
                 {% if listing.required_cash|float > 0 %}
-                  <div class="swap-plus-cash-line">
-                    <span class="detail-label">Plus Cash:</span>
-                    <span>+ ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span>
-                  </div>
+                <div class="meta-line"><span class="meta-label">Plus Cash:</span><span>+ ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span></div>
                 {% endif %}
               {% else %}
-                <h3 class="listing-title">
+                <h3 class="title">
                   {{ listing.title }}
                   {% if listing.required_cash|float > 0 %}
-                    <span class="required-cash">+ ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span>
+                    <span class="meta-line" style="display:inline-flex"><span class="meta-label">+ Cash:</span> ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span>
                   {% endif %}
                 </h3>
-                <div class="price-display">
-                  ₵{{ "{:,.2f}".format(listing.price|float) }}
-                </div>
+                <div class="price">₵{{ "{:,.2f}".format(listing.price|float) }}</div>
               {% endif %}
             </div>
-          </div>
-        </a>
-      {% endfor %}
-    </div>
+          </a>
+        {% endfor %}
+      </div>
 
-
-
-    <!-- PAGINATION: Only for real results -->
-    {% if listings and total_pages > 1 %}
-      <div class="pagination" style="display:flex;justify-content:center;gap:.5rem;margin:2rem 0;">
+      {% if listings and total_pages > 1 %}
+      <nav class="pagination" role="navigation" aria-label="Pagination">
         {% if page > 1 %}
-          <a href="?page={{page-1}}&search={{search}}&category={{selected_category}}&deal_type={{deal_type_filter}}&location={{location}}"
-             style="padding:.5rem 1rem;border:1px solid #ddd;border-radius:6px;text-decoration:none;color:#333;">Previous</a>
-        {% else %}
-          <span style="padding:.5rem 1rem;color:#aaa;">Previous</span>
+          <a class="page-link" href="?page={{page-1}}&search={{search}}&category={{selected_category}}&deal_type={{deal_type_filter}}&location={{location}}">Previous</a>
         {% endif %}
-
         {% for p in range(1, total_pages + 1) %}
           {% if p == page %}
-            <span style="padding:.5rem 1rem;background:#1976d2;color:white;border-radius:6px;">{{p}}</span>
+            <span class="page-current" aria-current="page">{{p}}</span>
           {% else %}
-            <a href="?page={{p}}&search={{search}}&category={{selected_category}}&deal_type={{deal_type_filter}}&location={{location}}"
-               style="padding:.5rem 1rem;border:1px solid #ddd;border-radius:6px;text-decoration:none;color:#333;">{{p}}</a>
+            <a class="page-link" href="?page={{p}}&search={{search}}&category={{selected_category}}&deal_type={{deal_type_filter}}&location={{location}}">{{p}}</a>
           {% endif %}
         {% endfor %}
-
         {% if page < total_pages %}
-          <a href="?page={{page+1}}&search={{search}}&category={{selected_category}}&deal_type={{deal_type_filter}}&location={{location}}"
-             style="padding:.5rem 1rem;border:1px solid #ddd;border-radius:6px;text-decoration:none;color:#333;">Next</a>
-        {% else %}
-          <span style="padding:.5rem 1rem;color:#aaa;">Next</span>
+          <a class="page-link" href="?page={{page+1}}&search={{search}}&category={{selected_category}}&deal_type={{deal_type_filter}}&location={{location}}">Next</a>
         {% endif %}
-      </div>
+      </nav>
+      {% endif %}
+    {% else %}
+      <p style="text-align:center;color:#6b7280;padding:3rem">No listings available right now.</p>
     {% endif %}
+  </section>
 
-  {% else %}
-    <p style="text-align:center;padding:3rem;color:#777;">No listings available right now.</p>
-  {% endif %}
-</section>
-
-
-
-
-<!-- ===== PROGRESSIVE HYDRATION: fetch per-user small data for visible listings ===== -->
-<script>
-(function(){
-  async function fetchHomeMeta() {
-    try {
-      const els = Array.from(document.querySelectorAll('.listing-card-link[data-listing-id], .listing-card[data-listing-id], .multi-carousel-item[data-listing-id]'));
-      const ids = [...new Set(els.map(e => e.dataset.listingId).filter(Boolean))];
-      if (!ids.length) return null;
-      const q = '/api/me/home-meta?ids=' + encodeURIComponent(ids.join(','));
-      const resp = await fetch(q, { credentials: 'same-origin' });
-      if (!resp.ok) return null;
-      const data = await resp.json();
-
-      // Expose for other scripts
-      window.HOME_META = data;
-      window.USER_SUBSCRIBED = !!data.user_subscribed;
-
-      // Update wishlist buttons for visible listings only
-      const wishSet = new Set((data.wishlisted_ids || []).map(String));
-      document.querySelectorAll('.wishlist-btn').forEach(btn => {
-        const lid = btn.dataset.listingId || btn.closest('[data-listing-id]')?.dataset.listingId;
-        if (!lid) return;
-        const icon = btn.querySelector('i.fas');
-        if (wishSet.has(String(lid))) {
-          btn.setAttribute('aria-pressed', 'true');
-          btn.dataset.wish = '1';
-          if (icon && icon.classList) icon.classList.add('wishlisted');
-          // Optionally update button text/icon here
-        } else {
-          btn.setAttribute('aria-pressed', 'false');
-          btn.dataset.wish = '0';
-          if (icon && icon.classList) icon.classList.remove('wishlisted');
-        }
-      });
-
-      // Update push subscription UI if present
-      if (window.USER_LOGGED_IN && window.USER_SUBSCRIBED) {
-        document.querySelectorAll('.push-sub-badge').forEach(el => el.classList.add('subscribed'));
-        const banner = document.getElementById('notify-prompt');
-        if (banner) banner.style.display = 'none';
-      }
-
-      return data;
-    } catch (err) {
-      console.warn('home-meta fetch failed', err);
-      return null;
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    // Start fetching per-user metadata in the background (non-blocking)
-    fetchHomeMeta().then(meta => {
-      // If user is already subscribed, ensure banner is hidden
-      if (meta && meta.user_subscribed) {
-        const banner = document.getElementById('notify-prompt');
-        if (banner) banner.style.display = 'none';
-      }
-    });
-    // expose helper for debugging or later re-run
-    window.fetchHomeMeta = fetchHomeMeta;
-  });
-})();
-</script>
-
-
-<!-- ===== AUTO-SCROLL SCRIPT ===== -->
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const track = document.querySelector(".multi-carousel-track");
-  const items = Array.from(document.querySelectorAll(".multi-carousel-item"));
-  const count = items.length;
-  if (!count) return;
-
-  // 1) Grab each item’s plan from the DOM
-  const PLAN_WEIGHTS = { Diamond:5, Gold:4, Silver:3, Bronze:2, Free:1 };
-  const plans = items.map(item => item.dataset.plan || 'Free');
-
-  // 2) Build a weighted list of item-indices
-  let weightedCycle = [];
-  plans.forEach((plan, idx) => {
-    const weight = PLAN_WEIGHTS[plan] || 1;
-    for (let i = 0; i < weight; i++) {
-      weightedCycle.push(idx);
-    }
-  });
-
-  // 3) Layout variables
-  let currentCycleIdx = 0;
-  let itemsPerView = 1;
-  let itemWidth = 0;
-
-  function calculateLayout() {
-    const containerWidth = document.querySelector(".multi-carousel-container").clientWidth;
-    if (window.innerWidth >= 1024)      itemsPerView = 4;
-    else if (window.innerWidth >= 768)  itemsPerView = 3;
-    else if (window.innerWidth >= 480)  itemsPerView = 2;
-    else                                 itemsPerView = 1;
-    itemWidth = containerWidth / itemsPerView;
-
-    // initial scroll
-    scrollToIndex(weightedCycle[currentCycleIdx]);
-  }
-
-  function scrollToIndex(itemIdx) {
-    // clamp so we don’t overshoot
-    const maxStart = count - itemsPerView;
-    const start = Math.min(itemIdx, maxStart);
-    track.style.transform = `translateX(${-start * itemWidth}px)`;
-  }
-
-  // 4) Auto‑scroll tick
-  function autoScroll() {
-    currentCycleIdx = (currentCycleIdx + 1) % weightedCycle.length;
-    scrollToIndex(weightedCycle[currentCycleIdx]);
-  }
-
-  // 5) Start/stop handlers
-  let autoInterval;
-  function startAuto() { autoInterval = setInterval(autoScroll, 4000); }
-  function stopAuto()  { clearInterval(autoInterval); }
-
-  // 6) Wire up events
-  window.addEventListener("resize", calculateLayout);
-  const container = document.querySelector(".multi-carousel-container");
-  container.addEventListener("mouseenter", stopAuto);
-  container.addEventListener("mouseleave", startAuto);
-
-  calculateLayout();
-  startAuto();
-});
-</script>
-
-
-
-  <!-- Notification Banner (initially hidden) -->
-  <div id="notify-prompt" style="display:none; position:fixed; top:0; left:0; right:0; background:#2563eb; color:white; padding:1rem; text-align:center; z-index:1000;">
-    🔔 Enable notifications to get alerts on new listings, proposal updates, and ad performance.
-    <button id="notify-yes" style="margin-left:1rem; padding:.5rem 1rem; background:white; color:#2563eb; border:none; border-radius:4px; cursor:pointer;">
-      Yes
-    </button>
-    <button id="notify-no" style="margin-left:.5rem; padding:.5rem 1rem; background:transparent; color:white; border:1px solid white; border-radius:4px; cursor:pointer;">
-      No, thanks
-    </button>
-  </div>
-
-  <!-- … your other scripts … -->
-
-<script>
-  // 1) Register your Service Worker
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(reg => console.log('SW registered:', reg.scope))
-        .catch(err => console.error('SW registration failed:', err));
-    });
-  }
-
-  // 2) Helper: convert URL-safe Base64 VAPID key to a UInt8Array
-  function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-      .replace(/-/g, '+')
-      .replace(/_/g, '/');
-    const rawData = atob(base64);
-    return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
-  }
-
-  // 3) Main push-subscribe logic
-  async function subscribeUser() {
-    try {
-      const reg = await navigator.serviceWorker.ready;
-      const perm = await Notification.requestPermission();
-      if (perm !== 'granted') {
-        throw new Error('Notification permission not granted');
-      }
-
-      const key = {{ vapid_public_key | tojson }};
-      if (!key) throw new Error('Missing VAPID public key!');
-
-      const subscription = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(key)
-      });
-
-      const resp = await fetch('/subscribe', {
-        method:      'POST',
-        credentials: 'include',
-        headers:     { 'Content-Type': 'application/json' },
-        body:        JSON.stringify(subscription)
-      });
-      if (!resp.ok) throw new Error(`Subscribe API failed: ${resp.status}`);
-      console.log('✅ Subscription stored on server');
-
-    } catch (err) {
-      console.error('❌ Subscription error:', err);
-    }
-  }
-
-  // 4) Banner display & button handlers (with 24 h re‑prompt)
-  document.addEventListener('DOMContentLoaded', () => {
-    const PROMPT_KEY      = 'swapsphere_notif_prompted';      // stores 'yes'
-    const PROMPT_NO_KEY   = 'swapsphere_notif_prompted_no';   // stores timestamp
-    const REPEAT_INTERVAL = 24 * 60 * 60 * 1000;              // 24 hours in ms
-
-    const banner = document.getElementById('notify-prompt');
-
-    function shouldShowBanner() {
-      // Skip if already subscribed (may be updated by progressive fetch)
-      if (window.USER_SUBSCRIBED === true) return false;
-      // Skip if they already clicked “yes”
-      if (localStorage.getItem(PROMPT_KEY) === 'yes') return false;
-
-      const noTs = parseInt(localStorage.getItem(PROMPT_NO_KEY), 10);
-      if (!noTs) {
-        // Never refused → show banner
-        return true;
-      }
-      // Only show if more than 24 h since last “no”
-      return (Date.now() - noTs) > REPEAT_INTERVAL;
-    }
-
-    if (window.USER_LOGGED_IN === true && shouldShowBanner()) {
-      banner.style.display = 'block';
-    }
-
-    document.getElementById('notify-yes').onclick = () => {
-      subscribeUser();
-      localStorage.setItem(PROMPT_KEY, 'yes');
-      localStorage.removeItem(PROMPT_NO_KEY);
-      banner.remove();
-    };
-
-    document.getElementById('notify-no').onclick = () => {
-      localStorage.setItem(PROMPT_NO_KEY, Date.now().toString());
-      banner.remove();
-    };
-  });
-</script>
-
-
-
-  <!-- Professional Footer -->
+  <!-- FOOTER -->
   <footer class="site-footer">
-    <div class="footer-container">
-      <div class="footer-section footer-about">
+    <div class="footer-inner">
+      <div>
         <div class="footer-logo">
-          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="var(--primary)">
-            <path d="M11 5h2v14h-2V5zm-4 7h2v7H7v-7zm8-7h2v14h-2V5z"/>
-          </svg>
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 5h2v14h-2V5zm-4 7h2v7H7v-7zm8-7h2v14h-2V5z"/></svg>
           <span>SwapHub</span>
         </div>
-        <p>The modern platform for item exchange and bartering. Connect with others to swap items you no longer need for things you want.</p>
-        <div class="footer-social">
-          <a href="#"><i class="fab fa-facebook-f"></i></a>
-          <a href="#"><i class="fab fa-twitter"></i></a>
-          <a href="#"><i class="fab fa-instagram"></i></a>
-          <a href="#"><i class="fab fa-linkedin-in"></i></a>
+        <p>The modern platform for item exchange and bartering. Swap your unused items for things you want.</p>
+        <div style="display:flex;gap:.65rem;margin-top:.5rem">
+          <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" aria-label="Twitter/X"><i class="fab fa-twitter"></i></a>
+          <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
         </div>
       </div>
-      
-      <div class="footer-section">
-        <h3>Quick Links</h3>
+      <div>
+        <h3 style="font-weight:800;color:#fff;margin-bottom:.6rem">Quick Links</h3>
         <ul class="footer-links">
           <li><a href="/dashboard">Dashboard</a></li>
           <li><a href="/my-listings">My Listings</a></li>
           <li><a href="/my-proposals">My Offers</a></li>
-          
         </ul>
       </div>
-      
-      <div class="footer-section">
-        <h3>Contact Us</h3>
-        <div class="footer-contact">
-          <p><i class="fas fa-envelope"></i> support@swaphub.com</p>
-          <p><i class="fas fa-phone"></i> (+233) 54-6476-036</p>
-          <p><i class="fas fa-map-marker-alt"></i> 123 Trade Street, Accra, Ghana</p>
-        </div>
+      <div>
+        <h3 style="font-weight:800;color:#fff;margin-bottom:.6rem">Contact Us</h3>
+        <ul class="footer-links">
+          <li><i class="fas fa-envelope"></i> support@swaphub.com</li>
+          <li><i class="fas fa-phone"></i> (+233) 54-6476-036</li>
+          <li><i class="fas fa-map-marker-alt"></i> 123 Trade Street, Accra, Ghana</li>
+        </ul>
       </div>
     </div>
-    
     <div class="footer-bottom">
-      <p>&copy; 2025 SwapHub. All rights reserved. |  <a href="{{ url_for('privacy_policy') }}">Privacy Policy | Terms & Conditions</a>
+      <p>&copy; 2025 SwapHub. All rights reserved. | <a href="{{ url_for('privacy_policy') }}">Privacy Policy</a> | <a href="{{ url_for('privacy_policy') }}">Terms &amp; Conditions</a></p>
     </div>
   </footer>
 
+  <!-- SCRIPTS -->
+  <script>
+    (function(){
+      const $ = (s, c=document)=>c.querySelector(s);
+      const $$ = (s, c=document)=>Array.from(c.querySelectorAll(s));
 
-<script>
-  //======== 1) Service Worker Registration & Push Subscription ========//
-  // Convert VAPID key
-  function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-      .replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = atob(base64);
-    return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
-  }
-
-  async function subscribeUser() {
-    try {
-      const reg = await navigator.serviceWorker.ready;
-      const perm = await Notification.requestPermission();
-      if (perm !== 'granted') throw new Error('Permission not granted');
-
-      const vapidKey = {{ vapid_public_key|tojson }};
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidKey)
-      });
-      await fetch('/subscribe', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(sub)
-      });
-      console.log('[Push] Subscribed');
-    } catch (err) {
-      console.error('[Push] Subscription error:', err);
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(reg => console.log('[SW] registered', reg.scope))
-        .catch(console.error);
-    }
-
-    // Staggered notification prompt: show after first listing click
-    const PROMPT_KEY = 'swapsphere_notif_prompted';
-    document.querySelectorAll('.listing-card-link').forEach(link => {
-      link.addEventListener('click', () => {
-        if (USER_LOGGED_IN && !USER_SUBSCRIBED && !localStorage.getItem(PROMPT_KEY)) {
-          document.getElementById('notify-prompt').style.display = 'block';
-        }
-      });
-    });
-    document.getElementById('notify-yes').onclick = () => {
-      subscribeUser();
-      localStorage.setItem(PROMPT_KEY, 'yes');
-      document.getElementById('notify-prompt').remove();
-    };
-    document.getElementById('notify-no').onclick = () => {
-      localStorage.setItem(PROMPT_KEY, 'no');
-      document.getElementById('notify-prompt').remove();
-    };
-  });
-
-  //======== 2) Proposal Status Update with Inline Badge & Undo ========//
-  let lastAction = null;
-
-  async function updateProposalStatus(id, status) {
-    try {
-      const res  = await fetch(`/proposals/${id}`, {
-        method: 'PUT',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({status})
-      });
-      const data = await res.json();
-      if (!data.success) {
-        return showToast('Update failed', false);
+      // Location toggle
+      const locToggle = $('#location-toggle');
+      const locInput  = $('#location');
+      if (locToggle && locInput){
+        locToggle.addEventListener('click', ()=>{
+          const showing = locInput.classList.toggle('show');
+          locToggle.setAttribute('aria-expanded', String(showing));
+          if (showing) locInput.focus();
+        });
       }
 
-      // Update badge inline
-      const card = document.querySelector(`.proposal-card[data-id="${id}"]`);
-      const badge = card.querySelector('.status-badge');
-      const prev  = badge.textContent;
-      badge.textContent = status;
-      badge.className   = `status-badge status-${status}`;
-
-      // Disable action buttons
-      card.querySelectorAll('.proposal-actions button').forEach(b => b.disabled = true);
-
-      // Show undo toast
-      lastAction = {id, prev};
-      showToast(`Marked "${status}"`, true);
-
-    } catch (e) {
-      console.error(e);
-      showToast('Network error', false);
-    }
-  }
-
-  function showToast(msg, canUndo) {
-    const toast = document.getElementById('undo-toast');
-    document.getElementById('undo-message').textContent = msg;
-    document.getElementById('undo-btn').style.display = canUndo ? 'inline' : 'none';
-    toast.style.display = 'block';
-    clearTimeout(toast.hideTimer);
-    toast.hideTimer = setTimeout(() => toast.style.display = 'none', 5000);
-  }
-
-  document.getElementById('undo-btn').addEventListener('click', () => {
-    if (lastAction) {
-      updateProposalStatus(lastAction.id, lastAction.prev);
-      lastAction = null;
-    }
-    document.getElementById('undo-toast').style.display = 'none';
-  });
-
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.accept-proposal')
-      .forEach(btn => btn.addEventListener('click', () => updateProposalStatus(btn.dataset.id, 'accepted')));
-    document.querySelectorAll('.decline-proposal')
-      .forEach(btn => btn.addEventListener('click', () => updateProposalStatus(btn.dataset.id, 'declined')));
-    document.querySelectorAll('.negotiate-proposal')
-      .forEach(btn => btn.addEventListener('click', () => updateProposalStatus(btn.dataset.id, 'negotiated')));
-  });
-
-  //======== 3) Mobile Navigation Toggle ========//
-  const hamburger = document.querySelector('.hamburger');
-  const navLinks = document.querySelector('.nav-links');
-  hamburger.addEventListener('click', () => {
-    navLinks.classList.toggle('active');
-    hamburger.classList.toggle('active');
-  });
-
-
-  //======== 5) Lazy Loading Images ========//
-document.addEventListener('DOMContentLoaded', () => {
-  const images = document.querySelectorAll('img[data-src]');
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const img = entry.target;
-          img.src = img.dataset.src;
-          img.removeAttribute('data-src');
-          observer.unobserve(img);
-        }
+      // Deal Type -> update URL
+      $$('#deal-type-row .deal-chip').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const value = btn.dataset.value || 'All';
+          const url = new URL(window.location.href);
+          if (value === 'All') url.searchParams.delete('deal_type');
+          else url.searchParams.set('deal_type', value);
+          url.searchParams.delete('page');
+          window.location.href = url.toString();
+        });
       });
-    },
-    { rootMargin: '200px' }
-  );
-  images.forEach(img => observer.observe(img));
-});
 
-//======== 7) Hero Carousel ========//
-  function initCarousel() {
-    const items = document.querySelectorAll('.carousel-item');
-    const dots  = document.querySelectorAll('.dot');
-    const prev  = document.querySelector('.control-prev');
-    const next  = document.querySelector('.control-next');
-    let idx = 0, total = items.length;
-    function show(n) {
-      items.forEach((it,i) => it.classList.toggle('active', i===n));
-      dots.forEach((d,i) => d.classList.toggle('active', i===n));
-      idx = n;
-    }
-    dots.forEach((d,i) => d.addEventListener('click', () => show(i)));
-    prev.addEventListener('click', () => show((idx-1+total)%total));
-    next.addEventListener('click', () => show((idx+1)%total));
-    setInterval(() => show((idx+1)%total), 8000);
-  }
+      // Category buttons -> hidden input + submit
+      const catBtns = $$('#category-scroller .category-btn');
+      const catHidden = $('#category-hidden');
+      const form = $('#search-form');
+      catBtns.forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          catBtns.forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-pressed','false'); });
+          btn.classList.add('active'); btn.setAttribute('aria-pressed','true');
+          if (catHidden) catHidden.value = btn.dataset.value || '';
+          if (form) form.submit();
+        });
+      });
 
-  //======== Initialize on DOMContentLoaded ========//
-  document.addEventListener('DOMContentLoaded', () => {
-    lazyLoadImages();
-    setupImpressionTracking();
-    initCarousel();
-  });
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  // collect all items we want to track
-  const carouselItems = Array.from(document.querySelectorAll('.multi-carousel-item'));
-  const gridLinks     = Array.from(document.querySelectorAll('.listing-card-link'));
-
-  const allTrackables = document.querySelectorAll('a[data-listing-id]');
-
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting) return;
-
-      const el = entry.target;
-      const id = el.dataset.listingId;   // ← matches data-listing-id
-      const src = el.dataset.source || 'grid';
-
-      if (!id) {
-        console.warn('Missing listingId on', el);
-        return;
+      // Carousel weighted auto-scroll
+      const track = $('#multi-track');
+      const items = $$('.multi-item');
+      if (track && items.length){
+        const PLAN = {Diamond:5, Gold:4, Silver:3, Bronze:2, Free:1};
+        const weighted = [];
+        items.forEach((it,i)=>{ const w = PLAN[it.dataset.plan] || 1; for(let k=0;k<w;k++) weighted.push(i); });
+        let idx=0, perView=1, itemW=0;
+        const calc=()=>{
+          const w = track.parentElement.clientWidth;
+          perView = innerWidth>=1024?4:innerWidth>=768?3:innerWidth>=480?2:1;
+          itemW = w / perView; go(weighted[idx]);
+        };
+        const go=(i)=>{ const maxStart = Math.max(0, items.length - perView); const start = Math.min(i, maxStart); track.style.transform=`translateX(${-start*itemW}px)`; };
+        let timer; const on=()=>timer=setInterval(()=>{idx=(idx+1)%weighted.length;go(weighted[idx]);},4000); const off=()=>clearInterval(timer);
+        addEventListener('resize', calc, {passive:true});
+        track.parentElement.addEventListener('mouseenter', off);
+        track.parentElement.addEventListener('mouseleave', on);
+        calc(); on();
       }
 
-      fetch('/api/track_impression', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listing_id: id, source: src })
-      })
-      .then(r => r.json())
-      .then(j => {
-        if (!j.success) console.error('Impression failed:', j);
-      })
-      .catch(err => console.error('Impression error:', err));
-
-      observer.unobserve(el); // Only count once
-    });
-  }, { threshold: 0.5 }); // 50% visible = impression
-
-  // Observe all cards
-  allTrackables.forEach(el => observer.observe(el));
-
-  // 2) Click handler for both grid & carousel
-  function handleClick(e) {
-    // if you clicked a nested element, climb up to the trackable container
-    let el = e.currentTarget;
-    const id  = el.dataset.listingId;
-    const src = el.dataset.source || 'grid';
-    if (!id) return console.warn('Missing listingId on click target', el);
-
-    fetch('/api/track_click', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ listing_id: id, source: src })
-    })
-    .then(r => r.json())
-    .then(j => { if (!j.success) console.error('Click error', j); })
-    .catch(console.error);
-  }
-
-  // wire up clicks on the link/button elements themselves
-  const carouselButtons = Array.from(document.querySelectorAll('.multi-carousel-button'));
-  carouselButtons.concat(gridLinks).forEach(el => {
-    el.addEventListener('click', handleClick);
-  });
-});
-
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.wishlist-btn').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.preventDefault();
-
-      const id = btn.dataset.listingId;
-      const icon = btn.querySelector('i.fas');
-
-      // ==== 1) OPTIMISTIC Immediate Toggle UI ====
-      const wasWishlisted = icon.classList.contains('wishlisted');
-      icon.classList.toggle('wishlisted');
-      btn.setAttribute('aria-pressed', wasWishlisted ? 'false' : 'true');
-
-      // Animation trigger (reset first to replay)
-      btn.classList.remove('animate');
-      void btn.offsetWidth; // reflow to restart animation
-      btn.classList.add('animate');
-
-      // ==== 2) Perform the API Call ====
-      fetch('/api/wishlist/toggle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listing_id: id })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (!data.success) throw new Error('Wishlist toggle failed');
-
-        // update wishlist counts in nav
-        document.getElementById('wishlist-count').textContent = data.total;
-        const m = document.getElementById('wishlist-count-mobile');
-        if (m) m.textContent = data.total;
-      })
-      .catch(err => {
-        // ==== 3) Revert UI if error ====
-        console.error(err);
-        icon.classList.toggle('wishlisted', wasWishlisted);
-        btn.setAttribute('aria-pressed', wasWishlisted ? 'true' : 'false');
+      // Wishlist optimistic toggle
+      function setWishCount(n){ const a=$('#wishlist-count'); const b=$('#wishlist-count-mobile'); if(a)a.textContent=n; if(b)b.textContent=n; }
+      $$('.wishlist-btn').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{
+          e.preventDefault(); e.stopPropagation();
+          const id = btn.dataset.listingId; const icon = btn.querySelector('i'); const was = icon.classList.contains('wishlisted');
+          icon.classList.toggle('wishlisted'); btn.setAttribute('aria-pressed', was?'false':'true');
+          fetch('/api/wishlist/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({listing_id:id})})
+          .then(r=>r.json()).then(j=>{ if(!j.success) throw 0; setWishCount(j.total); })
+          .catch(()=>{ icon.classList.toggle('wishlisted', was); btn.setAttribute('aria-pressed', was?'true':'false'); });
+        }, {passive:false});
       });
-    });
-  });
-});
 
-</script>
+      // Impressions & click tracking
+      const io = new IntersectionObserver((entries)=>{
+        entries.forEach(entry=>{
+          if(!entry.isIntersecting) return;
+          const el = entry.target, id = el.dataset.listingId, src = el.dataset.source || 'grid';
+          if (id) fetch('/api/track_impression',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({listing_id:id,source:src})}).catch(()=>{});
+          io.unobserve(el);
+        });
+      }, {threshold:.5});
+      $$('a[data-listing-id], .multi-item[data-listing-id]').forEach(el=>io.observe(el));
+      function clickTrack(e){ const el=e.currentTarget, id=el.dataset.listingId, src=el.dataset.source||'grid';
+        if(id){ fetch('/api/track_click',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({listing_id:id,source:src})}).catch(()=>{});} }
+      $$('a[data-listing-id]').forEach(a=>a.addEventListener('click', clickTrack));
+      $$('.multi-btn').forEach(a=>a.addEventListener('click', clickTrack));
 
+      // SW + Push (unchanged)
+      function urlBase64ToUint8Array(s){const p='='.repeat((4-s.length%4)%4);const b=(s+p).replace(/-/g,'+').replace(/_/g,'/');const r=atob(b);return new Uint8Array([...r].map(c=>c.charCodeAt(0))); }
+      async function subscribeUser(){
+        try{
+          if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+          const reg = await navigator.serviceWorker.ready;
+          const perm = await Notification.requestPermission(); if(perm!=='granted') return;
+          const key = window.VAPID_PUBLIC_KEY; if(!key) return;
+          const sub = await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:urlBase64ToUint8Array(key)});
+          await fetch('/subscribe',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub)});
+          window.USER_SUBSCRIBED = true;
+        }catch(e){ console.warn('Push subscribe failed:', e); }
+      }
+      if ('serviceWorker' in navigator){
+        addEventListener('load', ()=>{ navigator.serviceWorker.register('/service-worker.js').catch(()=>{}); });
+      }
+    })();
+  </script>
 
-<script>
-  document.querySelectorAll('.wishlist-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    btn.classList.remove('animate'); // reset if already animating
-    void btn.offsetWidth; // trigger reflow to restart animation
-    btn.classList.add('animate');
-  });
-});
-
-</script>
-
-<script src="{{ url_for('static', filename='heartbeat.js') }}"></script>
-
-
-
-
+  <script src="{{ url_for('static', filename='heartbeat.js') }}" defer></script>
 </body>
 </html>
