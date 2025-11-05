@@ -1,297 +1,400 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Proposals - SwapSphere</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>My Proposals – SwapSphere</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+
   <style>
-    :root {
-      --primary-color: #2ECC71;
-      --secondary-color: #34495E;
-      --accent-color: #F1C40F;
-      --text-color: #2C3E50;
-      --pending-color: #F39C12;
-      --accepted-color: #2ECC71;
-      --declined-color: #E74C3C;
-      --negotiated-color: #3498DB;
+    :root{
+      --primary:#2ECC71; --primary-600:#239b56;
+      --secondary:#34495E; --bg:#F6F7F9; --surface:#ffffff;
+      --text:#2C3E50; --muted:#7F8C8D; --border:#E5E7EB;
+      --shadow-xs:0 2px 8px rgba(0,0,0,.06); --shadow-sm:0 6px 18px rgba(0,0,0,.08);
+      --focus:0 0 0 3px rgba(46,204,113,.24);
+      --pending:#F39C12; --accepted:#2ECC71; --declined:#E74C3C; --negotiated:#3498DB;
+      --radius:14px;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Poppins', sans-serif;
-      background-color: #F8F9FA; color: var(--text-color);
-      line-height: 1.6; padding: 20px;
+    *{box-sizing:border-box}
+    body{
+      margin:0; padding:20px; font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      background:linear-gradient(180deg,#F9FBFF 0%, var(--bg) 100%); color:var(--text); line-height:1.6;
+      -webkit-font-smoothing:antialiased;
     }
-    .container { max-width: 1200px; margin: 0 auto; }
-    h1 { color: var(--secondary-color); margin-bottom: 20px; }
-    .proposals-list { display: grid; gap: 20px; }
-    .proposal-card {
-      background: white; border-radius: 10px;
-      padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      position: relative;
+    .container{max-width:1200px;margin:0 auto}
+    .page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;margin-bottom:1rem}
+    .title-wrap h1{margin:0;font-size:1.8rem;color:var(--secondary);font-weight:700}
+    .subtitle{color:var(--muted);font-size:.95rem}
+
+    .controls{
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+      box-shadow:var(--shadow-xs); padding:.8rem; display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; position:sticky; top:12px; z-index:2;
     }
-    .proposal-header {
-      display: flex; justify-content: space-between;
-      align-items: center; margin-bottom: 15px;
+    .chip{appearance:none;border:1px solid var(--border);background:#fff;color:var(--secondary);
+      padding:.5rem .8rem;border-radius:999px;font-weight:600;cursor:pointer;transition:.15s}
+    .chip:hover{box-shadow:var(--shadow-xs);transform:translateY(-1px)}
+    .chip.active{border-color:var(--primary);background:linear-gradient(180deg, rgba(46,204,113,.12), rgba(46,204,113,.04));color:var(--primary-600)}
+    .spacer{flex:1}
+    .search{position:relative;flex:1 1 260px;max-width:360px}
+    .search input{width:100%;padding:.7rem 2.6rem .7rem .9rem;border:1px solid var(--border);border-radius:10px;font:inherit}
+    .search input:focus{outline:none;box-shadow:var(--focus);border-color:var(--primary)}
+    .search .icon{position:absolute;right:.75rem;top:50%;transform:translateY(-50%);color:#9aa4b2;font-size:1rem}
+    .select{border:1px solid var(--border);border-radius:10px;padding:.6rem .75rem;background:#fff;font:inherit;cursor:pointer}
+
+    .proposals-list{display:grid;gap:1rem;margin-top:1rem;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+    .proposal-card{
+      background:#fff;border:1px solid var(--border);border-radius:var(--radius);
+      box-shadow:var(--shadow-xs);overflow:hidden;display:flex;flex-direction:column;transition:transform .16s, box-shadow .16s;
     }
-    .proposal-title {
-      font-size: 1.2rem; font-weight: 600;
-      color: var(--secondary-color);
+    .proposal-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm)}
+    .proposal-header{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:1rem 1rem .75rem;border-bottom:1px dashed var(--border)}
+    .proposal-title{font-weight:700;color:var(--secondary);font-size:1.05rem;margin:0;line-height:1.35}
+    .status-badge{padding:.35rem .7rem;border-radius:999px;color:#fff;font-size:.75rem;font-weight:700;white-space:nowrap}
+    .status-pending{background:var(--pending)} .status-accepted{background:var(--accepted)}
+    .status-declined{background:var(--declined)} .status-negotiated{background:var(--negotiated)}
+    .proposal-body{padding:1rem;display:grid;gap:.6rem}
+    .row{display:flex;gap:.5rem;align-items:flex-start}
+    .label{min-width:120px;color:var(--muted);font-weight:600;font-size:.9rem}
+    .value{color:var(--secondary)}
+
+    .details{margin:.25rem 0;border:1px dashed var(--border);border-radius:10px;background:#fcfcfd}
+    .details summary{list-style:none;cursor:pointer;padding:.6rem .9rem;font-weight:700;color:var(--secondary);display:flex;align-items:center;gap:.5rem}
+    .details summary::-webkit-details-marker{display:none}
+    .details[open] summary{border-bottom:1px dashed var(--border)}
+    .details-content{padding:.75rem .9rem .9rem;display:grid;gap:.5rem}
+
+    .lister{background:linear-gradient(180deg,#f7fcff, #f7fff9);border:1px solid var(--border);border-left:4px solid var(--primary);
+      border-radius:10px;padding:.85rem .9rem;display:grid;gap:.4rem}
+    .lister .title{font-weight:700;color:var(--secondary)}
+
+    .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:.25rem}
+    .gallery img{width:100%;height:100px;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid var(--border);background:#f3f4f6;transition:transform .15s, box-shadow .15s}
+    .gallery img:hover{transform:scale(1.02);box-shadow:var(--shadow-xs)}
+    @media (min-width:640px){ .gallery{grid-template-columns:repeat(4,1fr)} }
+
+    .card-actions{padding:.9rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem;border-top:1px dashed var(--border)}
+    .action-right{display:flex;gap:.5rem}
+    .btn{border:0;border-radius:10px;padding:.6rem .85rem;cursor:pointer;font-weight:700;background:#eef2f7;color:#384355;transition:.15s}
+    .btn:hover{filter:brightness(.98)}
+    .btn-outline{background:#fff;border:1px solid var(--border)}
+    .btn-danger{background:#E74C3C;color:#fff}
+    .btn-danger:hover{background:#c0392b}
+    .btn-pill{border-radius:999px}
+
+    .empty{text-align:center;background:#fff;border:1px dashed var(--border);border-radius:var(--radius);
+      padding:2.5rem;box-shadow:var(--shadow-xs);margin-top:1rem}
+    .empty img{width:160px;opacity:.9;margin-bottom:.8rem}
+    .empty h3{margin:.25rem 0 .2rem;font-size:1.25rem}
+    .empty p{color:var(--muted);margin:0 0 .6rem}
+
+    .modal{position:fixed;inset:0;background:rgba(17,24,39,.78);display:none;align-items:center;justify-content:center;z-index:50}
+    .modal.show{display:flex}
+    .dialog{background:#0b1220;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px;box-shadow:0 10px 40px rgba(0,0,0,.35);
+      max-width:92vw;max-height:92vh;display:flex;align-items:center;gap:10px}
+    .dialog img{max-width:85vw;max-height:85vh;border-radius:10px;display:block}
+    .modal-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.14);border:0;color:#fff;border-radius:10px;padding:.4rem .6rem;font-weight:700;cursor:pointer}
+    .nav-btn{background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:10px;padding:.6rem .75rem;cursor:pointer;font-weight:700}
+
+    /* Flash + removal animation */
+    .flash {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 18px;
+      background: #111827;
+      color: #fff;
+      padding: .6rem .9rem;
+      border-radius: 10px;
+      box-shadow: 0 10px 24px rgba(0,0,0,.18);
+      display: none;
+      z-index: 60;
+      font-weight: 600;
     }
-    .status-badge {
-      padding: 5px 10px; border-radius: 20px;
-      font-size: 0.8rem; font-weight: 500; color: white;
+    .flash.show { display: block; }
+    .flash.error { background: #7f1d1d; }
+    .flash.success { background: #14532d; }
+
+    .proposal-card.removing {
+      opacity: .35 !important;
+      transform: scale(.995);
+      transition: transform .18s, opacity .18s, height .18s, margin .18s, padding .18s;
+      overflow: hidden;
     }
-    .status-pending { background-color: var(--pending-color); }
-    .status-accepted { background-color: var(--accepted-color); }
-    .status-declined { background-color: var(--declined-color); }
-    .status-negotiated { background-color: var(--negotiated-color); }
-    .proposal-details { margin-bottom: 15px; }
-    .detail-row { display: flex; margin-bottom: 8px; }
-    .detail-label {
-      font-weight: 500; color: #7F8C8D; min-width: 150px;
-    }
-    .detail-value { color: var(--secondary-color); }
-    .proposal-images {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 10px; margin: 15px 0;
-    }
-    .proposal-image {
-      width: 100%; height: 150px; object-fit: cover;
-      border-radius: 5px; cursor: pointer;
-    }
-    .lister-info {
-      background-color: #f5f5f5; padding: 15px;
-      border-radius: 8px; margin: 15px 0;
-      border-left: 3px solid var(--primary-color);
-    }
-    .lister-info-title {
-      font-weight: 600; margin-bottom: 10px;
-      color: var(--secondary-color);
-    }
-    .proposal-actions {
-      display: flex; justify-content: flex-end;
-      gap: 10px; margin-top: 15px;
-    }
-    .btn {
-      padding: 8px 15px; border: none;
-      border-radius: 5px; cursor: pointer;
-      font-weight: 500; transition: all 0.3s ease;
-    }
-    .btn-delete {
-      background-color: #E74C3C; color: white;
-    }
-    .btn-delete:hover {
-      background-color: #C0392B;
-    }
-    .empty-state {
-      text-align: center; padding: 40px;
-      background: white; border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    .empty-state img {
-      width: 150px; margin-bottom: 20px;
-    }
-    @media (max-width: 768px) {
-      .detail-row { flex-direction: column; }
-      .detail-label { margin-bottom: 5px; }
-      .proposal-images {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      .proposal-actions { justify-content: space-between; }
+
+    :focus-visible{outline:none;box-shadow:var(--focus)}
+    @media (max-width:768px){
+      body{padding:16px}
+      .page-head{flex-direction:column;align-items:flex-start}
+      .label{min-width:100px}
+      .controls{top:0}
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>My Proposals</h1>
-    <div class="proposals-list">
+    <div class="page-head">
+      <div class="title-wrap">
+        <h1>My Proposals</h1>
+        <div class="subtitle">
+          {% if proposals %}You have {{ proposals|length }} proposal{{ 's' if proposals|length != 1 else '' }}{% else %}No proposals yet{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="controls" role="toolbar" aria-label="Proposal filters">
+      <button class="chip active" data-filter="all" aria-pressed="true">All</button>
+      <button class="chip" data-filter="pending">Pending</button>
+      <button class="chip" data-filter="accepted">Accepted</button>
+      <button class="chip" data-filter="declined">Declined</button>
+      <button class="chip" data-filter="negotiated">Negotiated</button>
+      <div class="spacer"></div>
+      <label class="search" aria-label="Search proposals">
+        <input id="searchInput" type="search" placeholder="Search title, item, message…" autocomplete="off"/>
+        <span class="icon">🔎</span>
+      </label>
+      <select id="sortSelect" class="select" aria-label="Sort proposals">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="title">Title (A–Z)</option>
+      </select>
+    </div>
+
+    <div id="grid" class="proposals-list">
       {% if proposals %}
         {% for proposal in proposals %}
-          <div class="proposal-card">
-            <div class="proposal-header">
-              <h3 class="proposal-title">
-                Proposal for: {{ proposal.listing_title }}
-              </h3>
-              <span class="status-badge status-{{ proposal.status }}">
-                {{ proposal.status|capitalize }}
-              </span>
-            </div>
+          <article class="proposal-card"
+                   data-id="{{ proposal.id }}"
+                   data-status="{{ proposal.status|lower }}"
+                   data-title="{{ (proposal.listing_title ~ ' ' ~ proposal.proposed_item ~ ' ' ~ proposal.message)|lower }}"
+                   data-created="{{ proposal.created_at.isoformat() if proposal.created_at else '' }}">
+            <header class="proposal-header">
+              <h3 class="proposal-title">Proposal for: {{ proposal.listing_title }}</h3>
+              <span class="status-badge status-{{ proposal.status }}">{{ proposal.status|capitalize }}</span>
+            </header>
 
-            <div class="proposal-details">
-              <div class="detail-row">
-                <span class="detail-label">Proposed Item:</span>
-                <span class="detail-value">{{ proposal.proposed_item }}</span>
-              </div>
-
-              <div class="lister-info">
-                <div class="lister-info-title">Item Lister Details</div>
-                <div class="detail-row">
-                  <span class="detail-label">Listed by:</span>
-                  <span class="detail-value">
-                    {{ proposal.lister_username }}
-                  </span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Contact:</span>
-                  <span class="detail-value">
-                    {{ proposal.listing_contact or proposal.lister_contact }}
-                  </span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">
-                    Original Listing Description:
-                  </span>
-                  <span class="detail-value">
-                    {{ proposal.listing_description }}
-                  </span>
-                </div>
-              </div>
+            <div class="proposal-body">
+              <div class="row"><div class="label">Proposed Item</div><div class="value">{{ proposal.proposed_item }}</div></div>
 
               {% if (proposal.additional_cash | default(0)) > 0 %}
-                <div class="detail-row">
-                  <span class="detail-label">Additional Cash:</span>
-                  <span class="detail-value">
-                    ₵{{ "%.2f"|format(proposal.additional_cash) }}
-                  </span>
-                </div>
+                <div class="row"><div class="label">Additional Cash</div><div class="value">₵{{ "%.2f"|format(proposal.additional_cash) }}</div></div>
               {% endif %}
 
-              <div class="detail-row">
-                <span class="detail-label">Condition:</span>
-                <span class="detail-value">{{ proposal.condition }}</span>
+              <div class="row"><div class="label">Condition</div><div class="value">{{ proposal.condition }}</div></div>
+              <div class="row"><div class="label">Submitted</div>
+                <div class="value">
+                  {% if proposal.created_at %}{{ proposal.created_at.strftime('%Y-%m-%d %H:%M') }}{% else %}N/A{% endif %}
+                </div>
               </div>
-              <div class="detail-row">
-                <span class="detail-label">Description:</span>
-                <span class="detail-value">
-                  {{ proposal.detailed_description }}
-                </span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Message:</span>
-                <span class="detail-value">{{ proposal.message }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">Submitted:</span>
-                <span class="detail-value">
-                  {% if proposal.created_at %}
-                    {{ proposal.created_at.strftime('%Y-%m-%d %H:%M') }}
-                  {% else %}
-                    N/A
+
+              <details class="details">
+                <summary>Details & Contact</summary>
+                <div class="details-content">
+                  <div class="row"><div class="label">Description</div><div class="value">{{ proposal.detailed_description }}</div></div>
+                  <div class="row"><div class="label">Message</div><div class="value">{{ proposal.message }}</div></div>
+                  <div class="lister">
+                    <div class="title">Item Lister</div>
+                    <div class="row"><div class="label">Listed by</div><div class="value">{{ proposal.lister_username }}</div></div>
+                    <div class="row"><div class="label">Contact</div>
+                      <div class="value">
+                        {% set contact = proposal.listing_contact or proposal.lister_contact %}
+                        {% if contact %}
+                          <a href="tel:{{ contact|replace(' ','') }}">{{ contact }}</a>
+                        {% else %}N/A{% endif %}
+                      </div>
+                    </div>
+                    <div class="row"><div class="label">Original Listing</div><div class="value">{{ proposal.listing_description }}</div></div>
+                  </div>
+
+                  <div class="row"><div class="label">My Contact</div>
+                    <div class="value">
+                      {% if proposal.Phone_number %}<a href="tel:{{ proposal.Phone_number|replace(' ','') }}">{{ proposal.Phone_number }}</a>{% endif %}
+                      {% if proposal.Email_address %}{% if proposal.Phone_number %} &nbsp;•&nbsp; {% endif %}<a href="mailto:{{ proposal.Email_address }}">{{ proposal.Email_address }}</a>{% endif %}
+                    </div>
+                  </div>
+
+                  {% if proposal.image1 or proposal.image2 or proposal.image3 or proposal.image4 %}
+                    <div class="row" style="flex-direction:column;gap:.4rem">
+                      <div class="label" style="min-width:auto">Images</div>
+                      <div class="gallery" data-images>
+                        {% for i in range(1,5) %}
+                          {% set img = proposal['image' ~ i] %}
+                          {% if img %}
+                            <img src="{{ url_for('static', filename='images/' ~ img) }}"
+                                 alt="Proposal image {{ i }} for {{ proposal.listing_title }}"
+                                 loading="lazy"
+                                 data-full="{{ url_for('static', filename='images/' ~ img) }}"
+                                 onclick="Gallery.open(this)"/>
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+                    </div>
                   {% endif %}
-                </span>
-              </div>
-              <div class="detail-row">
-                <span class="detail-label">My Contact Info:</span>
-                <span class="detail-value">
-                  {{ proposal.Phone_number|default('') }}
-                  {% if proposal.Email_address %}| {{ proposal.Email_address }}{% endif %}
-                </span>
-              </div>
+                </div>
+              </details>
             </div>
 
-            {% if proposal.image1 or proposal.image2 or proposal.image3 or proposal.image4 %}
-              <div class="proposal-images">
-                {% for i in range(1,5) %}
-                  {% set img = proposal['image' ~ i] %}
-                  {% if img %}
-                    <img
-                      src="{{ url_for('static', filename='images/' ~ img) }}"
-                      class="proposal-image"
-                      alt="Proposal image {{ i }}"
-                      onclick="openImageModal(this)"
-                    >
-                  {% endif %}
-                {% endfor %}
+            <footer class="card-actions">
+              <span class="muted" style="color:var(--muted);font-size:.9rem">ID: #{{ proposal.id }}</span>
+              <div class="action-right">
+                <button class="btn btn-outline btn-pill"
+                        onclick="copyShare({{ proposal.id }}, '{{ url_for('listing_details', listing_id=proposal.listing_id) }}')">
+                  Copy Link
+                </button>
+                <button class="btn btn-danger btn-pill" onclick="deleteProposal({{ proposal.id }})">Delete</button>
               </div>
-            {% endif %}
-
-            <div class="proposal-actions">
-              <button
-                class="btn btn-delete"
-                onclick="deleteProposal({{ proposal.id }})"
-              >
-                Delete Proposal
-              </button>
-            </div>
-          </div>
+            </footer>
+          </article>
         {% endfor %}
       {% else %}
-        <div class="empty-state">
-          <img
-            src="{{ url_for('static', filename='images/no-proposals.svg') }}"
-            alt="No proposals"
-          />
+        <div class="empty">
+          <img src="{{ url_for('static', filename='images/no-proposals.svg') }}" alt="No proposals"/>
           <h3>No Proposals Found</h3>
           <p>You haven't submitted any proposals yet.</p>
+          <a href="/dashboard" class="btn btn-outline btn-pill">Go to Dashboard</a>
         </div>
       {% endif %}
     </div>
   </div>
 
-  <!-- Image Modal -->
-  <div
-    id="imageModal"
-    class="modal"
-    style="
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8); z-index: 1000;
-      display: none; justify-content: center; align-items: center;
-    "
-  >
-    <span
-      onclick="closeImageModal()"
-      style="
-        position: absolute; top: 20px; right: 20px;
-        color: white; font-size: 30px; cursor: pointer;
-      "
-    >
-      &times;
-    </span>
-    <img id="modalImage" style="max-height: 80%; max-width: 80%;" />
+  <!-- Lightbox Modal -->
+  <div id="imageModal" class="modal" aria-modal="true" role="dialog" aria-label="Image viewer">
+    <button class="modal-close" onclick="Gallery.close()" aria-label="Close">✕</button>
+    <div class="dialog">
+      <button class="nav-btn" onclick="Gallery.prev()" aria-label="Previous image">‹</button>
+      <img id="modalImage" src="" alt=""/>
+      <button class="nav-btn" onclick="Gallery.next()" aria-label="Next image">›</button>
+    </div>
   </div>
 
-  <script>
-    // Image modal
-    function openImageModal(img) {
-      const modal = document.getElementById('imageModal');
-      const modalImg = document.getElementById('modalImage');
-      modal.style.display = 'flex';
-      modalImg.src = img.src;
-    }
-    function closeImageModal() {
-      document.getElementById('imageModal').style.display = 'none';
-    }
-    window.onclick = function (e) {
-      if (e.target === document.getElementById('imageModal')) {
-        closeImageModal();
-      }
-    };
+  <!-- Flash host -->
+  <div id="flash" class="flash" aria-live="polite"></div>
 
-    // Delete proposal
-    function deleteProposal(proposalId) {
-      if (
-        confirm(
-          'Are you sure you want to delete this proposal? This action cannot be undone.'
-        )
-      ) {
-        fetch(`/proposals/${proposalId}`, {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-        })
-          .then((response) => {
-            if (response.ok) window.location.reload();
-            else alert('Failed to delete proposal. Please try again.');
-          })
-          .catch((err) => {
-            console.error('Error:', err);
-            alert('An error occurred while deleting the proposal.');
-          });
+  <script>
+    // ===== Filters & sort =====
+    (function(){
+      const chips = Array.from(document.querySelectorAll('.controls .chip'));
+      const search = document.getElementById('searchInput');
+      const sort = document.getElementById('sortSelect');
+      const cards = Array.from(document.querySelectorAll('.proposal-card'));
+      const grid = document.getElementById('grid');
+      let state = {filter:'all', query:'', sort:'newest'};
+      function apply(){
+        cards.forEach(card=>{
+          const matchesStatus = state.filter==='all' || card.dataset.status===state.filter;
+          const hay = (card.dataset.title||'').includes(state.query.toLowerCase());
+          card.style.display = (matchesStatus && hay) ? '' : 'none';
+        });
+        const visible = cards.filter(c=>c.style.display!=='none');
+        visible.sort((a,b)=>{
+          if (state.sort==='title'){
+            return a.querySelector('.proposal-title').textContent.trim()
+              .localeCompare(b.querySelector('.proposal-title').textContent.trim());
+          }
+          const da = Date.parse(a.dataset.created||'') || 0;
+          const db = Date.parse(b.dataset.created||'') || 0;
+          return state.sort==='newest' ? (db-da) : (da-db);
+        });
+        visible.forEach(el=>grid.appendChild(el));
       }
+      chips.forEach(ch=>{
+        ch.addEventListener('click', ()=>{
+          chips.forEach(x=>{x.classList.remove('active');x.setAttribute('aria-pressed','false');});
+          ch.classList.add('active'); ch.setAttribute('aria-pressed','true');
+          state.filter = ch.dataset.filter; apply();
+        });
+      });
+      search.addEventListener('input', ()=>{ state.query = search.value.trim(); apply(); });
+      sort.addEventListener('change', ()=>{ state.sort = sort.value; apply(); });
+      apply();
+    })();
+
+    // ===== Gallery / Lightbox =====
+    const Gallery = (function(){
+      let imgs=[], idx=0;
+      const modal = document.getElementById('imageModal');
+      const elImg = document.getElementById('modalImage');
+      function open(target){
+        const container = target.closest('[data-images]');
+        imgs = Array.from(container.querySelectorAll('img'));
+        idx = imgs.indexOf(target);
+        set(elImg, imgs[idx]); show();
+      }
+      function set(view, srcEl){ const full = srcEl.dataset.full || srcEl.src; view.src = full; view.alt = srcEl.alt || ''; }
+      function show(){ modal.classList.add('show'); trap(); }
+      function hide(){ modal.classList.remove('show'); release(); }
+      function next(){ if (!imgs.length) return; idx = (idx+1)%imgs.length; set(elImg, imgs[idx]); }
+      function prev(){ if (!imgs.length) return; idx = (idx-1+imgs.length)%imgs.length; set(elImg, imgs[idx]); }
+      function onKey(e){ if (!modal.classList.contains('show')) return; if (e.key==='Escape') hide(); if (e.key==='ArrowRight') next(); if (e.key==='ArrowLeft') prev(); }
+      document.addEventListener('keydown', onKey);
+      modal.addEventListener('click', (e)=>{ if(e.target===modal) hide(); });
+      let lastFocus=null; function trap(){ lastFocus = document.activeElement; modal.querySelector('.modal-close').focus(); }
+      function release(){ if (lastFocus) lastFocus.focus(); }
+      return {open, close:hide, next, prev};
+    })();
+    function openImageModal(img){ Gallery.open(img); }
+    function closeImageModal(){ Gallery.close(); }
+
+    // ===== Flash =====
+    function showFlash(msg, type='success'){
+      const el = document.getElementById('flash');
+      el.textContent = msg;
+      el.className = `flash show ${type}`;
+      clearTimeout(el._t);
+      el._t = setTimeout(()=>{ el.className='flash'; }, 1700);
+    }
+
+    // ===== Smooth removal =====
+    function removeCardSmooth(card){
+      const h = card.offsetHeight;
+      card.style.height = h + 'px';
+      void card.offsetHeight; // reflow
+      card.classList.add('removing');
+      requestAnimationFrame(()=>{
+        card.style.height = '0px';
+        card.style.margin = '0';
+        card.style.padding = '0';
+        setTimeout(()=> card.remove(), 200);
+      });
+    }
+
+    // ===== Delete (matches your original route & behavior) =====
+    async function deleteProposal(proposalId){
+      if (!confirm('Are you sure you want to delete this proposal? This action cannot be undone.')) return;
+
+      const card = document.querySelector(`.proposal-card[data-id="${proposalId}"]`);
+
+      try{
+        const res = await fetch(`/proposals/${proposalId}`, {
+          method: 'DELETE',
+          credentials: 'same-origin' // send session cookie
+        });
+
+        const txt = await res.text();
+        let payload = {};
+        try { payload = txt ? JSON.parse(txt) : {}; } catch(_){}
+
+        if (!res.ok){
+          // Your route returns clear JSON error messages
+          const msg = payload.error || 'Failed to delete proposal. Please try again.';
+          throw new Error(msg);
+        }
+
+        if (card) removeCardSmooth(card);
+        showFlash('Proposal deleted','success');
+
+      }catch(err){
+        showFlash(err.message || 'Delete failed. Please try again.','error');
+      }
+    }
+
+    // ===== Copy share link =====
+    async function copyShare(_, url){
+      try{ await navigator.clipboard.writeText(url); showFlash('Link copied','success'); }
+      catch(e){ showFlash('Could not copy link','error'); }
     }
   </script>
+
   <script src="{{ url_for('static', filename='heartbeat.js') }}"></script>
 </body>
 </html>
