@@ -1002,17 +1002,151 @@ def create_user(form):
         if conn:
             conn.close()
 
+EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+PHONE_RE = re.compile(r"^[0-9 \-]{6,}$")  # digits/spaces/dashes (tweak to your needs)
+
+def _clean(s):
+    return (s or "").strip()
+
+def get_db_conn():
+    """Create a MySQL connection using Flask app config."""
+    return mysql.connector.connect(
+        host=current_app.config.get("MYSQL_HOST", "localhost"),
+        user=current_app.config.get("MYSQL_USER"),
+        password=current_app.config.get("MYSQL_PASSWORD"),
+        database=current_app.config.get("MYSQL_DB"),
+        auth_plugin=current_app.config.get("MYSQL_AUTH_PLUGIN", "mysql_native_password"),
+    )
+
+EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+PHONE_RE = re.compile(r"^[0-9 \-]{6,}$")
+
+def _clean(s):
+    return (s or "").strip()
+
+def get_db_conn():
+    return mysql.connector.connect(
+        host=current_app.config.get("MYSQL_HOST", "localhost"),
+        user=current_app.config.get("MYSQL_USER"),
+        password=current_app.config.get("MYSQL_PASSWORD"),
+        database=current_app.config.get("MYSQL_DB"),
+        auth_plugin=current_app.config.get("MYSQL_AUTH_PLUGIN", "mysql_native_password"),
+    )
+
+def _flash_duplicate_reason(email, username, country_code, phone_number) -> bool:
+    """
+    Returns True if a specific culprit was found & flashed.
+    Checks in priority: email > username > phone.
+    """
+    try:
+        conn = get_db_conn()
+        cur = conn.cursor()
+
+        cur.execute("SELECT 1 FROM users WHERE email=%s LIMIT 1", (email,))
+        if cur.fetchone():
+            flash("That email is already registered. Try logging in instead.", "error")
+            return True
+
+        cur.execute("SELECT 1 FROM users WHERE username=%s LIMIT 1", (username,))
+        if cur.fetchone():
+            flash("That username is taken. Please choose another.", "error")
+            return True
+
+        cur.execute(
+            "SELECT 1 FROM users WHERE country_code=%s AND phone_number=%s LIMIT 1",
+            (country_code, phone_number),
+        )
+        if cur.fetchone():
+            flash("That phone number is already associated with another account.", "error")
+            return True
+
+        return False
+    except mysql.connector.Error as sub_err:
+        if current_app.debug:
+            flash(f"MySQL error {getattr(sub_err,'errno','?')}: {sub_err}", "error")
+        return False
+    finally:
+        try:
+            cur.close(); conn.close()
+        except Exception:
+            pass
+
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        user = create_user(request.form)
-        if user:
-            flash('Account created successfully! Please log in.')
-            return redirect(url_for('login'))  # Redirect to login page
-        flash('Account created successfully! Please log in.')
-    
-    return render_template('signup.html')
+        username      = _clean(request.form.get('username'))
+        email         = _clean(request.form.get('email')).lower()
+        country_code  = _clean(request.form.get('country_code'))
+        phone_number  = _clean(request.form.get('phone_number'))
+        password      = request.form.get('password') or ""
 
+        # Basic server-side validation
+        errors = []
+        if len(username) < 3:
+            errors.append("Username must be at least 3 characters.")
+        if not EMAIL_RE.match(email):
+            errors.append("Please enter a valid email address.")
+        if not country_code:
+            errors.append("Please select your country code.")
+        if not PHONE_RE.fullmatch(phone_number):
+            errors.append("Phone number looks invalid. Use digits only (spaces or hyphens allowed).")
+        if len(password) < 8:
+            errors.append("Password must be at least 8 characters.")
+
+        if errors:
+            for e in errors: flash(e, "error")
+            return render_template('signup.html', form_prefill=dict(
+                username=username, email=email, country_code=country_code, phone_number=phone_number
+            ))
+
+        # Create via your helper
+        try:
+            user = create_user(request.form)
+            if user:
+                flash('Account created successfully! Please log in.', 'success')
+                return redirect(url_for('login'))
+
+            # Helper returned falsy → run targeted existence checks for specific flashes
+            if _flash_duplicate_reason(email, username, country_code, phone_number):
+                return render_template('signup.html', form_prefill=dict(
+                    username=username, email=email, country_code=country_code, phone_number=phone_number
+                ))
+
+            # No culprit found → final fallback
+            flash("We couldn't create your account right now. Please try again.", "error")
+            return render_template('signup.html', form_prefill=dict(
+                username=username, email=email, country_code=country_code, phone_number=phone_number
+            ))
+
+        except mysql.connector.Error as err:
+            if getattr(err, "errno", None) == 1062:  # Duplicate key
+                # Give a specific, field-based message (email first)
+                if not _flash_duplicate_reason(email, username, country_code, phone_number):
+                    flash("An account with the provided details already exists.", "error")
+                return render_template('signup.html', form_prefill=dict(
+                    username=username, email=email, country_code=country_code, phone_number=phone_number
+                ))
+
+            # Other DB errors
+            if current_app.debug:
+                flash(f"MySQL error {getattr(err,'errno','?')}: {err}", "error")
+            else:
+                flash("Something went wrong while creating your account. Please try again.", "error")
+            return render_template('signup.html', form_prefill=dict(
+                username=username, email=email, country_code=country_code, phone_number=phone_number
+            ))
+
+        except Exception as ex:
+            if current_app.debug:
+                flash(f"Unexpected error: {ex}", "error")
+            else:
+                flash("Unexpected error while creating your account. Please try again.", "error")
+            return render_template('signup.html', form_prefill=dict(
+                username=username, email=email, country_code=country_code, phone_number=phone_number
+            ))
+
+    # GET
+    return render_template('signup.html')
 
 
 

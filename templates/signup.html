@@ -7,116 +7,32 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    /* Shared styles */
-    :root {
-      --primary-color: #2ECC71;
-      --secondary-color: #34495E;
-      --background-color: #F8F9FA;
-      --input-border: #EAEDED;
-    }
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    body {
-      font-family: 'Poppins', sans-serif;
-      background-color: var(--background-color);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-    .container {
-      max-width: 500px;
-      margin: 2rem auto;
-      padding: 1.5rem;
-      width: 90%;
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-    .logo {
-      color: var(--primary-color);
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-    }
-    .form-container {
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    .form-group {
-      margin-bottom: 1.5rem;
-      position: relative;
-    }
-    label {
-      display: block;
-      margin-bottom: 0.5rem;
-      color: var(--secondary-color);
-      font-weight: 500;
-    }
-    input, select {
-      width: 100%;
-      padding: 0.8rem;
-      border: 2px solid var(--input-border);
-      border-radius: 8px;
-      font-size: 1rem;
-      transition: border-color 0.3s ease;
-    }
-    input:focus, select:focus {
-      outline: none;
-      border-color: var(--primary-color);
-    }
-    .password-toggle {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      cursor: pointer;
-      color: var(--secondary-color);
-    }
-    .submit-btn {
-      background: var(--primary-color);
-      color: white;
-      width: 100%;
-      padding: 1rem;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: opacity 0.3s ease;
-    }
-    .submit-btn:hover {
-      opacity: 0.9;
-    }
-    .switch-form {
-      text-align: center;
-      margin-top: 1.5rem;
-    }
-    .switch-form a {
-      color: var(--primary-color);
-      text-decoration: none;
-      font-weight: 500;
-    }
-    .error-message {
-      color: #e74c3c;
-      font-size: 0.9rem;
-      margin-top: 0.5rem;
-      display: none;
-    }
-    @media (max-width: 480px) {
-      .container {
-        padding: 1rem;
-      }
-      .form-container {
-        padding: 1.5rem;
-      }
-      input, select {
-        padding: 0.7rem;
-      }
+    :root { --primary-color:#2ECC71; --secondary-color:#34495E; --background-color:#F8F9FA; --input-border:#EAEDED; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Poppins',sans-serif; background:var(--background-color); min-height:100vh; display:flex; flex-direction:column; }
+    .container { max-width:500px; margin:2rem auto; padding:1.5rem; width:90%; }
+    .header { text-align:center; margin-bottom:2rem; }
+    .logo { color:var(--primary-color); font-size:2rem; margin-bottom:.5rem; }
+    .form-container { background:#fff; padding:2rem; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.1); }
+    .form-group { margin-bottom:1.5rem; position:relative; }
+    label { display:block; margin-bottom:.5rem; color:#34495E; font-weight:500; }
+    input,select { width:100%; padding:.8rem; border:2px solid var(--input-border); border-radius:8px; font-size:1rem; transition:border-color .3s; }
+    input:focus,select:focus { outline:none; border-color:var(--primary-color); }
+    .password-toggle { position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer; color:#34495E; }
+    .submit-btn { background:var(--primary-color); color:#fff; width:100%; padding:1rem; border:none; border-radius:8px; font-size:1rem; font-weight:500; cursor:pointer; transition:opacity .3s; }
+    .submit-btn:hover { opacity:.9; }
+    .switch-form { text-align:center; margin-top:1.5rem; }
+    .switch-form a { color:var(--primary-color); text-decoration:none; font-weight:500; }
+    .error-message { color:#e74c3c; font-size:.9rem; margin-top:.5rem; display:none; }
+
+    .flash { border-radius:8px; padding:.75rem .9rem; margin:.5rem 0; font-size:.95rem; border:2px solid; }
+    .flash-success { border-color:#a7f3d0; background:#ecfffa; color:#065f46; }
+    .flash-error   { border-color:#f5c2c7; background:#fff5f6; color:#7f1d1d; }
+
+    @media (max-width:480px){
+      .container{ padding:1rem; }
+      .form-container{ padding:1.5rem; }
+      input,select{ padding:.7rem; }
     }
   </style>
 </head>
@@ -128,42 +44,55 @@
     </div>
 
     <div class="form-container">
-      <form id="signupForm" method="POST">
+      <!-- Flash messages -->
+      {% with msgs = get_flashed_messages(with_categories=True) %}
+        {% if msgs %}
+          <div id="flash-messages" style="margin-bottom:1rem;">
+            {% for category, message in msgs %}
+              <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <form id="signupForm" method="POST" novalidate>
         <div class="form-group">
           <label for="username">Username</label>
-          <input type="text" id="username" name="username" required>
+          <input type="text" id="username" name="username" required
+                 value="{{ (form_prefill.username if form_prefill else '')|e }}">
           <div class="error-message" id="usernameError"></div>
         </div>
 
         <div class="form-group">
           <label for="email">Email</label>
-          <input type="email" id="email" name="email" required>
+          <input type="email" id="email" name="email" required
+                 value="{{ (form_prefill.email if form_prefill else '')|e }}">
           <div class="error-message" id="emailError"></div>
         </div>
 
-        <!-- Country Code Selector -->
         <div class="form-group">
           <label for="country_code">Country Code</label>
           <select id="country_code" name="country_code" required>
-            <!-- Sample options; add or modify as needed -->
-            <option value="+1">+1 (USA)</option>
-            <option value="+44">+44 (UK)</option>
-            <option value="+233">+233 (Ghana)</option>
-            <option value="+91">+91 (India)</option>
+            <option value="">Select…</option>
+            <option value="+1"   {% if form_prefill and form_prefill.country_code == '+1' %}selected{% endif %}>+1 (USA)</option>
+            <option value="+44"  {% if form_prefill and form_prefill.country_code == '+44' %}selected{% endif %}>+44 (UK)</option>
+            <option value="+233" {% if form_prefill and form_prefill.country_code == '+233' %}selected{% endif %}>+233 (Ghana)</option>
+            <option value="+91"  {% if form_prefill and form_prefill.country_code == '+91' %}selected{% endif %}>+91 (India)</option>
           </select>
           <div class="error-message" id="countryCodeError"></div>
         </div>
 
-        <!-- Phone Number Input -->
         <div class="form-group">
           <label for="phone_number">Phone Number</label>
-          <input type="text" id="phone_number" name="phone_number" required placeholder="Enter without country code or leading 0">
+          <input type="text" id="phone_number" name="phone_number" required
+                 placeholder="Enter without country code or leading 0"
+                 value="{{ (form_prefill.phone_number if form_prefill else '')|e }}">
           <div class="error-message" id="phoneNumberError"></div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" style="position:relative;">
           <label for="password">Password</label>
-          <input type="password" id="password" name="password" required minlength="8">
+          <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password">
           <i class="fas fa-eye password-toggle" id="togglePassword"></i>
           <div class="error-message" id="passwordError"></div>
         </div>
@@ -180,67 +109,36 @@
   <script>
     // Password toggle
     const togglePassword = document.querySelector('#togglePassword');
-    const password = document.querySelector('#password');
-    togglePassword.addEventListener('click', function() {
-      const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-      password.setAttribute('type', type);
+    const pwd = document.querySelector('#password');
+    togglePassword?.addEventListener('click', function() {
+      const type = pwd.getAttribute('type') === 'password' ? 'text' : 'password';
+      pwd.setAttribute('type', type);
       this.classList.toggle('fa-eye-slash');
     });
 
-    // Form validation
+    // Client-side validation (server is source of truth)
     document.getElementById('signupForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const username = document.getElementById('username');
-      const email = document.getElementById('email');
+      const username    = document.getElementById('username');
+      const email       = document.getElementById('email');
       const countryCode = document.getElementById('country_code');
       const phoneNumber = document.getElementById('phone_number');
-      const password = document.getElementById('password');
+      const password    = document.getElementById('password');
       let isValid = true;
-      
-      // Clear previous errors
+
       document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
-      
-      // Username validation
-      if (username.value.length < 3) {
-        document.getElementById('usernameError').textContent = 'Username must be at least 3 characters';
-        document.getElementById('usernameError').style.display = 'block';
-        isValid = false;
-      }
-      
-      // Email validation
-      if (!validateEmail(email.value)) {
-        document.getElementById('emailError').textContent = 'Please enter a valid email address';
-        document.getElementById('emailError').style.display = 'block';
-        isValid = false;
-      }
-      
-      // Country code validation (if needed)
-      if (countryCode.value.trim() === '') {
-        document.getElementById('countryCodeError').textContent = 'Please select your country code';
-        document.getElementById('countryCodeError').style.display = 'block';
-        isValid = false;
-      }
-      
-      
-      // Password validation
-      if (password.value.length < 6) {
-        document.getElementById('passwordError').textContent = 'Password must be at least 6 characters';
-        document.getElementById('passwordError').style.display = 'block';
-        isValid = false;
-      }
-      
-      if (isValid) {
-        // Submit form if all validations pass
-        this.submit();
-      }
+
+      if (username.value.trim().length < 3) { show('usernameError','Username must be at least 3 characters'); isValid = false; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) { show('emailError','Please enter a valid email address'); isValid = false; }
+      if (!countryCode.value.trim()) { show('countryCodeError','Please select your country code'); isValid = false; }
+      if (!/^[0-9 \-]{6,}$/.test(phoneNumber.value.trim())) { show('phoneNumberError','Phone number looks invalid. Use digits only (spaces or hyphens allowed).'); isValid = false; }
+      if (password.value.length < 8) { show('passwordError','Password must be at least 8 characters'); isValid = false; }
+
+      if (!isValid) e.preventDefault();
+
+      function show(id,msg){ const el=document.getElementById(id); el.textContent=msg; el.style.display='block'; }
     });
-    
-    function validateEmail(email) {
-      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return re.test(email);
-    }
   </script>
+
   <script src="{{ url_for('static', filename='heartbeat.js') }}"></script>
 </body>
 </html>
