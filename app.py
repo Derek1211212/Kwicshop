@@ -123,6 +123,7 @@ def allowed_file(filename):
 
 
 
+
 cache = Cache(config={
     'CACHE_TYPE': 'SimpleCache',
     'CACHE_DEFAULT_TIMEOUT': 300
