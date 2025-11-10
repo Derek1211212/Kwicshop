@@ -1992,11 +1992,18 @@ select.form-control {
                                         {{ proposal.status }}
                                     </span>
                                 </div>
-                                <div class="sender-info">
-                                    <p><strong>From:</strong> {{ proposal.sender_username }}</p>
-                                    <p><strong>Contact:</strong> {{ proposal.sender_contact }}</p>
-                                </div>
-                                <div class="proposal-images">
+<!-- sender-info (Contact shown as a tappable link) -->
+<div class="sender-info">
+  <p><strong>From:</strong> {{ proposal.sender_username }}</p>
+  <p>
+    <strong>Contact:</strong>
+    <a href="tel:{{ proposal.sender_contact|replace(' ', '')|replace('-', '') }}"
+       style="text-decoration:underline">
+      {{ proposal.sender_contact }}
+    </a>
+  </p>
+</div>
+                             <div class="proposal-images">
                                     {% for i in range(1,5) %}
                                     {% set img = proposal['image' ~ i] %}
                                     {% if img %}
@@ -2015,18 +2022,27 @@ select.form-control {
                                 {% else %}
                                 <p><strong>Additional Cash:</strong> None</p>
                                 {% endif %}
-                                <div class="proposal-actions">
-                                    {% if proposal.status in ['pending','declined'] %}
-                                    <button class="btn btn-success accept-proposal">Accept</button>
-                                    <button class="btn btn-outline-warning negotiate-proposal">Negotiate</button>
-                                    <button class="btn btn-outline-danger decline-proposal">Decline</button>
-                                    {% elif proposal.status == 'negotiated' %}
-                                    <button class="btn btn-success accept-proposal">Accept</button>
-                                    <button class="btn btn-outline-danger decline-proposal">Decline</button>
-                                    {% elif proposal.status == 'accepted' %}
-                                    <span class="status-badge status-accepted">{{ proposal.status.capitalize() }}</span>
-                                    {% endif %}
-                                </div>
+<!-- proposal-actions (Decline button disappears after declining) -->
+<div class="proposal-actions">
+  {% if proposal.status == 'pending' %}
+    <button class="btn btn-success accept-proposal">Accept</button>
+    <button class="btn btn-outline-warning negotiate-proposal">Negotiate</button>
+    <button class="btn btn-outline-danger decline-proposal">Decline</button>
+
+  {% elif proposal.status == 'negotiated' %}
+    <button class="btn btn-success accept-proposal">Accept</button>
+    <button class="btn btn-outline-danger decline-proposal">Decline</button>
+
+  {% elif proposal.status == 'declined' %}
+    <!-- No Decline button here -->
+    <button class="btn btn-success accept-proposal">Accept</button>
+    <button class="btn btn-outline-warning negotiate-proposal">Negotiate</button>
+
+  {% elif proposal.status == 'accepted' %}
+    <span class="status-badge status-accepted">{{ proposal.status.capitalize() }}</span>
+  {% endif %}
+</div>
+
                             </div>
                             {% endfor %}
                         </div>
@@ -2447,51 +2463,156 @@ select.form-control {
                 });
             });
 
-            // Proposal Action Buttons
-            document.querySelectorAll('.accept-proposal').forEach(button => {
-                button.addEventListener('click', () => {
-                    const card = button.closest('.proposal-card');
-                    updateProposalStatus(card, 'accepted').then(() => {
-                        card.querySelector('.status-badge').classList.add('accept-animation');
-                        setTimeout(() => card.querySelector('.status-badge').classList.remove('accept-animation'), 600);
-                    });
+// ------- Proposals: API + UI (scoped, no CSRF) -------
+async function updateProposalStatus(card, newStatus) {
+  const id = card?.dataset.id;
+  if (!id) throw new Error('Missing proposal id');
+
+  const res = await fetch(`/proposals/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'fetch' },
+    body: JSON.stringify({ status: newStatus }) // accepted | declined | negotiated
+  });
+
+  if (res.status === 401) {
+    location.href = `/login?next=${encodeURIComponent(location.pathname + location.search)}`;
+    return;
+  }
+  if (!res.ok) {
+    const t = await res.text().catch(()=> '');
+    throw new Error(`HTTP ${res.status} ${t}`);
+  }
+
+  // --- Optimistic UI updates ---
+  const badge = card.querySelector('.status-badge');
+  if (badge) {
+    badge.className = `status-badge status-${newStatus}`;
+    badge.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+    if (newStatus === 'accepted') {
+      badge.classList.add('accept-animation');
+      setTimeout(() => badge.classList.remove('accept-animation'), 600);
+    }
+  }
+
+  const actions = card.querySelector('.proposal-actions');
+  if (!actions) return;
+
+  if (newStatus === 'accepted') {
+    // Replace actions with static accepted badge
+    actions.textContent = '';
+    const span = document.createElement('span');
+    span.className = 'status-badge status-accepted';
+    span.textContent = 'Accepted';
+    actions.appendChild(span);
+  } else if (newStatus === 'negotiated') {
+    // Ensure Decline exists; keep Accept
+    if (!actions.querySelector('.decline-proposal')) {
+      const d = document.createElement('button');
+      d.className = 'btn btn-outline-danger decline-proposal';
+      d.textContent = 'Decline';
+      actions.appendChild(d);
+    }
+  } else if (newStatus === 'declined') {
+    // Remove the Decline button after declining (your requirement)
+    const declineBtn = actions.querySelector('.decline-proposal');
+    if (declineBtn) declineBtn.remove();
+
+    // Ensure Accept + Negotiate are present
+    if (!actions.querySelector('.accept-proposal')) {
+      const a = document.createElement('button');
+      a.className = 'btn btn-success accept-proposal';
+      a.textContent = 'Accept';
+      actions.appendChild(a);
+    }
+    if (!actions.querySelector('.negotiate-proposal')) {
+      const n = document.createElement('button');
+      n.className = 'btn btn-outline-warning negotiate-proposal';
+      n.textContent = 'Negotiate';
+      actions.appendChild(n);
+    }
+  }
+}
+
+// One delegated listener, scoped to the proposals section only
+const proposalsSection = document.getElementById('proposals');
+const proposalsList    = proposalsSection ? proposalsSection.querySelector('.proposals-list') : null;
+
+if (proposalsList) {
+  proposalsList.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.accept-proposal, .decline-proposal, .negotiate-proposal');
+    if (!btn || !proposalsList.contains(btn)) return;
+
+    const card = btn.closest('.proposal-card');
+    if (!card) return;
+
+    const action = btn.classList.contains('accept-proposal')    ? 'accepted'
+                 : btn.classList.contains('decline-proposal')   ? 'declined'
+                 : btn.classList.contains('negotiate-proposal') ? 'negotiated'
+                 : null;
+    if (!action) return;
+
+    const ok = confirm({
+      accepted:   'Accept this proposal?',
+      declined:   'Decline this proposal?',
+      negotiated: 'Mark this proposal as negotiating?'
+    }[action] || 'Proceed?');
+    if (!ok) return;
+
+    // Busy state on the clicked button only
+    const prevHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+    try {
+      await updateProposalStatus(card, action);
+    } catch (err) {
+      console.error(err);
+      alert('Something went wrong. Please try again.');
+    } finally {
+      // The button may be removed after decline; guard DOM presence
+      if (document.body.contains(btn)) {
+        btn.disabled = false;
+        btn.innerHTML = prevHTML;
+      }
+    }
+  });
+}
+
+
+                // Image Modal
+                let currentImages = [];
+                let currentIndex = 0;
+
+                window.openModal = function(img) {
+                    const modal = document.getElementById('imageModal');
+                    const modalImg = document.getElementById('modalImage');
+                    const card = img.closest('.proposal-card');
+                    currentImages = Array.from(card.querySelectorAll('.proposal-image')).map(i => i.src);
+                    currentIndex = currentImages.indexOf(img.src);
+                    modalImg.src = img.src;
+                    modal.style.display = 'block';
+                    document.body.style.overflow = 'hidden';
+                };
+
+                window.closeModal = function() {
+                    const modal = document.getElementById('imageModal');
+                    modal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                };
+
+                window.changeModalImage = function(direction) {
+                    currentIndex = (currentIndex + direction + currentImages.length) % currentImages.length;
+                    document.getElementById('modalImage').src = currentImages[currentIndex];
+                };
+
+                // Flash Messages Auto-Dismiss
+                document.querySelectorAll('.flash-message').forEach(msg => {
+                    setTimeout(() => {
+                        msg.style.opacity = '0';
+                        setTimeout(() => msg.remove(), 1000);
+                    }, 5000);
                 });
             });
-
-            // Image Modal
-            let currentImages = [];
-            let currentIndex = 0;
-
-            window.openModal = function(img) {
-                const modal = document.getElementById('imageModal');
-                const modalImg = document.getElementById('modalImage');
-                const card = img.closest('.proposal-card');
-                currentImages = Array.from(card.querySelectorAll('.proposal-image')).map(i => i.src);
-                currentIndex = currentImages.indexOf(img.src);
-                modalImg.src = img.src;
-                modal.style.display = 'block';
-                document.body.style.overflow = 'hidden';
-            };
-
-            window.closeModal = function() {
-                const modal = document.getElementById('imageModal');
-                modal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            };
-
-            window.changeModalImage = function(direction) {
-                currentIndex = (currentIndex + direction + currentImages.length) % currentImages.length;
-                document.getElementById('modalImage').src = currentImages[currentIndex];
-            };
-
-            // Flash Messages Auto-Dismiss
-            document.querySelectorAll('.flash-message').forEach(msg => {
-                setTimeout(() => {
-                    msg.style.opacity = '0';
-                    setTimeout(() => msg.remove(), 1000);
-                }, 5000);
-            });
-        });
     </script>
     <script src="{{ url_for('static', filename='heartbeat.js') }}"></script>
 </body>

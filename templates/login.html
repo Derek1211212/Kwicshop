@@ -408,6 +408,80 @@
 .alert-danger { background-color: #f8d7da; color: #721c24; }
 .alert-warning { background-color: #fff3cd; color: #856404; }
 
+
+
+/* === Ecommerce outline background: shoes, cars, dresses, bags, etc. === */
+:root { --brand-green: #22c55e; }
+
+body::before{
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+
+  /* subtle paper glow + tiled SVG pattern */
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #f6fff9, transparent 60%),
+    url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'>\
+  <g stroke='%2322c55e' stroke-opacity='0.13' stroke-width='2.2' fill='none' stroke-linecap='round' stroke-linejoin='round'>\
+    <!-- Shoe (sneaker) -->\
+    <path d='M45 110 C60 130, 95 130, 120 120 L150 120 150 135 60 135 C50 135, 42 128, 45 110 Z'/>\
+    <line x1='78' y1='118' x2='95' y2='118'/>\
+    <line x1='86' y1='112' x2='103' y2='112'/>\
+    <!-- High-heel shoe -->\
+    <path d='M250 120 C270 140, 305 140, 330 126 L342 150 L325 150 L320 140 C305 150, 270 150, 252 136 Z'/>\
+\
+    <!-- Car -->\
+    <path d='M40 250 L75 220 L145 220 L170 245 L190 245 L190 270 L32 270 L32 255 L40 250 Z'/>\
+    <circle cx='62' cy='270' r='10'/><circle cx='160' cy='270' r='10'/>\
+    <line x1='90' y1='220' x2='130' y2='220'/>\
+\
+    <!-- Dress -->\
+    <path d='M270 200 L285 180 L300 200 L295 220 L330 290 L240 290 L275 220 Z'/>\
+    <path d='M285 180 C285 170, 295 170, 300 180'/>\
+\
+    <!-- Shopping bag -->\
+    <rect x='55' y='30' width='70' height='70' rx='6'/>\
+    <path d='M60 60 C60 45, 120 45, 120 60'/>\
+    <circle cx='80' cy='58' r='2.5'/><circle cx='100' cy='58' r='2.5'/>\
+\
+    <!-- T-shirt -->\
+    <path d='M215 30 L240 45 L260 30 L285 45 L270 60 L270 105 L230 105 L230 60 Z'/>\
+\
+    <!-- Watch -->\
+    <rect x='315' y='40' width='20' height='30' rx='4'/>\
+    <circle cx='325' cy='85' r='18'/><line x1='325' y1='85' x2='325' y2='76'/><line x1='325' y1='85' x2='333' y2='85'/>\
+    <rect x='315' y='104' width='20' height='30' rx='4'/>\
+\
+    <!-- Laptop -->\
+    <rect x='30' y='310' width='100' height='60' rx='6'/>\
+    <path d='M25 373 L135 373 L145 360 L15 360 Z'/>\
+\
+    <!-- Handbag -->\
+    <rect x='230' y='320' width='120' height='55' rx='10'/>\
+    <path d='M245 320 C245 300, 335 300, 335 320'/>\
+\
+    <!-- Dress on hanger (mini) -->\
+    <path d='M320 220 C320 212, 332 212, 332 220'/>\
+    <path d='M316 225 L336 225 L346 260 L306 260 Z'/>\
+\
+    <!-- Shoe (mini) -->\
+    <path d='M180 320 C190 330, 210 330, 225 325 L235 325 235 335 185 335 C180 335, 176 330, 180 320 Z'/>\
+  </g>\
+</svg>") repeat;
+  background-size: 360px 360px, 360px 360px; /* adjust for density */
+}
+
+@media (max-width: 480px){
+  body::before { background-size: 300px 300px, 300px 300px; }
+}
+
+
+
+
+
   </style>
 </head>
 <body>

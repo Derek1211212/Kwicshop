@@ -296,23 +296,23 @@ def home():
     per_page = min(MAX_PER_PAGE, request.args.get('per_page', DEFAULT_PER_PAGE, type=int))
     offset   = (page - 1) * per_page
 
-    user_logged_in = 'user_id' in session
-    user_subscribed = False
-    carousel_listings = []
-    listings = []
+    user_logged_in     = 'user_id' in session
+    user_subscribed    = False
+    carousel_listings  = []
+    listings           = []
     suggestion_listings = []
-    show_suggestions = False
-    total_pages = 0
+    show_suggestions   = False
+    total_pages        = 0
 
     conn = cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # 1. CAROUSEL
+        # 1) Carousel
         carousel_listings = _get_carousel(cursor)
 
-        # 2. MAIN LISTINGS
+        # 2) Main listings
         listings, total_pages = _get_main_listings(
             cursor,
             search=search,
@@ -323,19 +323,21 @@ def home():
             offset=offset,
         )
 
-        # 3. SUGGESTIONS (only if no exact matches)
+        # 3) Suggestions if no results
         if search and not listings:
-            show_suggestions = True
+            show_suggestions   = True
             suggestion_listings = _get_suggestions(cursor, search)
 
-        # 4. ATTACH OFFERS + IMAGES
+        # 4) Attach offers + image URLs (RELATIVE)
         all_items = listings + suggestion_listings
         offers = _attach_offered_items(cursor, all_items)
 
-        base_img = url_for('static', filename='images/', _external=True)
         for item in all_items:
-            item['image_url'] = base_img + (item.get('image1') or 'placeholder.jpg')
-            item['offers'] = offers.get(item['listing_id'], [])
+            name = item.get('image1') or 'placeholder.jpg'
+            item['image_url'] = url_for('static', filename=f'images/{name}')
+            item['offers']    = offers.get(item['listing_id'], [])
+
+            # safe defaults
             item.setdefault('required_cash', 0)
             item.setdefault('additional_cash', 0)
             item.setdefault('desired_swap', '')
@@ -343,7 +345,7 @@ def home():
             item.setdefault('location', item.get('location', ''))
             item.setdefault('contact', item.get('contact', ''))
 
-        # 5. WISHLIST
+        # 5) Wishlist flags (only for visible)
         if user_logged_in and all_items:
             uid = session['user_id']
             cursor.execute("SELECT 1 FROM push_subscriptions WHERE user_id=%s LIMIT 1", (uid,))
@@ -352,7 +354,10 @@ def home():
             visible_ids = [x['listing_id'] for x in all_items]
             if visible_ids:
                 ph = ','.join(['%s'] * len(visible_ids))
-                cursor.execute(f"SELECT listing_id FROM wishlists WHERE user_id=%s AND listing_id IN ({ph})", (uid, *visible_ids))
+                cursor.execute(
+                    f"SELECT listing_id FROM wishlists WHERE user_id=%s AND listing_id IN ({ph})",
+                    (uid, *visible_ids)
+                )
                 wish_ids = {r['listing_id'] for r in cursor.fetchall()}
             else:
                 wish_ids = set()
@@ -363,7 +368,7 @@ def home():
             for item in all_items:
                 item['is_wishlisted'] = False
 
-        # 6. FEATURED
+        # 6) Featured
         featured = listings[0] if listings else (suggestion_listings[0] if suggestion_listings else None)
 
         return render_template(
@@ -392,27 +397,36 @@ def home():
         if cursor: cursor.close()
         if conn: conn.close()
 
-
 # ———————————————————————— HELPERS ————————————————————————
 
 def _get_carousel(cursor):
-    cursor.execute("SELECT listing_id, image1, title, `Plan` FROM listings ORDER BY created_at DESC LIMIT 20")
+    cursor.execute("""
+        SELECT listing_id, image1, title, `Plan`
+        FROM listings
+        ORDER BY created_at DESC
+        LIMIT 20
+    """)
     raw = cursor.fetchall()
     PLAN_WEIGHTS = {'Diamond':5,'Gold':4,'Silver':3,'Bronze':2,'Free':1}
     weighted = [i for i, r in enumerate(raw) for _ in range(PLAN_WEIGHTS.get(r['Plan'],1))]
-    if not weighted: return []
+    if not weighted:
+        return []
+
     jitter = random.randrange(len(weighted))
     offset = (read_offset() + jitter) % len(weighted)
     write_offset((offset + 1) % len(weighted))
+
     seen, ordered = set(), []
     for idx in weighted[offset:] + weighted[:offset]:
         if idx not in seen:
             seen.add(idx)
             ordered.append(raw[idx])
-        if len(ordered) == 5: break
-    base_img = url_for('static', filename='images/', _external=True)
+        if len(ordered) == 5:
+            break
+
     for c in ordered:
-        c['banner_image'] = base_img + (c.get('image1') or 'placeholder.jpg')
+        name = c.get('image1') or 'placeholder.jpg'
+        c['banner_image'] = url_for('static', filename=f'images/{name}')
     return ordered
 
 
@@ -427,6 +441,8 @@ def _get_main_listings(cursor, *, search, category, deal_type, location, per_pag
         WHERE 1=1
     """
     params = []
+    like = None
+
     if search:
         like = f"%{search}%"
         base_q += " AND (l.title LIKE %s OR l.description LIKE %s OR l.category LIKE %s)"
@@ -446,49 +462,49 @@ def _get_main_listings(cursor, *, search, category, deal_type, location, per_pag
     order = f"ORDER BY {plan_case} DESC, l.created_at DESC"
 
     cache_key = f"grid:{search}:{category}:{deal_type}:{location}:{per_page}:{offset}"
-    cached = cache.get(cache_key)
+    cached = cache.get(cache_key) if cache else None
     if cached:
         return cached
 
-    # Count
+    # Count first
     count_q = "SELECT COUNT(*) AS total FROM listings l WHERE 1=1"
     count_p = []
-    if search: count_q += " AND (l.title LIKE %s OR l.description LIKE %s OR l.category LIKE %s)"; count_p += [like, like, like]
-    if category != 'All': count_q += " AND l.category=%s"; count_p.append(category)
-    if deal_type != 'All': count_q += " AND l.deal_type=%s"; count_p.append(deal_type)
+    if search:
+        count_q += " AND (l.title LIKE %s OR l.description LIKE %s OR l.category LIKE %s)"
+        count_p += [like, like, like]
+    if category != 'All':
+        count_q += " AND l.category=%s"; count_p.append(category)
+    if deal_type != 'All':
+        count_q += " AND l.deal_type=%s"; count_p.append(deal_type)
     if location:
         count_q += " AND l.location IS NOT NULL"
         count_q += " AND (l.location=%s OR SOUNDEX(l.location)=SOUNDEX(%s) OR l.location LIKE %s)"
         count_p += [location, location, f"%{location}%"]
+
     cursor.execute(count_q, tuple(count_p))
     total = cursor.fetchone()['total']
 
-    # Listings
+    # Page of listings
     cursor.execute(base_q + " " + order + " LIMIT %s OFFSET %s", tuple(params + [per_page, offset]))
     listings = cursor.fetchall()
     listings = _rotate_weighted(listings)
+
     total_pages = (total + per_page - 1) // per_page
-    cache.set(cache_key, (listings, total_pages), timeout=60)
+    if cache:
+        cache.set(cache_key, (listings, total_pages), timeout=60)
     return listings, total_pages
 
 
-# --------------------------------------------------------------
-# 2. SUGGESTIONS – FULLY WRITTEN SQL (no "..." placeholders)
-# --------------------------------------------------------------
 def _get_suggestions(cursor, search):
     import re
     listings = []
-
-    # ---------- 1. Token-based partial match ----------
     tokens = [t for t in re.split(r'\s+', search) if len(t) > 2]
     if tokens:
-        conds = []
-        params = []
+        conds, params = [], []
         for t in tokens:
             conds.append("(l.title LIKE %s OR l.description LIKE %s OR l.category LIKE %s)")
             like = f"%{t}%"
             params += [like, like, like]
-
         q = f"""
             SELECT l.listing_id, l.title, l.description, l.category, l.deal_type, l.`Plan`,
                    l.image1, l.price, l.required_cash, l.additional_cash, l.desired_swap,
@@ -503,7 +519,6 @@ def _get_suggestions(cursor, search):
         cursor.execute(q, tuple(params))
         listings = cursor.fetchall()
 
-    # ---------- 2. Category fallback ----------
     if not listings:
         like = f"%{search}%"
         q = """
@@ -520,7 +535,6 @@ def _get_suggestions(cursor, search):
         cursor.execute(q, (like,))
         listings = cursor.fetchall()
 
-    # ---------- 3. Popular fallback ----------
     if not listings:
         q = """
             SELECT l.listing_id, l.title, l.description, l.category, l.deal_type, l.`Plan`,
@@ -539,10 +553,12 @@ def _get_suggestions(cursor, search):
 
 
 def _rotate_weighted(listings):
-    if not listings: return []
+    if not listings:
+        return []
     weights = {'Diamond':5,'Gold':4,'Silver':3,'Free':1}
     idxs = [i for i, l in enumerate(listings) for _ in range(weights.get(l['Plan'],1))]
-    if not idxs: return listings
+    if not idxs:
+        return listings
     jitter = random.randrange(len(idxs))
     offset = (read_offset() + jitter) % len(idxs)
     write_offset((offset + 1) % len(idxs))
@@ -551,7 +567,8 @@ def _rotate_weighted(listings):
         if i not in seen:
             seen.add(i)
             out.append(listings[i])
-        if len(out) == len(listings): break
+        if len(out) == len(listings):
+            break
     return out
 
 
@@ -562,12 +579,13 @@ def _attach_offered_items(cursor, items):
         ph = ','.join(['%s'] * len(swap_ids))
         cursor.execute(f"""
             SELECT listing_id, item_id, title, description, image1, `condition`
-            FROM offered_items WHERE listing_id IN ({ph})
+            FROM offered_items
+            WHERE listing_id IN ({ph})
             ORDER BY listing_id, item_id
         """, tuple(swap_ids))
-        base_img = url_for('static', filename='images/', _external=True)
         for o in cursor.fetchall():
-            o['image1'] = base_img + (o.get('image1') or 'placeholder.jpg')
+            name = o.get('image1') or 'placeholder.jpg'
+            o['image1'] = url_for('static', filename=f'images/{name}')
             offers.setdefault(o['listing_id'], []).append(o)
     return offers
 
