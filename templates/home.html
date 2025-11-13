@@ -64,7 +64,7 @@
     .brand{display:flex;align-items:center;gap:.6rem;font-weight:800;color:var(--primary)}
     .brand .brand-logo{width:30px;height:30px}
     .nav-links{display:flex;align-items:center;gap:1rem}
-    .nav-links a{padding:.5rem .75rem;border-radius:10px;font-weight:600;color:var(--secondary)}
+    .nav-links a{padding:.5rem .75rem;border-radius:10px;font-weight:100;color:var(--secondary)}
     .nav-links a:focus-visible{outline:none;box-shadow:var(--focus)}
     .nav-links a:hover{background:rgba(0,0,0,.04)}
     .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1rem;border-radius:12px;border:1px solid transparent;font-weight:700;cursor:pointer;transition:.15s}
@@ -748,61 +748,101 @@
 <body>
 
   <!-- NAV -->
-  <nav class="navbar" role="navigation" aria-label="Primary">
-    <div class="nav-wrap">
-      <a href="{{ url_for('home') }}" class="brand" aria-label="SwapHub Home">
-        <svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11 5h2v14h-2V5zm-4 7h2v7H7v-7zm8-7h2v14h-2V5z"/></svg>
-        <span>SwapHub</span>
+<!-- NAV -->
+<nav class="navbar" role="navigation" aria-label="Primary">
+  <div class="nav-wrap">
+    <a href="{{ url_for('home') }}" class="brand" aria-label="SwapHub Home">
+      <svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M11 5h2v14h-2V5zm-4 7h2v7H7v-7zm8-7h2v14h-2V5z"/>
+      </svg>
+      <span>SwapHub</span>
+    </a>
+
+    <div class="nav-links" id="primary-links">
+      <a href="{{ url_for('dashboard') }}" aria-current="{{ 'page' if request.path=='/dashboard' else 'false' }}">
+        Dashboard
+        {% if session.get('user_id') %}
+          <span class="visually-hidden">Go to your dashboard</span>
+        {% endif %}
       </a>
 
-      <div class="nav-links" id="primary-links">
-        <a href="/dashboard" aria-current="{{ 'page' if request.path=='/dashboard' else 'false' }}">
-          Dashboard
-          {% if session.get('user_id') %}<span class="visually-hidden">Upload an item for swap</span>{% endif %}
-        </a>
-        {% if session.get('user_id') %}
-          <!-- Desktop nav: Wishlist link -->
-          <a href="{{ url_for('view_wishlist') }}" class="nav-item wishlist-link" aria-label="Wishlist">
-            <i class="fas fa-heart" aria-hidden="true"></i>
-            <span>Wishlist</span>
-            <span id="wishlist-count" aria-live="polite">{{ session.get('wishlist_count', 0) }}</span>
-          </a>
-        {% endif %}
-
-        <a href="/my-proposals">My Offers</a>
-        {% if session.get('user_id') %}
-          <a href="/logout" class="btn btn-outline" data-no-pjax>Logout</a>
-        {% else %}
-          <a href="/login">Login</a>
-          <a href="/signup" class="btn btn-primary">Sign Up</a>
-        {% endif %}
-      </div>
-
-      <!-- Hamburger kept in DOM but hidden on mobile; visible on desktop if you want -->
-      <button class="hamburger" id="hamburger" aria-controls="primary-links" aria-expanded="false" aria-label="Toggle navigation" style="display:none;"></button>
-    </div>
-  </nav>
-
-  <!-- MOBILE BOTTOM NAV -->
-  <nav class="mb-nav" aria-label="Mobile">
-    <div class="mb-items">
       {% if session.get('user_id') %}
-        <a href="/dashboard" class="mb-item {% if request.path=='/dashboard' %}active{% endif %}">
-          <i class="fas fa-user mb-icon" aria-hidden="true"></i><span class="nav-label">Dashboard</span>
+        <!-- 🔹 NEW: Desktop nav CTA to open the create-listing section -->
+        <a href="{{ url_for('dashboard') }}?section=create-listing"
+           class="btn btn-primary nav-create-link">
+          <i class="fas fa-plus-circle" aria-hidden="true"></i>
+          <span>Create Listing</span>
         </a>
-        <a href="/my-proposals" class="mb-item {% if request.path=='/my-proposals' %}active{% endif %}">
-          <i class="fas fa-exchange-alt mb-icon" aria-hidden="true"></i><span class="nav-label">Sent Offers</span>
+
+        <!-- Desktop nav: Wishlist link -->
+        <a href="{{ url_for('view_wishlist') }}" class="nav-item wishlist-link" aria-label="Wishlist">
+          <i class="fas fa-heart" aria-hidden="true"></i>
+          <span>Wishlist</span>
+          <span id="wishlist-count" aria-live="polite">{{ session.get('wishlist_count', 0) }}</span>
         </a>
-        <a href="{{ url_for('view_wishlist') }}" class="mb-item position-relative {% if request.path.startswith('/wishlist') %}active{% endif %}">
-          <i class="fas fa-heart mb-icon" aria-hidden="true"></i><span class="nav-label">Wishlist</span>
-          <span id="wishlist-count-mobile" class="mb-badge" aria-live="polite">{{ session.get('wishlist_count', 0) }}</span>
-        </a>
+      {% endif %}
+
+      <a href="/my-proposals">My Offers</a>
+
+      {% if session.get('user_id') %}
+        <a href="/logout" class="btn btn-outline" data-no-pjax>Logout</a>
       {% else %}
-        <a href="/login" class="mb-item"><i class="fas fa-sign-in-alt mb-icon" aria-hidden="true"></i><span class="nav-label">Login</span></a>
-        <a href="/signup" class="mb-item"><i class="fas fa-user-plus mb-icon" aria-hidden="true"></i><span class="nav-label">Sign Up</span></a>
+        <a href="/login">Login</a>
+        <a href="/signup" class="btn btn-primary">Sign Up</a>
       {% endif %}
     </div>
-  </nav>
+
+    <!-- Hamburger kept in DOM but hidden on mobile; visible on desktop if you want -->
+    <button class="hamburger" id="hamburger" aria-controls="primary-links"
+            aria-expanded="false" aria-label="Toggle navigation" style="display:none;"></button>
+  </div>
+</nav>
+
+
+  <!-- MOBILE BOTTOM NAV -->
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mb-nav" aria-label="Mobile">
+  <div class="mb-items">
+    {% if session.get('user_id') %}
+      <a href="{{ url_for('dashboard') }}"
+         class="mb-item {% if request.path=='/dashboard' %}active{% endif %}">
+        <i class="fas fa-user mb-icon" aria-hidden="true"></i>
+        <span class="nav-label">Dashboard</span>
+      </a>
+
+      <!-- 🔹 NEW: direct link to create-listing tab -->
+      <a href="{{ url_for('dashboard') }}?section=create-listing" class="mb-item">
+        <i class="fas fa-plus-circle mb-icon" aria-hidden="true"></i>
+        <span class="nav-label">New Listing</span>
+      </a>
+
+      <a href="/my-proposals"
+         class="mb-item {% if request.path=='/my-proposals' %}active{% endif %}">
+        <i class="fas fa-exchange-alt mb-icon" aria-hidden="true"></i>
+        <span class="nav-label">Sent Offers</span>
+      </a>
+
+      <a href="{{ url_for('view_wishlist') }}"
+         class="mb-item position-relative {% if request.path.startswith('/wishlist') %}active{% endif %}">
+        <i class="fas fa-heart mb-icon" aria-hidden="true"></i>
+        <span class="nav-label">Wishlist</span>
+        <span id="wishlist-count-mobile" class="mb-badge" aria-live="polite">
+          {{ session.get('wishlist_count', 0) }}
+        </span>
+      </a>
+    {% else %}
+      <a href="/login" class="mb-item">
+        <i class="fas fa-sign-in-alt mb-icon" aria-hidden="true"></i>
+        <span class="nav-label">Login</span>
+      </a>
+      <a href="/signup" class="mb-item">
+        <i class="fas fa-user-plus mb-icon" aria-hidden="true"></i>
+        <span class="nav-label">Sign Up</span>
+      </a>
+    {% endif %}
+  </div>
+</nav>
+
 
 
   <button id="openSearchHub" class="open-search-hub-btn">

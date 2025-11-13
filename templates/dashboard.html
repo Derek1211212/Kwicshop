@@ -2614,6 +2614,68 @@ if (proposalsList) {
                 });
             });
     </script>
+
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const sections     = document.querySelectorAll('.dashboard-section');
+  const navItems     = document.querySelectorAll('.sidebar-nav .nav-item');
+  const sectionTitle = document.getElementById('section-title');
+
+  function internalShowSection(sectionId) {
+    // Show the right section
+    sections.forEach(sec => {
+      sec.classList.toggle('active', sec.id === sectionId);
+    });
+
+    // Sidebar active state
+    navItems.forEach(item => {
+      item.classList.toggle('active', item.dataset.section === sectionId);
+    });
+
+    // Update heading text
+    if (sectionTitle) {
+      const activeNav = Array.from(navItems).find(item => item.dataset.section === sectionId);
+      if (activeNav) {
+        const labelSpan = activeNav.querySelector('span');
+        if (labelSpan) sectionTitle.textContent = labelSpan.textContent;
+      }
+    }
+  }
+
+  // Global function so your HTML can call showSection('create-listing')
+  window.showSection = function(sectionId) {
+    internalShowSection(sectionId);
+
+    // Keep URL in sync (so refresh retains section)
+    const url = new URL(window.location);
+    url.searchParams.set('section', sectionId);
+    window.history.replaceState({}, '', url);
+  };
+
+  // Sidebar click wiring
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const target = item.dataset.section;
+      if (target) window.showSection(target);
+    });
+  });
+
+  // Initial from URL (?section=create-listing)
+  const params         = new URLSearchParams(window.location.search);
+  const initialSection = params.get('section') || 'listings';
+
+  internalShowSection(initialSection);
+});
+</script>
+
+
+
+
+
+
     <script src="{{ url_for('static', filename='heartbeat.js') }}"></script>
 </body>
 </html>
