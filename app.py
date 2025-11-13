@@ -1968,7 +1968,7 @@ def update_listing(listing_id):
         additional_cash          = request.form.get('additional_cash') or existing.get('additional_cash')
 
         # images for listings table
-        image_url = keep_or_save('image',  'image_url')
+        image_url = keep_or_save('image1',  'image_url')
         image1    = keep_or_save('image1', 'image1')
         image2    = keep_or_save('image2', 'image2')
         image3    = keep_or_save('image3', 'image3')
