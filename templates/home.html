@@ -715,7 +715,7 @@
 /* ===== OPEN BUTTON (Floating) ===== */
 .open-search-hub-btn {
   position: fixed;
-  bottom: 92px;
+  bottom: 117px;
   right: 24px;
   background: #059669;
   color: white;
@@ -766,14 +766,15 @@
         {% endif %}
       </a>
 
-      {% if session.get('user_id') %}
-        <!-- 🔹 NEW: Desktop nav CTA to open the create-listing section -->
-        <a href="{{ url_for('dashboard') }}?section=create-listing"
-           class="btn btn-primary nav-create-link">
-          <i class="fas fa-plus-circle" aria-hidden="true"></i>
-          <span>Create Listing</span>
-        </a>
+      {# 🔹 New Listing button – always visible #}
+      {% set create_target = url_for('dashboard', section='create-listing') %}
+      <a href="{% if session.get('user_id') %}{{ create_target }}{% else %}{{ url_for('login', next=create_target) }}{% endif %}"
+         class="btn btn-primary nav-create-link">
+        <i class="fas fa-plus-circle" aria-hidden="true"></i>
+        <span>New Listing</span>
+      </a>
 
+      {% if session.get('user_id') %}
         <!-- Desktop nav: Wishlist link -->
         <a href="{{ url_for('view_wishlist') }}" class="nav-item wishlist-link" aria-label="Wishlist">
           <i class="fas fa-heart" aria-hidden="true"></i>
@@ -787,8 +788,8 @@
       {% if session.get('user_id') %}
         <a href="/logout" class="btn btn-outline" data-no-pjax>Logout</a>
       {% else %}
-        <a href="/login">Login</a>
-        <a href="/signup" class="btn btn-primary">Sign Up</a>
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('signup') }}" class="btn btn-primary">Sign Up</a>
       {% endif %}
     </div>
 
@@ -799,27 +800,26 @@
 </nav>
 
 
+
   <!-- MOBILE BOTTOM NAV -->
 <!-- MOBILE BOTTOM NAV -->
 <nav class="mb-nav" aria-label="Mobile">
   <div class="mb-items">
-    {% if session.get('user_id') %}
-      <a href="{{ url_for('dashboard') }}"
-         class="mb-item {% if request.path=='/dashboard' %}active{% endif %}">
-        <i class="fas fa-user mb-icon" aria-hidden="true"></i>
-        <span class="nav-label">Dashboard</span>
-      </a>
+    {% set create_target = url_for('dashboard', section='create-listing') %}
 
-      <!-- 🔹 NEW: direct link to create-listing tab -->
-      <a href="{{ url_for('dashboard') }}?section=create-listing" class="mb-item">
+    {% if session.get('user_id') %}
+
+      <!-- 🔹 New Listing – logged in → go directly to section -->
+      <a href="{{ create_target }}" class="mb-item">
         <i class="fas fa-plus-circle mb-icon" aria-hidden="true"></i>
         <span class="nav-label">New Listing</span>
       </a>
 
-      <a href="/my-proposals"
-         class="mb-item {% if request.path=='/my-proposals' %}active{% endif %}">
-        <i class="fas fa-exchange-alt mb-icon" aria-hidden="true"></i>
-        <span class="nav-label">Sent Offers</span>
+
+      <a href="{{ url_for('dashboard') }}"
+         class="mb-item {% if request.path=='/dashboard' %}active{% endif %}">
+        <i class="fas fa-user mb-icon" aria-hidden="true"></i>
+        <span class="nav-label">Dashboard</span>
       </a>
 
       <a href="{{ url_for('view_wishlist') }}"
@@ -830,18 +830,37 @@
           {{ session.get('wishlist_count', 0) }}
         </span>
       </a>
+
+
+      <a href="/my-proposals"
+         class="mb-item {% if request.path=='/my-proposals' %}active{% endif %}">
+        <i class="fas fa-exchange-alt mb-icon" aria-hidden="true"></i>
+        <span class="nav-label">Sent Offers</span>
+      </a>
+
+
     {% else %}
-      <a href="/login" class="mb-item">
+          <!-- 🔹 New Listing – NOT logged in → send to login with next -->
+      <a href="{{ url_for('login', next=create_target) }}" class="mb-item">
+        <i class="fas fa-plus-circle mb-icon" aria-hidden="true"></i>
+        <span class="nav-label">New Listing</span>
+      </a>
+
+      <a href="{{ url_for('login') }}"
+         class="mb-item">
         <i class="fas fa-sign-in-alt mb-icon" aria-hidden="true"></i>
         <span class="nav-label">Login</span>
       </a>
-      <a href="/signup" class="mb-item">
+
+
+      <a href="{{ url_for('signup') }}" class="mb-item">
         <i class="fas fa-user-plus mb-icon" aria-hidden="true"></i>
         <span class="nav-label">Sign Up</span>
       </a>
     {% endif %}
   </div>
 </nav>
+
 
 
 
