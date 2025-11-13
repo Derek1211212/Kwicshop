@@ -141,7 +141,6 @@
 .featured-head-glass .section-eyebrow{color:var(--featured-accent);opacity:1}
 .featured-head-glass .section-title{color:#fff;margin:0}
 
-$1
     .listings{max-width:1200px;margin:1.25rem auto;padding:0 1rem}
     .grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fill, minmax(260px,1fr))}
     .card{position:relative;background:var(--card-bg);border:1px solid var(--card-border);border-radius:14px;overflow:hidden;box-shadow:none;transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease}
@@ -204,6 +203,35 @@ $1
       .nav-links .wishlist-link {position: relative;display: inline-flex;align-items: center;gap: .45rem;padding: .5rem .9rem}
       .nav-links .wishlist-link #wishlist-count {position: absolute;top: 0;right: 0;transform: translate(50%, -40%);min-width: 18px;height: 18px;line-height: 18px;padding: 0 6px;border-radius: 9999px;background: #ef4444;color: #fff;font-size: .7rem;text-align: center;box-shadow: 0 2px 6px rgba(0,0,0,.12);pointer-events: none;z-index: 1}
     }
+
+    /* === Global container alignment === */
+:root{
+  --container-max: 1200px;
+  --container-gutter: 1rem;      /* same side padding used everywhere */
+}
+
+/* Use width:min(...) to avoid max-width quirks and keep consistent padding */
+.container,
+.nav-wrap,
+.search-container,
+.filters,
+.multi-wrap,
+.section-head,
+.section-divider,
+.listings {
+  width: min(var(--container-max), 100%);
+  margin-inline: auto;
+  padding-inline: var(--container-gutter);
+}
+
+/* Optional: keep headings visually aligned with the same rules */
+.section-head,
+.section-divider { padding-inline: var(--container-gutter); }
+
+/* Ensure the listings grid never bleeds beyond the container */
+.listings { padding-inline: var(--container-gutter); }
+.grid { margin: 0; } /* remove any accidental outer margins */
+
   </style>
 
   <script>
@@ -394,7 +422,6 @@ $1
     </div>
   </div>
   <div class="section-divider"></div>
-
   <!-- LISTINGS GRID -->
   <section class="listings">
     {% set ns = namespace(idx=0) %}
