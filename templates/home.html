@@ -651,6 +651,92 @@
   font-size: 0.9rem;
 }
 
+
+
+
+/* ===== POPUP OVERLAY ===== */
+.search-hub-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease;
+}
+
+.search-hub-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ===== POPUP CARD ===== */
+.search-hub-popup {
+  width: 100%;
+  max-width: 520px;
+  background: white;
+  border-radius: 22px 22px 0 0;
+  padding: 1rem;
+  box-shadow: 0 -6px 24px rgba(0,0,0,.15);
+  transform: translateY(100%);
+  transition: transform .3s ease;
+}
+
+.search-hub-overlay.active .search-hub-popup {
+  transform: translateY(0);
+}
+
+/* ===== CLOSE BUTTON ===== */
+.search-hub-close {
+  position: absolute;
+  right: 1.2rem;
+  top: .8rem;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  font-size:1.2rem;
+  color:#374151;
+}
+
+.search-hub-close:hover {
+  background:#e5e7eb;
+}
+
+/* ===== OPEN BUTTON (Floating) ===== */
+.open-search-hub-btn {
+  position: fixed;
+  bottom: 92px;
+  right: 24px;
+  background: #059669;
+  color: white;
+  border: none;
+  padding: 0.9rem 1.2rem;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  z-index: 2000;
+  box-shadow: 0 4px 18px rgba(0,0,0,.18);
+}
+
+.open-search-hub-btn i {
+  font-size: 1.1rem;
+}
+
+
+
   </style>
 
   <script>
@@ -718,131 +804,92 @@
     </div>
   </nav>
 
-<!-- SEARCH HUB: Browse vs Swap Match -->
-<section class="search-hub">
-  <div class="search-hub-card">
-    <!-- Mode Toggle -->
-    <div class="search-modes" role="tablist" aria-label="Search mode">
-      <button
-        type="button"
-        class="mode-btn {% if not smart_match_mode %}active{% endif %}"
-        data-mode="browse"
-        aria-selected="{% if not smart_match_mode %}true{% else %}false{% endif %}"
-        role="tab"
-      >
-        <i class="fas fa-list-ul"></i>
-        Browse
-      </button>
-      <button
-        type="button"
-        class="mode-btn {% if smart_match_mode %}active{% endif %}"
-        data-mode="swap"
-        aria-selected="{% if smart_match_mode %}true{% else %}false{% endif %}"
-        role="tab"
-      >
-        <i class="fas fa-exchange-alt"></i>
-        Swap Match
-      </button>
-    </div>
 
-    <!-- BROWSE MODE (Normal search) -->
-    <form
-      id="browse-form"
-      class="hub-form {% if smart_match_mode %}hidden{% endif %}"
-      method="GET"
-      action="{{ url_for('home') }}"
-      role="search"
-      aria-label="Browse listings"
-    >
-      <div class="hub-row">
-        <i class="fas fa-search hub-icon" aria-hidden="true"></i>
-        <label for="q" class="visually-hidden">Search items</label>
-        <input
-          id="q"
-          name="search"
-          class="hub-input"
-          autocomplete="off"
-          placeholder="Search items, brands, categories…"
-          value="{{ search }}"
+  <button id="openSearchHub" class="open-search-hub-btn">
+  <i class="fas fa-search"></i> Search
+</button>
+
+
+<!-- SEARCH HUB POPUP -->
+<div id="searchHubOverlay" class="search-hub-overlay hidden">
+  <div class="search-hub-popup">
+
+    <button class="search-hub-close" id="closeSearchHub">
+      <i class="fas fa-times"></i>
+    </button>
+
+    <!-- SEARCH HUB: Browse vs Swap Match -->
+    <section class="search-hub">
+      <div class="search-hub-card">
+
+        <!-- Mode Toggle -->
+        <div class="search-modes" role="tablist">
+          <button
+            type="button"
+            class="mode-btn {% if not smart_match_mode %}active{% endif %}"
+            data-mode="browse"
+            aria-selected="{% if not smart_match_mode %}true{% else %}false{% endif %}"
+          >
+            <i class="fas fa-list-ul"></i> Browse
+          </button>
+
+          <button
+            type="button"
+            class="mode-btn {% if smart_match_mode %}active{% endif %}"
+            data-mode="swap"
+            aria-selected="{% if smart_match_mode %}true{% else %}false{% endif %}"
+          >
+            <i class="fas fa-exchange-alt"></i> Swap Match
+          </button>
+        </div>
+
+        <!-- BROWSE MODE -->
+        <form
+          id="browse-form"
+          class="hub-form {% if smart_match_mode %}hidden{% endif %}"
+          method="GET"
+          action="{{ url_for('home') }}"
         >
-      </div>
+          <div class="hub-row">
+            <i class="fas fa-search hub-icon"></i>
+            <input id="q" name="search" class="hub-input" placeholder="Search items…">
+          </div>
 
-      <div class="hub-row hub-row-sub">
-        <i class="fas fa-location-arrow hub-icon-sub" aria-hidden="true"></i>
-        <label for="location" class="visually-hidden">Location</label>
-        <input
-          id="location"
-          name="location"
-          class="hub-input-sub"
-          placeholder="Location (e.g., Madina…)"
-          value="{{ location }}"
+          <div class="hub-row hub-row-sub">
+            <i class="fas fa-location-arrow hub-icon-sub"></i>
+            <input id="location" name="location" class="hub-input-sub" placeholder="Location…">
+          </div>
+
+          <button class="hub-btn" type="submit">Search</button>
+        </form>
+
+        <!-- SWAP MODE -->
+        <form
+          id="swap-form"
+          class="hub-form {% if not smart_match_mode %}hidden{% endif %}"
+          method="GET"
+          action="{{ url_for('home') }}"
         >
+          <input type="hidden" name="smart_match" value="1">
+
+          <div class="hub-row">
+            <label class="hub-field-label">Have</label>
+            <input name="have" class="hub-input" placeholder="Eg. PS5">
+          </div>
+
+          <div class="hub-row">
+            <label class="hub-field-label">Want</label>
+            <input name="want" class="hub-input" placeholder="Eg. iPhone 11">
+          </div>
+
+          <button class="hub-btn hub-btn-swap" type="submit">See Matches →</button>
+        </form>
+
       </div>
+    </section>
 
-      <input type="hidden" name="deal_type" id="deal-type-hidden" value="{{ deal_type_filter }}">
-      <input type="hidden" name="category" id="category-hidden" value="{{ selected_category }}">
-
-      <button class="hub-btn" type="submit">Search</button>
-    </form>
-
-    <!-- SWAP MODE (Smart Match) -->
-    <form
-      id="swap-form"
-      class="hub-form {% if not smart_match_mode %}hidden{% endif %}"
-      method="GET"
-      action="{{ url_for('home') }}"
-      aria-label="Find swap matches"
-    >
-      <input type="hidden" name="smart_match" value="1">
-
-      <div class="hub-row-label">
-        <span class="hub-pill">Swap Tool</span>
-        <span class="hub-caption">Tell us what you have & what you want</span>
-      </div>
-
-      <div class="hub-row">
-        <label class="hub-field-label">What do you HAVE?</label>
-        <input
-          name="have"
-          class="hub-input"
-          placeholder="Eg. Samsung Note 9"
-          value="{{ smart_have if smart_match_mode else '' }}"
-        >
-      </div>
-
-      <div class="hub-row">
-        <label class="hub-field-label">What do you WANT?</label>
-        <input
-          name="want"
-          class="hub-input"
-          placeholder="Eg. iPhone 11"
-          value="{{ smart_want if smart_match_mode else '' }}"
-        >
-      </div>
-
-      <div class="hub-row hub-row-sub">
-        <i class="fas fa-location-arrow hub-icon-sub" aria-hidden="true"></i>
-        <input
-          name="location"
-          class="hub-input-sub"
-          placeholder="Location (optional)"
-          value="{{ location }}"
-        >
-      </div>
-
-      <!-- carry filters if you want -->
-      <input type="hidden" name="deal_type" value="{{ deal_type_filter }}">
-      <input type="hidden" name="category" value="{{ selected_category }}">
-
-      <button class="hub-btn hub-btn-swap" type="submit">
-        See Swap Matches →
-      </button>
-    </form>
   </div>
-</section>
-
-
-
+</div>
 
 
 
@@ -1214,6 +1261,25 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 </script>
+
+<script>
+document.getElementById("openSearchHub").onclick = function() {
+  document.getElementById("searchHubOverlay").classList.add("active");
+};
+
+document.getElementById("closeSearchHub").onclick = function() {
+  document.getElementById("searchHubOverlay").classList.remove("active");
+};
+
+/* close when clicking outside card */
+document.getElementById("searchHubOverlay").addEventListener("click", function(e) {
+  if (e.target === this) {
+    this.classList.remove("active");
+  }
+});
+</script>
+
+
 
 </body>
 </html>
