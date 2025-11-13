@@ -292,6 +292,11 @@ def home():
     location_q        = request.args.get('location', '').strip()
     page              = max(1, request.args.get('page', 1, type=int))
 
+    # Smart Match Wizard params
+    smart_match_mode = request.args.get('smart_match', '0') == '1'
+    smart_have       = request.args.get('have', '').strip()
+    smart_want       = request.args.get('want', '').strip()
+
     DEFAULT_PER_PAGE = 40
     MAX_PER_PAGE     = 200
     per_page = min(MAX_PER_PAGE, request.args.get('per_page', DEFAULT_PER_PAGE, type=int))
@@ -313,51 +318,62 @@ def home():
         # 1) Carousel
         carousel_listings = _get_carousel(cursor)
 
-        # 2) Main listings
-        listings, total_pages = _get_main_listings(
-            cursor,
-            search=search,
-            category=selected_category,
-            deal_type=deal_type_filter,
-            location=location_q,
-            per_page=per_page,
-            offset=offset,
-        )
+        # 2) Smart Match Mode
+        if smart_match_mode and (smart_have or smart_want):
+            listings, total_pages = _smart_match_listings(
+                cursor,
+                have=smart_have,
+                want=smart_want,
+                per_page=per_page,
+                offset=offset
+            )
+        else:
+            # Normal Listings
+            listings, total_pages = _get_main_listings(
+                cursor,
+                search=search,
+                category=selected_category,
+                deal_type=deal_type_filter,
+                location=location_q,
+                per_page=per_page,
+                offset=offset,
+            )
 
-        # 3) Suggestions if no results
-        if search and not listings:
-            show_suggestions   = True
+        # 3) Suggestions if no result
+        if not listings and search:
+            show_suggestions    = True
             suggestion_listings = _get_suggestions(cursor, search)
 
-        # 4) Attach offers + image URLs (RELATIVE)
+        # Combine items for wishlist + images
         all_items = listings + suggestion_listings
-        offers = _attach_offered_items(cursor, all_items)
+        offers    = _attach_offered_items(cursor, all_items)
 
         for item in all_items:
             name = item.get('image1') or 'placeholder.jpg'
             item['image_url'] = url_for('static', filename=f'images/{name}')
             item['offers']    = offers.get(item['listing_id'], [])
 
-            # safe defaults
             item.setdefault('required_cash', 0)
             item.setdefault('additional_cash', 0)
             item.setdefault('desired_swap', '')
             item.setdefault('price', item.get('price', 0))
-            item.setdefault('location', item.get('location', ''))
-            item.setdefault('contact', item.get('contact', ''))
+            item.setdefault('location', '')
+            item.setdefault('contact', '')
 
-        # 5) Wishlist flags (only for visible)
+        # Wishlist mapping
         if user_logged_in and all_items:
             uid = session['user_id']
+
             cursor.execute("SELECT 1 FROM push_subscriptions WHERE user_id=%s LIMIT 1", (uid,))
             user_subscribed = cursor.fetchone() is not None
 
             visible_ids = [x['listing_id'] for x in all_items]
+
             if visible_ids:
-                ph = ','.join(['%s'] * len(visible_ids))
+                ph = ",".join(["%s"] * len(visible_ids))
                 cursor.execute(
                     f"SELECT listing_id FROM wishlists WHERE user_id=%s AND listing_id IN ({ph})",
-                    (uid, *visible_ids)
+                    (uid, *visible_ids),
                 )
                 wish_ids = {r['listing_id'] for r in cursor.fetchall()}
             else:
@@ -369,7 +385,7 @@ def home():
             for item in all_items:
                 item['is_wishlisted'] = False
 
-        # 6) Featured
+        # Featured listing
         featured = listings[0] if listings else (suggestion_listings[0] if suggestion_listings else None)
 
         return render_template(
@@ -387,7 +403,10 @@ def home():
             user_subscribed=user_subscribed,
             vapid_public_key=app.config.get('VAPID_PUBLIC_KEY', ''),
             page=page,
-            total_pages=total_pages
+            total_pages=total_pages,
+            smart_match_mode=smart_match_mode,
+            smart_have=smart_have,
+            smart_want=smart_want
         )
 
     except Exception as e:
@@ -398,7 +417,122 @@ def home():
         if cursor: cursor.close()
         if conn: conn.close()
 
+
 # ———————————————————————— HELPERS ————————————————————————
+
+
+
+def _similarity(a, b):
+    if not a or not b:
+        return 0.0
+
+    a = a.lower()
+    b = b.lower()
+
+    # Token set similarity
+    a_tokens = set(a.split())
+    b_tokens = set(b.split())
+
+    token_overlap = len(a_tokens & b_tokens) / max(len(a_tokens | b_tokens), 1)
+
+    # Character similarity
+    from difflib import SequenceMatcher
+    char_sim = SequenceMatcher(None, a, b).ratio()
+
+    return (token_overlap * 0.5) + (char_sim * 0.5)
+
+
+
+
+def _smart_match_listings(cursor, *, have, want, per_page, offset):
+    """
+    AI-like Smart Match:
+    - fuzzy match user's HAVE against offered items + listing title
+    - fuzzy match user's WANT against desired_swap
+    - scoring based on Plan + Recency for final ranking
+    """
+
+    base_q = """
+        SELECT l.listing_id, l.title, l.description, l.category, l.deal_type, l.Plan,
+               l.image1, l.price, l.required_cash, l.additional_cash, l.desired_swap,
+               l.location, l.contact, u.username, l.created_at,
+               IFNULL(m.impressions,0) AS impressions
+        FROM listings l
+        JOIN users u ON l.user_id = u.id
+        LEFT JOIN listing_metrics m ON l.listing_id = m.listing_id
+        WHERE l.deal_type = 'Swap Deal'
+    """
+
+    cursor.execute(base_q)
+    raw = cursor.fetchall()
+
+    # Offered items
+    offered_map = {}
+    if raw:
+        listing_ids = [r["listing_id"] for r in raw]
+        ph = ",".join(["%s"] * len(listing_ids))
+        cursor.execute(f"SELECT * FROM offered_items WHERE listing_id IN ({ph})", tuple(listing_ids))
+
+        for o in cursor.fetchall():
+            offered_map.setdefault(o["listing_id"], []).append(o)
+
+    # Score each listing
+    scored = []
+
+    import datetime
+    now = datetime.datetime.now()
+
+    plan_weights = {"Diamond": 5, "Gold": 4, "Silver": 3, "Bronze": 2, "Free": 1}
+
+    for l in raw:
+        # Similarity scores
+        have_score = 0.0
+        if have:
+            # compare to listing title & description
+            have_score = max(have_score, _similarity(have, l["title"]))
+            have_score = max(have_score, _similarity(have, l["description"] or ""))
+
+            # compare to each offered item
+            for item in offered_map.get(l["listing_id"], []):
+                t = f"{item['title']} {item['description']}"
+                have_score = max(have_score, _similarity(have, t))
+
+        want_score = _similarity(want, l["desired_swap"]) if want else 0.0
+
+        # Plan score
+        plan_score = plan_weights.get(l["Plan"], 1) / 5.0
+
+        # Recency score (last 30 days)
+        days_old = (now - l["created_at"]).days
+        recency_score = max(0, 1 - (days_old / 30))
+
+        # Final weighted score
+        final = (have_score * 0.45) + (want_score * 0.45) + (plan_score * 0.07) + (recency_score * 0.03)
+
+        l["match_score"] = round(final * 100)
+        scored.append(l)
+
+    # Sort by match score desc
+    scored.sort(key=lambda x: x["match_score"], reverse=True)
+
+    # Pagination
+    total = len(scored)
+    total_pages = (total + per_page - 1) // per_page
+
+    page_slice = scored[offset: offset + per_page]
+
+    return page_slice, total_pages
+
+
+
+
+
+
+
+
+
+
+
 
 def _get_carousel(cursor):
     cursor.execute("""

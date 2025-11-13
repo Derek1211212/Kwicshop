@@ -232,6 +232,425 @@
 .listings { padding-inline: var(--container-gutter); }
 .grid { margin: 0; } /* remove any accidental outer margins */
 
+
+
+
+
+
+.smart-match-box {
+  background: #ffffff;
+  padding: 1rem;
+  margin: 1rem auto;
+  border-radius: 14px;
+  width: calc(100% - 2rem);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  border: 1px solid #e5e7eb;
+}
+
+.smart-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.sm-label {
+  font-size: 0.85rem;
+  color: #374151;
+  font-weight: 600;
+}
+
+.sm-input {
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.sm-input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16,185,129,0.2);
+}
+
+.sm-btn {
+  padding: 0.9rem;
+  border-radius: 12px;
+  background: #059669;
+  color: #fff;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.sm-btn:hover {
+  background: #047857;
+}
+
+.match-banner {
+  background: #ecfdf5;
+  color: #065f46;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  margin: 1rem;
+  font-size: 0.9rem;
+  border: 1px solid #d1fae5;
+  text-align: center;
+}
+
+
+
+
+/* SEARCH HUB WRAPPER */
+.search-hub {
+  padding: 1rem 1rem 0.5rem 1rem;
+}
+
+.search-hub-card {
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  padding: 0.9rem 0.9rem 1.1rem 0.9rem;
+}
+
+/* MODE TOGGLE */
+.search-modes {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.1rem;
+  background: #f3f4f6;
+  border-radius: 999px;
+  margin-bottom: 0.9rem;
+}
+
+.mode-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.mode-btn i {
+  font-size: 0.95rem;
+}
+
+.mode-btn.active {
+  background: #ffffff;
+  color: #059669;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* FORMS INSIDE HUB */
+.hub-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+
+.hub-form.hidden {
+  display: none;
+}
+
+/* Input rows */
+.hub-row {
+  display: flex;
+  align-items: center;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 0.7rem 0.9rem;
+  gap: 0.6rem;
+}
+
+.hub-row-sub {
+  background: #ecfdf5;
+  border-color: #bbf7d0;
+}
+
+.hub-icon {
+  color: #6b7280;
+  font-size: 1.05rem;
+}
+
+.hub-icon-sub {
+  color: #059669;
+  font-size: 0.95rem;
+}
+
+.hub-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.hub-input-sub {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+/* Labels inside Swap mode */
+.hub-row-label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  padding: 0.1rem 0.1rem 0.4rem 0.1rem;
+}
+
+.hub-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #ecfdf5;
+  color: #047857;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.hub-caption {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.hub-field-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.15rem;
+}
+
+/* Buttons */
+.hub-btn {
+  margin-top: 0.3rem;
+  background: #059669;
+  color: #ffffff;
+  border-radius: 12px;
+  padding: 0.85rem;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hub-btn:hover {
+  background: #047857;
+}
+
+.hub-btn-swap {
+  background: #2563eb;
+}
+
+.hub-btn-swap:hover {
+  background: #1d4ed8;
+}
+
+/* Match banner (unchanged style but looks nice with hub) */
+.match-banner {
+  background: #ecfdf5;
+  color: #065f46;
+  padding: 0.8rem 1rem;
+  border-radius: 14px;
+  margin: 0.8rem 1rem 0 1rem;
+  text-align: center;
+  border: 1px solid #d1fae5;
+  font-size: 0.9rem;
+}
+
+
+
+
+
+/* SEARCH HUB WRAPPER */
+.search-hub {
+  padding: 1rem 1rem 0.5rem 1rem;
+}
+
+.search-hub-card {
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  padding: 0.9rem 0.9rem 1.1rem 0.9rem;
+}
+
+/* MODE TOGGLE */
+.search-modes {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.1rem;
+  background: #f3f4f6;
+  border-radius: 999px;
+  margin-bottom: 0.9rem;
+}
+
+.mode-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.mode-btn i {
+  font-size: 0.95rem;
+}
+
+.mode-btn.active {
+  background: #ffffff;
+  color: #059669;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* FORMS INSIDE HUB */
+.hub-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+
+.hub-form.hidden {
+  display: none;
+}
+
+/* Input rows */
+.hub-row {
+  display: flex;
+  align-items: center;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 0.7rem 0.9rem;
+  gap: 0.6rem;
+}
+
+.hub-row-sub {
+  background: #ecfdf5;
+  border-color: #bbf7d0;
+}
+
+.hub-icon {
+  color: #6b7280;
+  font-size: 1.05rem;
+}
+
+.hub-icon-sub {
+  color: #059669;
+  font-size: 0.95rem;
+}
+
+.hub-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.hub-input-sub {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+/* Labels inside Swap mode */
+.hub-row-label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  padding: 0.1rem 0.1rem 0.4rem 0.1rem;
+}
+
+.hub-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #ecfdf5;
+  color: #047857;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.hub-caption {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.hub-field-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.15rem;
+}
+
+/* Buttons */
+.hub-btn {
+  margin-top: 0.3rem;
+  background: #059669;
+  color: #ffffff;
+  border-radius: 12px;
+  padding: 0.85rem;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hub-btn:hover {
+  background: #047857;
+}
+
+.hub-btn-swap {
+  background: #2563eb;
+}
+
+.hub-btn-swap:hover {
+  background: #1d4ed8;
+}
+
+/* Match banner (unchanged style but looks nice with hub) */
+.match-banner {
+  background: #ecfdf5;
+  color: #065f46;
+  padding: 0.8rem 1rem;
+  border-radius: 14px;
+  margin: 0.8rem 1rem 0 1rem;
+  text-align: center;
+  border: 1px solid #d1fae5;
+  font-size: 0.9rem;
+}
+
   </style>
 
   <script>
@@ -299,28 +718,137 @@
     </div>
   </nav>
 
-  <!-- SEARCH -->
-  <section class="search-shell">
-    <div class="search-container">
-      <form id="search-form" class="search-form" method="GET" action="{{ url_for('home') }}" role="search">
-        <div class="search-row">
-          <i class="fas fa-search input-icon" aria-hidden="true"></i>
-          <label for="q" class="visually-hidden">Search items</label>
-          <input id="q" name="search" class="search-input" autocomplete="off" placeholder="What are you looking for?" value="{{ search }}">
-          <button type="button" class="location-toggle" id="location-toggle" aria-controls="location" aria-expanded="false" title="Location search">
-            <i class="fas fa-map-marker-alt"></i>
-          </button>
-        </div>
-        <button class="search-btn" type="submit" aria-label="Search">Search</button>
-        <div class="search-row" style="grid-column:1 / -1">
-          <label for="location" class="visually-hidden">Location</label>
-          <input id="location" name="location" class="location-input" placeholder="Location (e.g., Madina…)" value="{{ location }}">
-        </div>
-        <input type="hidden" name="deal_type" id="deal-type-hidden" value="{{ deal_type_filter }}">
-        <input type="hidden" name="category" id="category-hidden" value="{{ selected_category }}">
-      </form>
+<!-- SEARCH HUB: Browse vs Swap Match -->
+<section class="search-hub">
+  <div class="search-hub-card">
+    <!-- Mode Toggle -->
+    <div class="search-modes" role="tablist" aria-label="Search mode">
+      <button
+        type="button"
+        class="mode-btn {% if not smart_match_mode %}active{% endif %}"
+        data-mode="browse"
+        aria-selected="{% if not smart_match_mode %}true{% else %}false{% endif %}"
+        role="tab"
+      >
+        <i class="fas fa-list-ul"></i>
+        Browse
+      </button>
+      <button
+        type="button"
+        class="mode-btn {% if smart_match_mode %}active{% endif %}"
+        data-mode="swap"
+        aria-selected="{% if smart_match_mode %}true{% else %}false{% endif %}"
+        role="tab"
+      >
+        <i class="fas fa-exchange-alt"></i>
+        Swap Match
+      </button>
     </div>
-  </section>
+
+    <!-- BROWSE MODE (Normal search) -->
+    <form
+      id="browse-form"
+      class="hub-form {% if smart_match_mode %}hidden{% endif %}"
+      method="GET"
+      action="{{ url_for('home') }}"
+      role="search"
+      aria-label="Browse listings"
+    >
+      <div class="hub-row">
+        <i class="fas fa-search hub-icon" aria-hidden="true"></i>
+        <label for="q" class="visually-hidden">Search items</label>
+        <input
+          id="q"
+          name="search"
+          class="hub-input"
+          autocomplete="off"
+          placeholder="Search items, brands, categories…"
+          value="{{ search }}"
+        >
+      </div>
+
+      <div class="hub-row hub-row-sub">
+        <i class="fas fa-location-arrow hub-icon-sub" aria-hidden="true"></i>
+        <label for="location" class="visually-hidden">Location</label>
+        <input
+          id="location"
+          name="location"
+          class="hub-input-sub"
+          placeholder="Location (e.g., Madina…)"
+          value="{{ location }}"
+        >
+      </div>
+
+      <input type="hidden" name="deal_type" id="deal-type-hidden" value="{{ deal_type_filter }}">
+      <input type="hidden" name="category" id="category-hidden" value="{{ selected_category }}">
+
+      <button class="hub-btn" type="submit">Search</button>
+    </form>
+
+    <!-- SWAP MODE (Smart Match) -->
+    <form
+      id="swap-form"
+      class="hub-form {% if not smart_match_mode %}hidden{% endif %}"
+      method="GET"
+      action="{{ url_for('home') }}"
+      aria-label="Find swap matches"
+    >
+      <input type="hidden" name="smart_match" value="1">
+
+      <div class="hub-row-label">
+        <span class="hub-pill">Swap Tool</span>
+        <span class="hub-caption">Tell us what you have & what you want</span>
+      </div>
+
+      <div class="hub-row">
+        <label class="hub-field-label">What do you HAVE?</label>
+        <input
+          name="have"
+          class="hub-input"
+          placeholder="Eg. Samsung Note 9"
+          value="{{ smart_have if smart_match_mode else '' }}"
+        >
+      </div>
+
+      <div class="hub-row">
+        <label class="hub-field-label">What do you WANT?</label>
+        <input
+          name="want"
+          class="hub-input"
+          placeholder="Eg. iPhone 11"
+          value="{{ smart_want if smart_match_mode else '' }}"
+        >
+      </div>
+
+      <div class="hub-row hub-row-sub">
+        <i class="fas fa-location-arrow hub-icon-sub" aria-hidden="true"></i>
+        <input
+          name="location"
+          class="hub-input-sub"
+          placeholder="Location (optional)"
+          value="{{ location }}"
+        >
+      </div>
+
+      <!-- carry filters if you want -->
+      <input type="hidden" name="deal_type" value="{{ deal_type_filter }}">
+      <input type="hidden" name="category" value="{{ selected_category }}">
+
+      <button class="hub-btn hub-btn-swap" type="submit">
+        See Swap Matches →
+      </button>
+    </form>
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
 
 
     <!-- FEATURED / HERO CAROUSEL -->
@@ -403,6 +931,15 @@
       </div>
     </div>
   </div>
+
+
+  {% if smart_match_mode %}
+<div class="match-banner">
+  Showing Smart Match results for:
+  <strong>{{ smart_have or 'Anything' }}</strong> → <strong>{{ smart_want or 'Anything' }}</strong>
+</div>
+{% endif %}
+
 
 
 
@@ -652,5 +1189,31 @@
   </script>
 
   <script src="{{ url_for('static', filename='heartbeat.js') }}" defer></script>
+
+  <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const modeButtons = document.querySelectorAll(".mode-btn");
+  const browseForm = document.getElementById("browse-form");
+  const swapForm = document.getElementById("swap-form");
+
+  modeButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const mode = btn.dataset.mode;
+
+      modeButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      if (mode === "browse") {
+        browseForm.classList.remove("hidden");
+        swapForm.classList.add("hidden");
+      } else {
+        swapForm.classList.remove("hidden");
+        browseForm.classList.add("hidden");
+      }
+    });
+  });
+});
+</script>
+
 </body>
 </html>
