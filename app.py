@@ -1914,181 +1914,291 @@ def edit_listing(listing_id):
 
 
 
-@app.route('/listings/<int:listing_id>/update', methods=['POST'])
+@app.route('/listings/<int:listing_id>/edit', methods=['POST'])
 @login_required
 def update_listing(listing_id):
     conn = get_db_connection()
-    conn.autocommit = False
     cursor = conn.cursor(dictionary=True)
 
     try:
-        # --- Load row & verify ownership ---
-        cursor.execute("SELECT * FROM listings WHERE listing_id=%s", (listing_id,))
+        # 1) Verify listing exists + ownership
+        cursor.execute("SELECT * FROM listings WHERE listing_id = %s", (listing_id,))
         existing = cursor.fetchone()
+
         if not existing or existing['user_id'] != session['user_id']:
             flash('You do not have permission to edit this listing', 'danger')
             return redirect(url_for('dashboard'))
 
-        uid = existing['user_id']
+        deal_type = existing['deal_type']
 
-        # -------- Helpers --------
-        def getf(name, default_key=None):
-            default_key = default_key or name
-            v = request.form.get(name)
-            return v.strip() if (v is not None and v.strip() != '') else existing.get(default_key)
+        # 2) Helper for listing fields: keep old if nothing posted
+        def get_listing_field(name, default_key=None):
+            """
+            Read a field from request.form, fallback to existing listing column.
+            default_key lets us map different form name -> listing column name.
+            """
+            key = default_key or name
+            val = request.form.get(name)
+            if val is None or str(val).strip() == '':
+                return existing.get(key)
+            return str(val).strip()
 
-        upload_dir = os.path.join(app.root_path, 'static', 'images')
-        os.makedirs(upload_dir, exist_ok=True)
+        # 3) Common listing fields (both Outright and Swap)
+        category         = get_listing_field('category')
+        location         = get_listing_field('location')
+        contact          = get_listing_field('contact')
+        desired_swap     = get_listing_field('desired_swap')
+        desired_swap_desc= get_listing_field('desired_swap_description')
+        required_cash    = request.form.get('required_cash')    or existing.get('required_cash')
+        additional_cash  = request.form.get('additional_cash')  or existing.get('additional_cash')
 
-        def keep_or_save(form_field, db_col):
-            f = request.files.get(form_field)
-            if f and allowed_file(f.filename):
-                fname = secure_filename(f.filename)
-                uniq  = f"{uuid.uuid4().hex}_{fname}"
-                f.save(os.path.join(upload_dir, uniq))
-                return uniq
-            return existing.get(db_col)
+        # optional extra fields – will only change if you add matching inputs
+        plan             = request.form.get('plan')             or existing.get('Plan')
+        plan_duration    = request.form.get('plan_duration')    or existing.get('Plan Duration')
+        status           = request.form.get('status')           or existing.get('status')
+        swap_notes       = request.form.get('swap_notes')       or existing.get('swap_notes')
 
-        # -------- Collect fields (names must match your HTML) --------
-        deal_type   = getf('deal_type', 'deal_type') or existing['deal_type']
-        title       = getf('title')
-        description = getf('description')
-        category    = getf('category')
-        location    = getf('location')
-        contact     = getf('contact')
+        # 4) For OUTRIGHT SALES: title/description/condition/price come from their own inputs
+        if deal_type == 'Outright Sales':
+            title       = get_listing_field('title')
+            description = get_listing_field('description')
+            condition   = get_listing_field('condition', default_key='condition')
+            price       = get_listing_field('price')
 
-        # Outright/Sales
-        condition_sales = getf('condition', 'condition')
-        price           = getf('price', 'price')  # VARCHAR in schema
+            # ---- Handle listing images for Outright (your original logic, preserved) ----
+            upload_dir = os.path.join(app.root_path, 'static', 'images')
+            os.makedirs(upload_dir, exist_ok=True)
 
-        # Swap
-        desired_swap             = getf('desired_swap', 'desired_swap')
-        desired_swap_description = getf('desired_swap_description', 'desired_swap_description')
-        required_cash            = request.form.get('required_cash') or existing.get('required_cash')
-        additional_cash          = request.form.get('additional_cash') or existing.get('additional_cash')
-
-        # images for listings table
-        image_url = keep_or_save('image1',  'image_url')
-        image1    = keep_or_save('image1', 'image1')
-        image2    = keep_or_save('image2', 'image2')
-        image3    = keep_or_save('image3', 'image3')
-        image4    = keep_or_save('image4', 'image4')
-
-        # --- DEBUG LOG: what we’re about to write ---
-        app.logger.info({
-            "listing_id": listing_id,
-            "user_id": uid,
-            "deal_type": deal_type,
-            "title": title,
-            "category": category,
-            "price": price,
-            "desired_swap": desired_swap,
-            "required_cash": required_cash,
-            "additional_cash": additional_cash,
-        })
-
-        # -------- UPDATE listings (scoped by listing_id + user_id) --------
-        update_sql = """
-            UPDATE listings
-            SET
-              title=%s,
-              description=%s,
-              category=%s,
-              location=%s,
-              contact=%s,
-              deal_type=%s,
-              `condition`=%s,
-              price=%s,
-              desired_swap=%s,
-              desired_swap_description=%s,
-              required_cash=%s,
-              additional_cash=%s,
-              image_url=%s,
-              image1=%s,
-              image2=%s,
-              image3=%s,
-              image4=%s
-            WHERE listing_id=%s AND user_id=%s
-            LIMIT 1
-        """
-        update_params = (
-            title, description, category, location, contact,
-            deal_type,
-            condition_sales, price,
-            desired_swap, desired_swap_description,
-            required_cash, additional_cash,
-            image_url, image1, image2, image3, image4,
-            listing_id, uid
-        )
-        cursor.execute(update_sql, update_params)
-        app.logger.info(f"[UPDATE listings] rowcount={cursor.rowcount}")
-
-        # If rowcount is 0, the values may be identical to existing.
-        # That’s not an error; MySQL reports 0 affected when no actual change.
-
-        # -------- offered_items sync --------
-        if deal_type == 'Swap Deal':
-            count = int(request.form.get('offered_items_count', 0) or 0)
-            keep_ids = []
-
-            def keep_or_save_item(slot, idx, old_name):
-                f = request.files.get(f'offered_image_{slot}_{idx}')
-                if f and allowed_file(f.filename):
-                    fname = secure_filename(f.filename)
+            form_to_db = [
+                ('image',  'image_url'),
+                ('image1', 'image1'),
+                ('image2', 'image2'),
+                ('image3', 'image3'),
+                ('image4', 'image4'),
+            ]
+            images_to_save = {}
+            for form_field, db_col in form_to_db:
+                file = request.files.get(form_field)
+                if file and allowed_file(file.filename):
+                    fname = secure_filename(file.filename)
                     uniq  = f"{uuid.uuid4().hex}_{fname}"
-                    f.save(os.path.join(upload_dir, uniq))
-                    return uniq
-                return old_name
-
-            for i in range(1, count + 1):
-                item_id = request.form.get(f'offered_item_id_{i}')
-                otitle  = (request.form.get(f'offered_title_{i}') or '').strip()
-                if not otitle:
-                    continue
-                odesc = (request.form.get(f'offered_description_{i}') or '').strip()
-                ocond = (request.form.get(f'offered_condition_{i}') or '').strip()
-
-                if item_id:
-                    cursor.execute("""
-                        SELECT image1,image2,image3,image4
-                        FROM offered_items WHERE item_id=%s AND listing_id=%s
-                    """, (item_id, listing_id))
-                    old = cursor.fetchone() or {}
-                    oi1 = keep_or_save_item(i, 1, old.get('image1'))
-                    oi2 = keep_or_save_item(i, 2, old.get('image2'))
-                    oi3 = keep_or_save_item(i, 3, old.get('image3'))
-                    oi4 = keep_or_save_item(i, 4, old.get('image4'))
-
-                    cursor.execute("""
-                        UPDATE offered_items
-                           SET title=%s, description=%s, `condition`=%s,
-                               image1=%s, image2=%s, image3=%s, image4=%s
-                         WHERE item_id=%s AND listing_id=%s
-                    """, (otitle, odesc, ocond, oi1, oi2, oi3, oi4, item_id, listing_id))
-                    keep_ids.append(int(item_id))
+                    file.save(os.path.join(upload_dir, uniq))
+                    images_to_save[db_col] = uniq
                 else:
-                    oi1 = keep_or_save_item(i, 1, None)
-                    oi2 = keep_or_save_item(i, 2, None)
-                    oi3 = keep_or_save_item(i, 3, None)
-                    oi4 = keep_or_save_item(i, 4, None)
-                    cursor.execute("""
-                        INSERT INTO offered_items
-                          (listing_id, title, description, `condition`, image1, image2, image3, image4)
-                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
-                    """, (listing_id, otitle, odesc, ocond, oi1, oi2, oi3, oi4))
-                    keep_ids.append(cursor.lastrowid)
+                    images_to_save[db_col] = existing.get(db_col)
 
-            if keep_ids:
-                fmt = ",".join(["%s"] * len(keep_ids))
-                cursor.execute(f"""
-                    DELETE FROM offered_items
-                     WHERE listing_id=%s AND item_id NOT IN ({fmt})
-                """, (listing_id, *keep_ids))
-            else:
-                cursor.execute("DELETE FROM offered_items WHERE listing_id=%s", (listing_id,))
-        else:
-            cursor.execute("DELETE FROM offered_items WHERE listing_id=%s", (listing_id,))
+            # Update listings for Outright Sales
+            cursor.execute(
+                """
+                UPDATE listings
+                SET
+                  title=%s,
+                  description=%s,
+                  category=%s,
+                  location=%s,
+                  contact=%s,
+                  `condition`=%s,
+                  price=%s,
+                  desired_swap=%s,
+                  desired_swap_description=%s,
+                  required_cash=%s,
+                  additional_cash=%s,
+                  image_url=%s,
+                  image1=%s,
+                  image2=%s,
+                  image3=%s,
+                  image4=%s,
+                  Plan=%s,
+                  `Plan Duration`=%s,
+                  status=%s,
+                  swap_notes=%s
+                WHERE listing_id = %s
+                """,
+                [
+                    title, description, category, location, contact,
+                    condition, price,
+                    desired_swap, desired_swap_desc,
+                    required_cash, additional_cash,
+                    images_to_save['image_url'],
+                    images_to_save['image1'],
+                    images_to_save['image2'],
+                    images_to_save['image3'],
+                    images_to_save['image4'],
+                    plan, plan_duration, status, swap_notes,
+                    listing_id
+                ]
+            )
 
+        # 5) For SWAP DEAL: main listing = Offered Item #1
+        else:  # deal_type == 'Swap Deal'
+            # a) General listing fields (NOT title/description/condition/images here)
+            cursor.execute(
+                """
+                UPDATE listings
+                SET
+                  category=%s,
+                  location=%s,
+                  contact=%s,
+                  desired_swap=%s,
+                  desired_swap_description=%s,
+                  required_cash=%s,
+                  additional_cash=%s,
+                  Plan=%s,
+                  `Plan Duration`=%s,
+                  status=%s,
+                  swap_notes=%s
+                WHERE listing_id = %s
+                """,
+                [
+                    category, location, contact,
+                    desired_swap, desired_swap_desc,
+                    required_cash, additional_cash,
+                    plan, plan_duration, status, swap_notes,
+                    listing_id
+                ]
+            )
+
+            # b) Load existing offered_items (to reuse old images when no new upload)
+            cursor.execute(
+                """
+                SELECT
+                  item_id,
+                  title,
+                  description,
+                  `condition`,
+                  image1, image2, image3, image4
+                FROM offered_items
+                WHERE listing_id = %s
+                ORDER BY item_id ASC
+                """,
+                (listing_id,)
+            )
+            old_items = cursor.fetchall()
+
+            # Index helper by "slot" (1, 2, ...) according to your form
+            old_by_slot = {}
+            for idx, row in enumerate(old_items, start=1):
+                old_by_slot[idx] = row
+
+            # c) Clear existing offered_items; we will reinsert
+            cursor.execute("DELETE FROM offered_items WHERE listing_id = %s", (listing_id,))
+
+            upload_dir = os.path.join(app.root_path, 'static', 'images')
+            os.makedirs(upload_dir, exist_ok=True)
+
+            requested_count = min(int(request.form.get('offered_items_count', 0) or 0), 2)
+
+            primary_listing_data = {
+                'title':       existing.get('title'),
+                'description': existing.get('description'),
+                'condition':   existing.get('condition'),
+                'price':       existing.get('price'),
+                'image1':      existing.get('image1'),
+                'image2':      existing.get('image2'),
+                'image3':      existing.get('image3'),
+                'image4':      existing.get('image4'),
+            }
+
+            for slot in range(1, requested_count + 1):
+                old = old_by_slot.get(slot, {})
+
+                otitle = request.form.get(f'offered_title_{slot}') or old.get('title')
+                if not otitle:
+                    # Don't insert an empty offered item
+                    continue
+
+                odesc = request.form.get(f'offered_description_{slot}') or old.get('description', '')
+                ocond = request.form.get(f'offered_condition_{slot}')   or old.get('condition', '')
+
+                # Optional "value" -> we will map slot 1 to listings.price if provided
+                ovalue = request.form.get(f'offered_value_{slot}')
+
+                # Handle images for this offered item
+                oimgs = []
+                for img_idx in range(1, 5):
+                    key_file   = f'offered_image_{slot}_{img_idx}'
+                    key_remove = f'remove_image_{slot}_{img_idx}'
+
+                    file   = request.files.get(key_file)
+                    remove = (request.form.get(key_remove) == 'true')
+
+                    old_img = old.get(f'image{img_idx}')
+
+                    if remove:
+                        new_img_name = None
+                    elif file and allowed_file(file.filename):
+                        fname = secure_filename(file.filename)
+                        uniq  = f"{uuid.uuid4().hex}_{fname}"
+                        file.save(os.path.join(upload_dir, uniq))
+                        new_img_name = uniq
+                    else:
+                        new_img_name = old_img
+
+                    oimgs.append(new_img_name)
+
+                # Insert offered_items row
+                cursor.execute(
+                    """
+                    INSERT INTO offered_items
+                      (listing_id, title, description, `condition`, image1, image2, image3, image4)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        listing_id,
+                        otitle,
+                        odesc,
+                        ocond,
+                        oimgs[0], oimgs[1], oimgs[2], oimgs[3]
+                    )
+                )
+
+                # If this is the PRIMARY item (slot 1) → sync it into listings table
+                if slot == 1:
+                    primary_listing_data['title']       = otitle
+                    primary_listing_data['description'] = odesc
+                    primary_listing_data['condition']   = ocond
+
+                    # Map value to listings.price if provided
+                    if ovalue and str(ovalue).strip() != '':
+                        primary_listing_data['price'] = str(ovalue).strip()
+
+                    # Images: image1 also becomes image_url
+                    primary_listing_data['image1'] = oimgs[0]
+                    primary_listing_data['image2'] = oimgs[1]
+                    primary_listing_data['image3'] = oimgs[2]
+                    primary_listing_data['image4'] = oimgs[3]
+
+            # d) After processing all offered items, write primary item into listings
+            cursor.execute(
+                """
+                UPDATE listings
+                SET
+                  title=%s,
+                  description=%s,
+                  `condition`=%s,
+                  price=%s,
+                  image_url=%s,
+                  image1=%s,
+                  image2=%s,
+                  image3=%s,
+                  image4=%s
+                WHERE listing_id=%s
+                """,
+                [
+                    primary_listing_data['title'],
+                    primary_listing_data['description'],
+                    primary_listing_data['condition'],
+                    primary_listing_data['price'],
+                    primary_listing_data['image1'],  # image_url
+                    primary_listing_data['image1'],
+                    primary_listing_data['image2'],
+                    primary_listing_data['image3'],
+                    primary_listing_data['image4'],
+                    listing_id
+                ]
+            )
+
+        # 6) Commit & redirect
         conn.commit()
         flash('Listing updated successfully!', 'success')
         return redirect(url_for('dashboard'))
@@ -2098,9 +2208,11 @@ def update_listing(listing_id):
         app.logger.error(f"[UPDATE-LISTING] Error updating listing #{listing_id}: {e}", exc_info=True)
         flash(f'An error occurred while updating your listing: {e}', 'danger')
         return redirect(url_for('edit_listing', listing_id=listing_id))
+
     finally:
         cursor.close()
         conn.close()
+
 
 
 
