@@ -3006,9 +3006,15 @@ def _send_password_email_worker(recipient_email, subject, body):
         if ok:
             logging.info("Password reset email sent to %s", recipient_email)
         else:
-            logging.error("Password reset email failed (send_email_notification returned False) for %s", recipient_email)
+            logging.error(
+                "Password reset email failed (send_email_notification returned False) for %s",
+                recipient_email,
+            )
     except Exception:
-        logging.exception("Exception while sending password reset email to %s", recipient_email)
+        logging.exception(
+            "Exception while sending password reset email to %s", recipient_email
+        )
+
 
 def send_password_reset_via_sendgrid(recipient_email, reset_url):
     """
@@ -3019,21 +3025,30 @@ def send_password_reset_via_sendgrid(recipient_email, reset_url):
         logging.error("send_password_reset_via_sendgrid called without recipient_email")
         return None
 
-    subject = "SwapHub — Password Reset Request"
+    subject = "Your SwapHub password reset request"
+
     body = (
-        "To reset your password, visit the following link:\n"
+        "Hello,\n\n"
+        "We received a request to reset the password for your SwapHub account "
+        "associated with this email address.\n\n"
+        "To choose a new password, please click the link below or paste it into your browser:\n"
         f"{reset_url}\n\n"
-        "This link will expire in 1 hour.\n"
-        "If you did not request a password reset, ignore this email."
+        "For your security, this link will expire in 1 hour.\n"
+        "If you did not request a password reset, you can safely ignore this message "
+        "and your account password will remain unchanged.\n\n"
+        "Best regards,\n"
+        "The SwapHub Team\n"
+        "support@swaphub.example\n"
     )
 
     thread = threading.Thread(
         target=_send_password_email_worker,
         args=(recipient_email, subject, body),
-        daemon=True
+        daemon=True,
     )
     thread.start()
     return thread
+
 
 # ========== Routes: forgot-password and reset-password (using SendGrid wrapper) ==========
 @app.route('/forgot-password', methods=['GET', 'POST'])
