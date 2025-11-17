@@ -1318,57 +1318,66 @@ def logout():
 
 def send_email_notification(recipient_email, subject, body):
     """
-    Send email using SendGrid's SMTP relay (TLS on port 587).
+    Send email using MailerSend's SMTP relay (TLS on port 587).
     Returns True on success, False on failure. Does not raise.
-    NOTE: Credentials are embedded for testing only — remove/rotate before production.
     """
+
     if not recipient_email:
         app.logger.warning("send_email_notification called without recipient_email")
         return False
 
     # ==============================
-    # 🔐 SENDGRID SMTP SETTINGS
+    # 🔐 MAILERSEND SMTP SETTINGS
     # ==============================
-    SMTP_SERVER = "smtp.sendgrid.net"
-    SMTP_PORT = 587
-    SMTP_USER = "apikey"  # This must remain literally 'apikey'
-    SMTP_PASSWORD = "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"  # TEST KEY ONLY
+    SMTP_SERVER = os.environ.get("MAILERSEND_SMTP_HOST", "smtp.mailersend.net")
+    SMTP_PORT = int(os.environ.get("MAILERSEND_SMTP_PORT", "587"))
+    SMTP_USER = os.environ.get("MAILERSEND_SMTP_USER")       # e.g. MS_xxx...
+    SMTP_PASSWORD = os.environ.get("MAILERSEND_SMTP_PASSWORD")
+
+    if not SMTP_USER or not SMTP_PASSWORD:
+        app.logger.error("MailerSend SMTP credentials are not set in environment")
+        return False
 
     # ==============================
     # 📧 SENDER ADDRESS
     # ==============================
-    # Use a domain-based or verified sender email in your SendGrid account.
-    # Once domain authentication is verified, use:
-    # sender_email = "no-reply@tghenterprise.net"
-    sender_email = "no-reply@tghenterprise.net"
+    # Must be a verified/allowed sender in your MailerSend domain.
+    sender_email = app.config.get("FROM_EMAIL", os.environ.get("FROM_EMAIL", "no-reply@test-51ndgwvkvwqlzqx8.mlsender.net"))
+    sender_name = app.config.get("FROM_NAME", os.environ.get("FROM_NAME", "SwapHub Notifications"))
 
     # ==============================
     # ✉️ BUILD THE EMAIL MESSAGE
     # ==============================
     msg = EmailMessage()
-    msg["From"] = f"SwapHub Notifications <{sender_email}>"
+    msg["From"] = f"{sender_name} <{sender_email}>"
     msg["To"] = recipient_email
     msg["Subject"] = subject
     msg.set_content(body)
 
     try:
+        app.logger.info("Connecting to MailerSend SMTP server %s:%s ...", SMTP_SERVER, SMTP_PORT)
+
         # Create SMTP connection with explicit socket timeout
-        app.logger.info("Connecting to SendGrid SMTP server...")
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10) as server:
             server.ehlo()
             # Upgrade connection to TLS
             server.starttls()
             server.ehlo()
-            # Login with SendGrid SMTP credentials
+            # Login with MailerSend SMTP credentials
             server.login(SMTP_USER, SMTP_PASSWORD)
             # Send the email message
             server.send_message(msg)
 
-        app.logger.info("✅ SendGrid SMTP: Email successfully sent to %s", recipient_email)
+        app.logger.info("✅ MailerSend SMTP: Email successfully sent to %s", recipient_email)
         return True
 
     except (smtplib.SMTPException, socket.timeout, ConnectionRefusedError) as e:
-        app.logger.error("❌ SendGrid SMTP error sending to %s: %s", recipient_email, e, exc_info=True)
+        app.logger.error(
+            "❌ MailerSend SMTP error sending to %s: %s",
+            recipient_email,
+            e,
+            exc_info=True,
+        )
         return False
     except Exception as e:
         app.logger.exception("❌ Unexpected error sending email to %s: %s", recipient_email, e)
@@ -2931,8 +2940,7 @@ def submit_review(listing_id):
 
 
 
-
-
+  
 
 
 
@@ -2941,61 +2949,80 @@ def submit_review(listing_id):
 if 'send_email_notification' not in globals():
     def send_email_notification(recipient_email, subject, body):
         """
-        Send email using SendGrid's SMTP relay (TLS on port 587).
+        Send email using MailerSend's SMTP relay (TLS on port 587 by default).
         Returns True on success, False on failure. Does not raise.
-        NOTE: Credentials are embedded for testing only — remove/rotate before production.
         """
+
         if not recipient_email:
             app.logger.warning("send_email_notification called without recipient_email")
             return False
 
         # ==============================
-        # 🔐 SENDGRID SMTP SETTINGS
+        # 🔐 MAILERSEND SMTP SETTINGS
         # ==============================
-        SMTP_SERVER = "smtp.sendgrid.net"
-        SMTP_PORT = 587
-        SMTP_USER = "apikey"  # This must remain literally 'apikey'
-        SMTP_PASSWORD = "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"  # TEST KEY ONLY
+        SMTP_SERVER = os.environ.get("MAILERSEND_SMTP_HOST", "smtp.mailersend.net")
+        SMTP_PORT = int(os.environ.get("MAILERSEND_SMTP_PORT", "587"))
+        SMTP_USER = os.environ.get("MAILERSEND_SMTP_USER")       # e.g. MS_xxx...
+        SMTP_PASSWORD = os.environ.get("MAILERSEND_SMTP_PASSWORD")
+
+        # 🔍 DEBUG: just to confirm values are being read (remove later)
+        app.logger.info("MailerSend SMTP user: %s", SMTP_USER)
+        app.logger.info("MailerSend SMTP password length: %d", len(SMTP_PASSWORD or ""))
+
+        if not SMTP_USER or not SMTP_PASSWORD:
+            app.logger.error("MailerSend SMTP credentials are not set in environment")
+            return False
 
         # ==============================
         # 📧 SENDER ADDRESS
         # ==============================
-        # Use a domain-based or verified sender email in your SendGrid account.
-        sender_email = app.config.get('FROM_EMAIL', "no-reply@tghenterprise.net")
+        # Use a domain-based or verified sender email in your MailerSend account.
+        sender_email = app.config.get("FROM_EMAIL", os.environ.get("FROM_EMAIL", "no-reply@test-51ndgwvkvwqlzqx8.mlsender.net"))
+
+        # Optional: sender display name
+        sender_name = app.config.get("FROM_NAME", os.environ.get("FROM_NAME", "SwapHub Notifications"))
 
         # ==============================
         # ✉️ BUILD THE EMAIL MESSAGE
         # ==============================
         msg = EmailMessage()
-        msg["From"] = f"SwapHub Notifications <{sender_email}>"
+        msg["From"] = f"{sender_name} <{sender_email}>"
         msg["To"] = recipient_email
         msg["Subject"] = subject
         msg.set_content(body)
 
         try:
+            app.logger.info("Connecting to MailerSend SMTP server %s:%s ...", SMTP_SERVER, SMTP_PORT)
+
             # Create SMTP connection with explicit socket timeout
-            app.logger.info("Connecting to SendGrid SMTP server...")
             with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10) as server:
                 server.ehlo()
                 # Upgrade connection to TLS
                 server.starttls()
                 server.ehlo()
-                # Login with SendGrid SMTP credentials
+                # Login with MailerSend SMTP credentials
                 server.login(SMTP_USER, SMTP_PASSWORD)
                 # Send the email message
                 server.send_message(msg)
 
-            app.logger.info("✅ SendGrid SMTP: Email successfully sent to %s", recipient_email)
+            app.logger.info("✅ MailerSend SMTP: Email successfully sent to %s", recipient_email)
             return True
 
         except (smtplib.SMTPException, socket.timeout, ConnectionRefusedError) as e:
-            app.logger.error("❌ SendGrid SMTP error sending to %s: %s", recipient_email, e, exc_info=True)
+            app.logger.error(
+                "❌ MailerSend SMTP error sending to %s: %s",
+                recipient_email,
+                e,
+                exc_info=True,
+            )
             return False
         except Exception as e:
             app.logger.exception("❌ Unexpected error sending email to %s: %s", recipient_email, e)
             return False
 
 # ========== Password-reset SendGrid wrapper (named uniquely to avoid conflicts) ==========
+# ========== Password-reset MailerSend wrapper (named uniquely to avoid conflicts) ==========
+
 def _send_password_email_worker(recipient_email, subject, body):
     """
     Worker function that calls the existing send_email_notification helper.
@@ -3016,13 +3043,13 @@ def _send_password_email_worker(recipient_email, subject, body):
         )
 
 
-def send_password_reset_via_sendgrid(recipient_email, reset_url):
+def send_password_reset_via_mailersend(recipient_email, reset_url):
     """
-    Public helper to queue a password reset email using SendGrid (via send_email_notification).
+    Public helper to queue a password reset email using MailerSend (via send_email_notification).
     Uses a unique function name to avoid any collisions with other senders.
     """
     if not recipient_email:
-        logging.error("send_password_reset_via_sendgrid called without recipient_email")
+        logging.error("send_password_reset_via_mailersend called without recipient_email")
         return None
 
     subject = "Your SwapHub password reset request"
@@ -3048,6 +3075,7 @@ def send_password_reset_via_sendgrid(recipient_email, reset_url):
     )
     thread.start()
     return thread
+
 
 
 # ========== Routes: forgot-password and reset-password (using SendGrid wrapper) ==========
@@ -3083,7 +3111,7 @@ def forgot_password():
 
             # Queue SendGrid email using the uniquely named helper
             try:
-                send_password_reset_via_sendgrid(email, reset_url)
+                send_password_reset_via_mailersend(email, reset_url)
                 flash('Password reset email queued. Check your inbox.', 'success')
             except Exception:
                 logging.exception("Failed to queue password reset email for %s", email)
