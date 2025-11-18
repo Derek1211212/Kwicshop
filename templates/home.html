@@ -957,194 +957,263 @@
 
 
 
-    <!-- FEATURED / HERO CAROUSEL -->
-  <section class="featured-shell" aria-label="Featured listings">
-    <!-- Overlay header ON the image -->
+{# ================= FEATURED / HERO CAROUSEL ================= #}
+<section class="featured-shell" aria-label="Featured listings">
+  <!-- Overlay header ON the image -->
   <div class="featured-head-overlay" aria-hidden="true">
     <div class="featured-head-glass">
       <div class="section-eyebrow">Promoted Picks</div>
-      
     </div>
   </div>
 
   <div class="multi-wrap">
-      <div class="multi-carousel" aria-roledescription="carousel">
-        <div class="multi-track" id="multi-track">
-          {% for listing in carousel_listings %}
-            <div class="multi-item" data-listing-id="{{ listing.listing_id }}" data-source="carousel" data-plan="{{ listing.Plan or 'Free' }}">
-              <div class="multi-card">
-                <img src="{{ listing.banner_image }}" alt="{{ listing.title }}" loading="lazy">
-                <div class="multi-overlay">
-
-                  <h3 class="multi-title">{{ listing.title }}</h3>
-                  <a class="multi-btn" href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
-                     data-listing-id="{{ listing.listing_id }}" data-source="carousel">
-                    View Listing <i class="fas fa-arrow-right" aria-hidden="true"></i>
-                  </a>
-                </div>
+    <div class="multi-carousel" aria-roledescription="carousel">
+      <div class="multi-track" id="multi-track">
+        {% for listing in carousel_listings %}
+          <div class="multi-item"
+               data-listing-id="{{ listing.listing_id }}"
+               data-source="carousel"
+               data-plan="{{ listing.Plan or 'Free' }}">
+            <div class="multi-card">
+              {# banner_image is already a fully built URL (Cloudinary thumb or local) #}
+              <img src="{{ listing.banner_image }}"
+                   alt="{{ listing.title }}"
+                   loading="lazy">
+              <div class="multi-overlay">
+                <h3 class="multi-title">{{ listing.title }}</h3>
+                <a class="multi-btn"
+                   href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
+                   data-listing-id="{{ listing.listing_id }}"
+                   data-source="carousel">
+                  View Listing <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </a>
               </div>
             </div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-  </section>
-
-
-
-
-  <!-- FILTERS -->
-  <div class="filters">
-    <!-- Deal Type -->
-    <div class="filter-card">
-      <div class="filter-title">Deal Type</div>
-      <div class="chip-row" id="deal-type-row" role="tablist" aria-label="Deal type">
-        {% set deal_types = ['All','Swap Deal','Outright Sales'] %}
-        {% for deal in deal_types %}
-          <button type="button" class="chip deal-chip{% if deal_type_filter == deal %} active{% endif %}"
-                  data-value="{{ deal }}" role="tab"
-                  aria-pressed="{% if deal_type_filter == deal %}true{% else %}false{% endif %}">
-            {{ deal }}
-          </button>
+          </div>
         {% endfor %}
       </div>
     </div>
+  </div>
+</section>
 
-    <!-- Categories (NOW SMALLER + HORIZONTAL SCROLLER) -->
-    <div class="filter-card">
-      <div class="filter-title">Categories</div>
-      <div class="category-scroller" id="category-scroller" role="tablist" aria-label="Categories">
-        {% for value, label, icon in [
-          ('All','All','mdi:format-list-bulleted'),
-          ('Electronics','Electronics','mdi:television'),
-          ('Mobile Phones & Accessories','Phones','mdi:cellphone'),
-          ('Computers & Networking','Computers','mdi:desktop-classic'),
-          ('Sports & Outdoors','Sports','mdi:basketball'),
-          ('Toys & Games','Toys','mdi:puzzle'),
-          ('Automobile & Vehicles','Auto','mdi:car')
-        ] %}
-        <button type="button"
-                class="category-btn{% if selected_category == value %} active{% endif %}"
-                data-value="{{ value }}" role="tab"
-                aria-pressed="{% if selected_category == value %}true{% else %}false{% endif %}">
+
+{# ================= FILTERS ================= #}
+<div class="filters">
+  <!-- Deal Type -->
+  <div class="filter-card">
+    <div class="filter-title">Deal Type</div>
+    <div class="chip-row" id="deal-type-row" role="tablist" aria-label="Deal type">
+      {% set deal_types = ['All', 'Swap Deal', 'Outright Sales'] %}
+      {% for deal in deal_types %}
+        <button
+          type="button"
+          class="chip deal-chip{% if deal_type_filter == deal %} active{% endif %}"
+          data-value="{{ deal }}"
+          role="tab"
+          aria-pressed="{% if deal_type_filter == deal %}true{% else %}false{% endif %}">
+          {{ deal }}
+        </button>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Categories (HORIZONTAL SCROLLER) -->
+  <div class="filter-card">
+    <div class="filter-title">Categories</div>
+    <div class="category-scroller" id="category-scroller" role="tablist" aria-label="Categories">
+      {% for value, label, icon in [
+        ('All','All','mdi:format-list-bulleted'),
+        ('Electronics','Electronics','mdi:television'),
+        ('Mobile Phones & Accessories','Phones','mdi:cellphone'),
+        ('Computers & Networking','Computers','mdi:desktop-classic'),
+        ('Sports & Outdoors','Sports','mdi:basketball'),
+        ('Toys & Games','Toys','mdi:puzzle'),
+        ('Automobile & Vehicles','Auto','mdi:car')
+      ] %}
+        <button
+          type="button"
+          class="category-btn{% if selected_category == value %} active{% endif %}"
+          data-value="{{ value }}"
+          role="tab"
+          aria-pressed="{% if selected_category == value %}true{% else %}false{% endif %}">
           <span class="category-icon-box" aria-hidden="true">
-            <img src="https://api.iconify.design/{{ icon }}.svg" alt="" width="18" height="18"
+            <img src="https://api.iconify.design/{{ icon }}.svg"
+                 alt=""
+                 width="18"
+                 height="18"
                  onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
           </span>
           <span class="category-name">{{ label }}</span>
         </button>
-        {% endfor %}
-      </div>
+      {% endfor %}
     </div>
   </div>
-
-
-  {% if smart_match_mode %}
-<div class="match-banner">
-  Showing Smart Match results for:
-  <strong>{{ smart_have or 'Anything' }}</strong> → <strong>{{ smart_want or 'Anything' }}</strong>
 </div>
+
+
+{# ================= SMART MATCH BANNER ================= #}
+{% if smart_match_mode %}
+  <div class="match-banner">
+    Showing Smart Match results for:
+    <strong>{{ smart_have or 'Anything' }}</strong> → <strong>{{ smart_want or 'Anything' }}</strong>
+  </div>
 {% endif %}
 
 
-
-
-  <!-- SUGGESTIONS -->
-  {% if show_suggestions %}
-    <div class="listings" aria-live="polite">
-      <div class="alert-info"><strong>No exact matches for “{{ search }}” — here are some suggestions:</strong></div>
-    </div>
-  {% endif %}
-
-  <!-- LISTINGS GRID HEADER -->
-  <div class="section-spacer-lg"></div>
-  <div class="section-head" aria-hidden="true">
-    <div>
-      <div class="section-eyebrow">Browse</div>
-      <h2 class="section-title">All Listings</h2>
+{# ================= SUGGESTIONS MESSAGE ================= #}
+{% if show_suggestions %}
+  <div class="listings" aria-live="polite">
+    <div class="alert-info">
+      <strong>No exact matches for “{{ search }}” — here are some suggestions:</strong>
     </div>
   </div>
-  <div class="section-divider"></div>
-  <!-- LISTINGS GRID -->
-  <section class="listings">
-    {% set ns = namespace(idx=0) %}
-    {% if listings or suggestion_listings %}
-      <div class="grid">
-        {% set display_list = listings if listings else suggestion_listings %}
-        {% for listing in display_list %}
-          {% set ns.idx = loop.index0 %}
-          <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
-             class="card listing-card-link" data-listing-id="{{ listing.listing_id }}" data-source="grid"
-             aria-label="{{ listing.title }}">
-            <span class="deal-badge {{ 'swap' if listing.deal_type=='Swap Deal' else 'sale' }}">{{ listing.deal_type }}</span>
+{% endif %}
 
-            {% if user_logged_in %}
-            <button class="wishlist-btn" type="button" aria-label="Toggle wishlist"
-                    data-listing-id="{{ listing.listing_id }}"
-                    aria-pressed="{{ 'true' if listing.is_wishlisted else 'false' }}">
+
+{# ================= LISTINGS GRID HEADER ================= #}
+<div class="section-spacer-lg"></div>
+<div class="section-head" aria-hidden="true">
+  <div>
+    <div class="section-eyebrow">Browse</div>
+    <h2 class="section-title">All Listings</h2>
+  </div>
+</div>
+<div class="section-divider"></div>
+
+
+{# ================= LISTINGS GRID ================= #}
+<section class="listings">
+  {% set ns = namespace(idx=0) %}
+  {% if listings or suggestion_listings %}
+    <div class="grid">
+      {% set display_list = listings if listings else suggestion_listings %}
+      {% for listing in display_list %}
+        {% set ns.idx = loop.index0 %}
+
+        <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
+           class="card listing-card-link"
+           data-listing-id="{{ listing.listing_id }}"
+           data-source="grid"
+           aria-label="{{ listing.title }}">
+
+          {# Deal type badge #}
+          <span class="deal-badge {{ 'swap' if listing.deal_type == 'Swap Deal' else 'sale' }}">
+            {{ listing.deal_type }}
+          </span>
+
+          {# Wishlist button (only when logged in) #}
+          {% if user_logged_in %}
+            <button
+              class="wishlist-btn"
+              type="button"
+              aria-label="Toggle wishlist"
+              data-listing-id="{{ listing.listing_id }}"
+              aria-pressed="{{ 'true' if listing.is_wishlisted else 'false' }}">
               <i class="fas fa-heart {{ 'wishlisted' if listing.is_wishlisted else '' }}"></i>
             </button>
-            {% endif %}
+          {% endif %}
 
-            {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 1 %}
-              <div class="swap-row" aria-hidden="true">
-                {% for o in listing.offers[:3] %}
-                  <div class="swap-photo">
-                    <img src="{{ o.image1 }}" alt="{{ o.title }}"
-                         {% if ns.idx < 6 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}>
-                  </div>
-                {% endfor %}
-              </div>
-            {% else %}
-              <div class="media{% if listing.show_full_image %} media--safe{% endif %}" {% if listing.show_full_image %}style="--blur-url:url('{{ listing.image_url }}')" {% endif %}>
-                <img src="{{ listing.image_url }}" alt="{{ listing.title }}"
-                     {% if ns.idx < 6 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}>
-              </div>
-            {% endif %}
-
-            <div class="content">
-              {% if listing.deal_type == 'Swap Deal' %}
-                {% set titles = listing.offers | map(attribute='title') | list %}
-                <div class="meta-line"><span class="meta-label">Offer:</span><span>{{ titles | join(' + ') }}{% if listing.additional_cash|float > 0 %} + ₵{{ "{:,.2f}".format(listing.additional_cash|float) }}{% endif %}</span></div>
-                <div class="meta-line"><span class="meta-label">Wants:</span><span>{{ listing.desired_swap }}</span></div>
-                {% if listing.required_cash|float > 0 %}
-                <div class="meta-line"><span class="meta-label">Plus Cash:</span><span>+ ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span></div>
-                {% endif %}
-              {% else %}
-                <h3 class="title">
-                  {{ listing.title }}
-                  {% if listing.required_cash|float > 0 %}
-                    <span class="meta-line" style="display:inline-flex"><span class="meta-label">+ Cash:</span> ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span>
-                  {% endif %}
-                </h3>
-                <div class="price" style="margin-top:.25rem">₵{{ "{:,.2f}".format(listing.price|float) }}</div>
-              {% endif %}
+          {# SWAP DEAL: multiple offer images strip #}
+          {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 1 %}
+            <div class="swap-row" aria-hidden="true">
+              {% for o in listing.offers[:3] %}
+                <div class="swap-photo">
+                  {# o.image1 is already normalized (Cloudinary thumb or static) #}
+                  <img src="{{ o.image1 }}"
+                       alt="{{ o.title }}"
+                       {% if ns.idx < 6 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}>
+                </div>
+              {% endfor %}
             </div>
-          </a>
-        {% endfor %}
-      </div>
 
-      {% if listings and total_pages > 1 %}
+          {# ALL OTHER CASES: single main image for the card #}
+          {% else %}
+            <div class="media{% if listing.show_full_image %} media--safe{% endif %}"
+                 {% if listing.show_full_image %}style="--blur-url:url('{{ listing.image_url }}')" {% endif %}>
+              {# listing.image_url is already final URL (Cloudinary 4:3 thumb or static) #}
+              <img src="{{ listing.image_url }}"
+                   alt="{{ listing.title }}"
+                   {% if ns.idx < 6 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}>
+            </div>
+          {% endif %}
+
+          <div class="content">
+            {% if listing.deal_type == 'Swap Deal' %}
+              {% set titles = listing.offers | map(attribute='title') | list %}
+              <div class="meta-line">
+                <span class="meta-label">Offer:</span>
+                <span>
+                  {{ titles | join(' + ') }}
+                  {% if listing.additional_cash|float > 0 %}
+                    + ₵{{ "{:,.2f}".format(listing.additional_cash|float) }}
+                  {% endif %}
+                </span>
+              </div>
+              <div class="meta-line">
+                <span class="meta-label">Wants:</span>
+                <span>{{ listing.desired_swap }}</span>
+              </div>
+              {% if listing.required_cash|float > 0 %}
+                <div class="meta-line">
+                  <span class="meta-label">Plus Cash:</span>
+                  <span>+ ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span>
+                </div>
+              {% endif %}
+            {% else %}
+              <h3 class="title">
+                {{ listing.title }}
+                {% if listing.required_cash|float > 0 %}
+                  <span class="meta-line" style="display:inline-flex">
+                    <span class="meta-label">+ Cash:</span>
+                    ₵{{ "{:,.2f}".format(listing.required_cash|float) }}
+                  </span>
+                {% endif %}
+              </h3>
+              <div class="price" style="margin-top:.25rem">
+                ₵{{ "{:,.2f}".format(listing.price|float) }}
+              </div>
+            {% endif %}
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+
+    {# ================= PAGINATION ================= #}
+    {% if listings and total_pages > 1 %}
       <nav class="pagination" role="navigation" aria-label="Pagination">
         {% if page > 1 %}
-          <a class="page-link" href="?page={{page-1}}&search={{search}}&category={{selected_category}}&deal_type={{deal_type_filter}}&location={{location}}">Previous</a>
+          <a class="page-link"
+             href="?page={{ page-1 }}&search={{ search }}&category={{ selected_category }}&deal_type={{ deal_type_filter }}&location={{ location }}">
+            Previous
+          </a>
         {% endif %}
+
         {% for p in range(1, total_pages + 1) %}
           {% if p == page %}
-            <span class="page-current" aria-current="page">{{p}}</span>
+            <span class="page-current" aria-current="page">{{ p }}</span>
           {% else %}
-            <a class="page-link" href="?page={{p}}&search={{search}}&category={{selected_category}}&deal_type={{deal_type_filter}}&location={{location}}">{{p}}</a>
+            <a class="page-link"
+               href="?page={{ p }}&search={{ search }}&category={{ selected_category }}&deal_type={{ deal_type_filter }}&location={{ location }}">
+              {{ p }}
+            </a>
           {% endif %}
         {% endfor %}
+
         {% if page < total_pages %}
-          <a class="page-link" href="?page={{page+1}}&search={{search}}&category={{selected_category}}&deal_type={{deal_type_filter}}&location={{location}}">Next</a>
+          <a class="page-link"
+             href="?page={{ page+1 }}&search={{ search }}&category={{ selected_category }}&deal_type={{ deal_type_filter }}&location={{ location }}">
+            Next
+          </a>
         {% endif %}
       </nav>
-      {% endif %}
-    {% else %}
-      <p style="text-align:center;color:#6b7280;padding:3rem">No listings available right now.</p>
     {% endif %}
-  </section>
+  {% else %}
+    <p style="text-align:center;color:#6b7280;padding:3rem">
+      No listings available right now.
+    </p>
+  {% endif %}
+</section>
+
 
   <!-- FOOTER -->
   <footer class="site-footer">

@@ -1097,52 +1097,52 @@
             </div>
 
             <div class="image-gallery">
-{% set sale_imgs = [listing.image_url, listing.image1, listing.image2, listing.image3, listing.image4]
-                    | reject("none") | reject("equalto", "") | list %}
+              {# Build list of normalized URLs provided by the backend #}
+              {% set sale_imgs = [listing.image_url, listing.image1, listing.image2, listing.image3, listing.image4]
+                                  | reject("none") | reject("equalto", "") | list %}
 
-<div class="main-image-container">
-  {% if sale_imgs %}
-    <img
-      id="mainImage-sale"
-      class="main-image"
-      src="{{ sale_imgs[0] }}"
-      alt="{{ listing.title }}"
-    />
-  {% else %}
-    {# placeholder.jpg is a static asset, that’s fine #}
-    <img
-      id="mainImage-sale"
-      class="main-image"
-      src="{{ url_for('static', filename='images/placeholder.jpg') }}"
-      alt="{{ listing.title }}"
-    />
-  {% endif %}
-  <div class="image-overlay">
-    <div class="listing-meta">
-      <i class="fas fa-images"></i>
-      <span id="image-counter-sale">1 of {{ sale_imgs | length }}</span>
-    </div>
-    <button
-      class="zoom-button"
-      onclick="toggleZoom('mainImage-sale')"
-      style="background:none;border:none;color:white;cursor:pointer;"
-    >
-      <i class="fas fa-search-plus"></i>
-    </button>
-  </div>
-</div>
+              <div class="main-image-container">
+                {% if sale_imgs %}
+                  <img
+                    id="mainImage-sale"
+                    class="main-image"
+                    src="{{ sale_imgs[0] }}"
+                    alt="{{ listing.title }}"
+                  />
+                {% else %}
+                  {# Hard-coded placeholder is fine to keep static #}
+                  <img
+                    id="mainImage-sale"
+                    class="main-image"
+                    src="{{ url_for('static', filename='images/placeholder.jpg') }}"
+                    alt="{{ listing.title }}"
+                  />
+                {% endif %}
+                <div class="image-overlay">
+                  <div class="listing-meta">
+                    <i class="fas fa-images"></i>
+                    <span id="image-counter-sale">1 of {{ sale_imgs | length }}</span>
+                  </div>
+                  <button
+                    class="zoom-button"
+                    onclick="toggleZoom('mainImage-sale')"
+                    style="background:none;border:none;color:white;cursor:pointer;"
+                  >
+                    <i class="fas fa-search-plus"></i>
+                  </button>
+                </div>
+              </div>
 
-<div class="thumbnail-container" id="thumbnailContainer-sale">
-  {% for img in sale_imgs %}
-    <img
-      src="{{ img }}"
-      class="thumbnail {% if loop.first %}active{% endif %}"
-      alt="Thumbnail {{ loop.index }} of {{ listing.title }}"
-      onclick="changeMainImage(this, '{{ img }}', 'mainImage-sale', 'thumbnailContainer-sale')"
-    />
-  {% endfor %}
-</div>
-
+              <div class="thumbnail-container" id="thumbnailContainer-sale">
+                {% for img in sale_imgs %}
+                  <img
+                    src="{{ img }}"
+                    class="thumbnail {% if loop.first %}active{% endif %}"
+                    alt="Thumbnail {{ loop.index }} of {{ listing.title }}"
+                    onclick="changeMainImage(this, '{{ img }}', 'mainImage-sale', 'thumbnailContainer-sale')"
+                  />
+                {% endfor %}
+              </div>
             </div>
           </div>
 
@@ -1160,51 +1160,51 @@
                 </div>
 
                 <div class="image-gallery">
-{% set imgs = [item.image1, item.image2, item.image3, item.image4]
-              | reject("none") | reject("equalto", "") | list %}
+                  {# Each item.image* is already normalized in the backend #}
+                  {% set imgs = [item.image1, item.image2, item.image3, item.image4]
+                                | reject("none") | reject("equalto", "") | list %}
 
-<div class="main-image-container">
-  {% if imgs %}
-    <img
-      id="mainImage-{{ idx }}"
-      class="main-image"
-      src="{{ imgs[0] }}"
-      alt="{{ item.title }}"
-    />
-  {% else %}
-    <img
-      id="mainImage-{{ idx }}"
-      class="main-image"
-      src="{{ url_for('static', filename='images/placeholder.jpg') }}"
-      alt="{{ item.title }}"
-    />
-  {% endif %}
-  <div class="image-overlay">
-    <div class="listing-meta">
-      <i class="fas fa-images"></i>
-      <span id="image-counter-{{ idx }}">1 of {{ imgs | length }}</span>
-    </div>
-    <button
-      class="zoom-button"
-      onclick="toggleZoom('mainImage-{{ idx }}')"
-      style="background:none;border:none;color:white;cursor:pointer;"
-    >
-      <i class="fas fa-search-plus"></i>
-    </button>
-  </div>
-</div>
+                  <div class="main-image-container">
+                    {% if imgs %}
+                      <img
+                        id="mainImage-{{ idx }}"
+                        class="main-image"
+                        src="{{ imgs[0] }}"
+                        alt="{{ item.title }}"
+                      />
+                    {% else %}
+                      <img
+                        id="mainImage-{{ idx }}"
+                        class="main-image"
+                        src="{{ url_for('static', filename='images/placeholder.jpg') }}"
+                        alt="{{ item.title }}"
+                      />
+                    {% endif %}
+                    <div class="image-overlay">
+                      <div class="listing-meta">
+                        <i class="fas fa-images"></i>
+                        <span id="image-counter-{{ idx }}">1 of {{ imgs | length }}</span>
+                      </div>
+                      <button
+                        class="zoom-button"
+                        onclick="toggleZoom('mainImage-{{ idx }}')"
+                        style="background:none;border:none;color:white;cursor:pointer;"
+                      >
+                        <i class="fas fa-search-plus"></i>
+                      </button>
+                    </div>
+                  </div>
 
-<div class="thumbnail-container" id="thumbnailContainer-{{ idx }}">
-  {% for img in imgs %}
-    <img
-      src="{{ img }}"
-      class="thumbnail {% if loop.first %}active{% endif %}"
-      alt="Thumbnail {{ loop.index }} of {{ item.title }}"
-      onclick="changeMainImage(this, '{{ img }}', 'mainImage-{{ idx }}', 'thumbnailContainer-{{ idx }}')"
-    />
-  {% endfor %}
-</div>
-
+                  <div class="thumbnail-container" id="thumbnailContainer-{{ idx }}">
+                    {% for img in imgs %}
+                      <img
+                        src="{{ img }}"
+                        class="thumbnail {% if loop.first %}active{% endif %}"
+                        alt="Thumbnail {{ loop.index }} of {{ item.title }}"
+                        onclick="changeMainImage(this, '{{ img }}', 'mainImage-{{ idx }}', 'thumbnailContainer-{{ idx }}')"
+                      />
+                    {% endfor %}
+                  </div>
                 </div>
               </div>
             {% endfor %}
@@ -1218,51 +1218,50 @@
               </div>
 
               <div class="image-gallery">
-{% set imgs = [listing.image_url, listing.image1, listing.image2, listing.image3, listing.image4]
-              | reject("none") | reject("equalto", "") | list %}
+                {% set imgs = [listing.image_url, listing.image1, listing.image2, listing.image3, listing.image4]
+                              | reject("none") | reject("equalto", "") | list %}
 
-<div class="main-image-container">
-  {% if imgs %}
-    <img
-      id="mainImage-swap"
-      class="main-image"
-      src="{{ imgs[0] }}"
-      alt="{{ listing.title }}"
-    />
-  {% else %}
-    <img
-      id="mainImage-swap"
-      class="main-image"
-      src="{{ url_for('static', filename='images/placeholder.jpg') }}"
-      alt="{{ listing.title }}"
-    />
-  {% endif %}
-  <div class="image-overlay">
-    <div class="listing-meta">
-      <i class="fas fa-images"></i>
-      <span id="image-counter-swap">1 of {{ imgs | length }}</span>
-    </div>
-    <button
-      class="zoom-button"
-      onclick="toggleZoom('mainImage-swap')"
-      style="background:none;border:none;color:white;cursor:pointer;"
-    >
-      <i class="fas fa-search-plus"></i>
-    </button>
-  </div>
-</div>
+                <div class="main-image-container">
+                  {% if imgs %}
+                    <img
+                      id="mainImage-swap"
+                      class="main-image"
+                      src="{{ imgs[0] }}"
+                      alt="{{ listing.title }}"
+                    />
+                  {% else %}
+                    <img
+                      id="mainImage-swap"
+                      class="main-image"
+                      src="{{ url_for('static', filename='images/placeholder.jpg') }}"
+                      alt="{{ listing.title }}"
+                    />
+                  {% endif %}
+                  <div class="image-overlay">
+                    <div class="listing-meta">
+                      <i class="fas fa-images"></i>
+                      <span id="image-counter-swap">1 of {{ imgs | length }}</span>
+                    </div>
+                    <button
+                      class="zoom-button"
+                      onclick="toggleZoom('mainImage-swap')"
+                      style="background:none;border:none;color:white;cursor:pointer;"
+                    >
+                      <i class="fas fa-search-plus"></i>
+                    </button>
+                  </div>
+                </div>
 
-<div class="thumbnail-container" id="thumbnailContainer-swap">
-  {% for img in imgs %}
-    <img
-      src="{{ img }}"
-      class="thumbnail {% if loop.first %}active{% endif %}"
-      alt="Thumbnail {{ loop.index }} of {{ listing.title }}"
-      onclick="changeMainImage(this, '{{ img }}', 'mainImage-swap', 'thumbnailContainer-swap')"
-    />
-  {% endfor %}
-</div>
-
+                <div class="thumbnail-container" id="thumbnailContainer-swap">
+                  {% for img in imgs %}
+                    <img
+                      src="{{ img }}"
+                      class="thumbnail {% if loop.first %}active{% endif %}"
+                      alt="Thumbnail {{ loop.index }} of {{ listing.title }}"
+                      onclick="changeMainImage(this, '{{ img }}', 'mainImage-swap', 'thumbnailContainer-swap')"
+                    />
+                  {% endfor %}
+                </div>
               </div>
             </div>
           {% endif %}
