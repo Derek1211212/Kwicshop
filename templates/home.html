@@ -126,11 +126,21 @@
     @media (min-width:1024px){.multi-item{flex-basis:25%}}
     .multi-card{position:relative;height:95%;width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(180deg,#0b1410,#122018);outline:1px solid rgba(255,255,255,.05)}
     .multi-card::after{content:none}
-    .multi-card>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .3s;filter:saturate(1.05) contrast(1.02)}
+    .multi-card>img{position:absolute;inset:0;width:100%;height:100%;object-fit:scale-down;transition:transform .3s;filter:saturate(1.05) contrast(1.02)}
     .multi-card:hover>img{transform:scale(1.06)}
     .multi-overlay{position:absolute;left:0;right:0;bottom:0;padding:1rem;color:#fff;display:flex;flex-direction:column;gap:.35rem;z-index:2}
     .multi-kicker{display:inline-flex;align-items:center;gap:.4rem;padding:.25rem .55rem;border-radius:999px;background:var(--featured-glass);color:var(--featured-text);font-size:.72rem;font-weight:800;letter-spacing:.08em;border:1px solid rgba(255,255,255,.14);backdrop-filter: blur(6px)}
-    .multi-title{font-weight:800;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.35);font-size:1.05rem}
+    .multi-title{
+  font-weight: 800;
+  color: #fff;
+  font-size: 1.05rem;
+
+  /* strong, dark shadow so white text is readable even on bright images */
+  text-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.75),
+    0 0 2px rgba(0, 0, 0, 0.9);
+}
+
     .multi-btn{align-self:flex-start;background:#ecfffa;color:#0b1b12;border-radius:999px;padding:.45rem .9rem;font-weight:700;border:1px solid rgba(0,0,0,.08);transition: transform .15s ease}
     .multi-btn:hover{transform:translateY(-1px)}
 
@@ -154,29 +164,18 @@
 .media {
   position: relative;
   overflow: hidden;
+  background: #f3f4f6; /* or the subtle gradient we added earlier */
   aspect-ratio: 4 / 3;
-  @supports not (aspect-ratio: 1 / 1) {
-    height: 184px;
-  }
-
-  /* soft, neutral background like Amazon/Shopify */
-  background: radial-gradient(circle at top left, #ffffff 0, #f9fafb 45%, #edf2f7 100%);
-  border-radius: 12px;
-  padding: 6px;                 /* little breathing room around the image */
 }
-
-/* the actual product image */
 .media img {
-  position: relative;           /* no absolute positioning */
-  inset: auto;
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;          /* never crop */
+  object-fit: contain;  /* ✅ full image visible */
   object-position: center;
-  border-radius: 10px;
-  box-shadow: 0 1px 4px rgba(15,23,42,.08);  /* tiny inner shadow */
-  transition: transform .25s ease, box-shadow .25s ease;
 }
+
 
 /* blur fallback for "sensitive" full images, still with subtle bg */
 .media.media--safe::before {
