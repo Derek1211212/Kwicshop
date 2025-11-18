@@ -292,41 +292,6 @@ scheduler.start()
 
 
 
-from urllib.parse import urlparse
-
-def is_cloudinary_url(url: str) -> bool:
-    if not url:
-        return False
-    return (
-        isinstance(url, str)
-        and url.startswith("http")
-        and "res.cloudinary.com" in url
-        and "/upload/" in url
-    )
-
-def cloudinary_thumb(url: str, w: int = 600, h: int = 450, crop: str = "fill") -> str:
-    """
-    Return a Cloudinary thumbnail URL cropped to w x h with smart focus.
-    Intended for card/grid thumbnails (4:3 by default).
-    """
-    if not is_cloudinary_url(url):
-        return url
-
-    parts = url.split("/upload/")
-    if len(parts) != 2:
-        return url
-
-    prefix, suffix = parts
-    # c_fill + g_auto = smart centered crop
-    transform = f"c_{crop},g_auto,w_{w},h_{h},f_auto,q_auto"
-    return f"{prefix}/upload/{transform}/{suffix}"
-
-
-
-
-
-
-
 # 3) The home route
 @app.route('/')
 def home():
@@ -393,14 +358,14 @@ def home():
         offers    = _attach_offered_items(cursor, all_items)
 
         for item in all_items:
-            raw = item.get('image1')
+            raw_image = item.get('image1')  # might be 'file.jpg' or 'https://...'
 
-            if raw and raw.startswith("http"):
-                # Cloudinary image → cropped 4:3 thumbnail
-                item['image_url'] = cloudinary_thumb(raw, w=600, h=450)
+            if raw_image and raw_image.startswith('http'):
+                # New style: Cloudinary URL stored directly
+                item['image_url'] = raw_image
             else:
-                # Local fallback
-                name = raw or 'placeholder.jpg'
+                # Old style: filename in static/images or fallback placeholder
+                name = raw_image or 'placeholder.jpg'
                 item['image_url'] = url_for('static', filename=f'images/{name}')
 
             item['offers'] = offers.get(item['listing_id'], [])
@@ -411,7 +376,6 @@ def home():
             item.setdefault('price', item.get('price', 0))
             item.setdefault('location', '')
             item.setdefault('contact', '')
-
 
 
         # Wishlist mapping
@@ -614,18 +578,14 @@ def _get_carousel(cursor):
             break
 
     for c in ordered:
-        raw = c.get('image1')
-
-        if raw and raw.startswith("http"):
-            # Cloudinary image → cropped hero thumb
-            c['banner_image'] = cloudinary_thumb(raw, w=960, h=540)  # 16:9-ish
+        raw_image = c.get('image1')
+        if raw_image and raw_image.startswith('http'):
+            c['banner_image'] = raw_image
         else:
-            # Local fallback
-            name = raw or 'placeholder.jpg'
+            name = raw_image or 'placeholder.jpg'
             c['banner_image'] = url_for('static', filename=f'images/{name}')
 
     return ordered
-
 
 
 
@@ -783,15 +743,12 @@ def _attach_offered_items(cursor, items):
             ORDER BY listing_id, item_id
         """, tuple(swap_ids))
         for o in cursor.fetchall():
-            raw = o.get('image1')
-
-            if raw and raw.startswith("http"):
-                # Cloudinary thumb for swap mini images
-                o['image1'] = cloudinary_thumb(raw, w=600, h=450)
+            raw_image = o.get('image1')
+            if raw_image and raw_image.startswith('http'):
+                o['image1'] = raw_image
             else:
-                name = raw or 'placeholder.jpg'
+                name = raw_image or 'placeholder.jpg'
                 o['image1'] = url_for('static', filename=f'images/{name}')
-
             offers.setdefault(o['listing_id'], []).append(o)
     return offers
 
@@ -874,52 +831,6 @@ def listing_details(listing_id):
         flash('Error: Invalid form submission. Please use the proposal form.', 'danger')
         return redirect(url_for('listing_details', listing_id=listing_id))
 
-    # --- helper: normalize an image field (Cloudinary or local) ---
-    def _normalize_image_url(raw, width=900, height=675):
-        """
-        Turn whatever is stored (Cloudinary URL, plain filename, or None)
-        into a final URL suitable for the frontend.
-
-        - Cloudinary URL: inject c_fill,g_auto,f_auto,q_auto,w_<>,h_<> after /upload/
-        - Local filename: map to /static/images/<filename>
-        """
-        if not raw:
-            return None
-
-        raw = str(raw).strip()
-        if not raw:
-            return None
-
-        # Already a URL (Cloudinary or otherwise)
-        if raw.startswith('http://') or raw.startswith('https://'):
-            # If it's Cloudinary and has /upload/, inject transformation
-            if 'res.cloudinary.com' in raw and '/upload/' in raw and width and height:
-                try:
-                    base, rest = raw.split('/upload/', 1)
-
-                    # If rest already starts with a Cloudinary transformation (c_...),
-                    # leave it alone to avoid double-transforming.
-                    if rest.startswith('c_'):
-                        return raw
-
-                    transform = ",".join([
-                        "c_fill",
-                        "g_auto",
-                        "f_auto",
-                        "q_auto",
-                        f"w_{width}",
-                        f"h_{height}",
-                    ])
-                    return f"{base}/upload/{transform}/{rest}"
-                except ValueError:
-                    # If split fails for some reason, just return as-is
-                    return raw
-            # Non-cloudinary or no /upload/ segment -> just return as-is
-            return raw
-
-        # Otherwise, treat as legacy local filename in static/images
-        return url_for('static', filename=f'images/{raw}')
-
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -966,24 +877,7 @@ def listing_details(listing_id):
         """, (listing_id,))
         listing['offered_items'] = cursor.fetchall() or []
 
-        # --- Step 4: Normalize ALL image fields for this page (Cloudinary cropping) ---
-
-        # a) Main listing images
-        for key in ['image_url', 'image1', 'image2', 'image3', 'image4']:
-            if key in listing:
-                listing[key] = _normalize_image_url(listing.get(key))
-
-        # Optional: ensure we have at least some fallback image_url
-        if not listing.get('image_url'):
-            listing['image_url'] = url_for('static', filename='images/placeholder.jpg')
-
-        # b) Offered items images
-        for item in listing['offered_items']:
-            for k in ['image1', 'image2', 'image3', 'image4']:
-                if k in item:
-                    item[k] = _normalize_image_url(item.get(k))
-
-        app.logger.debug(f"Listing data (with normalized images) loaded successfully: {listing}")
+        app.logger.debug(f"Listing data loaded successfully: {listing}")
 
     except mysql.connector.Error as e:
         app.logger.error(f"Database error in listing_details: {str(e)}", exc_info=True)
@@ -1006,7 +900,6 @@ def listing_details(listing_id):
         listing=listing,
         listing_id=listing_id
     )
-
 
 
 

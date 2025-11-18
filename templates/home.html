@@ -113,180 +113,33 @@
     .category-icon-box{width:28px;height:28px;border-radius:8px;background:#f3f4f6;display:grid;place-items:center;flex-shrink:0}
     .category-name{font-size:.8rem;font-weight:700}
 
-/* --- FEATURED / CAROUSEL --- */
-.featured-shell{
-  background:white;
-  border-bottom:1px solid var(--featured-edge);
-  padding:1.25rem 0 1.5rem;
-  position:relative;
-}
-.featured-shell .section-title{color:var(--featured-text)}
-.featured-shell .section-eyebrow{color:var(--featured-accent);opacity:.9}
+    /* --- FEATURED / CAROUSEL --- */
+    .featured-shell{background:white; border-bottom:1px solid var(--featured-edge);padding:1.25rem 0 1.5rem;position:relative}
+    .featured-shell .section-title{color:var(--featured-text)}
+    .featured-shell .section-eyebrow{color:var(--featured-accent);opacity:.9}
+    .multi-wrap{max-width:1200px;margin:0 auto;padding:0 1rem}
+    .multi-carousel{position:relative;overflow:hidden;border-radius:18px;box-shadow:0 18px 50px rgba(0,0,0,.25);height:var(--carousel-h)}
+    .multi-track{display:flex;transition:transform .5s ease;will-change:transform;height:100%}
+    .multi-item{flex:0 0 100%;padding:.6rem;height:100%;display:flex;align-items:flex-end}
+    @media (min-width:480px){.multi-item{flex-basis:50%}}
+    @media (min-width:768px){.multi-item{flex-basis:33.333%}}
+    @media (min-width:1024px){.multi-item{flex-basis:25%}}
+    .multi-card{position:relative;height:95%;width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(180deg,#0b1410,#122018);outline:1px solid rgba(255,255,255,.05)}
+    .multi-card::after{content:none}
+    .multi-card>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .3s;filter:saturate(1.05) contrast(1.02)}
+    .multi-card:hover>img{transform:scale(1.06)}
+    .multi-overlay{position:absolute;left:0;right:0;bottom:0;padding:1rem;color:#fff;display:flex;flex-direction:column;gap:.35rem;z-index:2}
+    .multi-kicker{display:inline-flex;align-items:center;gap:.4rem;padding:.25rem .55rem;border-radius:999px;background:var(--featured-glass);color:var(--featured-text);font-size:.72rem;font-weight:800;letter-spacing:.08em;border:1px solid rgba(255,255,255,.14);backdrop-filter: blur(6px)}
+    .multi-title{font-weight:800;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.35);font-size:1.05rem}
+    .multi-btn{align-self:flex-start;background:#ecfffa;color:#0b1b12;border-radius:999px;padding:.45rem .9rem;font-weight:700;border:1px solid rgba(0,0,0,.08);transition: transform .15s ease}
+    .multi-btn:hover{transform:translateY(-1px)}
 
-/* slightly smaller hero height so it doesn’t dominate desktop */
-:root{
-  --carousel-h: clamp(220px, 24vw, 360px);
-}
-
-.multi-wrap{
-  max-width:1200px;
-  margin:0 auto;
-  padding:0 1rem;
-}
-
-.multi-carousel{
-  position:relative;
-  overflow:hidden;
-  border-radius:18px;
-  box-shadow:0 18px 50px rgba(0,0,0,.25);
-  height:var(--carousel-h);
-}
-
-.multi-track{
-  display:flex;
-  transition:transform .5s ease;
-  will-change:transform;
-  height:100%;
-  /* no gap/padding here – keeps slider math correct */
-}
-
-/* Base: 1 card per slide (mobile) */
-.multi-item{
-  flex:0 0 100%;
-  padding:.6rem;
-  height:100%;
-  display:flex;
-  align-items:flex-end;
-}
-
-/* Small phones landscape: you *can* show 2 if needed */
-@media (min-width:480px){
-  .multi-item{
-    flex-basis:50%;
-  }
-}
-
-/* Tablets / small desktop: max 3 cards per row */
-@media (min-width:768px){
-  .multi-item{
-    flex-basis:33.333%;
-  }
-}
-
-/* Keep 3 per row on “normal” desktops as well */
-@media (min-width:1024px){
-  .multi-item{
-    flex-basis:33.333%;
-  }
-}
-
-/* Only on very wide screens (big monitors) go to 4 per row */
-@media (min-width:1440px){
-  .multi-item{
-    flex-basis:25%;
-  }
-}
-
-.multi-card{
-  position:relative;
-  height:95%;
-  width:100%;
-  border-radius:16px;
-  overflow:hidden;
-  background:linear-gradient(180deg,#0b1410,#122018);
-  outline:1px solid rgba(255,255,255,.05);
-}
-.multi-card::after{content:none}
-
-.multi-card>img{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit: scale-down;          /* keeps a nice crop */
-  object-position:center;    /* center subject */
-  transition:transform .3s;
-  filter:saturate(1.05) contrast(1.02);
-}
-.multi-card:hover>img{transform:scale(1.06)}
-
-.multi-overlay{
-  position:absolute;
-  left:0;right:0;bottom:0;
-  padding:1rem;
-  color:#fff;
-  display:flex;
-  flex-direction:column;
-  gap:.35rem;
-  z-index:2;
-}
-
-.multi-kicker{
-  display:inline-flex;
-  align-items:center;
-  gap:.4rem;
-  padding:.25rem .55rem;
-  border-radius:999px;
-  background:var(--featured-glass);
-  color:var(--featured-text);
-  font-size:.72rem;
-  font-weight:800;
-  letter-spacing:.08em;
-  border:1px solid rgba(255,255,255,.14);
-  backdrop-filter: blur(6px);
-}
-
-.multi-title{
-  font-weight:800;
-  color:#fff;
-  text-shadow:0 2px 12px rgba(0,0,0,.35);
-  font-size:1.05rem;
-}
-
-.multi-btn{
-  align-self:flex-start;
-  background:#ecfffa;
-  color:#0b1b12;
-  border-radius:999px;
-  padding:.45rem .9rem;
-  font-weight:700;
-  border:1px solid rgba(0,0,0,.08);
-  transition: transform .15s ease;
-}
-.multi-btn:hover{transform:translateY(-1px)}
-
+    :root{ --carousel-h: clamp(280px, 48vw, 520px); }
 /* Overlayed header on top of the carousel */
-.featured-head-overlay{
-  position:absolute;
-  left:50%;
-  transform:translateX(-50%);
-  top:12px;
-  width:calc(100% - 2rem);
-  max-width:1200px;
-  z-index:5;
-  pointer-events:none;
-}
-.featured-head-glass{
-  display:inline-flex;
-  flex-direction:column;
-  gap:.25rem;
-  padding:.6rem .9rem;
-  border-radius:12px;
-  color:var(--featured-text);
-  background:linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.35));
-  border:1px solid rgba(255,255,255,.18);
-  box-shadow:0 10px 30px rgba(0,0,0,.25);
-  backdrop-filter:blur(8px);
-}
-.featured-head-glass .section-eyebrow{
-  color:var(--featured-accent);
-  opacity:1;
-}
-.featured-head-glass .section-title{
-  color:#fff;
-  margin:0;
-}
-
+.featured-head-overlay{position:absolute;left:50%;transform:translateX(-50%);top:12px;width:calc(100% - 2rem);max-width:1200px;z-index:5;pointer-events:none}
+.featured-head-glass{display:inline-flex;flex-direction:column;gap:.25rem;padding:.6rem .9rem;border-radius:12px;color:var(--featured-text);background:linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.35));border:1px solid rgba(255,255,255,.18);box-shadow:0 10px 30px rgba(0,0,0,.25);backdrop-filter:blur(8px)}
+.featured-head-glass .section-eyebrow{color:var(--featured-accent);opacity:1}
+.featured-head-glass .section-title{color:#fff;margin:0}
 
     .listings{max-width:1200px;margin:1.25rem auto;padding:0 1rem}
     .grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fill, minmax(260px,1fr))}
@@ -297,11 +150,57 @@
     .wishlist-btn{position:absolute;top:.5rem;right:.5rem;border:1px solid #e9ecef;background:#fff;border-radius:999px;padding:.4rem;cursor:pointer;z-index:2;box-shadow:var(--shadow-xs)}
     .wishlist-btn i{font-size:1.1rem;color:#c0c0c0;transition:.2s}
     .wishlist-btn i.wishlisted{color:#e74c3c}
-    .media{position:relative;overflow:hidden;background:#f3f4f6;aspect-ratio:4 / 3;}@supports not (aspect-ratio: 1 / 1){.media{height:184px;}}
-    .media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position: var(--focal-x, 50%) var(--focal-y, 50%);transition:transform .25s ease}
-    .media.media--safe::before{content:"";position:absolute;inset:0;background: var(--blur-url) center/cover no-repeat;filter: blur(12px);transform: scale(1.08);opacity:.9}
-.media.media--safe img{position:relative;z-index:1;object-fit:contain}
-.card:hover .media img{transform:scale(1.03)}
+/* IMAGE AREA – subtle ecommerce style */
+.media {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  @supports not (aspect-ratio: 1 / 1) {
+    height: 184px;
+  }
+
+  /* soft, neutral background like Amazon/Shopify */
+  background: radial-gradient(circle at top left, #ffffff 0, #f9fafb 45%, #edf2f7 100%);
+  border-radius: 12px;
+  padding: 6px;                 /* little breathing room around the image */
+}
+
+/* the actual product image */
+.media img {
+  position: relative;           /* no absolute positioning */
+  inset: auto;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;          /* never crop */
+  object-position: center;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(15,23,42,.08);  /* tiny inner shadow */
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+/* blur fallback for "sensitive" full images, still with subtle bg */
+.media.media--safe::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--blur-url) center/cover no-repeat;
+  filter: blur(14px);
+  transform: scale(1.1);
+  opacity: .85;
+}
+
+.media.media--safe img {
+  position: relative;
+  z-index: 1;
+  object-fit: contain;
+}
+
+/* slightly lift image on hover, but keep it gentle */
+.card:hover .media img {
+  transform: scale(1.02);
+  box-shadow: 0 4px 14px rgba(15,23,42,.12);
+}
+
     .swap-row{display:flex;gap:2px;height:140px;overflow:hidden}
     .swap-photo{flex:1;overflow:hidden}
     .swap-photo img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
