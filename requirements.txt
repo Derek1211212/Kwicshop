@@ -26,5 +26,8 @@ Flask-Caching>=2.0
 mailersend>=2.0.0
 flask-apscheduler==1.12.4
 redis==5.0.8
+cloudinary
+cloudinary_storage
+
 
 

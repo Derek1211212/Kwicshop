@@ -769,13 +769,14 @@
                                 <div class="gallery-container" id="offered-gallery-{{ item_index }}">
                                     {% for i in range(1, 5) %}
                                     <div class="gallery-item" data-index="{{ i }}" data-type="offered">
-                                        {% if item['image' ~ i] %}
-                                            <img src="{{ url_for('static', filename='images/' + item['image' ~ i]) }}"
-                                                 onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
-                                                 alt="Offered item {{ item_index }} image {{ i }}">
-                                        {% else %}
-                                            <img src="https://via.placeholder.com/300?text=Image+{{ i }}" alt="No image">
-                                        {% endif %}
+{% if item['image' ~ i] %}
+    <img src="{{ item['image' ~ i] }}"
+         onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
+         alt="Offered item {{ item_index }} image {{ i }}">
+{% else %}
+    <img src="https://via.placeholder.com/300?text=Image+{{ i }}" alt="No image">
+{% endif %}
+
                                         <span class="item-label">Image {{ i }}</span>
                                         <div class="item-actions">
                                             <button type="button" class="btn-action btn-remove" title="Remove image">
@@ -918,13 +919,14 @@
                         <div class="gallery-container" id="gallery-container">
                             <!-- Main Image -->
                             <div class="gallery-item active" data-index="0" data-type="main">
-                                {% if listing.image_url %}
-                                    <img src="{{ url_for('static', filename='images/' + listing.image_url) }}"
-                                         onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
-                                         alt="Main listing image">
-                                {% else %}
-                                    <img src="https://via.placeholder.com/300?text=Main+Image" alt="No main image">
-                                {% endif %}
+{% if listing.image_url %}
+    <img src="{{ listing.image_url }}"
+         onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
+         alt="Main listing image">
+{% else %}
+    <img src="https://via.placeholder.com/300?text=Main+Image" alt="No main image">
+{% endif %}
+
                                 <span class="item-label">Main</span>
                                 <div class="item-actions">
                                     <button type="button" class="btn-action btn-remove" title="Remove image">
@@ -938,15 +940,15 @@
                                 <input type="hidden" name="remove_image_0" class="remove-image-input" value="false">
                             </div>
                             <!-- Additional Images -->
-                            {% for i in range(1, 5) %}
-                            <div class="gallery-item" data-index="{{ i }}" data-type="additional">
-                                {% if listing['image' ~ i] %}
-                                    <img src="{{ url_for('static', filename='images/' + listing['image' ~ i]) }}"
-                                         onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
-                                         alt="Additional image {{ i }}">
-                                {% else %}
-                                    <img src="https://via.placeholder.com/300?text=Image+{{ i }}" alt="No additional image">
-                                {% endif %}
+{% for i in range(1, 5) %}
+<div class="gallery-item" data-index="{{ i }}" data-type="additional">
+    {% if listing['image' ~ i] %}
+        <img src="{{ listing['image' ~ i] }}"
+             onerror="this.src='https://via.placeholder.com/300?text=Image+Error'"
+             alt="Additional image {{ i }}">
+    {% else %}
+        <img src="https://via.placeholder.com/300?text=Image+{{ i }}" alt="No additional image">
+    {% endif %}
                                 <span class="item-label">Image {{ i }}</span>
                                 <div class="item-actions">
                                     <button type="button" class="btn-action btn-remove" title="Remove image">

@@ -50,6 +50,9 @@ import time
 import fnmatch
 from collections import defaultdict
 
+import cloudinary
+import cloudinary.uploader
+
 
 
 
@@ -119,6 +122,15 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'avif'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET")
+)
+
 
 
 
@@ -349,9 +361,17 @@ def home():
         offers    = _attach_offered_items(cursor, all_items)
 
         for item in all_items:
-            name = item.get('image1') or 'placeholder.jpg'
-            item['image_url'] = url_for('static', filename=f'images/{name}')
-            item['offers']    = offers.get(item['listing_id'], [])
+            raw_image = item.get('image1')  # might be 'file.jpg' or 'https://...'
+
+            if raw_image and raw_image.startswith('http'):
+                # New style: Cloudinary URL stored directly
+                item['image_url'] = raw_image
+            else:
+                # Old style: filename in static/images or fallback placeholder
+                name = raw_image or 'placeholder.jpg'
+                item['image_url'] = url_for('static', filename=f'images/{name}')
+
+            item['offers'] = offers.get(item['listing_id'], [])
 
             item.setdefault('required_cash', 0)
             item.setdefault('additional_cash', 0)
@@ -359,6 +379,7 @@ def home():
             item.setdefault('price', item.get('price', 0))
             item.setdefault('location', '')
             item.setdefault('contact', '')
+
 
         # Wishlist mapping
         if user_logged_in and all_items:
@@ -560,9 +581,15 @@ def _get_carousel(cursor):
             break
 
     for c in ordered:
-        name = c.get('image1') or 'placeholder.jpg'
-        c['banner_image'] = url_for('static', filename=f'images/{name}')
+        raw_image = c.get('image1')
+        if raw_image and raw_image.startswith('http'):
+            c['banner_image'] = raw_image
+        else:
+            name = raw_image or 'placeholder.jpg'
+            c['banner_image'] = url_for('static', filename=f'images/{name}')
+
     return ordered
+
 
 
 def _get_main_listings(cursor, *, search, category, deal_type, location, per_page, offset):
@@ -719,10 +746,15 @@ def _attach_offered_items(cursor, items):
             ORDER BY listing_id, item_id
         """, tuple(swap_ids))
         for o in cursor.fetchall():
-            name = o.get('image1') or 'placeholder.jpg'
-            o['image1'] = url_for('static', filename=f'images/{name}')
+            raw_image = o.get('image1')
+            if raw_image and raw_image.startswith('http'):
+                o['image1'] = raw_image
+            else:
+                name = raw_image or 'placeholder.jpg'
+                o['image1'] = url_for('static', filename=f'images/{name}')
             offers.setdefault(o['listing_id'], []).append(o)
     return offers
+
 
 
 
@@ -1443,21 +1475,27 @@ def create_proposal(listing_id):
                 flash('Invalid value for additional cash.', 'danger')
                 return redirect(url_for('listing_details', listing_id=listing_id))
 
-        # Handle image uploads
-        upload_folder = app.config.get('UPLOAD_FOLDER', '/tmp/uploads')
-        os.makedirs(upload_folder, exist_ok=True)
-        image_filenames = []
+        # Handle image uploads (Cloudinary)
+        image_urls = []
         for i in range(1, 5):
             file = request.files.get(f'image{i}')
             if file and file.filename and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                path = os.path.join(upload_folder, filename)
-                file.save(path)
-                image_filenames.append(filename)
+                try:
+                    upload_result = cloudinary.uploader.upload(
+                        file,
+                        folder="swaphub/proposals",
+                        resource_type="image"
+                    )
+                    image_url = upload_result.get("secure_url")
+                    image_urls.append(image_url)
+                except Exception as e:
+                    app.logger.exception(f"Cloudinary upload failed for proposal image {i}: {e}")
+                    flash('Error uploading images. Please try again.', 'danger')
+                    return redirect(url_for('listing_details', listing_id=listing_id))
             else:
-                image_filenames.append(None)
+                image_urls.append(None)
 
-        # Insert into proposals (use exact column names from your schema)
+        # Insert into proposals
         insert_query = '''
             INSERT INTO proposals (
                 listing_id, user_id, proposed_item,
@@ -1472,7 +1510,7 @@ def create_proposal(listing_id):
             additional_cash, message,
             detailed_description, condition,
             phone_number, email_address,
-            *image_filenames
+            *image_urls
         )
         cursor.execute(insert_query, params)
         conn.commit()
@@ -1560,6 +1598,7 @@ The SwapHub Team
             cursor.close()
         if conn:
             conn.close()
+
 
 
 
@@ -2108,10 +2147,7 @@ def update_listing(listing_id):
             condition   = get_listing_field('condition', default_key='condition')
             price       = get_listing_field('price')
 
-            # ---- Handle listing images for Outright (your original logic, preserved) ----
-            upload_dir = os.path.join(app.root_path, 'static', 'images')
-            os.makedirs(upload_dir, exist_ok=True)
-
+            # ---- Handle listing images for Outright using Cloudinary ----
             form_to_db = [
                 ('image',  'image_url'),
                 ('image1', 'image1'),
@@ -2123,10 +2159,17 @@ def update_listing(listing_id):
             for form_field, db_col in form_to_db:
                 file = request.files.get(form_field)
                 if file and allowed_file(file.filename):
-                    fname = secure_filename(file.filename)
-                    uniq  = f"{uuid.uuid4().hex}_{fname}"
-                    file.save(os.path.join(upload_dir, uniq))
-                    images_to_save[db_col] = uniq
+                    try:
+                        upload_result = cloudinary.uploader.upload(
+                            file,
+                            folder="swaphub/listings",
+                            resource_type="image"
+                        )
+                        image_url = upload_result.get("secure_url")
+                        images_to_save[db_col] = image_url
+                    except Exception as e:
+                        app.logger.exception(f"Cloudinary upload failed for listing image {form_field}: {e}")
+                        images_to_save[db_col] = existing.get(db_col)
                 else:
                     images_to_save[db_col] = existing.get(db_col)
 
@@ -2226,9 +2269,6 @@ def update_listing(listing_id):
             # c) Clear existing offered_items; we will reinsert
             cursor.execute("DELETE FROM offered_items WHERE listing_id = %s", (listing_id,))
 
-            upload_dir = os.path.join(app.root_path, 'static', 'images')
-            os.makedirs(upload_dir, exist_ok=True)
-
             requested_count = min(int(request.form.get('offered_items_count', 0) or 0), 2)
 
             primary_listing_data = {
@@ -2256,7 +2296,7 @@ def update_listing(listing_id):
                 # Optional "value" -> we will map slot 1 to listings.price if provided
                 ovalue = request.form.get(f'offered_value_{slot}')
 
-                # Handle images for this offered item
+                # Handle images for this offered item (Cloudinary)
                 oimgs = []
                 for img_idx in range(1, 5):
                     key_file   = f'offered_image_{slot}_{img_idx}'
@@ -2268,16 +2308,22 @@ def update_listing(listing_id):
                     old_img = old.get(f'image{img_idx}')
 
                     if remove:
-                        new_img_name = None
+                        new_img = None
                     elif file and allowed_file(file.filename):
-                        fname = secure_filename(file.filename)
-                        uniq  = f"{uuid.uuid4().hex}_{fname}"
-                        file.save(os.path.join(upload_dir, uniq))
-                        new_img_name = uniq
+                        try:
+                            upload_result = cloudinary.uploader.upload(
+                                file,
+                                folder="swaphub/offers",
+                                resource_type="image"
+                            )
+                            new_img = upload_result.get("secure_url")
+                        except Exception as e:
+                            app.logger.exception(f"Cloudinary upload failed for offered_image_{slot}_{img_idx}: {e}")
+                            new_img = old_img
                     else:
-                        new_img_name = old_img
+                        new_img = old_img
 
-                    oimgs.append(new_img_name)
+                    oimgs.append(new_img)
 
                 # Insert offered_items row
                 cursor.execute(
@@ -2479,7 +2525,7 @@ def allowed_file(filename):
 @login_required
 def create_listing():
     logger.debug(f"Processing listing for user_id: {session['user_id']}")
-    
+
     # 1) Common data
     dt = request.form.get('deal_type', 'Swap Deal')
     deal_type = dt if dt == 'Swap Deal' else 'Outright Sales'
@@ -2496,10 +2542,19 @@ def create_listing():
     if deal_type == 'Outright Sales':
         for f in request.files.getlist('images[]'):
             if f and allowed_file(f.filename):
-                fn = secure_filename(f.filename)
-                u = f"{uuid.uuid4().hex}_{fn}"
-                f.save(os.path.join(app.config['UPLOAD_FOLDER'], u))
-                main_images.append(u)
+                try:
+                    upload_result = cloudinary.uploader.upload(
+                        f,
+                        folder="swaphub/listings",
+                        resource_type="image"
+                    )
+                    image_url = upload_result.get("secure_url")
+                    main_images.append(image_url)
+                except Exception as e:
+                    logger.exception(f"Cloudinary upload failed for main image: {e}")
+                    flash("Error uploading images. Please try again.", "error")
+                    return redirect(url_for('dashboard'))
+
                 if len(main_images) >= 5:
                     break
         if not main_images:
@@ -2523,20 +2578,27 @@ def create_listing():
             return redirect(url_for('dashboard'))
 
         # Group images by item
-        images_per_item = []
         offer_image_files_1 = request.files.getlist('offer_images_1[]')
         offer_image_files_2 = request.files.getlist('offer_images_2[]')
         image_lists = [offer_image_files_1, offer_image_files_2][:len(off_conds)]
         logger.debug(f"Image lists: {[[f.filename for f in lst] for lst in image_lists]}")
 
-        def save_files(file_list):
+        def save_files_to_cloudinary(file_list):
             out = []
             for f in file_list:
                 if f and allowed_file(f.filename):
-                    fn = secure_filename(f.filename)
-                    u = f"{uuid.uuid4().hex}_{fn}"
-                    f.save(os.path.join(app.config['UPLOAD_FOLDER'], u))
-                    out.append(u)
+                    try:
+                        upload_result = cloudinary.uploader.upload(
+                            f,
+                            folder="swaphub/offers",
+                            resource_type="image"
+                        )
+                        image_url = upload_result.get("secure_url")
+                        out.append(image_url)
+                    except Exception as e:
+                        logger.exception(f"Cloudinary upload failed for offered item image: {e}")
+                        flash("Error uploading images. Please try again.", "error")
+                        return None
             return out
 
         for i in range(len(off_conds)):
@@ -2546,7 +2608,10 @@ def create_listing():
                 return redirect(url_for('dashboard'))
 
             item_title = off_titles[i].strip() if i < len(off_titles) and off_titles[i].strip() else title
-            item_images = save_files(image_lists[i][:4]) if i < len(image_lists) else []
+            raw_images = image_lists[i][:4] if i < len(image_lists) else []
+            item_images = save_files_to_cloudinary(raw_images)
+            if item_images is None:
+                return redirect(url_for('dashboard'))
             if not item_images:
                 flash(f"Item {i+1} must have at least one image.", "error")
                 logger.error(f"Item {i+1} has no images: {image_lists[i] if i < len(image_lists) else []}")
@@ -2568,23 +2633,62 @@ def create_listing():
     price = None
 
     if deal_type == 'Swap Deal':
-        desired_swap = request.form.get('desired_swap').strip()
-        additional_cash = request.form.get('additional_cash') or None
-        required_cash = request.form.get('required_cash') or None
+        desired_swap = (request.form.get('desired_swap') or '').strip()
+
+        # --- money fields as Decimal ---
+        additional_cash_raw = (request.form.get('additional_cash') or '').replace(',', '').strip()
+        required_cash_raw = (request.form.get('required_cash') or '').replace(',', '').strip()
+
+        if additional_cash_raw:
+            try:
+                additional_cash = Decimal(additional_cash_raw).quantize(Decimal('0.01'))
+            except InvalidOperation:
+                flash("Invalid value for additional cash.", "error")
+                logger.error(f"Invalid additional_cash: {additional_cash_raw}")
+                return redirect(url_for('dashboard'))
+
+        if required_cash_raw:
+            try:
+                required_cash = Decimal(required_cash_raw).quantize(Decimal('0.01'))
+            except InvalidOperation:
+                flash("Invalid value for required cash.", "error")
+                logger.error(f"Invalid required_cash: {required_cash_raw}")
+                return redirect(url_for('dashboard'))
+        # -------------------------------
+
         if not desired_swap:
             flash("Desired item is required for swap.", "error")
             logger.error("Missing desired swap item")
             return redirect(url_for('dashboard'))
+
         # Extract condition from first offered item
         condition = offered_items[0]['condition']
+
     else:
-        price = request.form.get('price') or None
+        # --- price as Decimal ---
+        price_raw = (request.form.get('price') or '').replace(',', '').strip()
+        if price_raw:
+            try:
+                price = Decimal(price_raw).quantize(Decimal('0.01'))
+            except InvalidOperation:
+                flash("Invalid value for price.", "error")
+                logger.error(f"Invalid price: {price_raw}")
+                return redirect(url_for('dashboard'))
+        else:
+            price = None
+        # -----------------------
+
         # Grab the sale-condition directly from the form
         condition = request.form.get('condition')
         off_conds = [condition]
         off_descs = [description]
         offered_items = []
-    logger.debug(f"Deal specifics: desired_swap={desired_swap}, price={price}, condition={condition}")
+
+    logger.debug(
+        f"Deal specifics: desired_swap={desired_swap}, price={price}, "
+        f"additional_cash={additional_cash}, required_cash={required_cash}, "
+        f"condition={condition}"
+    )
 
     # 5) Combine description
     if deal_type == 'Swap Deal':
@@ -2596,6 +2700,11 @@ def create_listing():
 
     # 6) PAYSTACK flow
     if plan != 'Free':
+        # Store money values as strings for session safety
+        pending_price = f"{price:.2f}" if isinstance(price, Decimal) else price
+        pending_additional_cash = f"{additional_cash:.2f}" if isinstance(additional_cash, Decimal) else additional_cash
+        pending_required_cash = f"{required_cash:.2f}" if isinstance(required_cash, Decimal) else required_cash
+
         session['pending_listing'] = {
             'user_id': session['user_id'],
             'title': title,
@@ -2603,15 +2712,18 @@ def create_listing():
             'category': category,
             'desired_swap': desired_swap,
             'desired_swap_description': desired_swap_description,
-            'additional_cash': additional_cash,
-            'required_cash': required_cash,
+            'additional_cash': pending_additional_cash,
+            'required_cash': pending_required_cash,
             'location': location,
             'contact': contact,
-            'main_images': main_images if deal_type == 'Outright Sales' else (offered_items[0]['images'][:4] if offered_items else []),
+            'main_images': (
+                main_images if deal_type == 'Outright Sales'
+                else (offered_items[0]['images'][:4] if offered_items else [])
+            ),
             'plan': plan,
             'deal_type': deal_type,
-            'price': price,
-            'offered_items': offered_items
+            'price': pending_price,
+            'offered_items': offered_items,
         }
         logger.debug(f"Stored pending listing for payment: {session['pending_listing']}")
         plan_fees = {'Bronze': 20, 'Silver': 50, 'Gold': 100, 'Diamond': 200}
@@ -2635,6 +2747,7 @@ def create_listing():
         listing_params += swap_images + [None] * (5 - len(swap_images))
     listing_params += [plan, deal_type, price]
     logger.debug(f"Listing params: {listing_params}")
+
     cursor.execute("""
         INSERT INTO listings (
             user_id, title, description, category,
@@ -2669,6 +2782,7 @@ def create_listing():
     flash("Listing created successfully!", "success")
     logger.debug("Listing creation completed successfully")
     return redirect(url_for('dashboard'))
+
 
 
 
