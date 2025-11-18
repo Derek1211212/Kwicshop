@@ -1613,47 +1613,58 @@ select.form-control {
                         <div class="listings-grid">
                             {% for listing in listings %}
                             <div class="listing-card" data-listing-id="{{ listing.listing_id }}">
-                                <div class="listing-image">
-                                    {# — Offered‑items images or main image — #}
-                                    {% if listing.deal_type == 'Swap Deal' and listing.offered_items|length == 2 %}
-                                    <div class="offered-items-images">
-                                        {% for item in listing.offered_items[:2] %}
-                                        <div class="offered-item">
-                                            <img src="{{ url_for('static', filename='images/' + item.image1.split('/')[-1]) }}"
-                                                alt="{{ item.title }}"
-                                                onerror="this.src='https://via.placeholder.com/150x120?text=No+Image'">
-                                        </div>
-                                        {% endfor %}
-                                    </div>
-                                    {% else %}
-                                    {% set display_image = listing.image_url %}
-                                    {% if listing.deal_type == 'Swap Deal' and listing.offered_items and listing.offered_items|length == 1 %}
-                                    {% set display_image = listing.offered_items[0].image1 %}
-                                    {% endif %}
-                                    <img src="{{ display_image
-                                                and url_for('static', filename='images/' + display_image.split('/')[-1])
-                                                or 'https://via.placeholder.com/300x200?text=No+Image' }}"
-                                        alt="{{ listing.title }}"
-                                        class="listing-image"
-                                        onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
-                                    {% endif %}
+ <div class="listing-image">
+  {# — Offered-items images or main image — #}
+  {% if listing.deal_type == 'Swap Deal' and listing.offered_items|length == 2 %}
+    <div class="offered-items-images">
+      {% for item in listing.offered_items[:2] %}
+        {% set img_src = item.image1 %}
+        <div class="offered-item">
+          {% if img_src %}
+            <img src="{{ img_src }}"
+                 alt="{{ item.title }}"
+                 onerror="this.src='https://via.placeholder.com/150x120?text=No+Image'">
+          {% else %}
+            <img src="https://via.placeholder.com/150x120?text=No+Image"
+                 alt="{{ item.title }}">
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    {# default image logic: main listing image, or first offered item’s image for single-item swap #}
+    {% set display_image = listing.image_url %}
+    {% if listing.deal_type == 'Swap Deal' and listing.offered_items and listing.offered_items|length == 1 %}
+      {% set display_image = listing.offered_items[0].image1 %}
+    {% endif %}
 
-                                    <div class="listing-badges">
-                                        {# — Deal‑type badge — #}
-                                        <span class="badge {% if listing.deal_type == 'Swap Deal' %}badge-swap{% else %}badge-sale{% endif %}">
-                                            {{ listing.deal_type }}
-                                        </span>
+    {% if display_image %}
+      <img src="{{ display_image }}"
+           alt="{{ listing.title }}"
+           class="listing-image"
+           onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">
+    {% else %}
+      <img src="https://via.placeholder.com/300x200?text=No+Image"
+           alt="{{ listing.title }}"
+           class="listing-image">
+    {% endif %}
+  {% endif %}
 
-                                        {# — Plan badge — #}
-                                        <span class="badge
-                                                    {% if listing.plan == 'Premium' %}badge-premium
-                                                    {% elif listing.plan == 'Standard' %}badge-standard
-                                                    {% else %}badge-basic
-                                                    {% endif %}">
-                                            {{ listing.plan }}
-                                        </span>
-                                    </div>
-                                </div>
+  <div class="listing-badges">
+    <span class="badge {% if listing.deal_type == 'Swap Deal' %}badge-swap{% else %}badge-sale{% endif %}">
+      {{ listing.deal_type }}
+    </span>
+
+    <span class="badge
+                {% if listing.plan == 'Premium' %}badge-premium
+                {% elif listing.plan == 'Standard' %}badge-standard
+                {% else %}badge-basic
+                {% endif %}">
+      {{ listing.plan }}
+    </span>
+  </div>
+</div>
+
 
                                 <div class="listing-content">
                                     <h3>{{ listing.title }}</h3>
