@@ -113,33 +113,180 @@
     .category-icon-box{width:28px;height:28px;border-radius:8px;background:#f3f4f6;display:grid;place-items:center;flex-shrink:0}
     .category-name{font-size:.8rem;font-weight:700}
 
-    /* --- FEATURED / CAROUSEL --- */
-    .featured-shell{background:white; border-bottom:1px solid var(--featured-edge);padding:1.25rem 0 1.5rem;position:relative}
-    .featured-shell .section-title{color:var(--featured-text)}
-    .featured-shell .section-eyebrow{color:var(--featured-accent);opacity:.9}
-    .multi-wrap{max-width:1200px;margin:0 auto;padding:0 1rem}
-    .multi-carousel{position:relative;overflow:hidden;border-radius:18px;box-shadow:0 18px 50px rgba(0,0,0,.25);height:var(--carousel-h)}
-    .multi-track{display:flex;transition:transform .5s ease;will-change:transform;height:100%}
-    .multi-item{flex:0 0 100%;padding:.6rem;height:100%;display:flex;align-items:flex-end}
-    @media (min-width:480px){.multi-item{flex-basis:50%}}
-    @media (min-width:768px){.multi-item{flex-basis:33.333%}}
-    @media (min-width:1024px){.multi-item{flex-basis:25%}}
-    .multi-card{position:relative;height:95%;width:100%;border-radius:16px;overflow:hidden;background:linear-gradient(180deg,#0b1410,#122018);outline:1px solid rgba(255,255,255,.05)}
-    .multi-card::after{content:none}
-    .multi-card>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .3s;filter:saturate(1.05) contrast(1.02)}
-    .multi-card:hover>img{transform:scale(1.06)}
-    .multi-overlay{position:absolute;left:0;right:0;bottom:0;padding:1rem;color:#fff;display:flex;flex-direction:column;gap:.35rem;z-index:2}
-    .multi-kicker{display:inline-flex;align-items:center;gap:.4rem;padding:.25rem .55rem;border-radius:999px;background:var(--featured-glass);color:var(--featured-text);font-size:.72rem;font-weight:800;letter-spacing:.08em;border:1px solid rgba(255,255,255,.14);backdrop-filter: blur(6px)}
-    .multi-title{font-weight:800;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.35);font-size:1.05rem}
-    .multi-btn{align-self:flex-start;background:#ecfffa;color:#0b1b12;border-radius:999px;padding:.45rem .9rem;font-weight:700;border:1px solid rgba(0,0,0,.08);transition: transform .15s ease}
-    .multi-btn:hover{transform:translateY(-1px)}
+/* --- FEATURED / CAROUSEL --- */
+.featured-shell{
+  background:white;
+  border-bottom:1px solid var(--featured-edge);
+  padding:1.25rem 0 1.5rem;
+  position:relative;
+}
+.featured-shell .section-title{color:var(--featured-text)}
+.featured-shell .section-eyebrow{color:var(--featured-accent);opacity:.9}
 
-    :root{ --carousel-h: clamp(280px, 48vw, 520px); }
+/* slightly smaller hero height so it doesn’t dominate desktop */
+:root{
+  --carousel-h: clamp(220px, 24vw, 360px);
+}
+
+.multi-wrap{
+  max-width:1200px;
+  margin:0 auto;
+  padding:0 1rem;
+}
+
+.multi-carousel{
+  position:relative;
+  overflow:hidden;
+  border-radius:18px;
+  box-shadow:0 18px 50px rgba(0,0,0,.25);
+  height:var(--carousel-h);
+}
+
+.multi-track{
+  display:flex;
+  transition:transform .5s ease;
+  will-change:transform;
+  height:100%;
+  /* no gap/padding here – keeps slider math correct */
+}
+
+/* Base: 1 card per slide (mobile) */
+.multi-item{
+  flex:0 0 100%;
+  padding:.6rem;
+  height:100%;
+  display:flex;
+  align-items:flex-end;
+}
+
+/* Small phones landscape: you *can* show 2 if needed */
+@media (min-width:480px){
+  .multi-item{
+    flex-basis:50%;
+  }
+}
+
+/* Tablets / small desktop: max 3 cards per row */
+@media (min-width:768px){
+  .multi-item{
+    flex-basis:33.333%;
+  }
+}
+
+/* Keep 3 per row on “normal” desktops as well */
+@media (min-width:1024px){
+  .multi-item{
+    flex-basis:33.333%;
+  }
+}
+
+/* Only on very wide screens (big monitors) go to 4 per row */
+@media (min-width:1440px){
+  .multi-item{
+    flex-basis:25%;
+  }
+}
+
+.multi-card{
+  position:relative;
+  height:95%;
+  width:100%;
+  border-radius:16px;
+  overflow:hidden;
+  background:linear-gradient(180deg,#0b1410,#122018);
+  outline:1px solid rgba(255,255,255,.05);
+}
+.multi-card::after{content:none}
+
+.multi-card>img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;          /* keeps a nice crop */
+  object-position:center;    /* center subject */
+  transition:transform .3s;
+  filter:saturate(1.05) contrast(1.02);
+}
+.multi-card:hover>img{transform:scale(1.06)}
+
+.multi-overlay{
+  position:absolute;
+  left:0;right:0;bottom:0;
+  padding:1rem;
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  gap:.35rem;
+  z-index:2;
+}
+
+.multi-kicker{
+  display:inline-flex;
+  align-items:center;
+  gap:.4rem;
+  padding:.25rem .55rem;
+  border-radius:999px;
+  background:var(--featured-glass);
+  color:var(--featured-text);
+  font-size:.72rem;
+  font-weight:800;
+  letter-spacing:.08em;
+  border:1px solid rgba(255,255,255,.14);
+  backdrop-filter: blur(6px);
+}
+
+.multi-title{
+  font-weight:800;
+  color:#fff;
+  text-shadow:0 2px 12px rgba(0,0,0,.35);
+  font-size:1.05rem;
+}
+
+.multi-btn{
+  align-self:flex-start;
+  background:#ecfffa;
+  color:#0b1b12;
+  border-radius:999px;
+  padding:.45rem .9rem;
+  font-weight:700;
+  border:1px solid rgba(0,0,0,.08);
+  transition: transform .15s ease;
+}
+.multi-btn:hover{transform:translateY(-1px)}
+
 /* Overlayed header on top of the carousel */
-.featured-head-overlay{position:absolute;left:50%;transform:translateX(-50%);top:12px;width:calc(100% - 2rem);max-width:1200px;z-index:5;pointer-events:none}
-.featured-head-glass{display:inline-flex;flex-direction:column;gap:.25rem;padding:.6rem .9rem;border-radius:12px;color:var(--featured-text);background:linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.35));border:1px solid rgba(255,255,255,.18);box-shadow:0 10px 30px rgba(0,0,0,.25);backdrop-filter:blur(8px)}
-.featured-head-glass .section-eyebrow{color:var(--featured-accent);opacity:1}
-.featured-head-glass .section-title{color:#fff;margin:0}
+.featured-head-overlay{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  top:12px;
+  width:calc(100% - 2rem);
+  max-width:1200px;
+  z-index:5;
+  pointer-events:none;
+}
+.featured-head-glass{
+  display:inline-flex;
+  flex-direction:column;
+  gap:.25rem;
+  padding:.6rem .9rem;
+  border-radius:12px;
+  color:var(--featured-text);
+  background:linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.35));
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+  backdrop-filter:blur(8px);
+}
+.featured-head-glass .section-eyebrow{
+  color:var(--featured-accent);
+  opacity:1;
+}
+.featured-head-glass .section-title{
+  color:#fff;
+  margin:0;
+}
+
 
     .listings{max-width:1200px;margin:1.25rem auto;padding:0 1rem}
     .grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fill, minmax(260px,1fr))}
@@ -801,7 +948,6 @@
 
 
 
-  <!-- MOBILE BOTTOM NAV -->
 <!-- MOBILE BOTTOM NAV -->
 <nav class="mb-nav" aria-label="Mobile">
   <div class="mb-items">
@@ -812,9 +958,8 @@
       <!-- 🔹 New Listing – logged in → go directly to section -->
       <a href="{{ create_target }}" class="mb-item">
         <i class="fas fa-plus-circle mb-icon" aria-hidden="true"></i>
-        <span class="nav-label">New Listing</span>
+        <span class="nav-label">Upload Ads</span>
       </a>
-
 
       <a href="{{ url_for('dashboard') }}"
          class="mb-item {% if request.path=='/dashboard' %}active{% endif %}">
@@ -822,8 +967,17 @@
         <span class="nav-label">Dashboard</span>
       </a>
 
+
+            <a href="/my-proposals"
+         class="mb-item {% if request.path=='/my-proposals' %}active{% endif %}">
+        <i class="fas fa-exchange-alt mb-icon" aria-hidden="true"></i>
+        <span class="nav-label">Proposals</span>
+      </a>
+
+
+      {# ⭐ Wishlist with its own relative container #}
       <a href="{{ url_for('view_wishlist') }}"
-         class="mb-item position-relative {% if request.path.startswith('/wishlist') %}active{% endif %}">
+         class="mb-item mb-item-wishlist {% if request.path.startswith('/wishlist') %}active{% endif %}">
         <i class="fas fa-heart mb-icon" aria-hidden="true"></i>
         <span class="nav-label">Wishlist</span>
         <span id="wishlist-count-mobile" class="mb-badge" aria-live="polite">
@@ -831,27 +985,17 @@
         </span>
       </a>
 
-
-      <a href="/my-proposals"
-         class="mb-item {% if request.path=='/my-proposals' %}active{% endif %}">
-        <i class="fas fa-exchange-alt mb-icon" aria-hidden="true"></i>
-        <span class="nav-label">Sent Offers</span>
-      </a>
-
-
     {% else %}
-          <!-- 🔹 New Listing – NOT logged in → send to login with next -->
+      <!-- 🔹 New Listing – NOT logged in → send to login with next -->
       <a href="{{ url_for('login', next=create_target) }}" class="mb-item">
         <i class="fas fa-plus-circle mb-icon" aria-hidden="true"></i>
         <span class="nav-label">New Listing</span>
       </a>
 
-      <a href="{{ url_for('login') }}"
-         class="mb-item">
+      <a href="{{ url_for('login') }}" class="mb-item">
         <i class="fas fa-sign-in-alt mb-icon" aria-hidden="true"></i>
         <span class="nav-label">Login</span>
       </a>
-
 
       <a href="{{ url_for('signup') }}" class="mb-item">
         <i class="fas fa-user-plus mb-icon" aria-hidden="true"></i>
@@ -860,6 +1004,7 @@
     {% endif %}
   </div>
 </nav>
+
 
 
 
@@ -1119,9 +1264,13 @@
               {% for o in listing.offers[:3] %}
                 <div class="swap-photo">
                   {# o.image1 is already normalized (Cloudinary thumb or static) #}
-                  <img src="{{ o.image1 }}"
-                       alt="{{ o.title }}"
-                       {% if ns.idx < 6 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}>
+                  <img
+                    src="{{ url_for('static', filename='images/placeholder.jpg') }}"
+                    data-src="{{ o.image1 }}"
+                    alt="{{ o.title }}"
+                    class="lazy-img"
+                    {% if ns.idx < 3 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}
+                    decoding="async">
                 </div>
               {% endfor %}
             </div>
@@ -1131,9 +1280,13 @@
             <div class="media{% if listing.show_full_image %} media--safe{% endif %}"
                  {% if listing.show_full_image %}style="--blur-url:url('{{ listing.image_url }}')" {% endif %}>
               {# listing.image_url is already final URL (Cloudinary 4:3 thumb or static) #}
-              <img src="{{ listing.image_url }}"
-                   alt="{{ listing.title }}"
-                   {% if ns.idx < 6 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}>
+              <img
+                src="{{ url_for('static', filename='images/placeholder.jpg') }}"
+                data-src="{{ listing.image_url }}"
+                alt="{{ listing.title }}"
+                class="lazy-img"
+                {% if ns.idx < 3 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}
+                decoding="async">
             </div>
           {% endif %}
 
@@ -1213,6 +1366,7 @@
     </p>
   {% endif %}
 </section>
+
 
 
   <!-- FOOTER -->
@@ -1405,6 +1559,46 @@ document.getElementById("searchHubOverlay").addEventListener("click", function(e
     this.classList.remove("active");
   }
 });
+</script>
+
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const lazyImages = document.querySelectorAll("img.lazy-img[data-src]");
+
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            const src = img.getAttribute("data-src");
+            if (src) {
+              img.src = src;
+              img.removeAttribute("data-src");
+            }
+            img.classList.remove("lazy-img");
+            obs.unobserve(img);
+          }
+        });
+      }, {
+        rootMargin: "200px 0px",
+        threshold: 0.1
+      });
+
+      lazyImages.forEach(img => observer.observe(img));
+    } else {
+      // Fallback for old browsers: load all images immediately
+      lazyImages.forEach(img => {
+        const src = img.getAttribute("data-src");
+        if (src) {
+          img.src = src;
+          img.removeAttribute("data-src");
+        }
+        img.classList.remove("lazy-img");
+      });
+    }
+  });
 </script>
 
 
