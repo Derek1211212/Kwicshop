@@ -52,6 +52,8 @@ from collections import defaultdict
 
 import cloudinary
 import cloudinary.uploader
+from twilio.rest import Client
+
 
 
 
@@ -130,6 +132,8 @@ cloudinary.config(
     api_key=os.getenv("CLOUDINARY_API_KEY"),
     api_secret=os.getenv("CLOUDINARY_API_SECRET")
 )
+
+
 
 
 
@@ -908,230 +912,102 @@ def listing_details(listing_id):
 
 
 
-# User lookup now returns account_status
-def authenticate_user(email, password):
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute(
-        "SELECT id, account_status FROM users WHERE email = %s AND password = %s",
-        (email, password)
-    )
-    user = cursor.fetchone()
-    cursor.close()
-    conn.close()
-    return user
 
-# Login Required Decorator (if needed for protected routes)
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            flash('Please log in to access this page')
-            return redirect(url_for('login', next=request.url))
-        return f(*args, **kwargs)
-    return decorated_function
+# ====== Twilio client (for phone OTP) ======
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+TWILIO_VERIFY_SERVICE_SID = os.getenv("TWILIO_VERIFY_SERVICE_SID")
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    # Determine where to go after login: first from query, then form, then home
-    next_url = request.args.get('next') or request.form.get('next') or url_for('home')
-
-    # Initialize or retrieve the per-email failure counts
-    session.setdefault('failed_logins', {})
-
-    if request.method == 'POST':
-        email = request.form.get('email', '').strip().lower()
-        password = request.form.get('password', '')
-
-        if not email or not password:
-            flash('Please enter both email and password', 'danger')
-            return redirect(url_for('login', next=next_url))
-
-        # Check account suspension status
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT account_status FROM users WHERE email = %s", (email,))
-        row = cur.fetchone()
-        cur.close()
-        conn.close()
-        if row and row[0] == 'Suspended':
-            flash(
-                'Your account is suspended. Please email swapsphere@gmail.com to request reactivation.',
-                'danger'
-            )
-            return redirect(url_for('login', next=next_url))
-
-        # Authenticate credentials
-        user = authenticate_user(email, password)
-        if user:
-            # Successful login
-            session['failed_logins'].pop(email, None)
-            session['user_id'] = user['id']
-            session.permanent = True
-
-            # If there's a post-login message, flash it now
-            post_msg = session.pop('post_login_message', None)
-            if post_msg:
-                flash(post_msg, 'success')
-
-            logging.info(f"User {user['id']} logged in successfully")
-            return redirect(next_url)
-        else:
-            # Failed login: increment count
-            failed = session['failed_logins'].get(email, 0) + 1
-            session['failed_logins'][email] = failed
-            logging.warning(f"Failed login attempt {failed} for email: {email}")
-
-            # Provide warnings or suspend as needed
-            if failed == 3:
-                flash('Warning: One more failed attempt will lock your account.', 'warning')
-            elif failed >= 4:
-                try:
-                    conn = get_db_connection()
-                    cur = conn.cursor()
-                    cur.execute(
-                        "UPDATE users SET account_status = 'Suspended' WHERE email = %s",
-                        (email,)
-                    )
-                    conn.commit()
-                    cur.close()
-                    conn.close()
-                    logging.warning(f"User account suspended due to repeated failures: {email}")
-                except Exception as e:
-                    logging.error(f"Error suspending account {email}: {e}")
-                flash(
-                    'Your account has been suspended due to multiple failed login attempts. '
-                    'Please email swapsphere@gmail.com to request reactivation.',
-                    'danger'
-                )
-            else:
-                flash('Invalid email or password', 'danger')
-
-        # On any failure, stay on login
-        return redirect(url_for('login', next=next_url))
-
-    # GET request: render form. post‑login message will NOT appear here.
-    return render_template('login.html', next_url=next_url)
+twilio_client = None
+if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
+    twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 
-# ─── 2) Kick‐off Google OAuth Flow ────────────────────────────────────────────
-@app.route('/login/google')
-def login_google():
-    next_url = request.args.get('next') or url_for('home')
-    redirect_uri = url_for('authorize', _external=True)
-    return google.authorize_redirect(redirect_uri, state=next_url)
+# ====== Regex + helpers reused in signup ======
+EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+PHONE_RE = re.compile(r"^[0-9 \-]{6,}$")
 
 
-# ─── 3) OAuth2 Callback Handler ──────────────────────────────────────────────
-@app.route('/oauth2callback')
-def authorize():
-    # Exchange code for access token
-    token = google.authorize_access_token()
-
-    # Fetch userinfo endpoint from metadata
-    userinfo_endpoint = google.server_metadata.get('userinfo_endpoint')
-    resp = google.get(userinfo_endpoint)
-    resp.raise_for_status()
-    user_info = resp.json()
-
-    # Extract the Google ID
-    google_id = user_info.get('sub') or user_info.get('id')
-    if not google_id:
-        raise RuntimeError("No 'sub' or 'id' in userinfo response")
-
-    # Create or find the user
-    user = get_or_create_user(
-        google_id=google_id,
-        email=user_info.get('email'),
-        username=user_info.get('name'),  # your non-null field
-        avatar=user_info.get('picture')
-    )
-
-    # Log them in using 'id'
-    session['user_id'] = user['id']
-    session.permanent = True
-    logging.info(f"User {user['id']} logged in via Google")
-
-    # Redirect back to original page
-    next_url = request.args.get('state') or url_for('home')
-    return redirect(next_url)
+def _clean(s):
+    return (s or "").strip()
 
 
+# Alias to keep your older helper name happy
+def get_db_conn():
+    return get_db_connection()
 
 
-
-
-
-
-# ─── 5) Helper: find-or-create user by Google ID ────────────────────────────
-def get_or_create_user(google_id, email, username, avatar=None):
+# ====== User helpers ======
+def normalize_contact(country_code: str, phone_number: str) -> str:
     """
-    Look up a user by google_id. If none exists, insert a new user
-    providing username (non-null) and a NULL password for Google SSO.
-    Returns a dict with at least 'id' (the PK) and other fields.
+    Normalizes to the format you used in create_user:
+    contact = country_code + phone_without_leading_zero
     """
-    conn = get_db_connection()
-    cur  = conn.cursor(dictionary=True)
+    phone_number = (phone_number or "").strip()
+    phone_number = "".join(phone_number.split())  # remove spaces
 
-    # Try to find existing user
-    cur.execute("SELECT * FROM users WHERE google_id = %s", (google_id,))
-    user = cur.fetchone()
+    if phone_number.startswith("0"):
+        phone_number = phone_number[1:]
 
-    if not user:
-        # Insert new user
-        cur.execute("""
-            INSERT INTO users
-              (google_id, email, username, avatar, role, password, created_at)
-            VALUES
-              (%s, %s, %s, %s, 'Customer', NULL, NOW())
-        """, (google_id, email, username, avatar))
-        conn.commit()
-        new_id = cur.lastrowid
-        # Build a minimal user dict
-        user = {
-            'id': new_id,
-            'google_id': google_id,
-            'email': email,
-            'username': username,
-            'avatar': avatar,
-            'role': 'Customer'
-        }
-
-    cur.close()
-    conn.close()
-    return user
+    return (country_code or "") + phone_number
 
 
-
-
-
-
-
-def authenticate_user(email, password):
-    """Verify user credentials against database"""
+def get_user_by_contact(contact: str):
+    """Lookup a user by 'contact' (phone). Returns dict or None."""
     conn = None
     cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        
-        # Get user by email
-        cursor.execute("""
-            SELECT id, email, password 
-            FROM users 
-            WHERE email = %s
-        """, (email,))
-        user = cursor.fetchone()
-        
-        # Verify password if user exists
-        if user and check_password_hash(user['password'], password):
-            return {
-                'id': user['id'],
-                'email': user['email']
-                # Add other user fields you need in session
-            }
+        cursor.execute(
+            "SELECT id, contact, account_status FROM users WHERE contact = %s LIMIT 1",
+            (contact,),
+        )
+        return cursor.fetchone()
+    except Exception as e:
+        logging.error(f"Error fetching user by contact {contact}: {e}")
         return None
-        
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+def authenticate_user(email, password):
+    """Securely verify user credentials against DB using password hash."""
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute(
+            """
+            SELECT id, email, password, account_status
+            FROM users
+            WHERE email = %s
+            """,
+            (email,),
+        )
+        user = cursor.fetchone()
+
+        if not user:
+            return None
+
+        # Check account status
+        if user.get("account_status") == "Suspended":
+            return "suspended"
+
+        if user and check_password_hash(user["password"], password):
+            # Return minimal safe subset
+            return {
+                "id": user["id"],
+                "email": user["email"],
+                "account_status": user.get("account_status"),
+            }
+
+        return None
     except Exception as e:
         logging.error(f"Authentication error for {email}: {str(e)}")
         return None
@@ -1150,31 +1026,23 @@ def create_user(form):
         cursor = conn.cursor()
 
         sql = """
-            INSERT INTO users (username, email, contact, password) 
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO users (username, email, contact, password, role, created_at, account_status)
+            VALUES (%s, %s, %s, %s, 'Customer', NOW(), 'Active')
         """
-        username = form['username']
-        email = form['email']
-        country_code = form['country_code']
-        phone_number = form['phone_number'].strip()
+        username = form["username"]
+        email = form["email"]
+        country_code = form["country_code"]
+        phone_number = form["phone_number"].strip()
 
-        # Remove all whitespace
-        phone_number = "".join(phone_number.split())
+        contact = normalize_contact(country_code, phone_number)
 
-        # Remove leading zero if it exists
-        if phone_number.startswith("0"):
-            phone_number = phone_number[1:]
-
-        # Combine country code and phone number
-        contact = country_code + phone_number
-
-        hashed_password = generate_password_hash(form['password'])
+        hashed_password = generate_password_hash(form["password"])
 
         cursor.execute(sql, (username, email, contact, hashed_password))
         conn.commit()
 
         user_id = cursor.lastrowid
-        return {'id': user_id, 'username': username, 'email': email, 'contact': contact}
+        return {"id": user_id, "username": username, "email": email, "contact": contact}
 
     except Exception as e:
         logging.error(f"Error creating user: {str(e)}")
@@ -1187,42 +1055,14 @@ def create_user(form):
         if conn:
             conn.close()
 
-EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
-PHONE_RE = re.compile(r"^[0-9 \-]{6,}$")  # digits/spaces/dashes (tweak to your needs)
-
-def _clean(s):
-    return (s or "").strip()
-
-def get_db_conn():
-    """Create a MySQL connection using Flask app config."""
-    return mysql.connector.connect(
-        host=current_app.config.get("MYSQL_HOST", "localhost"),
-        user=current_app.config.get("MYSQL_USER"),
-        password=current_app.config.get("MYSQL_PASSWORD"),
-        database=current_app.config.get("MYSQL_DB"),
-        auth_plugin=current_app.config.get("MYSQL_AUTH_PLUGIN", "mysql_native_password"),
-    )
-
-EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
-PHONE_RE = re.compile(r"^[0-9 \-]{6,}$")
-
-def _clean(s):
-    return (s or "").strip()
-
-def get_db_conn():
-    return mysql.connector.connect(
-        host=current_app.config.get("MYSQL_HOST", "localhost"),
-        user=current_app.config.get("MYSQL_USER"),
-        password=current_app.config.get("MYSQL_PASSWORD"),
-        database=current_app.config.get("MYSQL_DB"),
-        auth_plugin=current_app.config.get("MYSQL_AUTH_PLUGIN", "mysql_native_password"),
-    )
 
 def _flash_duplicate_reason(email, username, country_code, phone_number) -> bool:
     """
     Returns True if a specific culprit was found & flashed.
     Checks in priority: email > username > phone.
     """
+    conn = None
+    cur = None
     try:
         conn = get_db_conn()
         cur = conn.cursor()
@@ -1237,33 +1077,378 @@ def _flash_duplicate_reason(email, username, country_code, phone_number) -> bool
             flash("That username is taken. Please choose another.", "error")
             return True
 
-        cur.execute(
-            "SELECT 1 FROM users WHERE country_code=%s AND phone_number=%s LIMIT 1",
-            (country_code, phone_number),
-        )
+        phone_norm = normalize_contact(country_code, phone_number)
+        cur.execute("SELECT 1 FROM users WHERE contact=%s LIMIT 1", (phone_norm,))
         if cur.fetchone():
-            flash("That phone number is already associated with another account.", "error")
+            flash(
+                "That phone number is already associated with another account.", "error"
+            )
             return True
 
         return False
     except mysql.connector.Error as sub_err:
-        if current_app.debug:
-            flash(f"MySQL error {getattr(sub_err,'errno','?')}: {sub_err}", "error")
+        flash(f"MySQL error {getattr(sub_err, 'errno', '?')}: {sub_err}", "error")
         return False
     finally:
-        try:
-            cur.close(); conn.close()
-        except Exception:
-            pass
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
-@app.route('/signup', methods=['GET', 'POST'])
+
+# ====== Login required decorator ======
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user_id" not in session:
+            flash("Please log in to access this page", "danger")
+            return redirect(url_for("login", next=request.url))
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
+# =====================================================
+#                      LOGIN (EMAIL)
+# =====================================================
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    # Determine where to go after login: first from query, then form, then home
+    next_url = request.args.get("next") or request.form.get("next") or url_for("home")
+
+    # Initialize or retrieve the per-email failure counts
+    session.setdefault("failed_logins", {})
+
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        if not email or not password:
+            flash("Please enter both email and password", "danger")
+            return redirect(url_for("login", next=next_url))
+
+        # Authenticate credentials & account status
+        user = authenticate_user(email, password)
+        if user == "suspended":
+            flash(
+                "Your account is suspended. Please email swapsphere@gmail.com to request reactivation.",
+                "danger",
+            )
+            return redirect(url_for("login", next=next_url))
+
+        if user:
+            # Successful login
+            session["failed_logins"].pop(email, None)
+            session["user_id"] = user["id"]
+            session.permanent = True
+
+            # If there's a post-login message, flash it now
+            post_msg = session.pop("post_login_message", None)
+            if post_msg:
+                flash(post_msg, "success")
+
+            logging.info(f"User {user['id']} logged in successfully")
+            return redirect(next_url)
+        else:
+            # Failed login: increment count
+            failed = session["failed_logins"].get(email, 0) + 1
+            session["failed_logins"][email] = failed
+            logging.warning(f"Failed login attempt {failed} for email: {email}")
+
+            # Provide warnings or suspend as needed
+            if failed == 3:
+                flash(
+                    "Warning: One more failed attempt will lock your account.",
+                    "warning",
+                )
+            elif failed >= 4:
+                try:
+                    conn = get_db_connection()
+                    cur = conn.cursor()
+                    cur.execute(
+                        "UPDATE users SET account_status = 'Suspended' WHERE email = %s",
+                        (email,),
+                    )
+                    conn.commit()
+                    cur.close()
+                    conn.close()
+                    logging.warning(
+                        f"User account suspended due to repeated failures: {email}"
+                    )
+                except Exception as e:
+                    logging.error(f"Error suspending account {email}: {e}")
+                flash(
+                    "Your account has been suspended due to multiple failed login attempts. "
+                    "Please email swapsphere@gmail.com to request reactivation.",
+                    "danger",
+                )
+            else:
+                flash("Invalid email or password", "danger")
+
+        # On any failure, stay on login
+        return redirect(url_for("login", next=next_url))
+
+    # GET request: render form.
+    return render_template("login.html", next_url=next_url)
+
+
+
+print("DEBUG SID:", os.getenv("TWILIO_ACCOUNT_SID"))
+print("DEBUG TOKEN:", os.getenv("TWILIO_AUTH_TOKEN"))
+print("DEBUG VERIFY:", os.getenv("TWILIO_VERIFY_SERVICE_SID"))
+
+
+
+
+# =====================================================
+#                PHONE LOGIN (TWILIO) STEP 1
+# =====================================================
+@app.route("/login/phone", methods=["GET", "POST"])
+def login_phone():
+    next_url = request.args.get("next") or request.form.get("next") or url_for("home")
+
+    if request.method == "POST":
+        country_code = _clean(request.form.get("country_code"))
+        phone_number = _clean(request.form.get("phone_number"))
+
+        if not country_code or not phone_number:
+            flash("Please enter both country code and phone number.", "danger")
+            return redirect(url_for("login_phone", next=next_url))
+
+        contact = normalize_contact(country_code, phone_number)
+        user = get_user_by_contact(contact)
+
+        if not user:
+            flash(
+                "We couldn't find an account with that phone number. Please sign up.",
+                "danger",
+            )
+            return redirect(url_for("signup"))
+
+        if user.get("account_status") == "Suspended":
+            flash(
+                "Your account is suspended. Please email swapsphere@gmail.com to request reactivation.",
+                "danger",
+            )
+            return redirect(url_for("login_phone", next=next_url))
+
+        if not twilio_client or not TWILIO_VERIFY_SERVICE_SID:
+            flash(
+                "Phone login is currently unavailable. Please use email/password.",
+                "danger",
+            )
+            return redirect(url_for("login", next=next_url))
+
+        try:
+            # Twilio Verify expects E.164, so prepend + if not present
+            to_number = contact
+            if not to_number.startswith("+"):
+                to_number = "+" + to_number
+
+            verification = twilio_client.verify.v2.services(
+                TWILIO_VERIFY_SERVICE_SID
+            ).verifications.create(to=to_number, channel="sms")
+
+            logging.info(f"Sent verification to {to_number}: status={verification.status}")
+
+            session["phone_login_contact"] = contact
+            session["phone_login_next"] = next_url
+
+            flash("We sent a verification code to your phone.", "success")
+            return redirect(url_for("login_phone_verify"))
+
+        except Exception as e:
+            logging.error(f"Error sending OTP via Twilio to {contact}: {e}")
+            flash(
+                "We couldn't send a verification code right now. Please try again later.",
+                "danger",
+            )
+            return redirect(url_for("login_phone", next=next_url))
+
+    return render_template("login_phone.html", next_url=next_url)
+
+
+# =====================================================
+#                PHONE LOGIN (TWILIO) STEP 2
+# =====================================================
+@app.route("/login/phone/verify", methods=["GET", "POST"])
+def login_phone_verify():
+    contact = session.get("phone_login_contact")
+    next_url = session.get("phone_login_next", url_for("home"))
+
+    if not contact:
+        flash("Please start by entering your phone number.", "danger")
+        return redirect(url_for("login_phone", next=next_url))
+
+    if request.method == "POST":
+        code = _clean(request.form.get("code"))
+
+        if not code:
+            flash("Please enter the verification code.", "danger")
+            return redirect(url_for("login_phone_verify"))
+
+        if not twilio_client or not TWILIO_VERIFY_SERVICE_SID:
+            flash(
+                "Phone login is currently unavailable. Please use email/password.",
+                "danger",
+            )
+            return redirect(url_for("login", next=next_url))
+
+        try:
+            to_number = contact
+            if not to_number.startswith("+"):
+                to_number = "+" + to_number
+
+            result = twilio_client.verify.v2.services(
+                TWILIO_VERIFY_SERVICE_SID
+            ).verification_checks.create(to=to_number, code=code)
+
+            logging.info(f"Twilio verification check for {to_number}: status={result.status}")
+
+            if result.status != "approved":
+                flash("Invalid or expired verification code. Please try again.", "danger")
+                return redirect(url_for("login_phone_verify"))
+
+            # Approved → log user in
+            user = get_user_by_contact(contact)
+            if not user:
+                flash("We couldn't find that account anymore.", "danger")
+                return redirect(url_for("login_phone"))
+
+            if user.get("account_status") == "Suspended":
+                flash(
+                    "Your account is suspended. Please email swapsphere@gmail.com to request reactivation.",
+                    "danger",
+                )
+                return redirect(url_for("login_phone"))
+
+            session["user_id"] = user["id"]
+            session.permanent = True
+
+            session.pop("phone_login_contact", None)
+            session.pop("phone_login_next", None)
+
+            logging.info(f"User {user['id']} logged in via phone.")
+            return redirect(next_url)
+
+        except Exception as e:
+            logging.error(f"Error verifying OTP for {contact}: {e}")
+            flash("We couldn't verify that code. Please try again.", "danger")
+            return redirect(url_for("login_phone_verify"))
+
+    return render_template("login_phone_verify.html", next_url=next_url)
+
+
+# =====================================================
+#                 GOOGLE OAUTH LOGIN
+#       (assumes you configured `google` client)
+# =====================================================
+from authlib.integrations.flask_client import OAuth
+
+oauth = OAuth(app)
+google = oauth.register(
+    name="google",
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    server_metadata_url=os.getenv("GOOGLE_DISCOVERY_URL"),
+    client_kwargs={"scope": "openid email profile"},
+)
+
+
+def get_or_create_user(google_id, email, username, avatar=None):
+    """
+    Look up a user by google_id. If none exists, insert a new user
+    providing username (non-null) and a NULL password for Google SSO.
+    Returns a dict with at least 'id' (the PK) and other fields.
+    """
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+
+    # Try to find existing user
+    cur.execute("SELECT * FROM users WHERE google_id = %s", (google_id,))
+    user = cur.fetchone()
+
+    if not user:
+        # Insert new user
+        cur.execute(
+            """
+            INSERT INTO users
+              (google_id, email, username, avatar, role, password, created_at, account_status)
+            VALUES
+              (%s, %s, %s, %s, 'Customer', NULL, NOW(), 'Active')
+        """,
+            (google_id, email, username, avatar),
+        )
+        conn.commit()
+        new_id = cur.lastrowid
+        # Build a minimal user dict
+        user = {
+            "id": new_id,
+            "google_id": google_id,
+            "email": email,
+            "username": username,
+            "avatar": avatar,
+            "role": "Customer",
+        }
+
+    cur.close()
+    conn.close()
+    return user
+
+
+@app.route("/login/google")
+def login_google():
+    next_url = request.args.get("next") or url_for("home")
+    redirect_uri = url_for("authorize_google", _external=True)
+    # Put the next url into 'state'
+    return google.authorize_redirect(redirect_uri, state=next_url)
+
+
+@app.route("/oauth2callback")
+def authorize_google():
+    # Exchange code for access token
+    token = google.authorize_access_token()
+
+    # Fetch userinfo endpoint from metadata
+    userinfo_endpoint = google.server_metadata.get("userinfo_endpoint")
+    resp = google.get(userinfo_endpoint)
+    resp.raise_for_status()
+    user_info = resp.json()
+
+    # Extract the Google ID
+    google_id = user_info.get("sub") or user_info.get("id")
+    if not google_id:
+        raise RuntimeError("No 'sub' or 'id' in userinfo response")
+
+    # Create or find the user
+    user = get_or_create_user(
+        google_id=google_id,
+        email=user_info.get("email"),
+        username=user_info.get("name"),
+        avatar=user_info.get("picture"),
+    )
+
+    # Log them in using 'id'
+    session["user_id"] = user["id"]
+    session.permanent = True
+    logging.info(f"User {user['id']} logged in via Google")
+
+    # Redirect back to original page
+    next_url = request.args.get("state") or url_for("home")
+    return redirect(next_url)
+
+
+# =====================================================
+#                     SIGNUP ROUTE
+# =====================================================
+@app.route("/signup", methods=["GET", "POST"])
 def signup():
-    if request.method == 'POST':
-        username      = _clean(request.form.get('username'))
-        email         = _clean(request.form.get('email')).lower()
-        country_code  = _clean(request.form.get('country_code'))
-        phone_number  = _clean(request.form.get('phone_number'))
-        password      = request.form.get('password') or ""
+    if request.method == "POST":
+        username = _clean(request.form.get("username"))
+        email = _clean(request.form.get("email")).lower()
+        country_code = _clean(request.form.get("country_code"))
+        phone_number = _clean(request.form.get("phone_number"))
+        password = request.form.get("password") or ""
 
         # Basic server-side validation
         errors = []
@@ -1274,64 +1459,105 @@ def signup():
         if not country_code:
             errors.append("Please select your country code.")
         if not PHONE_RE.fullmatch(phone_number):
-            errors.append("Phone number looks invalid. Use digits only (spaces or hyphens allowed).")
+            errors.append(
+                "Phone number looks invalid. Use digits only (spaces or hyphens allowed)."
+            )
         if len(password) < 8:
             errors.append("Password must be at least 8 characters.")
 
         if errors:
-            for e in errors: flash(e, "error")
-            return render_template('signup.html', form_prefill=dict(
-                username=username, email=email, country_code=country_code, phone_number=phone_number
-            ))
+            for e in errors:
+                flash(e, "error")
+            return render_template(
+                "signup.html",
+                form_prefill=dict(
+                    username=username,
+                    email=email,
+                    country_code=country_code,
+                    phone_number=phone_number,
+                ),
+            )
 
         # Create via your helper
         try:
             user = create_user(request.form)
             if user:
-                flash('Account created successfully! Please log in.', 'success')
-                return redirect(url_for('login'))
+                flash("Account created successfully! Please log in.", "success")
+                return redirect(url_for("login"))
 
             # Helper returned falsy → run targeted existence checks for specific flashes
             if _flash_duplicate_reason(email, username, country_code, phone_number):
-                return render_template('signup.html', form_prefill=dict(
-                    username=username, email=email, country_code=country_code, phone_number=phone_number
-                ))
+                return render_template(
+                    "signup.html",
+                    form_prefill=dict(
+                        username=username,
+                        email=email,
+                        country_code=country_code,
+                        phone_number=phone_number,
+                    ),
+                )
 
             # No culprit found → final fallback
             flash("We couldn't create your account right now. Please try again.", "error")
-            return render_template('signup.html', form_prefill=dict(
-                username=username, email=email, country_code=country_code, phone_number=phone_number
-            ))
+            return render_template(
+                "signup.html",
+                form_prefill=dict(
+                    username=username,
+                    email=email,
+                    country_code=country_code,
+                    phone_number=phone_number,
+                ),
+            )
 
         except mysql.connector.Error as err:
             if getattr(err, "errno", None) == 1062:  # Duplicate key
                 # Give a specific, field-based message (email first)
-                if not _flash_duplicate_reason(email, username, country_code, phone_number):
-                    flash("An account with the provided details already exists.", "error")
-                return render_template('signup.html', form_prefill=dict(
-                    username=username, email=email, country_code=country_code, phone_number=phone_number
-                ))
+                if not _flash_duplicate_reason(
+                    email, username, country_code, phone_number
+                ):
+                    flash(
+                        "An account with the provided details already exists.", "error"
+                    )
+                return render_template(
+                    "signup.html",
+                    form_prefill=dict(
+                        username=username,
+                        email=email,
+                        country_code=country_code,
+                        phone_number=phone_number,
+                    ),
+                )
 
             # Other DB errors
-            if current_app.debug:
-                flash(f"MySQL error {getattr(err,'errno','?')}: {err}", "error")
-            else:
-                flash("Something went wrong while creating your account. Please try again.", "error")
-            return render_template('signup.html', form_prefill=dict(
-                username=username, email=email, country_code=country_code, phone_number=phone_number
-            ))
+            flash(
+                f"MySQL error {getattr(err,'errno','?')}: {err}",
+                "error",
+            )
+            return render_template(
+                "signup.html",
+                form_prefill=dict(
+                    username=username,
+                    email=email,
+                    country_code=country_code,
+                    phone_number=phone_number,
+                ),
+            )
 
         except Exception as ex:
-            if current_app.debug:
-                flash(f"Unexpected error: {ex}", "error")
-            else:
-                flash("Unexpected error while creating your account. Please try again.", "error")
-            return render_template('signup.html', form_prefill=dict(
-                username=username, email=email, country_code=country_code, phone_number=phone_number
-            ))
+            flash(f"Unexpected error: {ex}", "error")
+            return render_template(
+                "signup.html",
+                form_prefill=dict(
+                    username=username,
+                    email=email,
+                    country_code=country_code,
+                    phone_number=phone_number,
+                ),
+            )
 
     # GET
-    return render_template('signup.html')
+    return render_template("signup.html")
+
 
 
 

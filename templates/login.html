@@ -401,29 +401,25 @@
     }
 
     .alert {
-  padding: 10px;
-  border-radius: 4px;
-  margin-bottom: 10px;
-}
-.alert-danger { background-color: #f8d7da; color: #721c24; }
-.alert-warning { background-color: #fff3cd; color: #856404; }
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+    .alert-danger { background-color: #f8d7da; color: #721c24; }
+    .alert-warning { background-color: #fff3cd; color: #856404; }
 
+    /* === Ecommerce outline background: shoes, cars, dresses, bags, etc. === */
+    :root { --brand-green: #22c55e; }
 
-
-/* === Ecommerce outline background: shoes, cars, dresses, bags, etc. === */
-:root { --brand-green: #22c55e; }
-
-body::before{
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-
-  /* subtle paper glow + tiled SVG pattern */
-  background:
-    radial-gradient(1200px 600px at 10% -10%, #f6fff9, transparent 60%),
-    url("data:image/svg+xml;utf8,\
+    body::before{
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #f6fff9, transparent 60%),
+        url("data:image/svg+xml;utf8,\
 <svg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'>\
   <g stroke='%2322c55e' stroke-opacity='0.13' stroke-width='2.2' fill='none' stroke-linecap='round' stroke-linejoin='round'>\
     <!-- Shoe (sneaker) -->\
@@ -471,17 +467,12 @@ body::before{
     <path d='M180 320 C190 330, 210 330, 225 325 L235 325 235 335 185 335 C180 335, 176 330, 180 320 Z'/>\
   </g>\
 </svg>") repeat;
-  background-size: 360px 360px, 360px 360px; /* adjust for density */
-}
+      background-size: 360px 360px, 360px 360px;
+    }
 
-@media (max-width: 480px){
-  body::before { background-size: 300px 300px, 300px 300px; }
-}
-
-
-
-
-
+    @media (max-width: 480px){
+      body::before { background-size: 300px 300px, 300px 300px; }
+    }
   </style>
 </head>
 <body>
@@ -497,13 +488,28 @@ body::before{
   {% endif %}
 {% endwith %}
 
-
   <div class="container">
     <div class="header">
       <div class="logo">SwapSphere</div>
       <h1>Please Login</h1>
     </div>
     <div class="form-container">
+
+      <!-- NEW: Login method switcher -->
+      <div style="display:flex; gap:10px; margin-bottom:1rem;">
+        <button type="button" id="emailTab"
+                style="flex:1; padding:0.6rem; border-radius:8px; border:none;
+                       background:#2ECC71; color:#fff; font-weight:600; cursor:pointer;">
+          Email Login
+        </button>
+        <button type="button" id="phoneTab"
+                style="flex:1; padding:0.6rem; border-radius:8px; border:none;
+                       background:#27AE60; color:#fff; font-weight:600; cursor:pointer; opacity:0.6;">
+          Phone Login
+        </button>
+      </div>
+
+      <!-- EMAIL LOGIN FORM (original) -->
       <form id="loginForm" method="POST" action="{{ url_for('login') }}">
         <div class="form-group">
           <label for="email">Email</label>
@@ -528,10 +534,34 @@ body::before{
         </button>
         <div class="form-actions">
           <a href="{{ url_for('login_google', next=next_url) }}" class="btn-google">
-            <i class="fab fa-google"></i> Sign in with Google
+            <i class="fab fa-google"></i> Quick Sign-up with Google
           </a>
         </div>
       </form>
+
+      <!-- PHONE LOGIN FORM (new) -->
+      <form id="phoneLoginForm" method="POST" action="{{ url_for('login_phone') }}" style="display:none;">
+        <input type="hidden" name="next" value="{{ next_url }}">
+        <div class="form-group">
+          <label for="country_code">Country Code</label>
+          <select id="country_code" name="country_code" required>
+            <option value="+233">+233 (Ghana)</option>
+            <option value="+1">+1 (USA)</option>
+            <option value="+44">+44 (UK)</option>
+            <option value="+91">+91 (India)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="phone_number">Phone Number</label>
+          <input type="text" id="phone_number" name="phone_number"
+                 placeholder="e.g 054XXXXXXX" required>
+        </div>
+        <button type="submit" class="submit-btn">
+          <span class="btn-text">Send Login Code</span>
+          <div class="loading-spinner"></div>
+        </button>
+      </form>
+
       <div class="switch-form">
         Don't have an account? <a href="{{ url_for('signup') }}">Sign up</a>
       </div>
@@ -539,6 +569,26 @@ body::before{
   </div>
 
   <script>
+    // NEW: toggle between Email login and Phone login
+    const emailTab = document.getElementById('emailTab');
+    const phoneTab = document.getElementById('phoneTab');
+    const emailForm = document.getElementById('loginForm');
+    const phoneForm = document.getElementById('phoneLoginForm');
+
+    emailTab.addEventListener('click', function() {
+      emailForm.style.display = 'block';
+      phoneForm.style.display = 'none';
+      emailTab.style.opacity = '1';
+      phoneTab.style.opacity = '0.6';
+    });
+
+    phoneTab.addEventListener('click', function() {
+      emailForm.style.display = 'none';
+      phoneForm.style.display = 'block';
+      phoneTab.style.opacity = '1';
+      emailTab.style.opacity = '0.6';
+    });
+
     // Password toggle functionality
     const togglePassword = document.querySelector('#togglePassword');
     const passwordInput = document.querySelector('#password');
@@ -571,7 +621,7 @@ body::before{
       }, 3000);
     }
 
-    // Form validation with enhanced animations
+    // Form validation with enhanced animations (EMAIL login only)
     document.getElementById('loginForm').addEventListener('submit', function(e) {
       let isValid = true;
       
