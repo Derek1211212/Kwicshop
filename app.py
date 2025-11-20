@@ -53,6 +53,8 @@ from collections import defaultdict
 import cloudinary
 import cloudinary.uploader
 from twilio.rest import Client
+from urllib.parse import quote_plus
+
 
 
 
@@ -1687,6 +1689,12 @@ def create_proposal(listing_id):
         phone_number = request.form.get('phone_number', '').strip()
         email_address = request.form.get('email_address', '').strip()
 
+        # NEW: optional vendor WhatsApp + listing title from hidden fields
+        vendor_whatsapp_form = request.form.get('vendor_whatsapp', '').strip()
+        listing_title_from_form = request.form.get('listing_title', '').strip()
+        if listing_title_from_form:
+            listing_title = listing_title_from_form  # prefer explicit form title if present
+
         # Validate required fields
         if not all([proposed_item, detailed_description, condition, phone_number, email_address]):
             flash('All required fields must be filled.', 'danger')
@@ -1742,75 +1750,101 @@ def create_proposal(listing_id):
         conn.commit()
 
         # Lookup owner using users.id
-        cursor.execute("SELECT email, contact, name FROM users WHERE id = %s", (owner_id,))
+        cursor.execute("SELECT email, contact, name, username FROM users WHERE id = %s", (owner_id,))
         owner = cursor.fetchone()
 
-        # Lookup proposer name for friendly email (best effort)
+        # Lookup proposer name for friendly text (best effort)
         proposer_name = "A user"
+        proposer_email = None
         if proposer_id:
             try:
                 cursor.execute("SELECT name, email FROM users WHERE id = %s", (proposer_id,))
                 proposer = cursor.fetchone()
                 if proposer:
                     proposer_name = proposer.get('name') or proposer.get('email') or proposer_name
+                    proposer_email = proposer.get('email')
             except Exception:
                 app.logger.debug("Could not fetch proposer name for user id=%s", proposer_id, exc_info=True)
 
+        # === WhatsApp deep-link construction ===
+        # Determine vendor WhatsApp number:
+        #  1) from hidden form field (preferred),
+        #  2) fallback to owner.contact from DB
+        vendor_number_raw = vendor_whatsapp_form or (owner.get('contact') if owner else '')
+
+        def normalize_msisdn(raw: str) -> str:
+            """Keep only digits for wa.me link (e.g. '+233544...' -> '233544...')."""
+            if not raw:
+                return ''
+            digits = ''.join(ch for ch in raw if ch.isdigit())
+            return digits
+
+        wa_phone = normalize_msisdn(vendor_number_raw)
+
+        if not wa_phone:
+            app.logger.warning("No valid WhatsApp number for owner_id=%s, listing_id=%s", owner_id, listing_id)
+            flash('Your proposal was saved, but the owner has no valid WhatsApp number configured.', 'warning')
+            return redirect(url_for('listing_details', listing_id=listing_id))
+
+        # Build WhatsApp message text (from proposer to owner)
+        owner_display_name = None
         if owner:
-            owner_email = owner.get('email')
+            owner_display_name = owner.get('name') or owner.get('username') or None
+        if not owner_display_name:
+            owner_display_name = "there"
 
-            # Prepare friendly, inbox-friendly subject and body
-            listing_url = url_for('listing_details', listing_id=listing_id, _external=True)
-            friendly_subject = f"New proposal for your listing: {listing_title}"
-            friendly_body = f"""Hi there,
+        # Format additional cash nicely
+        if additional_cash is not None:
+            additional_cash_str = f"{additional_cash:,.2f}"
+        else:
+            additional_cash_str = "0.00"
 
-{proposer_name} has sent you a new swap proposal for your listing "{listing_title}" on SwapHub.
+        wa_message = (
+            f"Hi {owner_display_name}, I'm interested in your listing \"{listing_title}\" on SwapHub.\n\n"
+            f"Here is my swap proposal:\n"
+            f"- Item I'm offering: {proposed_item}\n"
+            f"- Condition: {condition}\n"
+            f"- Additional cash (GHS): {additional_cash_str}\n\n"
+            f"My contact details:\n"
+            f"- Phone: {phone_number}\n"
+            f"- Email: {email_address}\n\n"
+        )
 
-Proposal summary:
-- Offered item: {proposed_item}
-- Condition: {condition}
-- Additional cash offered: {"GH₵{:,.2f}".format(additional_cash) if additional_cash is not None else "N/A"}
+        if detailed_description:
+            wa_message += f"Details about my item:\n{detailed_description}\n\n"
 
-Message from {proposer_name}:
-{message if message else 'No additional message provided.'}
+        if message:
+            wa_message += f"Additional message:\n{message}\n\n"
 
-View the proposal and respond: {listing_url}
+        wa_message += "This proposal has also been saved on SwapHub."
 
-If you no longer want to receive these notifications, please update your notification settings in your dashboard.
+        # URL-encode message
+        wa_text = quote_plus(wa_message)
+        wa_url = f"https://wa.me/{wa_phone}?text={wa_text}"
 
-Thanks for being on SwapHub!
-The SwapHub Team
-"""
+        # Optional: Web-push notification (you can keep this or remove)
+        try:
+            push_title = "New proposal received"
+            push_body = f"{proposer_name} sent a proposal for \"{listing_title}\"."
+            send_push(
+                owner_id,
+                push_title,
+                push_body,
+                url_for('dashboard')
+            )
+            app.logger.info("Push notification sent to user %s for listing %s", owner_id, listing_id)
+        except Exception as push_err:
+            app.logger.error("Push notification error: %s", push_err, exc_info=True)
 
-            # Send email notification (non-fatal)
-            if owner_email:
-                try:
-                    ok = send_email_notification(
-                        owner_email,
-                        friendly_subject,
-                        friendly_body
-                    )
-                    if not ok:
-                        app.logger.warning("Email notification failed for user id=%s", owner_id)
-                except Exception as e:
-                    app.logger.exception("Unexpected error in send_email_notification: %s", e)
+        # IMPORTANT: we NO LONGER send email here; instead we redirect user to WhatsApp
+        app.logger.info(
+            "Proposal created successfully for listing_id=%s; redirecting to WhatsApp %s",
+            listing_id, wa_url
+        )
 
-            # Web-push notification (still wrapped)
-            try:
-                push_title = "New proposal received"
-                push_body = f"{proposer_name} sent a proposal for \"{listing_title}\"."
-                send_push(
-                    owner_id,
-                    push_title,
-                    push_body,
-                    url_for('dashboard')
-                )
-                app.logger.info("Push notification sent to user %s for listing %s", owner_id, listing_id)
-            except Exception as push_err:
-                app.logger.error("Push notification error: %s", push_err, exc_info=True)
-
-        flash('Your swap proposal has been submitted successfully! The owner will be notified.', 'success')
-        return redirect(url_for('listing_details', listing_id=listing_id))
+        # No flash here because we are leaving the site to WhatsApp;
+        # if you want, you can store something in session and show it when they come back.
+        return redirect(wa_url)
 
     except Exception as e:
         if conn:

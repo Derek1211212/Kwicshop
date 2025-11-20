@@ -381,6 +381,31 @@
       color: white;
     }
 
+
+
+/* WhatsApp-specific styling */
+.whatsapp-message-button {
+  background: #25D366;
+  border-color: #1ebe5d;
+  color: #ffffff;
+}
+
+.whatsapp-message-button:hover,
+.whatsapp-message-button:active {
+  background: #1ebe5d;
+  color: #ffffff;
+}
+
+/* Small helper note under WhatsApp button */
+.whatsapp-note {
+  font-size: 0.8rem;
+  color: var(--dark-gray);
+  margin-top: 0.25rem;
+  margin-left: 1.6rem; /* roughly align under phone icon */
+}
+
+
+
     /* Condition Badges */
     .condition-badge {
       display: inline-block;
@@ -1317,7 +1342,20 @@
               <i class="fas fa-phone" style="color:var(--primary-color)"></i>
               <span>{{ listing.contact }}</span>
             </div>
+
+            {# ✅ Only show quick WhatsApp chat for NON-swap deals #}
+            {% if listing.deal_type != 'Swap Deal' %}
+              <div class="contact-method">
+                <a href="javascript:void(0)" id="whatsappQuickLink" class="message-button whatsapp-message-button">
+                  <i class="fab fa-whatsapp"></i> Chat via WhatsApp
+                </a>
+              </div>
+              <div class="whatsapp-note">
+                This number should be WhatsApp-enabled for direct messaging.
+              </div>
+            {% endif %}
           {% endif %}
+
           {% if listing.email %}
             <div class="contact-method">
               <i class="fas fa-envelope" style="color:var(--primary-color)"></i>
@@ -1326,6 +1364,8 @@
           {% endif %}
         </div>
       </div>
+
+
 
       <!-- Additional Information -->
       <div class="details-section">
@@ -1353,12 +1393,11 @@
       {% if listing.deal_type == 'Swap Deal' %}
         <div class="action-section">
           <button class="offer-button" id="offerButton">
-            <i class="fas fa-handshake"></i> Make Swap Offer
+            <i class="fab fa-whatsapp" style="margin-right: 0.4rem;"></i>
+            <span>Make Swap Offer</span>
           </button>
         </div>
       {% endif %}
-    </div>
-  </div>
 
   <!-- Ratings & Reviews Section -->
   <div class="details-section">
@@ -1606,11 +1645,57 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+
+  /* WhatsApp: config pulled from Jinja.
+     listing.contact should already contain full number INCLUDING country code,
+     e.g. 233544156292 (no plus sign). */
+  const vendorWhatsAppRaw  = "{{ listing.contact|default('', true) }}";
+  const ownerName          = {{ listing.username|tojson }};
+  const listingTitle       = {{ listing.title|tojson }};
+  const currentListingUrl  = "{{ url_for('listing_details', listing_id=listing_id, _external=True) }}";
+
+  /* Simple phone normalizer: strip everything except digits */
+  function normalizePhone(raw) {
+    if (!raw) return '';
+    return raw.replace(/\D/g, '');
+  }
+
+  /* Use the number from DB as the source of truth.
+     It already has the correct country code attached from signup. */
+  function getWhatsAppNumber(raw) {
+    return normalizePhone(raw);
+  }
+
+  // --- Quick WhatsApp chat button (top Contact section) ---
+  const whatsappQuickLink = document.getElementById('whatsappQuickLink');
+
+  if (whatsappQuickLink) {
+    whatsappQuickLink.addEventListener('click', function (e) {
+      e.preventDefault(); // stop jumping to top
+
+      const phoneDigits = getWhatsAppNumber(vendorWhatsAppRaw);
+      if (!phoneDigits) {
+        alert('Seller WhatsApp number is missing or invalid.');
+        return;
+      }
+
+      const lines = [
+        `Hi ${ownerName || 'there'},`,
+        '',
+        `I'm interested in your listing "${listingTitle}" on SwapHub.`,
+        `Listing link: ${currentListingUrl}`
+      ];
+
+      const waUrl = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(lines.join('\n'))}`;
+      window.open(waUrl, '_blank');
+    });
+  }
+
   // Modal Controls
-  const modal = document.getElementById('proposalModal');
-  const offerButton = document.getElementById('offerButton');
+  const modal            = document.getElementById('proposalModal');
+  const offerButton      = document.getElementById('offerButton');
   const closeModalButton = document.getElementById('closeModal');
-  const proposalForm = document.getElementById('proposalForm');
+  const proposalForm     = document.getElementById('proposalForm');
 
   function openModal() {
     modal.style.display = 'block';
@@ -1638,7 +1723,6 @@ document.addEventListener('DOMContentLoaded', function() {
           if (data.logged_in) {
             openModal();
           } else {
-            // Redirect to login with the current page and modal flag
             const nextUrl = window.location.pathname + '?open_modal=true';
             window.location.href = '/login?next=' + encodeURIComponent(nextUrl);
           }
@@ -1681,11 +1765,11 @@ document.addEventListener('DOMContentLoaded', function() {
     openModal();
   }
 
-  // Proposal Form Submission
-  const uploadBtn = document.querySelector('.upload-btn');
-  const fileInput = document.getElementById('image1');
-  const uploadContainer = document.getElementById('uploadContainer');
-  const fileList = document.getElementById('fileList');
+  // Proposal Form Submission (backend handles WhatsApp redirect)
+  const uploadBtn        = document.querySelector('.upload-btn');
+  const fileInput        = document.getElementById('image1');
+  const uploadContainer  = document.getElementById('uploadContainer');
+  const fileList         = document.getElementById('fileList');
   const previewContainer = document.getElementById('previewContainer');
 
   let files = [];
@@ -1693,13 +1777,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (proposalForm) {
     proposalForm.addEventListener('submit', function(e) {
-      const proposedItem = document.getElementById('proposed_item');
+      const proposedItem        = document.getElementById('proposed_item');
       const detailedDescription = document.getElementById('detailed_description');
-      const condition = document.getElementById('condition');
-      const phoneNumber = document.getElementById('phone_number');
-      const emailAddress = document.getElementById('email_address');
+      const condition           = document.getElementById('condition');
+      const phoneNumber         = document.getElementById('phone_number');
+      const emailAddress        = document.getElementById('email_address');
 
-      // Client-side validation
+      // Client-side validation – only prevent default when invalid
       if (proposedItem.value.trim() === '') {
         e.preventDefault();
         alert('Please enter the item you are offering');
@@ -1726,23 +1810,16 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      // Log form data for debugging
-      const formData = new FormData(this);
-      console.log('Form action URL:', this.action);
-      console.log('Form data:', Object.fromEntries(formData));
-      for (let [key, value] of formData.entries()) {
-        if (value instanceof File && value.name) {
-          console.log(`File ${key}:`, value.name, value.size);
-        }
+      // Valid -> let browser submit normally (Flask will redirect to WhatsApp)
+      const submitBtn = proposalForm.querySelector('.modal-submit-btn');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.querySelector('.btn-content').innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> Submitting...';
       }
-
-      // Show loading state
-      const submitBtn = this.querySelector('.modal-submit-btn');
-      submitBtn.disabled = true;
-      submitBtn.querySelector('.btn-content').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
     });
 
-    // File upload handling
+    // File upload handling (unchanged)
     if (uploadBtn) {
       uploadBtn.addEventListener('click', function() {
         fileInput.click();
@@ -1797,7 +1874,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function handleFiles(selectedFiles) {
       files = [];
-      // Filter and limit to 4 image files
       for (let i = 0; i < selectedFiles.length && files.length < maxFiles; i++) {
         const file = selectedFiles[i];
         if (file.type.match('image.*')) {
@@ -1808,15 +1884,13 @@ document.addEventListener('DOMContentLoaded', function() {
         alert(`Maximum ${maxFiles} images allowed. Only the first ${maxFiles} will be used.`);
       }
 
-      // Clear existing files in all inputs
       for (let i = 1; i <= maxFiles; i++) {
         const targetInput = document.getElementById(`image${i}`);
         if (targetInput) {
-          targetInput.files = new DataTransfer().files; // Clear files
+          targetInput.files = new DataTransfer().files;
         }
       }
 
-      // Assign files to input fields (image1, image2, etc.)
       files.forEach((file, index) => {
         const targetInput = document.getElementById(`image${index + 1}`);
         if (targetInput) {
@@ -1855,7 +1929,7 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
           const index = parseInt(this.getAttribute('data-index'));
           files.splice(index, 1);
-          handleFiles(files); // Reassign files to inputs
+          handleFiles(files);
         });
       });
     }
@@ -1871,7 +1945,7 @@ document.addEventListener('DOMContentLoaded', function() {
           preview.src = e.target.result;
           preview.alt = `Preview ${index + 1}`;
           preview.title = file.name;
-          preview.style.width = '80px';
+          preview.style.width  = '80px';
           preview.style.height = '80px';
           preview.style.objectFit = 'cover';
           preview.style.borderRadius = '6px';
@@ -1895,7 +1969,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Mobile Menu Toggle
   const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-  const navLinks = document.getElementById('navLinks');
+  const navLinks      = document.getElementById('navLinks');
 
   if (mobileMenuBtn && navLinks) {
     mobileMenuBtn.addEventListener('click', () => {
@@ -1909,23 +1983,23 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Image Gallery Functionality
+  // Image Gallery Functionality (same as before)
   function changeMainImage(thumbnail, imageUrl, mainImageId, thumbnailContainerId) {
-    const mainImage = document.getElementById(mainImageId);
+    const mainImage          = document.getElementById(mainImageId);
     const thumbnailContainer = document.getElementById(thumbnailContainerId);
-    const thumbnails = thumbnailContainer.querySelectorAll('.thumbnail');
-    
+    const thumbnails         = thumbnailContainer.querySelectorAll('.thumbnail');
+
     mainImage.classList.add('image-changing');
     thumbnails.forEach(thumb => thumb.classList.remove('active'));
     thumbnail.classList.add('active');
-    
+
     const currentIndex = Array.from(thumbnails).indexOf(thumbnail) + 1;
-    const counterId = mainImageId.replace('mainImage', 'image-counter');
+    const counterId    = mainImageId.replace('mainImage', 'image-counter');
     const imageCounter = document.getElementById(counterId);
     if (imageCounter) {
       imageCounter.textContent = `${currentIndex} of ${thumbnails.length}`;
     }
-    
+
     setTimeout(() => {
       mainImage.src = imageUrl;
       mainImage.classList.remove('image-changing');
@@ -1938,10 +2012,10 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function toggleZoom(mainImageId) {
-    const img = document.getElementById(mainImageId);
+    const img      = document.getElementById(mainImageId);
     const isZoomed = img.style.transform === 'scale(2)';
-    img.style.transform = isZoomed ? 'scale(1)' : 'scale(2)';
-    img.style.cursor = isZoomed ? 'zoom-in' : 'zoom-out';
+    img.style.transform       = isZoomed ? 'scale(1)' : 'scale(2)';
+    img.style.cursor          = isZoomed ? 'zoom-in' : 'zoom-out';
     img.style.transformOrigin = 'center center';
   }
 
@@ -1985,9 +2059,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Responsive Adjustments
   if (window.innerWidth < 768) {
-    if (navLinks) navLinks.style.display = 'none';
+    if (navLinks)      navLinks.style.display = 'none';
     if (mobileMenuBtn) mobileMenuBtn.style.display = 'block';
-    
+
     const firstThumbnail = document.querySelector('#thumbnailContainer .thumbnail');
     if (firstThumbnail) {
       setTimeout(() => {
@@ -2003,7 +2077,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   window.addEventListener('resize', function() {
     if (window.innerWidth >= 768) {
-      if (navLinks) navLinks.style.display = 'flex';
+      if (navLinks)      navLinks.style.display = 'flex';
       if (mobileMenuBtn) mobileMenuBtn.style.display = 'none';
     } else {
       if (mobileMenuBtn) mobileMenuBtn.style.display = 'block';
@@ -2028,7 +2102,7 @@ document.addEventListener('DOMContentLoaded', function() {
         alert('Please select a rating');
         return;
       }
-      
+
       try {
         const response = await fetch(`/submit_rating/{{ listing.listing_id }}`, {
           method: 'POST',
@@ -2037,9 +2111,9 @@ document.addEventListener('DOMContentLoaded', function() {
           },
           body: `rating=${ratingInput.value}`
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
           alert('Rating submitted successfully!');
           location.reload();
@@ -2062,7 +2136,7 @@ document.addEventListener('DOMContentLoaded', function() {
         alert('Please write a review before submitting');
         return;
       }
-      
+
       try {
         const response = await fetch(`/submit_review/{{ listing.listing_id }}`, {
           method: 'POST',
@@ -2071,18 +2145,22 @@ document.addEventListener('DOMContentLoaded', function() {
           },
           body: `review_text=${encodeURIComponent(reviewText)}`
         });
-        
+
         const data = await response.json();
-        console.log('Review submission response:', data); // Debug log
-        
+        console.log('Review submission response:', data);
+
         if (data.success) {
-          const reviewsList = document.querySelector('.reviews-list') || document.createElement('div');
-          if (reviewsList.children.length === 0 && document.querySelector('.reviews-container p')) {
-            document.querySelector('.reviews-container p').remove();
+          const reviewsContainer = document.querySelector('.reviews-container');
+          let reviewsList = document.querySelector('.reviews-list');
+
+          if (!reviewsList) {
+            reviewsList = document.createElement('div');
             reviewsList.classList.add('reviews-list');
-            document.querySelector('.reviews-container').prepend(reviewsList);
+            const emptyP = reviewsContainer.querySelector('p');
+            if (emptyP) emptyP.remove();
+            reviewsContainer.prepend(reviewsList);
           }
-          
+
           const reviewItem = document.createElement('div');
           reviewItem.className = 'review-item';
           reviewItem.innerHTML = `
@@ -2094,7 +2172,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <p>${data.review.review_text}</p>
             </div>
           `;
-          
+
           reviewsList.prepend(reviewItem);
           document.getElementById('reviewText').value = '';
           alert('Review submitted successfully!');
@@ -2109,7 +2187,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// Image Gallery Helper
+// Global helpers for inline onclicks in the HTML
 function changeMainImage(el, src, mainImageId, thumbnailContainerId) {
   const mainImg = document.getElementById(mainImageId);
   mainImg.src = src;
@@ -2118,9 +2196,9 @@ function changeMainImage(el, src, mainImageId, thumbnailContainerId) {
   thumbs.forEach(img => img.classList.remove('active'));
   el.classList.add('active');
 
-  const counterId = mainImageId.replace('mainImage', 'image-counter');
+  const counterId    = mainImageId.replace('mainImage', 'image-counter');
   const currentIndex = Array.from(thumbs).indexOf(el) + 1;
-  const counter = document.getElementById(counterId);
+  const counter      = document.getElementById(counterId);
   if (counter) {
     counter.textContent = `${currentIndex} of ${thumbs.length}`;
   }
@@ -2135,6 +2213,8 @@ function toggleZoom(imageId) {
   }
 }
 </script>
+
+
 
 <script>
   window.addEventListener('load', function() {
