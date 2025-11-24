@@ -227,7 +227,8 @@
               </form>
             </div>
             <a href="{{ url_for('listing_details', listing_id=item.listing_id) }}" aria-label="View {{ item.title }} details">
-              <img src="{{ url_for('static', filename='images/' + (item.image_url or 'placeholder.jpg')) }}" alt="{{ item.title }}" loading="lazy" />
+              <img src="{{ item.image_url }}" alt="{{ item.title }}" loading="lazy" />
+
             </a>
           </div>
           <div class="content">
@@ -274,7 +275,8 @@
         <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .9rem;">
           {% for sim in all_similar %}
           <a href="{{ url_for('listing_details', listing_id=sim.listing_id) }}" class="similar-card">
-            <img src="{{ url_for('static', filename='images/' + (sim.image_url or 'placeholder.jpg')) }}" alt="{{ sim.title }}" loading="lazy" />
+            <img src="{{ sim.image_url }}" alt="{{ sim.title }}" loading="lazy" />
+
             <p>{{ sim.title[:24] }}{% if sim.title|length > 24 %}…{% endif %}</p>
           </a>
           {% endfor %}

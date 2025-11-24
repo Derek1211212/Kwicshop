@@ -4394,6 +4394,26 @@ def view_wishlist():
 
         similar_listings[listing_id] = sim
 
+    # --- normalize images for wishlist items and similar listings ---
+    def _normalize_image(record):
+        # Prefer explicit image_url if present, else image1
+        raw = record.get('image_url') or record.get('image1')
+
+        if raw and str(raw).startswith('http'):
+            # Cloudinary / external URL stored directly
+            record['image_url'] = raw
+        else:
+            # Local filename in static/images or fallback placeholder
+            name = raw or 'placeholder.jpg'
+            record['image_url'] = url_for('static', filename=f'images/{name}')
+
+    for item in wishlist_items:
+        _normalize_image(item)
+
+    for sims in similar_listings.values():
+        for sim in sims:
+            _normalize_image(sim)
+
     cursor.close()
     conn.close()
 
@@ -4402,6 +4422,7 @@ def view_wishlist():
         listings=wishlist_items,
         similar_listings=similar_listings
     )
+
 
 
 
