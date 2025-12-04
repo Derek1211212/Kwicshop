@@ -5932,6 +5932,14 @@ def google_verification():
 
 
 
+@app.route("/sitemap.xml")
+def sitemap():
+    static_dir = os.path.join(os.path.dirname(__file__), "templates")
+    return send_from_directory(static_dir, "sitemap.xml")
+
+
+
+
 
 
 
