@@ -5922,6 +5922,19 @@ scheduler.add_job(
     next_run_time=datetime.utcnow()
 )
 
+
+
+
+@app.route("/googlefbaf22f94e24fef4.html")
+def google_verification():
+    templates_dir = os.path.join(os.path.dirname(__file__), "templates")
+    return send_from_directory(templates_dir, "googlefbaf22f94e24fef4.html")
+
+
+
+
+
+
 # ------------------------------------------------------------------
 # 5c – Start the scheduler **once** (after app is created)
 # ------------------------------------------------------------------
