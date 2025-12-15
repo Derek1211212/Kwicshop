@@ -54,6 +54,7 @@ import cloudinary
 import cloudinary.uploader
 from twilio.rest import Client
 from urllib.parse import quote_plus
+import atexit
 
 
 
@@ -142,28 +143,26 @@ cloudinary.config(
 
 
 
+# ─── 1) Cache Configuration ────────────────────────────────────────────────
 cache = Cache(config={
     'CACHE_TYPE': 'SimpleCache',
     'CACHE_DEFAULT_TIMEOUT': 300
 })
 cache.init_app(app)
 
-
-
-# Database connection function
+# ─── 2) Database Configuration ─────────────────────────────────────────────
 dbconfig = {
-    "host":       os.getenv('DB_HOST', 'localhost'),
-    "user":       os.getenv('DB_USER', 'root'),
-    "password":   os.getenv('DB_PASSWORD', ''),
-    "database":   os.getenv('DB_DATABASE', ''),
-    "port":       int(os.getenv('DB_PORT', 3306)),
-    "charset":    'utf8mb4',
-    "collation":  'utf8mb4_unicode_ci',
+    "host":        os.getenv('DB_HOST', 'localhost'),
+    "user":        os.getenv('DB_USER', 'root'),
+    "password":    os.getenv('DB_PASSWORD', ''),
+    "database":    os.getenv('DB_DATABASE', ''),
+    "port":        int(os.getenv('DB_PORT', 3306)),
+    "charset":     'utf8mb4',
+    "collation":   'utf8mb4_unicode_ci',
     "use_unicode": True
 }
 
-# ─── 2) Determine how many app‑server processes you’re running ──────────────
-#    (e.g. Gunicorn --workers or similar). Default to 1 in dev.
+# ─── 3) Determine worker count safely ──────────────────────────────────────
 try:
     WEB_CONCURRENCY = int(os.getenv('WEB_CONCURRENCY', '1'))
     if WEB_CONCURRENCY < 1:
@@ -171,22 +170,21 @@ try:
 except ValueError:
     WEB_CONCURRENCY = 1
 
-# ─── 3) Define your total‑app ceiling and per‑pool cap ───────────────────────
-TOTAL_APP_CONN = 200   # across all workers, aim to use no more than this
-MAX_PER_POOL   = 15    # mysql.connector.pooling hard upper bound
-MIN_PER_POOL   = 5     # always at least this many connections
+# ─── 4) SAFE pool limits (MySQL-friendly) ──────────────────────────────────
+# Default MySQL max_connections ≈ 151
+TOTAL_APP_CONN = int(os.getenv('TOTAL_APP_CONN', '100'))
+MAX_PER_POOL   = int(os.getenv('MAX_PER_POOL', '10'))
+MIN_PER_POOL   = int(os.getenv('MIN_PER_POOL', '3'))
 
-# ─── 4) Compute per‑process pool size ────────────────────────────────────────
-raw_size = TOTAL_APP_CONN // WEB_CONCURRENCY
+raw_size  = TOTAL_APP_CONN // WEB_CONCURRENCY
 pool_size = max(MIN_PER_POOL, min(raw_size, MAX_PER_POOL))
 
 logger.info(
-    f"DB Pool Configuration → WEB_CONCURRENCY={WEB_CONCURRENCY}, "
-    f"TOTAL_APP_CONN={TOTAL_APP_CONN}, raw_per_pool={raw_size}, "
-    f"using pool_size={pool_size}"
+    f"DB Pool → workers={WEB_CONCURRENCY}, "
+    f"raw_per_worker={raw_size}, pool_size={pool_size}"
 )
 
-# ─── 5) Instantiate the MySQLConnectionPool ────────────────────────────────
+# ─── 5) Create ONE pool per process ────────────────────────────────────────
 cnxpool = pooling.MySQLConnectionPool(
     pool_name="mypool",
     pool_size=pool_size,
@@ -194,26 +192,48 @@ cnxpool = pooling.MySQLConnectionPool(
     **dbconfig
 )
 
-# ─── 6) Helper to get a connection from the pool ────────────────────────────
+# ─── 6) SAFE wrapper connection (routes remain unchanged) ──────────────────
+class SafePooledConnection:
+    """
+    Wraps mysql.connector connection to GUARANTEE
+    it returns to the pool even if the developer forgets.
+    """
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def __getattr__(self, name):
+        return getattr(self._conn, name)
+
+    def close(self):
+        if self._conn:
+            try:
+                self._conn.close()  # return to pool
+            finally:
+                self._conn = None
+
+    def __del__(self):
+        self.close()
+
+
 def get_db_connection():
     """
-    Returns a mysql.connector connection from the configured pool.
+    RETURNS EXACTLY WHAT YOUR ROUTES EXPECT.
+    NO ROUTE CHANGES REQUIRED.
     """
-    return cnxpool.get_connection()
+    return SafePooledConnection(cnxpool.get_connection())
 
 
+# ─── 7) Graceful shutdown cleanup ──────────────────────────────────────────
+def shutdown_pool():
+    try:
+        cnxpool._remove_connections()
+    except Exception:
+        pass
 
-oauth = OAuth(app)
-google = oauth.register(
-    name='google',
-    client_id=os.environ['GOOGLE_CLIENT_ID'],
-    client_secret=os.environ['GOOGLE_CLIENT_SECRET'],
-    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-    client_kwargs={
-        # Remove 'openid' so no id_token is returned
-        'scope': 'email profile'
-    }
-)
+atexit.register(shutdown_pool)
+
+
 
 
 
@@ -1348,12 +1368,17 @@ def login_phone_verify():
 from authlib.integrations.flask_client import OAuth
 
 oauth = OAuth(app)
+
 google = oauth.register(
-    name="google",
-    client_id=os.getenv("GOOGLE_CLIENT_ID"),
-    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
-    server_metadata_url=os.getenv("GOOGLE_DISCOVERY_URL"),
-    client_kwargs={"scope": "openid email profile"},
+    name='google',
+    client_id=os.environ.get('GOOGLE_CLIENT_ID'),
+    client_secret=os.environ.get('GOOGLE_CLIENT_SECRET'),
+    authorize_url='https://accounts.google.com/o/oauth2/v2/auth',
+    access_token_url='https://oauth2.googleapis.com/token',
+    api_base_url='https://www.googleapis.com/oauth2/v2/',
+    client_kwargs={
+        'scope': 'email profile'
+    }
 )
 
 
@@ -1398,18 +1423,19 @@ def get_or_create_user(google_id, email, username, avatar=None):
     return user
 
 
-@app.route("/login/google")
-def login_google():
-    next_url = request.args.get("next") or url_for("home")
-    redirect_uri = url_for("authorize_google", _external=True)
-    # Put the next url into 'state'
-    return google.authorize_redirect(redirect_uri, state=next_url)
+@app.route('/login/google')
+def google_login():
+    redirect_uri = url_for('google_callback', _external=True)
+    return oauth.google.authorize_redirect(redirect_uri)
 
 
-@app.route("/oauth2callback")
-def authorize_google():
-    # Exchange code for access token
-    token = google.authorize_access_token()
+
+@app.route('/login/google/callback')
+def google_callback():
+    token = oauth.google.authorize_access_token()
+    user_info = oauth.google.get('userinfo').json()
+    return user_info
+
 
     # Fetch userinfo endpoint from metadata
     userinfo_endpoint = google.server_metadata.get("userinfo_endpoint")
