@@ -319,6 +319,48 @@ scheduler.start()
 
 
 
+def _get_category_counts(cursor, *, search, deal_type, location):
+    """
+    Returns dict: { category_name: count }
+    Counts respect current filters.
+    """
+
+    base_q = """
+        SELECT l.category, COUNT(*) AS total
+        FROM listings l
+        WHERE 1=1
+    """
+    params = []
+
+    if search:
+        like = f"%{search}%"
+        base_q += " AND (l.title LIKE %s OR l.description LIKE %s OR l.category LIKE %s)"
+        params += [like, like, like]
+
+    if deal_type and deal_type != 'All':
+        base_q += " AND l.deal_type = %s"
+        params.append(deal_type)
+
+    if location:
+        base_q += """
+            AND l.location IS NOT NULL
+            AND (l.location = %s OR SOUNDEX(l.location) = SOUNDEX(%s) OR l.location LIKE %s)
+        """
+        params += [location, location, f"%{location}%"]
+
+    base_q += " GROUP BY l.category"
+
+    cursor.execute(base_q, tuple(params))
+
+    return {row['category']: row['total'] for row in cursor.fetchall()}
+
+
+
+
+
+
+
+
 
 
 # 3) The home route
@@ -329,11 +371,6 @@ def home():
     deal_type_filter  = request.args.get('deal_type', 'All')
     location_q        = request.args.get('location', '').strip()
     page              = max(1, request.args.get('page', 1, type=int))
-
-    # Smart Match Wizard params
-    smart_match_mode = request.args.get('smart_match', '0') == '1'
-    smart_have       = request.args.get('have', '').strip()
-    smart_want       = request.args.get('want', '').strip()
 
     DEFAULT_PER_PAGE = 40
     MAX_PER_PAGE     = 200
@@ -347,6 +384,7 @@ def home():
     suggestion_listings = []
     show_suggestions   = False
     total_pages        = 0
+    category_counts    = {}
 
     conn = cursor = None
     try:
@@ -356,49 +394,41 @@ def home():
         # 1) Carousel
         carousel_listings = _get_carousel(cursor)
 
-        # 2) Smart Match Mode
-        if smart_match_mode and (smart_have or smart_want):
-            listings, total_pages = _smart_match_listings(
-                cursor,
-                have=smart_have,
-                want=smart_want,
-                per_page=per_page,
-                offset=offset
-            )
-        else:
-            # Normal Listings
-            listings, total_pages = _get_main_listings(
-                cursor,
-                search=search,
-                category=selected_category,
-                deal_type=deal_type_filter,
-                location=location_q,
-                per_page=per_page,
-                offset=offset,
-            )
+        # 2) Normal Listings
+        listings, total_pages = _get_main_listings(
+            cursor,
+            search=search,
+            category=selected_category,
+            deal_type=deal_type_filter,
+            location=location_q,
+            per_page=per_page,
+            offset=offset,
+        )
 
         # 3) Suggestions if no result
         if not listings and search:
             show_suggestions    = True
             suggestion_listings = _get_suggestions(cursor, search)
 
-        # Combine items for wishlist + images
+        # 4) Compute category counts
+        cursor.execute("""
+            SELECT category, COUNT(*) as count
+            FROM listings
+            GROUP BY category
+        """)
+        category_counts = {row['category']: row['count'] for row in cursor.fetchall()}
+
+        # 5) Attach images & offers
         all_items = listings + suggestion_listings
         offers    = _attach_offered_items(cursor, all_items)
 
         for item in all_items:
-            raw_image = item.get('image1')  # might be 'file.jpg' or 'https://...'
-
+            raw_image = item.get('image1')
             if raw_image and raw_image.startswith('http'):
-                # New style: Cloudinary URL stored directly
                 item['image_url'] = raw_image
             else:
-                # Old style: filename in static/images or fallback placeholder
-                name = raw_image or 'placeholder.jpg'
-                item['image_url'] = url_for('static', filename=f'images/{name}')
-
+                item['image_url'] = url_for('static', filename=f'images/{raw_image or "placeholder.jpg"}')
             item['offers'] = offers.get(item['listing_id'], [])
-
             item.setdefault('required_cash', 0)
             item.setdefault('additional_cash', 0)
             item.setdefault('desired_swap', '')
@@ -406,16 +436,13 @@ def home():
             item.setdefault('location', '')
             item.setdefault('contact', '')
 
-
-        # Wishlist mapping
+        # 6) Wishlist logic
         if user_logged_in and all_items:
             uid = session['user_id']
-
             cursor.execute("SELECT 1 FROM push_subscriptions WHERE user_id=%s LIMIT 1", (uid,))
             user_subscribed = cursor.fetchone() is not None
 
             visible_ids = [x['listing_id'] for x in all_items]
-
             if visible_ids:
                 ph = ",".join(["%s"] * len(visible_ids))
                 cursor.execute(
@@ -432,7 +459,6 @@ def home():
             for item in all_items:
                 item['is_wishlisted'] = False
 
-        # Featured listing
         featured = listings[0] if listings else (suggestion_listings[0] if suggestion_listings else None)
 
         return render_template(
@@ -451,9 +477,7 @@ def home():
             vapid_public_key=app.config.get('VAPID_PUBLIC_KEY', ''),
             page=page,
             total_pages=total_pages,
-            smart_match_mode=smart_match_mode,
-            smart_have=smart_have,
-            smart_want=smart_want
+            category_counts=category_counts   # <-- Pass it here
         )
 
     except Exception as e:
@@ -463,6 +487,7 @@ def home():
     finally:
         if cursor: cursor.close()
         if conn: conn.close()
+
 
 
 # ———————————————————————— HELPERS ————————————————————————

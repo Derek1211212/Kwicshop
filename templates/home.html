@@ -105,14 +105,201 @@
     .chip.active{background:linear-gradient(180deg, rgba(129,199,132,.12), rgba(129,199,132,.06));color:var(--primary-dark);border-color:var(--primary)}
 
     /* CATEGORY SCROLLER — smaller buttons + horizontal scroll */
-    .category-scroller{display:flex;gap:.5rem;overflow-x:auto;overflow-y:hidden;padding:.25rem 0 .35rem;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scroll-snap-type:x mandatory}
-    .category-scroller::-webkit-scrollbar{height:6px}
-    .category-scroller::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:6px}
-    .category-btn{flex:0 0 auto; scroll-snap-align:start;display:flex;flex-direction:row;align-items:center;gap:.45rem;border:1px solid var(--border);border-radius:12px;background:#fff;color:var(--text);padding:.45rem .6rem; cursor:pointer; transition:transform .12s, box-shadow .15s, border-color .15s;white-space:nowrap; min-width:auto; max-width:none;font-weight:700; font-size:.82rem}
-    .category-btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-xs);border-color:rgba(129,199,132,.5)}
-    .category-btn.active{background:linear-gradient(180deg, rgba(129,199,132,.10), rgba(129,199,132,.04));border-color:var(--primary);color:var(--primary-dark)}
-    .category-icon-box{width:28px;height:28px;border-radius:8px;background:#f3f4f6;display:grid;place-items:center;flex-shrink:0}
-    .category-name{font-size:.8rem;font-weight:700}
+
+.category-filter {
+  margin: 1.4rem 0;
+  position: relative;
+}
+
+.category-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: .6rem;
+}
+
+/* 🔥 KEY PART */
+.category-scroll-grid {
+  display: grid;
+  grid-auto-flow: column;                  /* fill DOWN then RIGHT */
+  grid-template-rows: repeat(3, auto);     /* EXACTLY 3 rows */
+  grid-auto-columns: minmax(48%, 1fr);     /* 2 columns */
+  gap: .75rem;
+
+  overflow-x: auto;
+  padding-bottom: .5rem;
+  scroll-snap-type: x mandatory;
+}
+
+.category-scroll-grid::-webkit-scrollbar {
+  display: none;
+}
+
+/* Card */
+.category-card {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .7rem;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,.06);
+  text-decoration: none;
+  color: #222;
+  box-shadow: 0 6px 16px rgba(0,0,0,.05);
+  scroll-snap-align: start;
+  transition: all .2s ease;
+}
+
+.category-card:hover {
+  transform: translateY(-2px);
+}
+
+.category-card.active {
+  border: 2px solid #2e7d32;
+  background: linear-gradient(135deg,
+    rgba(46,125,50,.14),
+    rgba(76,175,80,.08));
+}
+
+/* Icon */
+.cat-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: rgba(46,125,50,.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cat-icon img {
+  width: 22px;
+  height: 22px;
+}
+
+.cat-label {
+  font-size: .85rem;
+  font-weight: 600;
+}
+
+/* 🔥 Scroll hint fade */
+.scroll-fade {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  top: 2.2rem;
+  width: 38px;
+  pointer-events: none;
+  background: linear-gradient(to right,
+    rgba(255,255,255,0),
+    rgba(255,255,255,.9));
+  animation: fadePulse 1.6s infinite;
+}
+
+@keyframes fadePulse {
+  0%   { opacity: .4; }
+  50%  { opacity: 1; }
+  100% { opacity: .4; }
+}
+
+/* Desktop — disable scrolling */
+@media (min-width: 992px) {
+  .category-scroll-grid {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: auto;
+    overflow: visible;
+  }
+
+  .scroll-fade {
+    display: none;
+  }
+}
+
+
+/* Nudge animation */
+@keyframes scrollNudge {
+  0%   { transform: translateX(0); }
+  40%  { transform: translateX(-18px); }
+  70%  { transform: translateX(0); }
+  100% { transform: translateX(0); }
+}
+
+.category-scroll-grid.nudge {
+  animation: scrollNudge 1.2s ease-in-out;
+}
+
+
+.category-swipe-hint {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .85rem;
+  font-weight: 600;
+  color: #2e7d32;
+  margin-bottom: .5rem;
+  opacity: 0;
+  animation: swipeFadeIn 0.6s ease forwards,
+             swipePulse 2.2s ease-in-out infinite;
+  animation-delay: 0.2s, 1s;
+}
+
+/* Swipe text */
+.swipe-text {
+  white-space: nowrap;
+}
+
+/* Arrow animation */
+.swipe-arrow {
+  display: inline-block;
+  font-size: 1rem;
+  animation: arrowNudge 1.2s ease-in-out infinite;
+}
+
+/* Fade overlay on the right */
+.scroll-fade {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 40px;
+  pointer-events: none;
+  background: linear-gradient(to right, rgba(255,255,255,0), #fff);
+}
+
+/* Animations */
+@keyframes arrowNudge {
+  0%   { transform: translateX(0); }
+  50%  { transform: translateX(6px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes swipePulse {
+  0%   { opacity: 1; }
+  50%  { opacity: .55; }
+  100% { opacity: 1; }
+}
+
+@keyframes swipeFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* Hide on desktop */
+@media (min-width: 992px) {
+  .category-swipe-hint {
+    display: none;
+  }
+}
+
+
+
+
+
+
+
+
+
+
 
     /* --- FEATURED / CAROUSEL --- */
     .featured-shell{background:white; border-bottom:1px solid var(--featured-edge);padding:1.25rem 0 1.5rem;position:relative}
@@ -905,7 +1092,7 @@
 
 
 
-<<!-- OPEN SEARCH HUB BUTTON -->
+<!-- OPEN SEARCH HUB BUTTON -->
 <button id="openSearchHub" class="open-search-hub-btn">
   <i class="fas fa-search"></i> Search
 </button>
@@ -1069,38 +1256,61 @@
     </div>
   </div>
 
-  <!-- Categories (HORIZONTAL SCROLLER) -->
-  <div class="filter-card">
-    <div class="filter-title">Categories</div>
-    <div class="category-scroller" id="category-scroller" role="tablist" aria-label="Categories">
-      {% for value, label, icon in [
-        ('All','All','mdi:format-list-bulleted'),
-        ('Electronics','Electronics','mdi:television'),
-        ('Mobile Phones & Accessories','Phones','mdi:cellphone'),
-        ('Computers & Networking','Computers','mdi:desktop-classic'),
-        ('Sports & Outdoors','Sports','mdi:basketball'),
-        ('Toys & Games','Toys','mdi:puzzle'),
-        ('Automobile & Vehicles','Auto','mdi:car')
-      ] %}
-        <button
-          type="button"
-          class="category-btn{% if selected_category == value %} active{% endif %}"
-          data-value="{{ value }}"
-          role="tab"
-          aria-pressed="{% if selected_category == value %}true{% else %}false{% endif %}">
-          <span class="category-icon-box" aria-hidden="true">
-            <img src="https://api.iconify.design/{{ icon }}.svg"
-                 alt=""
-                 width="18"
-                 height="18"
-                 onerror="this.onerror=null; this.src='{{ url_for('static', filename='icons/placeholder.svg') }}';">
-          </span>
-          <span class="category-name">{{ label }}</span>
-        </button>
-      {% endfor %}
-    </div>
-  </div>
+<section class="category-filter">
+  <h3 class="category-title">Browse Categories</h3>
+
+<div class="category-swipe-hint" aria-hidden="true">
+  <span class="swipe-text">Swipe to see more</span>
+  <span class="swipe-arrow">→</span>
 </div>
+
+
+  <div class="category-scroll-grid">
+
+    {% set categories = [
+      ('All','All','mdi:view-grid'),
+      ('Electronics','Electronics','mdi:television'),
+      ('Mobile Phones & Accessories','Phones','mdi:cellphone'),
+      ('Computers & Networking','Computers','mdi:laptop'),
+      ('Sports & Outdoors','Sports','mdi:basketball'),
+      ('Toys & Games','Toys','mdi:puzzle'),
+      ('Automobile & Vehicles','Automobile','mdi:car'),
+      ('Fashion & Accessories','Fashion','mdi:tshirt-crew'),
+      ('Home & Garden','Home','mdi:sofa'),
+      ('Books & Stationery','Books','mdi:book-open-page-variant'),
+      ('Health & Beauty','Health','mdi:heart-pulse'),
+      ('Real Estate','Property','mdi:home-city')
+    ] %}
+
+    {% for value, label, icon in categories %}
+      <a
+        href="{{ url_for('home',
+          category=value,
+          search=search,
+          location=location_q,
+          deal_type=deal_type_filter) }}"
+        class="category-card {% if selected_category == value %}active{% endif %}"
+      >
+        <div class="cat-icon">
+          <img src="https://api.iconify.design/{{ icon }}.svg" alt="{{ label }}">
+        </div>
+
+        <div class="cat-meta">
+          <span class="cat-label">{{ label }}</span>
+        </div>
+      </a>
+    {% endfor %}
+
+  </div>
+
+  <!-- Scroll hint overlay -->
+  <div class="scroll-fade"></div>
+</section>
+
+
+
+
+
 
 
 {# ================= SMART MATCH BANNER ================= #}
@@ -1526,6 +1736,69 @@
     }
   });
 </script>
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const scroller = document.querySelector('.category-scroll');
+  if (!scroller) return;
+
+  setTimeout(() => {
+    scroller.scrollBy({ left: 40, behavior: 'smooth' });
+    setTimeout(() => {
+      scroller.scrollBy({ left: -40, behavior: 'smooth' });
+    }, 600);
+  }, 400);
+});
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const grid = document.querySelector('.category-scroll-grid');
+  const hint = document.querySelector('.category-swipe-hint');
+
+  if (!grid || !hint) return;
+
+  // Mobile only
+  if (window.innerWidth >= 992) return;
+
+  // Run once per user
+  if (localStorage.getItem('categoryScrollHinted')) return;
+
+  // Show swipe hint
+  setTimeout(() => {
+    hint.classList.add('show');
+    grid.classList.add('nudge');
+  }, 600);
+
+  const stopHints = () => {
+    hint.classList.remove('show');
+    grid.classList.remove('nudge');
+    localStorage.setItem('categoryScrollHinted', '1');
+    grid.removeEventListener('scroll', stopHints);
+    grid.removeEventListener('touchstart', stopHints);
+  };
+
+  grid.addEventListener('scroll', stopHints, { passive: true });
+  grid.addEventListener('touchstart', stopHints, { passive: true });
+});
+</script>
+
+
+<script>
+  window.addEventListener('load', () => {
+    const hint = document.querySelector('.category-swipe-hint');
+    if (!hint) return;
+
+    // Force reflow to restart CSS animations
+    hint.style.animation = 'none';
+    hint.offsetHeight; // trigger reflow
+    hint.style.animation = '';
+  });
+</script>
+
 
 
 
