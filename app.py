@@ -493,12 +493,100 @@ def _similarity(a, b):
 
 def _smart_match_listings(cursor, *, have, want, per_page, offset):
     """
-    AI-like Smart Match:
-    - fuzzy match user's HAVE against offered items + listing title
-    - fuzzy match user's WANT against desired_swap
-    - scoring based on Plan + Recency for final ranking
+    Two modes:
+    - If `have` is provided: fuzzy matching (existing behavior).
+    - If only `want` is provided: targeted SQL to RETURN ONLY listings that INVOLVE `want`
+      and attach only offered_items that match `want`.
     """
+    want = (want or "").strip()
+    have = (have or "").strip()
 
+    # ----------------- WANT-ONLY MODE -----------------
+    if not have and want:
+        like = f"%{want}%"
+
+        # 1) count total matching listings for pagination
+        count_q = """
+            SELECT COUNT(DISTINCT l.listing_id) AS total
+            FROM listings l
+            WHERE l.deal_type = 'Swap Deal'
+              AND (
+                    l.desired_swap LIKE %s
+                 OR l.title LIKE %s
+                 OR l.description LIKE %s
+                 OR EXISTS (
+                      SELECT 1 FROM offered_items o
+                      WHERE o.listing_id = l.listing_id
+                        AND (o.title LIKE %s OR o.description LIKE %s)
+                 )
+              )
+        """
+        cursor.execute(count_q, (like, like, like, like, like))
+        total = cursor.fetchone()['total']
+        if not total:
+            return [], 0
+
+        # 2) fetch a page of listings matching the want term (include user + metrics)
+        page_q = f"""
+            SELECT l.listing_id, l.title, l.description, l.category, l.deal_type, l.`Plan`,
+                   l.image1, l.price, l.required_cash, l.additional_cash, l.desired_swap,
+                   l.location, l.contact, u.username, IFNULL(m.impressions,0) AS impressions,
+                   l.created_at
+            FROM listings l
+            JOIN users u ON l.user_id = u.id
+            LEFT JOIN listing_metrics m ON l.listing_id = m.listing_id
+            WHERE l.deal_type = 'Swap Deal'
+              AND (
+                    l.desired_swap LIKE %s
+                 OR l.title LIKE %s
+                 OR l.description LIKE %s
+                 OR EXISTS (
+                      SELECT 1 FROM offered_items o
+                      WHERE o.listing_id = l.listing_id
+                        AND (o.title LIKE %s OR o.description LIKE %s)
+                 )
+              )
+            ORDER BY
+              CASE l.`Plan` WHEN 'Diamond' THEN 5 WHEN 'Gold' THEN 4 WHEN 'Silver' THEN 3 WHEN 'Bronze' THEN 2 ELSE 1 END DESC,
+              l.created_at DESC
+            LIMIT %s OFFSET %s
+        """
+        params = (like, like, like, like, like, per_page, offset)
+        cursor.execute(page_q, params)
+        listings = cursor.fetchall()
+
+        # 3) Attach only offered_items that match `want`
+        if listings:
+            listing_ids = [r['listing_id'] for r in listings]
+            ph = ",".join(["%s"] * len(listing_ids))
+
+            # fetch only matching offered_items
+            cursor.execute(
+                f"SELECT * FROM offered_items WHERE listing_id IN ({ph}) AND (title LIKE %s OR description LIKE %s)",
+                tuple(listing_ids) + (like, like)
+            )
+            rows = cursor.fetchall()
+            offers = {}
+            for r in rows:
+                offers.setdefault(r['listing_id'], []).append(r)
+
+            # attach filtered offers
+            for l in listings:
+                l['offers'] = offers.get(l['listing_id'], [])
+                # safe defaults
+                l.setdefault('required_cash', 0)
+                l.setdefault('additional_cash', 0)
+                l.setdefault('desired_swap', l.get('desired_swap') or '')
+                l.setdefault('price', l.get('price', 0))
+                l.setdefault('location', l.get('location', ''))
+                l.setdefault('contact', l.get('contact', ''))
+
+        total_pages = (total + per_page - 1) // per_page
+        return listings, total_pages
+
+    # ----------------- HAVE+WANT / FUZZY MODE (existing) -----------------
+    # Keep your current fuzzy scoring behavior here (unchanged).
+    # I'll paste your existing fuzzy implementation (slightly tidied).
     base_q = """
         SELECT l.listing_id, l.title, l.description, l.category, l.deal_type, l.Plan,
                l.image1, l.price, l.required_cash, l.additional_cash, l.desired_swap,
@@ -509,70 +597,48 @@ def _smart_match_listings(cursor, *, have, want, per_page, offset):
         LEFT JOIN listing_metrics m ON l.listing_id = m.listing_id
         WHERE l.deal_type = 'Swap Deal'
     """
-
     cursor.execute(base_q)
     raw = cursor.fetchall()
 
-    # Offered items
+    # Offered items map
     offered_map = {}
     if raw:
         listing_ids = [r["listing_id"] for r in raw]
         ph = ",".join(["%s"] * len(listing_ids))
         cursor.execute(f"SELECT * FROM offered_items WHERE listing_id IN ({ph})", tuple(listing_ids))
-
         for o in cursor.fetchall():
             offered_map.setdefault(o["listing_id"], []).append(o)
 
-    # Score each listing
+    # Scoring as you had it (fuzzy)
     scored = []
-
     import datetime
     now = datetime.datetime.now()
-
     plan_weights = {"Diamond": 5, "Gold": 4, "Silver": 3, "Bronze": 2, "Free": 1}
 
     for l in raw:
-        # Similarity scores
         have_score = 0.0
         if have:
-            # compare to listing title & description
-            have_score = max(have_score, _similarity(have, l["title"]))
-            have_score = max(have_score, _similarity(have, l["description"] or ""))
-
-            # compare to each offered item
+            have_score = max(have_score, _similarity(have, l.get("title", "")))
+            have_score = max(have_score, _similarity(have, l.get("description", "") or ""))
             for item in offered_map.get(l["listing_id"], []):
-                t = f"{item['title']} {item['description']}"
+                t = f"{item.get('title','')} {item.get('description','')}"
                 have_score = max(have_score, _similarity(have, t))
 
-        want_score = _similarity(want, l["desired_swap"]) if want else 0.0
-
-        # Plan score
-        plan_score = plan_weights.get(l["Plan"], 1) / 5.0
-
-        # Recency score (last 30 days)
-        days_old = (now - l["created_at"]).days
+        want_score = _similarity(want, l.get("desired_swap") or "") if want else 0.0
+        plan_score = plan_weights.get(l.get("Plan"), 1) / 5.0
+        days_old = (now - l.get("created_at", now)).days if l.get("created_at") else 365
         recency_score = max(0, 1 - (days_old / 30))
-
-        # Final weighted score
         final = (have_score * 0.45) + (want_score * 0.45) + (plan_score * 0.07) + (recency_score * 0.03)
-
         l["match_score"] = round(final * 100)
+        # attach offers (all offers) for fuzzy mode
+        l['offers'] = offered_map.get(l['listing_id'], [])
         scored.append(l)
 
-    # Sort by match score desc
-    scored.sort(key=lambda x: x["match_score"], reverse=True)
-
-    # Pagination
+    scored.sort(key=lambda x: x['match_score'], reverse=True)
     total = len(scored)
     total_pages = (total + per_page - 1) // per_page
-
     page_slice = scored[offset: offset + per_page]
-
     return page_slice, total_pages
-
-
-
-
 
 
 
@@ -1434,36 +1500,36 @@ def google_login():
 def google_callback():
     token = oauth.google.authorize_access_token()
     user_info = oauth.google.get('userinfo').json()
-    return user_info
-
-
-    # Fetch userinfo endpoint from metadata
-    userinfo_endpoint = google.server_metadata.get("userinfo_endpoint")
-    resp = google.get(userinfo_endpoint)
-    resp.raise_for_status()
-    user_info = resp.json()
-
-    # Extract the Google ID
-    google_id = user_info.get("sub") or user_info.get("id")
+    
+    google_id = user_info.get("sub")
     if not google_id:
-        raise RuntimeError("No 'sub' or 'id' in userinfo response")
+        raise RuntimeError("Google login failed: missing user ID")
 
-    # Create or find the user
+    # Create or fetch user
     user = get_or_create_user(
         google_id=google_id,
         email=user_info.get("email"),
         username=user_info.get("name"),
-        avatar=user_info.get("picture"),
+        avatar=user_info.get("picture")
     )
 
-    # Log them in using 'id'
+    # Log user in
     session["user_id"] = user["id"]
     session.permanent = True
     logging.info(f"User {user['id']} logged in via Google")
 
-    # Redirect back to original page
+    # Redirect back to home or state
     next_url = request.args.get("state") or url_for("home")
     return redirect(next_url)
+
+
+
+
+
+
+
+
+
 
 
 # =====================================================

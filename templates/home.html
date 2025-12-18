@@ -376,37 +376,27 @@
 /* MODE TOGGLE */
 .search-modes {
   display: flex;
-  gap: 0.4rem;
-  padding: 0.1rem;
-  background: #f3f4f6;
-  border-radius: 999px;
-  margin-bottom: 0.9rem;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
 .mode-btn {
   flex: 1;
+  padding: 10px;
+  border-radius: 8px;
   border: none;
-  background: transparent;
-  border-radius: 999px;
-  padding: 0.45rem 0.75rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #6b7280;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
   cursor: pointer;
+  background: #eee;
 }
+
 
 .mode-btn i {
   font-size: 0.95rem;
 }
 
 .mode-btn.active {
-  background: #ffffff;
-  color: #059669;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  background: #0a7cff;
+  color: #fff;
 }
 
 /* FORMS INSIDE HUB */
@@ -498,14 +488,12 @@
 
 /* Buttons */
 .hub-btn {
-  margin-top: 0.3rem;
-  background: #059669;
-  color: #ffffff;
-  border-radius: 12px;
-  padding: 0.85rem;
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
   border: none;
-  font-size: 0.95rem;
-  font-weight: 700;
+  background: #0a7cff;
+  color: #fff;
   cursor: pointer;
 }
 
@@ -596,6 +584,10 @@
 
 .hub-form.hidden {
   display: none;
+}
+
+.hidden {
+  display: none !important;
 }
 
 /* Input rows */
@@ -717,15 +709,11 @@
 .search-hub-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  z-index: 9999;
+  background: rgba(0,0,0,.55);
   opacity: 0;
   pointer-events: none;
   transition: opacity .25s ease;
+  z-index: 9999;
 }
 
 .search-hub-overlay.active {
@@ -735,14 +723,13 @@
 
 /* ===== POPUP CARD ===== */
 .search-hub-popup {
+  background: #fff;
   width: 100%;
-  max-width: 520px;
-  background: white;
-  border-radius: 22px 22px 0 0;
-  padding: 1rem;
-  box-shadow: 0 -6px 24px rgba(0,0,0,.15);
-  transform: translateY(100%);
-  transition: transform .3s ease;
+  max-width: 460px;
+  margin: 10vh auto;
+  border-radius: 14px;
+  padding: 20px;
+  position: relative;
 }
 
 .search-hub-overlay.active .search-hub-popup {
@@ -752,19 +739,12 @@
 /* ===== CLOSE BUTTON ===== */
 .search-hub-close {
   position: absolute;
-  right: 1.2rem;
-  top: .8rem;
-  background: #f3f4f6;
+  top: 12px;
+  right: 12px;
+  background: none;
   border: none;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  font-size:1.2rem;
-  color:#374151;
+  font-size: 20px;
+  cursor: pointer;
 }
 
 .search-hub-close:hover {
@@ -795,6 +775,10 @@
 }
 
 
+.hidden {
+  display: none !important;
+  pointer-events: none !important;
+}
 
   </style>
 
@@ -921,91 +905,102 @@
 
 
 
-  <button id="openSearchHub" class="open-search-hub-btn">
+<<!-- OPEN SEARCH HUB BUTTON -->
+<button id="openSearchHub" class="open-search-hub-btn">
   <i class="fas fa-search"></i> Search
 </button>
 
+<!-- SEARCH HUB OVERLAY -->
+<div id="searchHubOverlay" class="search-hub-overlay" aria-hidden="true">
+  <div class="search-hub-popup" role="dialog" aria-modal="true">
 
-<!-- SEARCH HUB POPUP -->
-<div id="searchHubOverlay" class="search-hub-overlay hidden">
-  <div class="search-hub-popup">
-
-    <button class="search-hub-close" id="closeSearchHub">
+    <!-- CLOSE BUTTON -->
+    <button class="search-hub-close" id="closeSearchHub" aria-label="Close search">
       <i class="fas fa-times"></i>
     </button>
 
-    <!-- SEARCH HUB: Browse vs Swap Match -->
+    <!-- SEARCH HUB -->
     <section class="search-hub">
-      <div class="search-hub-card">
 
-        <!-- Mode Toggle -->
-        <div class="search-modes" role="tablist">
-          <button
-            type="button"
-            class="mode-btn {% if not smart_match_mode %}active{% endif %}"
-            data-mode="browse"
-            aria-selected="{% if not smart_match_mode %}true{% else %}false{% endif %}"
-          >
-            <i class="fas fa-list-ul"></i> Browse
-          </button>
+      <!-- MODE TOGGLE -->
+      <div class="search-modes" role="tablist">
+        <button
+          type="button"
+          class="mode-btn active"
+          data-mode="browse"
+          role="tab"
+          aria-selected="true"
+        >
+          <i class="fas fa-list-ul"></i> Browse
+        </button>
 
-          <button
-            type="button"
-            class="mode-btn {% if smart_match_mode %}active{% endif %}"
-            data-mode="swap"
-            aria-selected="{% if smart_match_mode %}true{% else %}false{% endif %}"
+        <button
+          type="button"
+          class="mode-btn"
+          data-mode="swap"
+          role="tab"
+          aria-selected="false"
+        >
+          <i class="fas fa-exchange-alt"></i> Swap Match
+        </button>
+      </div>
+
+      <!-- BROWSE FORM -->
+      <form
+        id="browse-form"
+        class="hub-form"
+        method="GET"
+        action="{{ url_for('home') }}"
+      >
+        <div class="hub-row">
+          <i class="fas fa-search hub-icon"></i>
+          <input
+            name="search"
+            class="hub-input"
+            placeholder="Search items…"
           >
-            <i class="fas fa-exchange-alt"></i> Swap Match
-          </button>
         </div>
 
-        <!-- BROWSE MODE -->
-        <form
-          id="browse-form"
-          class="hub-form {% if smart_match_mode %}hidden{% endif %}"
-          method="GET"
-          action="{{ url_for('home') }}"
-        >
-          <div class="hub-row">
-            <i class="fas fa-search hub-icon"></i>
-            <input id="q" name="search" class="hub-input" placeholder="Search items…">
-          </div>
+        <div class="hub-row hub-row-sub">
+          <i class="fas fa-location-arrow hub-icon-sub"></i>
+          <input
+            name="location"
+            class="hub-input-sub"
+            placeholder="Location…"
+          >
+        </div>
 
-          <div class="hub-row hub-row-sub">
-            <i class="fas fa-location-arrow hub-icon-sub"></i>
-            <input id="location" name="location" class="hub-input-sub" placeholder="Location…">
-          </div>
+        <button class="hub-btn" type="submit">Search</button>
+      </form>
 
-          <button class="hub-btn" type="submit">Search</button>
-        </form>
+      <!-- SWAP FORM -->
+      <form
+        id="swap-form"
+        class="hub-form hidden"
+        method="GET"
+        action="{{ url_for('home') }}"
+      >
+        <input type="hidden" name="smart_match" value="1">
 
-        <!-- SWAP MODE -->
-        <form
-          id="swap-form"
-          class="hub-form {% if not smart_match_mode %}hidden{% endif %}"
-          method="GET"
-          action="{{ url_for('home') }}"
-        >
-          <input type="hidden" name="smart_match" value="1">
+        <div class="hub-row">
+          <label class="hub-field-label">What do you want?</label>
+          <input
+            name="want"
+            class="hub-input"
+            placeholder="Eg. iPhone 11"
+          >
+        </div>
 
-          <div class="hub-row">
-            <label class="hub-field-label">Have</label>
-            <input name="have" class="hub-input" placeholder="Eg. PS5">
-          </div>
+        <button class="hub-btn hub-btn-swap" type="submit">
+          See Swap Matches →
+        </button>
+      </form>
 
-          <div class="hub-row">
-            <label class="hub-field-label">Want</label>
-            <input name="want" class="hub-input" placeholder="Eg. iPhone 11">
-          </div>
-
-          <button class="hub-btn hub-btn-swap" type="submit">See Matches →</button>
-        </form>
-
-      </div>
     </section>
-
   </div>
 </div>
+
+
 
 
 
@@ -1431,47 +1426,66 @@
 
   <script src="{{ url_for('static', filename='heartbeat.js') }}" defer></script>
 
-  <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const modeButtons = document.querySelectorAll(".mode-btn");
-  const browseForm = document.getElementById("browse-form");
-  const swapForm = document.getElementById("swap-form");
-
-  modeButtons.forEach(btn => {
-    btn.addEventListener("click", () => {
-      const mode = btn.dataset.mode;
-
-      modeButtons.forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-
-      if (mode === "browse") {
-        browseForm.classList.remove("hidden");
-        swapForm.classList.add("hidden");
-      } else {
-        swapForm.classList.remove("hidden");
-        browseForm.classList.add("hidden");
-      }
-    });
-  });
-});
-</script>
-
 <script>
-document.getElementById("openSearchHub").onclick = function() {
-  document.getElementById("searchHubOverlay").classList.add("active");
-};
+(() => {
+  const overlay   = document.getElementById("searchHubOverlay");
+  const openBtn   = document.getElementById("openSearchHub");
+  const closeBtn  = document.getElementById("closeSearchHub");
 
-document.getElementById("closeSearchHub").onclick = function() {
-  document.getElementById("searchHubOverlay").classList.remove("active");
-};
+  const browseBtn = document.querySelector('[data-mode="browse"]');
+  const swapBtn   = document.querySelector('[data-mode="swap"]');
 
-/* close when clicking outside card */
-document.getElementById("searchHubOverlay").addEventListener("click", function(e) {
-  if (e.target === this) {
-    this.classList.remove("active");
-  }
-});
+  const browseForm = document.getElementById("browse-form");
+  const swapForm   = document.getElementById("swap-form");
+
+  /* ========== OPEN / CLOSE ========== */
+  const openHub = () => {
+    overlay.classList.add("active");
+    overlay.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden"; // iOS safe
+  };
+
+  const closeHub = () => {
+    overlay.classList.remove("active");
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  };
+
+  openBtn.addEventListener("click", openHub);
+  closeBtn.addEventListener("click", closeHub);
+
+  /* ========== CLICK OUTSIDE ========== */
+  overlay.addEventListener("click", e => {
+    if (e.target === overlay) closeHub();
+  });
+
+  /* ========== ESC KEY ========== */
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && overlay.classList.contains("active")) {
+      closeHub();
+    }
+  });
+
+  /* ========== MODE SWITCH ========== */
+  const activateMode = mode => {
+    const isBrowse = mode === "browse";
+
+    browseBtn.classList.toggle("active", isBrowse);
+    swapBtn.classList.toggle("active", !isBrowse);
+
+    browseBtn.setAttribute("aria-selected", isBrowse);
+    swapBtn.setAttribute("aria-selected", !isBrowse);
+
+    browseForm.classList.toggle("hidden", !isBrowse);
+    swapForm.classList.toggle("hidden", isBrowse);
+  };
+
+  browseBtn.addEventListener("click", () => activateMode("browse"));
+  swapBtn.addEventListener("click", () => activateMode("swap"));
+
+})();
 </script>
+
 
 
 
