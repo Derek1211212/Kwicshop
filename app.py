@@ -261,64 +261,6 @@ def write_offset(val):
 
 
 
-def check_and_update_expired_plans():
-    try:
-        # Connect to the database using your existing function
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # Define plan durations in days
-        PLAN_DURATIONS = {
-            'Diamond': 30,   # 3 months
-            'Gold': 21,      # 2 months
-            'Silver': 14,    # 1 month
-            
-        }
-
-        # Fetch listings with non-Free plans
-        cursor.execute("SELECT user_id, Plan, created_at FROM listings WHERE Plan != 'Free'")
-        listings = cursor.fetchall()
-
-        # Use current time (assuming database created_at is in UTC)
-        now = datetime.now()
-        expired_ids = []
-
-        # Check each listing for expiration
-        for listing_id, plan, created_at in listings:
-            duration_days = PLAN_DURATIONS.get(plan, 0)
-            if duration_days == 0:  # Skip invalid plans
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Warning: Invalid plan '{plan}' for listing ID {listing_id}")
-                continue
-            if now > created_at + timedelta(days=duration_days):
-                expired_ids.append(listing_id)
-
-        # Update expired listings to 'Free'
-        if expired_ids:
-            format_strings = ','.join(['%s'] * len(expired_ids))
-            cursor.execute(f"UPDATE listings SET Plan = 'Free' WHERE user_id IN ({format_strings})", tuple(expired_ids))
-            conn.commit()
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Updated {cursor.rowcount} expired listings to 'Free'.")
-        else:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] No expired listings to update.")
-
-        cursor.close()
-        conn.close()
-    except mysql.connector.Error as db_err:
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Database error: {db_err}")
-    except Exception as e:
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Error running expiration job: {e}")
-
-# APScheduler setup for testing
-scheduler = BackgroundScheduler()
-scheduler.add_job(func=check_and_update_expired_plans, trigger="interval", hours=12)  # 10 seconds for testing
-scheduler.start()
-
-
-
-
-
-
-
 def _get_category_counts(cursor, *, search, deal_type, location):
     """
     Returns dict: { category_name: count }
@@ -712,107 +654,180 @@ def _get_carousel(cursor):
 def _get_main_listings(cursor, *, search, category, deal_type, location, per_page, offset):
     base_q = """
         SELECT l.listing_id, l.title, l.description, l.category, l.deal_type, l.`Plan`,
-               l.image1, l.price, l.required_cash, l.additional_cash, l.desired_swap,
-               l.location, l.contact, u.username, IFNULL(m.impressions,0) AS impressions
+               l.image1, l.price, l.required_cash, l.additional_cash,
+               l.desired_swap, l.desired_swap_description,
+               l.location, l.contact,
+               u.username,
+               IFNULL(m.impressions,0) AS impressions
         FROM listings l
         JOIN users u ON l.user_id = u.id
         LEFT JOIN listing_metrics m ON l.listing_id = m.listing_id
         WHERE 1=1
     """
+
     params = []
-    like = None
 
+    # -----------------------------
+    # SHARP SEARCH (CORE FIX)
+    # -----------------------------
     if search:
-        like = f"%{search}%"
-        base_q += " AND (l.title LIKE %s OR l.description LIKE %s OR l.category LIKE %s)"
-        params += [like, like, like]
+        tokens = [t for t in re.split(r'\s+', search.strip()) if len(t) >= 2]
+
+        search_clauses = []
+        for t in tokens:
+            like = f"%{t}%"
+            search_clauses.append("""
+                l.title LIKE %s
+                OR l.description LIKE %s
+                OR l.category LIKE %s
+                OR l.desired_swap LIKE %s
+                OR l.desired_swap_description LIKE %s
+            """)
+            params.extend([like, like, like, like, like])
+
+        base_q += " AND (" + " OR ".join(search_clauses) + ")"
+
+    # -----------------------------
+    # FILTERS
+    # -----------------------------
     if category != 'All':
-        base_q += " AND l.category=%s"
+        base_q += " AND l.category = %s"
         params.append(category)
+
     if deal_type != 'All':
-        base_q += " AND l.deal_type=%s"
+        base_q += " AND l.deal_type = %s"
         params.append(deal_type)
+
     if location:
-        base_q += " AND l.location IS NOT NULL"
-        base_q += " AND (l.location=%s OR SOUNDEX(l.location)=SOUNDEX(%s) OR l.location LIKE %s)"
-        params += [location, location, f"%{location}%"]
+        base_q += """
+            AND l.location IS NOT NULL
+            AND (
+                l.location = %s
+                OR l.location LIKE %s
+                OR SOUNDEX(l.location) = SOUNDEX(%s)
+            )
+        """
+        params.extend([location, f"%{location}%", location])
 
-    plan_case = "CASE l.`Plan` WHEN 'Diamond' THEN 5 WHEN 'Gold' THEN 4 WHEN 'Silver' THEN 3 ELSE 1 END"
-    order = f"ORDER BY {plan_case} DESC, l.created_at DESC"
+    # -----------------------------
+    # ORDERING
+    # -----------------------------
+    plan_case = """
+        CASE l.`Plan`
+            WHEN 'Diamond' THEN 5
+            WHEN 'Gold' THEN 4
+            WHEN 'Silver' THEN 3
+            WHEN 'Bronze' THEN 2
+            ELSE 1
+        END
+    """
 
-    cache_key = f"grid:{search}:{category}:{deal_type}:{location}:{per_page}:{offset}"
-    cached = cache.get(cache_key) if cache else None
-    if cached:
-        return cached
+    order_q = f"""
+        ORDER BY
+            {plan_case} DESC,
+            l.created_at DESC
+    """
 
-    # Count first
+    # -----------------------------
+    # COUNT QUERY (MATCHES SEARCH LOGIC)
+    # -----------------------------
     count_q = "SELECT COUNT(*) AS total FROM listings l WHERE 1=1"
-    count_p = []
-    if search:
-        count_q += " AND (l.title LIKE %s OR l.description LIKE %s OR l.category LIKE %s)"
-        count_p += [like, like, like]
-    if category != 'All':
-        count_q += " AND l.category=%s"; count_p.append(category)
-    if deal_type != 'All':
-        count_q += " AND l.deal_type=%s"; count_p.append(deal_type)
-    if location:
-        count_q += " AND l.location IS NOT NULL"
-        count_q += " AND (l.location=%s OR SOUNDEX(l.location)=SOUNDEX(%s) OR l.location LIKE %s)"
-        count_p += [location, location, f"%{location}%"]
+    count_params = []
 
-    cursor.execute(count_q, tuple(count_p))
+    if search:
+        tokens = [t for t in re.split(r'\s+', search.strip()) if len(t) >= 2]
+        count_clauses = []
+        for t in tokens:
+            like = f"%{t}%"
+            count_clauses.append("""
+                l.title LIKE %s
+                OR l.description LIKE %s
+                OR l.category LIKE %s
+                OR l.desired_swap LIKE %s
+                OR l.desired_swap_description LIKE %s
+            """)
+            count_params.extend([like, like, like, like, like])
+
+        count_q += " AND (" + " OR ".join(count_clauses) + ")"
+
+    if category != 'All':
+        count_q += " AND l.category = %s"
+        count_params.append(category)
+
+    if deal_type != 'All':
+        count_q += " AND l.deal_type = %s"
+        count_params.append(deal_type)
+
+    if location:
+        count_q += """
+            AND l.location IS NOT NULL
+            AND (
+                l.location = %s
+                OR l.location LIKE %s
+                OR SOUNDEX(l.location) = SOUNDEX(%s)
+            )
+        """
+        count_params.extend([location, f"%{location}%", location])
+
+    cursor.execute(count_q, tuple(count_params))
     total = cursor.fetchone()['total']
 
-    # Page of listings
-    cursor.execute(base_q + " " + order + " LIMIT %s OFFSET %s", tuple(params + [per_page, offset]))
+    # -----------------------------
+    # PAGE QUERY
+    # -----------------------------
+    cursor.execute(
+        base_q + order_q + " LIMIT %s OFFSET %s",
+        tuple(params + [per_page, offset])
+    )
+
     listings = cursor.fetchall()
     listings = _rotate_weighted(listings)
 
     total_pages = (total + per_page - 1) // per_page
-    if cache:
-        cache.set(cache_key, (listings, total_pages), timeout=60)
     return listings, total_pages
 
 
-def _get_suggestions(cursor, search):
-    import re
-    listings = []
-    tokens = [t for t in re.split(r'\s+', search) if len(t) > 2]
-    if tokens:
-        conds, params = [], []
-        for t in tokens:
-            conds.append("(l.title LIKE %s OR l.description LIKE %s OR l.category LIKE %s)")
-            like = f"%{t}%"
-            params += [like, like, like]
-        q = f"""
-            SELECT l.listing_id, l.title, l.description, l.category, l.deal_type, l.`Plan`,
-                   l.image1, l.price, l.required_cash, l.additional_cash, l.desired_swap,
-                   l.location, l.contact, u.username, IFNULL(m.impressions,0) AS impressions
-            FROM listings l
-            JOIN users u ON l.user_id = u.id
-            LEFT JOIN listing_metrics m ON l.listing_id = m.listing_id
-            WHERE {' OR '.join(conds)}
-            ORDER BY m.impressions DESC, l.created_at DESC
-            LIMIT 24
-        """
-        cursor.execute(q, tuple(params))
-        listings = cursor.fetchall()
+    
 
-    if not listings:
-        like = f"%{search}%"
-        q = """
-            SELECT l.listing_id, l.title, l.description, l.category, l.deal_type, l.`Plan`,
-                   l.image1, l.price, l.required_cash, l.additional_cash, l.desired_swap,
-                   l.location, l.contact, u.username, IFNULL(m.impressions,0) AS impressions
-            FROM listings l
-            JOIN users u ON l.user_id = u.id
-            LEFT JOIN listing_metrics m ON l.listing_id = m.listing_id
-            WHERE l.category LIKE %s
-            ORDER BY m.impressions DESC, l.created_at DESC
-            LIMIT 24
-        """
-        cursor.execute(q, (like,))
-        listings = cursor.fetchall()
+import re
+
+def _get_suggestions(cursor, search):
+    tokens = [t for t in re.split(r'\s+', search.strip()) if len(t) >= 2]
+    if not tokens:
+        return []
+
+    clauses = []
+    params = []
+
+    for t in tokens:
+        like = f"%{t}%"
+        clauses.append("""
+            l.title LIKE %s
+            OR l.description LIKE %s
+            OR l.category LIKE %s
+            OR l.desired_swap LIKE %s
+            OR l.desired_swap_description LIKE %s
+        """)
+        params.extend([like, like, like, like, like])
+
+    q = f"""
+        SELECT l.listing_id, l.title, l.description, l.category, l.deal_type, l.`Plan`,
+               l.image1, l.price, l.required_cash, l.additional_cash,
+               l.desired_swap, l.desired_swap_description,
+               l.location, l.contact,
+               u.username,
+               IFNULL(m.impressions,0) AS impressions
+        FROM listings l
+        JOIN users u ON l.user_id = u.id
+        LEFT JOIN listing_metrics m ON l.listing_id = m.listing_id
+        WHERE ({' OR '.join(clauses)})
+        ORDER BY m.impressions DESC, l.created_at DESC
+        LIMIT 24
+    """
+
+    cursor.execute(q, tuple(params))
+    return cursor.fetchall()
+
 
     if not listings:
         q = """
@@ -2921,6 +2936,17 @@ def allowed_file(filename):
 
 
 
+
+
+from datetime import datetime, timedelta
+
+PLAN_DURATIONS = {
+    'Bronze': 21,     # 3 weeks
+    'Silver': 30,     # 1 month
+    'Gold': 60,       # 2 months
+    'Diamond': 90,    # 3 months
+}
+
 @app.route('/listings', methods=['POST'])
 @login_required
 def create_listing():
@@ -3035,7 +3061,6 @@ def create_listing():
     if deal_type == 'Swap Deal':
         desired_swap = (request.form.get('desired_swap') or '').strip()
 
-        # --- money fields as Decimal ---
         additional_cash_raw = (request.form.get('additional_cash') or '').replace(',', '').strip()
         required_cash_raw = (request.form.get('required_cash') or '').replace(',', '').strip()
 
@@ -3054,18 +3079,15 @@ def create_listing():
                 flash("Invalid value for required cash.", "error")
                 logger.error(f"Invalid required_cash: {required_cash_raw}")
                 return redirect(url_for('dashboard'))
-        # -------------------------------
 
         if not desired_swap:
             flash("Desired item is required for swap.", "error")
             logger.error("Missing desired swap item")
             return redirect(url_for('dashboard'))
 
-        # Extract condition from first offered item
         condition = offered_items[0]['condition']
 
     else:
-        # --- price as Decimal ---
         price_raw = (request.form.get('price') or '').replace(',', '').strip()
         if price_raw:
             try:
@@ -3076,19 +3098,10 @@ def create_listing():
                 return redirect(url_for('dashboard'))
         else:
             price = None
-        # -----------------------
-
-        # Grab the sale-condition directly from the form
         condition = request.form.get('condition')
         off_conds = [condition]
         off_descs = [description]
         offered_items = []
-
-    logger.debug(
-        f"Deal specifics: desired_swap={desired_swap}, price={price}, "
-        f"additional_cash={additional_cash}, required_cash={required_cash}, "
-        f"condition={condition}"
-    )
 
     # 5) Combine description
     if deal_type == 'Swap Deal':
@@ -3096,11 +3109,20 @@ def create_listing():
         combined_description = f"{description}\n\n{joined_offers}" if joined_offers else description
     else:
         combined_description = description
-    logger.debug(f"Combined description: {combined_description}")
+
+     # -------------------------------------------------
+    # Compute expires_at EARLY (before Paystack redirect)
+    # -------------------------------------------------
+    expires_at = None
+
+    if plan in PLAN_DURATIONS:
+        expires_at = datetime.utcnow() + timedelta(days=PLAN_DURATIONS[plan])
+
+    logger.debug(f"Computed expires_at in create_listing: {expires_at}")
+       
 
     # 6) PAYSTACK flow
     if plan != 'Free':
-        # Store money values as strings for session safety
         pending_price = f"{price:.2f}" if isinstance(price, Decimal) else price
         pending_additional_cash = f"{additional_cash:.2f}" if isinstance(additional_cash, Decimal) else additional_cash
         pending_required_cash = f"{required_cash:.2f}" if isinstance(required_cash, Decimal) else required_cash
@@ -3124,12 +3146,20 @@ def create_listing():
             'deal_type': deal_type,
             'price': pending_price,
             'offered_items': offered_items,
+            'expires_at': expires_at.isoformat() if expires_at else None
         }
-        logger.debug(f"Stored pending listing for payment: {session['pending_listing']}")
+
         plan_fees = {'Bronze': 20, 'Silver': 50, 'Gold': 100, 'Diamond': 200}
         return redirect(url_for('paystack_payment', plan=plan, amount=plan_fees.get(plan, 0)))
 
-    # 7) INSERT INTO listings
+
+    # 7) Compute expiry date
+    expires_at = None
+    if plan in PLAN_DURATIONS:
+        expires_at = datetime.utcnow() + timedelta(days=PLAN_DURATIONS[plan])
+        logger.debug(f"Computed expiry date for plan {plan}: {expires_at}")
+
+    # 8) INSERT INTO listings
     conn = get_db_connection()
     cursor = conn.cursor()
     listing_params = [
@@ -3142,12 +3172,10 @@ def create_listing():
     if deal_type == 'Outright Sales':
         listing_params += main_images + [None] * (5 - len(main_images))
     else:
-        # Use first offered item's images for Swap Deal
         swap_images = offered_items[0]['images'][:4] if offered_items else []
         listing_params += swap_images + [None] * (5 - len(swap_images))
-    listing_params += [plan, deal_type, price]
-    logger.debug(f"Listing params: {listing_params}")
-
+    listing_params += [plan, deal_type, price, expires_at]
+    
     cursor.execute("""
         INSERT INTO listings (
             user_id, title, description, category,
@@ -3155,13 +3183,13 @@ def create_listing():
             additional_cash, required_cash,
             `condition`, location, contact,
             image_url, image1, image2, image3, image4,
-            plan, deal_type, price
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            plan, deal_type, price, expires_at
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """, listing_params)
     lid = cursor.lastrowid
     logger.debug(f"Inserted listing with ID: {lid}")
 
-    # 8) Insert offered items (only for Swap Deal)
+    # 9) Insert offered items
     if deal_type == 'Swap Deal':
         for item in offered_items:
             cursor.execute("""
@@ -3182,6 +3210,7 @@ def create_listing():
     flash("Listing created successfully!", "success")
     logger.debug("Listing creation completed successfully")
     return redirect(url_for('dashboard'))
+
 
 
 
@@ -3255,37 +3284,61 @@ def paystack_verify():
         return redirect(url_for('home'))
 
     # Pull pending listing
+    # Pull pending listing
     p = result['data']['metadata'].get('pending_listing') or session.pop('pending_listing', None)
     if not p:
         flash("No pending listing.", "error")
         logger.error("No pending listing found")
         return redirect(url_for('home'))
+
     logger.debug(f"Pending listing: {p}")
 
+    # -----------------------------
+    # Restore expires_at SAFELY
+    # -----------------------------
+    expires_at = None
+    if p.get('expires_at'):
+        try:
+            expires_at = datetime.fromisoformat(p['expires_at'])
+        except ValueError:
+            logger.error(f"Invalid expires_at format: {p['expires_at']}")
+            expires_at = None
+
+    logger.debug(f"Restored expires_at: {expires_at}")
+
+    # -----------------------------
     # Clean up numeric fields
+    # -----------------------------
     raw_additional = str(p.get('additional_cash', '')).strip()
     raw_required = str(p.get('required_cash', '')).strip()
     raw_price = str(p.get('price', '')).strip()
-    additional_cash = int(float(raw_additional)) if raw_additional else None
-    required_cash = int(float(raw_required)) if raw_required else None
-    price = int(float(raw_price)) if raw_price else None
 
-    # Validate offered items for Swap Deal
+    additional_cash = Decimal(raw_additional).quantize(Decimal('0.01')) if raw_additional else None
+    required_cash = Decimal(raw_required).quantize(Decimal('0.01')) if raw_required else None
+    price = Decimal(raw_price).quantize(Decimal('0.01')) if raw_price else None
+
+    # -----------------------------
+    # Validate offered items (Swap Deal)
+    # -----------------------------
     offered_items = p.get('offered_items', [])
     if p['deal_type'] == 'Swap Deal':
         if not (1 <= len(offered_items) <= 2):
             flash("Invalid number of offered items.", "error")
             logger.error(f"Invalid number of offered items: {len(offered_items)}")
             return redirect(url_for('home'))
+
         for i, item in enumerate(offered_items, 1):
             if not (item.get('condition') and item.get('description') and item['images'][0]):
                 flash(f"Item {i} is incomplete.", "error")
                 logger.error(f"Item {i} incomplete: {item}")
                 return redirect(url_for('home'))
 
+    # -----------------------------
     # Insert into listings
+    # -----------------------------
     conn = get_db_connection()
     cursor = conn.cursor()
+
     listing_params = [
         p['user_id'], p['title'], p['description'], p['category'],
         p.get('desired_swap'), p.get('desired_swap_description'),
@@ -3293,10 +3346,15 @@ def paystack_verify():
         (offered_items[0]['condition'] if offered_items else None),
         p['location'], p['contact']
     ]
-    main_images = p.get('main_images', [])[:4]  # Use up to 4 images
+
+    main_images = p.get('main_images', [])[:4]
     listing_params += main_images + [None] * (5 - len(main_images))
-    listing_params += [p['plan'], p['deal_type'], price]
+
+    # 👉 expires_at INCLUDED HERE
+    listing_params += [p['plan'], p['deal_type'], price, expires_at]
+
     logger.debug(f"Listing params for verification: {listing_params}")
+
     cursor.execute("""
         INSERT INTO listings (
             user_id, title, description, category,
@@ -3304,9 +3362,12 @@ def paystack_verify():
             additional_cash, required_cash,
             `condition`, location, contact,
             image_url, image1, image2, image3, image4,
-            plan, deal_type, price
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            plan, deal_type, price, expires_at
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                  %s, %s, %s, %s, %s,
+                  %s, %s, %s, %s)
     """, listing_params)
+
     lid = cursor.lastrowid
     logger.debug(f"Inserted listing with ID: {lid}")
 
