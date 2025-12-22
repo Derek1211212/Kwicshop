@@ -1456,96 +1456,119 @@ def login_phone_verify():
 #                 GOOGLE OAUTH LOGIN
 #       (assumes you configured `google` client)
 # =====================================================
-from authlib.integrations.flask_client import OAuth
 
 oauth = OAuth(app)
 
 google = oauth.register(
-    name='google',
-    client_id=os.environ.get('GOOGLE_CLIENT_ID'),
-    client_secret=os.environ.get('GOOGLE_CLIENT_SECRET'),
-    authorize_url='https://accounts.google.com/o/oauth2/v2/auth',
-    access_token_url='https://oauth2.googleapis.com/token',
-    api_base_url='https://www.googleapis.com/oauth2/v2/',
+    name="google",
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    authorize_url="https://accounts.google.com/o/oauth2/v2/auth",
+    access_token_url="https://oauth2.googleapis.com/token",
+    api_base_url="https://www.googleapis.com/oauth2/v2/",
     client_kwargs={
-        'scope': 'email profile'
+        "scope": "email profile"
     }
 )
 
 
+
+
 def get_or_create_user(google_id, email, username, avatar=None):
-    """
-    Look up a user by google_id. If none exists, insert a new user
-    providing username (non-null) and a NULL password for Google SSO.
-    Returns a dict with at least 'id' (the PK) and other fields.
-    """
     conn = get_db_connection()
     cur = conn.cursor(dictionary=True)
 
-    # Try to find existing user
+    # 1️⃣ Try finding user by google_id (already linked)
     cur.execute("SELECT * FROM users WHERE google_id = %s", (google_id,))
     user = cur.fetchone()
+    if user:
+        cur.close()
+        conn.close()
+        return user
 
-    if not user:
-        # Insert new user
+    # 2️⃣ Try finding user by email (password account exists)
+    cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+    user = cur.fetchone()
+
+    if user:
+        # 🔗 Link Google account to existing user
         cur.execute(
             """
-            INSERT INTO users
-              (google_id, email, username, avatar, role, password, created_at, account_status)
-            VALUES
-              (%s, %s, %s, %s, 'Customer', NULL, NOW(), 'Active')
-        """,
-            (google_id, email, username, avatar),
+            UPDATE users
+            SET google_id = %s,
+                avatar = COALESCE(avatar, %s)
+            WHERE id = %s
+            """,
+            (google_id, avatar, user["id"]),
         )
         conn.commit()
-        new_id = cur.lastrowid
-        # Build a minimal user dict
-        user = {
-            "id": new_id,
-            "google_id": google_id,
-            "email": email,
-            "username": username,
-            "avatar": avatar,
-            "role": "Customer",
-        }
+
+        cur.execute("SELECT * FROM users WHERE id = %s", (user["id"],))
+        linked_user = cur.fetchone()
+
+        cur.close()
+        conn.close()
+        return linked_user
+
+    # 3️⃣ New user → create Google-only account
+    cur.execute(
+        """
+        INSERT INTO users
+          (google_id, email, username, avatar, role, password, created_at, account_status)
+        VALUES
+          (%s, %s, %s, %s, 'Customer', NULL, NOW(), 'Active')
+        """,
+        (google_id, email, username, avatar),
+    )
+    conn.commit()
+
+    new_id = cur.lastrowid
+    cur.execute("SELECT * FROM users WHERE id = %s", (new_id,))
+    new_user = cur.fetchone()
 
     cur.close()
     conn.close()
-    return user
+    return new_user
 
 
-@app.route('/login/google')
+
+@app.route("/login/google")
 def google_login():
-    redirect_uri = url_for('google_callback', _external=True)
-    return oauth.google.authorize_redirect(redirect_uri)
+    next_url = request.args.get("next")
+    session["oauth_next"] = next_url
+
+    redirect_uri = url_for("google_callback", _external=True)
+    return google.authorize_redirect(redirect_uri)
 
 
 
-@app.route('/login/google/callback')
+
+@app.route("/login/google/callback")
 def google_callback():
-    token = oauth.google.authorize_access_token()
-    user_info = oauth.google.get('userinfo').json()
-    
-    google_id = user_info.get("sub")
-    if not google_id:
-        raise RuntimeError("Google login failed: missing user ID")
+    token = google.authorize_access_token()
 
-    # Create or fetch user
+    resp = google.get("userinfo")
+    userinfo = resp.json()
+
+    if not userinfo or "id" not in userinfo:
+        abort(400, "Google authentication failed")
+
+    google_id = userinfo["id"]
+    email = userinfo.get("email")
+    name = userinfo.get("name")
+    avatar = userinfo.get("picture")
+
     user = get_or_create_user(
         google_id=google_id,
-        email=user_info.get("email"),
-        username=user_info.get("name"),
-        avatar=user_info.get("picture")
+        email=email,
+        username=name,
+        avatar=avatar
     )
 
-    # Log user in
     session["user_id"] = user["id"]
     session.permanent = True
-    logging.info(f"User {user['id']} logged in via Google")
 
-    # Redirect back to home or state
-    next_url = request.args.get("state") or url_for("home")
-    return redirect(next_url)
+    return redirect(url_for("home"))
 
 
 
