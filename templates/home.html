@@ -1111,81 +1111,130 @@
 
       <!-- MODE TOGGLE -->
       <div class="search-modes" role="tablist">
-        <button
-          type="button"
-          class="mode-btn active"
-          data-mode="browse"
-          role="tab"
-          aria-selected="true"
-        >
-          <i class="fas fa-list-ul"></i> Browse
+        <button type="button" class="mode-btn active" data-mode="buy">
+          <i class="fas fa-shopping-cart"></i> Buy
         </button>
 
-        <button
-          type="button"
-          class="mode-btn"
-          data-mode="swap"
-          role="tab"
-          aria-selected="false"
-        >
-          <i class="fas fa-exchange-alt"></i> Swap Match
+        <button type="button" class="mode-btn" data-mode="swap">
+          <i class="fas fa-exchange-alt"></i> Swap
         </button>
       </div>
 
-      <!-- BROWSE FORM -->
-      <form
-        id="browse-form"
-        class="hub-form"
-        method="GET"
-        action="{{ url_for('home') }}"
-      >
-        <div class="hub-row">
+      <!-- SEARCH FORM -->
+      <form id="search-form" class="hub-form" method="GET" action="{{ url_for('home') }}">
+        <input type="hidden" name="mode" id="search-mode" value="buy">
+        <input type="hidden" name="have" id="have-value">
+
+        <!-- BUY SEARCH -->
+        <div class="hub-row" id="buy-row">
           <i class="fas fa-search hub-icon"></i>
           <input
             name="search"
+            id="buy-input"
             class="hub-input"
-            placeholder="Search items…"
+            placeholder="What are you looking for?"
+            autocomplete="off"
           >
         </div>
 
-        <div class="hub-row hub-row-sub">
-          <i class="fas fa-location-arrow hub-icon-sub"></i>
+        <!-- SWAP: HAVE -->
+        <div class="hub-row hub-row-sub hidden" id="have-row">
+          <i class="fas fa-box hub-icon-sub"></i>
           <input
-            name="location"
+            id="have-input"
             class="hub-input-sub"
-            placeholder="Location…"
+            placeholder="What do you have?"
+            autocomplete="off"
           >
+          <button type="button" id="have-next-btn" class="hub-btn-sub">
+            Next →
+          </button>
         </div>
 
-        <button class="hub-btn" type="submit">Search</button>
-      </form>
-
-      <!-- SWAP FORM -->
-      <form
-        id="swap-form"
-        class="hub-form hidden"
-        method="GET"
-        action="{{ url_for('home') }}"
-      >
-        <input type="hidden" name="smart_match" value="1">
-
-        <div class="hub-row">
-          <label class="hub-field-label">What do you want?</label>
+        <!-- SWAP: WANT -->
+        <div class="hub-row hub-row-sub hidden" id="want-row">
+          <i class="fas fa-gift hub-icon-sub"></i>
           <input
             name="want"
-            class="hub-input"
-            placeholder="Eg. iPhone 11"
+            id="want-input"
+            class="hub-input-sub"
+            placeholder="What do you want in exchange?"
+            autocomplete="off"
           >
+          <button type="submit" class="hub-btn-sub">
+            See Swap Matches →
+          </button>
         </div>
 
-        <button class="hub-btn hub-btn-swap" type="submit">
-          See Swap Matches →
+        <button class="hub-btn" type="submit" id="buy-search-btn">
+          Search
         </button>
       </form>
 
     </section>
   </div>
 </div>
+
+<script>
+const modeButtons   = document.querySelectorAll('.mode-btn');
+const modeInput     = document.getElementById('search-mode');
+
+const buyRow        = document.getElementById('buy-row');
+const buyInput      = document.getElementById('buy-input');
+const buyBtn        = document.getElementById('buy-search-btn');
+
+const haveRow       = document.getElementById('have-row');
+const wantRow       = document.getElementById('want-row');
+
+const haveInput     = document.getElementById('have-input');
+const wantInput     = document.getElementById('want-input');
+const haveHidden    = document.getElementById('have-value');
+const haveNextBtn   = document.getElementById('have-next-btn');
+
+modeButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    modeButtons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const mode = btn.dataset.mode;
+    modeInput.value = mode;
+
+    // Reset
+    buyRow.classList.add('hidden');
+    buyBtn.classList.add('hidden');
+    haveRow.classList.add('hidden');
+    wantRow.classList.add('hidden');
+
+    if (mode === 'buy') {
+      buyRow.classList.remove('hidden');
+      buyBtn.classList.remove('hidden');
+      buyInput.focus();
+    } else {
+      haveRow.classList.remove('hidden');
+      haveInput.focus();
+    }
+  });
+});
+
+// Swap flow: HAVE → WANT
+haveNextBtn.addEventListener('click', () => {
+  if (!haveInput.value.trim()) return;
+
+  haveHidden.value = haveInput.value.trim();
+  haveRow.classList.add('hidden');
+  wantRow.classList.remove('hidden');
+  wantInput.focus();
+});
+
+// Final guard before submit
+document.getElementById('search-form').addEventListener('submit', e => {
+  if (modeInput.value === 'swap') {
+    if (!wantInput.value.trim()) {
+      e.preventDefault();
+    }
+  }
+});
+</script>
 
 
 

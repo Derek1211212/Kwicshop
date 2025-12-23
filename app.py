@@ -299,6 +299,83 @@ def _get_category_counts(cursor, *, search, deal_type, location):
 
 
 
+# -------------------------------
+# SEARCH SYNONYMS (GLOBAL)
+# -------------------------------
+SYNONYMS = {
+    # ----- Electronics -----
+    "phone": ["iphone", "android", "mobile", "smartphone", "cellphone", "samsung", "xiaomi", "huawei", "oneplus", "nokia", "tecno", "infinix"],
+    "tablet": ["ipad", "android tablet", "surface", "galaxy tab", "kindle fire", "note pad", "tab"],
+    "tv": ["television", "smart tv", "oled", "led", "lcd", "plasma", "sony tv", "samsung tv", "lg tv", "philips tv", "tcl tv"],
+    "laptop": ["notebook", "macbook", "pc", "ultrabook", "chromebook", "dell laptop", "hp laptop", "asus laptop", "lenovo", "acer"],
+    "desktop": ["pc", "workstation", "gaming pc", "imac", "all-in-one"],
+    "camera": ["dslr", "mirrorless", "canon", "nikon", "sony alpha", "go pro", "action camera", "polaroid", "camera lens", "canon eos", "nikon dslr"],
+    "headphones": ["earphones", "earbuds", "airpods", "beats", "sony headphones", "bose", "audio", "headset", "gaming headset"],
+    "speaker": ["bluetooth speaker", "home speaker", "bose speaker", "jbl", "sound system", "audio system", "subwoofer"],
+    "printer": ["scanner", "all-in-one printer", "hp printer", "canon printer", "epson", "laser printer", "inkjet printer"],
+
+    # ----- Vehicles -----
+    "car": ["vehicle", "auto", "automobile", "sedan", "hatchback", "suv", "jeep", "truck", "van", "4x4", "coupe", "mercedes", "bmw", "toyota", "honda", "nissan", "ford", "chevrolet"],
+    "motorbike": ["bike", "scooter", "harley", "yamaha", "kawasaki", "duke", "honda bike", "suzuki", "motorcycle"],
+    "bicycle": ["bike", "mountain bike", "road bike", "mtb", "cycle", "electrical bike", "ebike", "bmx"],
+
+    # ----- Home Appliances -----
+    "fridge": ["refrigerator", "freezer", "lg fridge", "samsung fridge", "whirlpool fridge", "mini fridge", "bar fridge"],
+    "washing machine": ["washer", "laundry machine", "front load washer", "top load washer", "bosch washer", "lg washer", "samsung washer"],
+    "microwave": ["oven", "microwave oven", "panasonic microwave", "lg microwave", "convection oven"],
+    "air conditioner": ["ac", "split ac", "window ac", "haier ac", "lg ac", "cooler", "aircon", "evaporative cooler"],
+    "fan": ["ceiling fan", "table fan", "stand fan", "ventilator", "desk fan"],
+
+    # ----- Furniture -----
+    "sofa": ["couch", "settee", "divan", "sectional", "love seat", "recliner", "futon"],
+    "bed": ["mattress", "bunk bed", "queen bed", "king bed", "single bed", "sofa bed", "cot"],
+    "table": ["dining table", "coffee table", "desk", "work table", "study table"],
+    "chair": ["armchair", "office chair", "dining chair", "stool", "recliner chair", "bean bag"],
+
+    # ----- Fashion -----
+    "shoes": ["sneakers", "trainers", "boots", "heels", "sandals", "footwear", "nike", "adidas", "puma", "reebok", "slippers", "loafer"],
+    "clothes": ["apparel", "garments", "t-shirt", "shirt", "pants", "jeans", "dress", "skirt", "hoodie", "jacket", "coat", "sweater", "trousers", "shorts"],
+    "bag": ["backpack", "handbag", "purse", "laptop bag", "shoulder bag", "duffel", "tote", "messenger bag", "clutch"],
+
+    # ----- Gaming -----
+    "console": ["playstation", "ps5", "xbox", "nintendo switch", "gaming console", "ps4", "xbox series x", "xbox series s", "nintendo wii"],
+    "game": ["video game", "xbox game", "ps5 game", "nintendo game", "pc game", "playstation game", "switch game"],
+
+    # ----- Sports & Outdoors -----
+    "bicycle gear": ["helmet", "gloves", "lights", "water bottle", "bike pump"],
+    "fitness": ["dumbbells", "treadmill", "exercise bike", "yoga mat", "resistance bands", "home gym", "elliptical"],
+    "sports equipment": ["football", "soccer ball", "basketball", "tennis racket", "badminton", "golf club", "cricket bat"],
+
+    # ----- Toys & Kids -----
+    "toy": ["kids toy", "lego", "action figure", "doll", "board game", "puzzle", "remote control car", "stuffed animal"],
+    "baby gear": ["stroller", "car seat", "crib", "high chair", "baby monitor"],
+
+    # ----- Books & Stationery -----
+    "book": ["novel", "comic", "textbook", "magazine", "manga", "guide", "manual", "storybook"],
+    "stationery": ["pen", "pencil", "notebook", "marker", "folder", "eraser", "highlighter"],
+
+    # ----- Watches & Accessories -----
+    "watch": ["smartwatch", "analog watch", "digital watch", "apple watch", "fitbit", "g-shock", "timex"],
+    "accessory": ["addon", "extra", "attachment", "peripheral", "gear", "equipment", "belt", "hat", "scarf", "gloves", "jewelry"],
+
+    # ----- Automotive Parts -----
+    "car part": ["engine", "brake", "tire", "wheel", "battery", "bumper", "mirror", "headlight", "taillight", "exhaust", "gearbox"],
+
+    # ----- Miscellaneous -----
+    "gift": ["present", "surprise", "giveaway", "reward", "item"],
+    "home decor": ["painting", "vase", "rug", "curtain", "lamp", "mirror", "clock"],
+    "tool": ["drill", "hammer", "screwdriver", "wrench", "pliers", "saw", "toolkit", "hand tool", "power tool"],
+    "pet": ["dog", "cat", "bird", "fish", "rabbit", "hamster", "pet food", "pet supplies"],
+
+    # ----- Swap/Trading Generic Terms -----
+    "exchange": ["swap", "trade", "barter", "give and take", "trade-in"],
+    "wanted": ["desired", "looking for", "need", "required", "interest in"],
+}
+
+
+
+
+
 
 
 
@@ -308,7 +385,16 @@ def _get_category_counts(cursor, *, search, deal_type, location):
 # 3) The home route
 @app.route('/')
 def home():
-    search            = request.args.get('search', '').strip()
+    # ---------------- MODE AWARE REQUEST PARSING ----------------
+    mode = request.args.get('mode', 'buy')  # 'buy' or 'swap'
+
+    if mode == 'swap':
+        search = request.args.get('want', '').strip()
+        have   = request.args.get('have', '').strip()
+    else:
+        search = request.args.get('search', '').strip()
+        have   = ''
+
     selected_category = request.args.get('category', 'All')
     deal_type_filter  = request.args.get('deal_type', 'All')
     location_q        = request.args.get('location', '').strip()
@@ -336,21 +422,34 @@ def home():
         # 1) Carousel
         carousel_listings = _get_carousel(cursor)
 
-        # 2) Normal Listings
-        listings, total_pages = _get_main_listings(
-            cursor,
-            search=search,
-            category=selected_category,
-            deal_type=deal_type_filter,
-            location=location_q,
-            per_page=per_page,
-            offset=offset,
-        )
+        # ---------------- MAIN LISTINGS (MODE CONTROLLED) ----------------
+        if mode == 'swap' and have:
+            listings, total_pages = _smart_match_listings(
+                cursor,
+                have=have,
+                want=search,
+                per_page=per_page,
+                offset=offset
+            )
+        else:
+            listings, total_pages = _get_main_listings(
+                cursor,
+                search=search,
+                category=selected_category,
+                deal_type=deal_type_filter,
+                location=location_q,
+                per_page=per_page,
+                offset=offset,
+            )
 
-        # 3) Suggestions if no result
+        # ---------------- SUGGESTIONS (MODE AWARE) ----------------
         if not listings and search:
-            show_suggestions    = True
-            suggestion_listings = _get_suggestions(cursor, search)
+            show_suggestions = True
+            suggestion_listings = _get_suggestions(
+                cursor,
+                search,
+                deal_type=('Swap Deal' if mode == 'swap' else None)
+            )
 
         # 4) Compute category counts
         cursor.execute("""
@@ -360,23 +459,9 @@ def home():
         """)
         category_counts = {row['category']: row['count'] for row in cursor.fetchall()}
 
-        # 5) Attach images & offers
+        # 5) Attach images & offers (uses listings.image1–image4)
         all_items = listings + suggestion_listings
-        offers    = _attach_offered_items(cursor, all_items)
-
-        for item in all_items:
-            raw_image = item.get('image1')
-            if raw_image and raw_image.startswith('http'):
-                item['image_url'] = raw_image
-            else:
-                item['image_url'] = url_for('static', filename=f'images/{raw_image or "placeholder.jpg"}')
-            item['offers'] = offers.get(item['listing_id'], [])
-            item.setdefault('required_cash', 0)
-            item.setdefault('additional_cash', 0)
-            item.setdefault('desired_swap', '')
-            item.setdefault('price', item.get('price', 0))
-            item.setdefault('location', '')
-            item.setdefault('contact', '')
+        _attach_offered_items(cursor, all_items)  # attaches images + offers + defaults
 
         # 6) Wishlist logic
         if user_logged_in and all_items:
@@ -401,6 +486,7 @@ def home():
             for item in all_items:
                 item['is_wishlisted'] = False
 
+        # Featured listing
         featured = listings[0] if listings else (suggestion_listings[0] if suggestion_listings else None)
 
         return render_template(
@@ -419,7 +505,7 @@ def home():
             vapid_public_key=app.config.get('VAPID_PUBLIC_KEY', ''),
             page=page,
             total_pages=total_pages,
-            category_counts=category_counts   # <-- Pass it here
+            category_counts=category_counts
         )
 
     except Exception as e:
@@ -429,6 +515,7 @@ def home():
     finally:
         if cursor: cursor.close()
         if conn: conn.close()
+
 
 
 
@@ -458,7 +545,7 @@ def _similarity(a, b):
 
 
 
-def _smart_match_listings(cursor, *, have, want, per_page, offset):
+def _smart_match_listings(cursor, have, want, per_page, offset):
     """
     Two modes:
     - If `have` is provided: fuzzy matching (existing behavior).
@@ -472,7 +559,6 @@ def _smart_match_listings(cursor, *, have, want, per_page, offset):
     if not have and want:
         like = f"%{want}%"
 
-        # 1) count total matching listings for pagination
         count_q = """
             SELECT COUNT(DISTINCT l.listing_id) AS total
             FROM listings l
@@ -493,8 +579,7 @@ def _smart_match_listings(cursor, *, have, want, per_page, offset):
         if not total:
             return [], 0
 
-        # 2) fetch a page of listings matching the want term (include user + metrics)
-        page_q = f"""
+        page_q = """
             SELECT l.listing_id, l.title, l.description, l.category, l.deal_type, l.`Plan`,
                    l.image1, l.price, l.required_cash, l.additional_cash, l.desired_swap,
                    l.location, l.contact, u.username, IFNULL(m.impressions,0) AS impressions,
@@ -514,33 +599,39 @@ def _smart_match_listings(cursor, *, have, want, per_page, offset):
                  )
               )
             ORDER BY
-              CASE l.`Plan` WHEN 'Diamond' THEN 5 WHEN 'Gold' THEN 4 WHEN 'Silver' THEN 3 WHEN 'Bronze' THEN 2 ELSE 1 END DESC,
+              CASE l.`Plan`
+                WHEN 'Diamond' THEN 5
+                WHEN 'Gold' THEN 4
+                WHEN 'Silver' THEN 3
+                WHEN 'Bronze' THEN 2
+                ELSE 1
+              END DESC,
               l.created_at DESC
             LIMIT %s OFFSET %s
         """
-        params = (like, like, like, like, like, per_page, offset)
-        cursor.execute(page_q, params)
+        cursor.execute(page_q, (like, like, like, like, like, per_page, offset))
         listings = cursor.fetchall()
 
-        # 3) Attach only offered_items that match `want`
         if listings:
-            listing_ids = [r['listing_id'] for r in listings]
-            ph = ",".join(["%s"] * len(listing_ids))
+            ids = [l['listing_id'] for l in listings]
+            ph = ",".join(["%s"] * len(ids))
 
-            # fetch only matching offered_items
             cursor.execute(
-                f"SELECT * FROM offered_items WHERE listing_id IN ({ph}) AND (title LIKE %s OR description LIKE %s)",
-                tuple(listing_ids) + (like, like)
+                f"""
+                SELECT *
+                FROM offered_items
+                WHERE listing_id IN ({ph})
+                  AND (title LIKE %s OR description LIKE %s)
+                """,
+                tuple(ids) + (like, like)
             )
             rows = cursor.fetchall()
             offers = {}
             for r in rows:
                 offers.setdefault(r['listing_id'], []).append(r)
 
-            # attach filtered offers
             for l in listings:
                 l['offers'] = offers.get(l['listing_id'], [])
-                # safe defaults
                 l.setdefault('required_cash', 0)
                 l.setdefault('additional_cash', 0)
                 l.setdefault('desired_swap', l.get('desired_swap') or '')
@@ -551,9 +642,7 @@ def _smart_match_listings(cursor, *, have, want, per_page, offset):
         total_pages = (total + per_page - 1) // per_page
         return listings, total_pages
 
-    # ----------------- HAVE+WANT / FUZZY MODE (existing) -----------------
-    # Keep your current fuzzy scoring behavior here (unchanged).
-    # I'll paste your existing fuzzy implementation (slightly tidied).
+    # ----------------- FUZZY MODE (UNCHANGED LOGIC) -----------------
     base_q = """
         SELECT l.listing_id, l.title, l.description, l.category, l.deal_type, l.Plan,
                l.image1, l.price, l.required_cash, l.additional_cash, l.desired_swap,
@@ -567,20 +656,18 @@ def _smart_match_listings(cursor, *, have, want, per_page, offset):
     cursor.execute(base_q)
     raw = cursor.fetchall()
 
-    # Offered items map
     offered_map = {}
     if raw:
-        listing_ids = [r["listing_id"] for r in raw]
-        ph = ",".join(["%s"] * len(listing_ids))
-        cursor.execute(f"SELECT * FROM offered_items WHERE listing_id IN ({ph})", tuple(listing_ids))
+        ids = [r["listing_id"] for r in raw]
+        ph = ",".join(["%s"] * len(ids))
+        cursor.execute(f"SELECT * FROM offered_items WHERE listing_id IN ({ph})", tuple(ids))
         for o in cursor.fetchall():
             offered_map.setdefault(o["listing_id"], []).append(o)
 
-    # Scoring as you had it (fuzzy)
-    scored = []
     import datetime
     now = datetime.datetime.now()
     plan_weights = {"Diamond": 5, "Gold": 4, "Silver": 3, "Bronze": 2, "Free": 1}
+    scored = []
 
     for l in raw:
         have_score = 0.0
@@ -595,17 +682,14 @@ def _smart_match_listings(cursor, *, have, want, per_page, offset):
         plan_score = plan_weights.get(l.get("Plan"), 1) / 5.0
         days_old = (now - l.get("created_at", now)).days if l.get("created_at") else 365
         recency_score = max(0, 1 - (days_old / 30))
-        final = (have_score * 0.45) + (want_score * 0.45) + (plan_score * 0.07) + (recency_score * 0.03)
-        l["match_score"] = round(final * 100)
-        # attach offers (all offers) for fuzzy mode
+        l["match_score"] = round((have_score*0.45 + want_score*0.45 + plan_score*0.07 + recency_score*0.03) * 100)
         l['offers'] = offered_map.get(l['listing_id'], [])
         scored.append(l)
 
     scored.sort(key=lambda x: x['match_score'], reverse=True)
-    total = len(scored)
-    total_pages = (total + per_page - 1) // per_page
-    page_slice = scored[offset: offset + per_page]
-    return page_slice, total_pages
+    total_pages = (len(scored) + per_page - 1) // per_page
+    return scored[offset:offset + per_page], total_pages
+
 
 
 
@@ -651,135 +735,77 @@ def _get_carousel(cursor):
 
 
 
-def _get_main_listings(cursor, *, search, category, deal_type, location, per_page, offset):
+def _get_main_listings(cursor, search, category, deal_type, location, per_page, offset):
+    import re
+
     base_q = """
         SELECT l.listing_id, l.title, l.description, l.category, l.deal_type, l.`Plan`,
-               l.image1, l.price, l.required_cash, l.additional_cash,
-               l.desired_swap, l.desired_swap_description,
-               l.location, l.contact,
-               u.username,
+               l.image1, l.image2, l.image3, l.image4, l.price, l.required_cash, l.additional_cash,
+               l.desired_swap, l.desired_swap_description, l.location, l.contact, u.username,
                IFNULL(m.impressions,0) AS impressions
         FROM listings l
         JOIN users u ON l.user_id = u.id
         LEFT JOIN listing_metrics m ON l.listing_id = m.listing_id
         WHERE 1=1
     """
-
     params = []
 
-    # -----------------------------
-    # SHARP SEARCH (CORE FIX)
-    # -----------------------------
+    # ---------------- SEARCH TOKENS ----------------
+    token_clauses = []
     if search:
-        tokens = [t for t in re.split(r'\s+', search.strip()) if len(t) >= 2]
-
-        search_clauses = []
+        tokens = [t for t in re.split(r'\s+', search.strip()) if len(t) > 0]
         for t in tokens:
             like = f"%{t}%"
-            search_clauses.append("""
-                l.title LIKE %s
-                OR l.description LIKE %s
-                OR l.category LIKE %s
-                OR l.desired_swap LIKE %s
-                OR l.desired_swap_description LIKE %s
-            """)
-            params.extend([like, like, like, like, like])
+            token_clauses.append(
+                "(l.title LIKE %s OR l.description LIKE %s OR l.category LIKE %s "
+                "OR l.desired_swap LIKE %s OR l.desired_swap_description LIKE %s)"
+            )
+            params += [like, like, like, like, like]
 
-        base_q += " AND (" + " OR ".join(search_clauses) + ")"
+    if token_clauses:
+        base_q += " AND (" + " OR ".join(token_clauses) + ")"
 
-    # -----------------------------
-    # FILTERS
-    # -----------------------------
     if category != 'All':
-        base_q += " AND l.category = %s"
+        base_q += " AND l.category=%s"
         params.append(category)
 
-    if deal_type != 'All':
-        base_q += " AND l.deal_type = %s"
+    if deal_type and deal_type != 'All':
+        base_q += " AND l.deal_type=%s"
         params.append(deal_type)
 
     if location:
-        base_q += """
-            AND l.location IS NOT NULL
-            AND (
-                l.location = %s
-                OR l.location LIKE %s
-                OR SOUNDEX(l.location) = SOUNDEX(%s)
-            )
-        """
-        params.extend([location, f"%{location}%", location])
+        base_q += " AND l.location IS NOT NULL AND (l.location=%s OR SOUNDEX(l.location)=SOUNDEX(%s) OR l.location LIKE %s)"
+        params += [location, location, f"%{location}%"]
 
-    # -----------------------------
-    # ORDERING
-    # -----------------------------
-    plan_case = """
-        CASE l.`Plan`
-            WHEN 'Diamond' THEN 5
-            WHEN 'Gold' THEN 4
-            WHEN 'Silver' THEN 3
-            WHEN 'Bronze' THEN 2
-            ELSE 1
-        END
-    """
+    plan_case = "CASE l.`Plan` WHEN 'Diamond' THEN 5 WHEN 'Gold' THEN 4 WHEN 'Silver' THEN 3 ELSE 1 END"
+    order = f"ORDER BY {plan_case} DESC, l.created_at DESC"
 
-    order_q = f"""
-        ORDER BY
-            {plan_case} DESC,
-            l.created_at DESC
-    """
-
-    # -----------------------------
-    # COUNT QUERY (MATCHES SEARCH LOGIC)
-    # -----------------------------
+    # ---------------- COUNT QUERY ----------------
     count_q = "SELECT COUNT(*) AS total FROM listings l WHERE 1=1"
     count_params = []
 
-    if search:
-        tokens = [t for t in re.split(r'\s+', search.strip()) if len(t) >= 2]
-        count_clauses = []
-        for t in tokens:
-            like = f"%{t}%"
-            count_clauses.append("""
-                l.title LIKE %s
-                OR l.description LIKE %s
-                OR l.category LIKE %s
-                OR l.desired_swap LIKE %s
-                OR l.desired_swap_description LIKE %s
-            """)
-            count_params.extend([like, like, like, like, like])
+    if token_clauses:
+        count_q += " AND (" + " OR ".join(token_clauses) + ")"
+        count_params += params[:len(token_clauses) * 5]  # 5 placeholders per token
 
-        count_q += " AND (" + " OR ".join(count_clauses) + ")"
-
+    # Add remaining filters
+    idx = len(count_params)
     if category != 'All':
-        count_q += " AND l.category = %s"
+        count_q += " AND l.category=%s"
         count_params.append(category)
-
-    if deal_type != 'All':
-        count_q += " AND l.deal_type = %s"
+    if deal_type and deal_type != 'All':
+        count_q += " AND l.deal_type=%s"
         count_params.append(deal_type)
-
     if location:
-        count_q += """
-            AND l.location IS NOT NULL
-            AND (
-                l.location = %s
-                OR l.location LIKE %s
-                OR SOUNDEX(l.location) = SOUNDEX(%s)
-            )
-        """
-        count_params.extend([location, f"%{location}%", location])
+        count_q += " AND l.location IS NOT NULL AND (l.location=%s OR SOUNDEX(l.location)=SOUNDEX(%s) OR l.location LIKE %s)"
+        count_params += [location, location, f"%{location}%"]
 
+    # Execute count query
     cursor.execute(count_q, tuple(count_params))
     total = cursor.fetchone()['total']
 
-    # -----------------------------
-    # PAGE QUERY
-    # -----------------------------
-    cursor.execute(
-        base_q + order_q + " LIMIT %s OFFSET %s",
-        tuple(params + [per_page, offset])
-    )
-
+    # ---------------- FETCH LISTINGS ----------------
+    cursor.execute(base_q + " " + order + " LIMIT %s OFFSET %s", tuple(params + [per_page, offset]))
     listings = cursor.fetchall()
     listings = _rotate_weighted(listings)
 
@@ -787,63 +813,72 @@ def _get_main_listings(cursor, *, search, category, deal_type, location, per_pag
     return listings, total_pages
 
 
-    
+
+
+
+
 
 import re
+def _get_suggestions(cursor, search, deal_type=None):
+    import re
+    listings = []
+    tokens = [t for t in re.split(r'\s+', search) if len(t) > 1]
+    if tokens:
+        conds, params = [], []
+        for t in tokens:
+            like = f"%{t}%"
+            conds.append(
+                "(l.title LIKE %s OR l.description LIKE %s OR l.category LIKE %s "
+                "OR l.desired_swap LIKE %s OR l.desired_swap_description LIKE %s)"
+            )
+            params += [like, like, like, like, like]
 
-def _get_suggestions(cursor, search):
-    tokens = [t for t in re.split(r'\s+', search.strip()) if len(t) >= 2]
-    if not tokens:
-        return []
-
-    clauses = []
-    params = []
-
-    for t in tokens:
-        like = f"%{t}%"
-        clauses.append("""
-            l.title LIKE %s
-            OR l.description LIKE %s
-            OR l.category LIKE %s
-            OR l.desired_swap LIKE %s
-            OR l.desired_swap_description LIKE %s
-        """)
-        params.extend([like, like, like, like, like])
-
-    q = f"""
-        SELECT l.listing_id, l.title, l.description, l.category, l.deal_type, l.`Plan`,
-               l.image1, l.price, l.required_cash, l.additional_cash,
-               l.desired_swap, l.desired_swap_description,
-               l.location, l.contact,
-               u.username,
-               IFNULL(m.impressions,0) AS impressions
-        FROM listings l
-        JOIN users u ON l.user_id = u.id
-        LEFT JOIN listing_metrics m ON l.listing_id = m.listing_id
-        WHERE ({' OR '.join(clauses)})
-        ORDER BY m.impressions DESC, l.created_at DESC
-        LIMIT 24
-    """
-
-    cursor.execute(q, tuple(params))
-    return cursor.fetchall()
-
-
-    if not listings:
-        q = """
+        where_clause = " OR ".join(conds)
+        q = f"""
             SELECT l.listing_id, l.title, l.description, l.category, l.deal_type, l.`Plan`,
-                   l.image1, l.price, l.required_cash, l.additional_cash, l.desired_swap,
+                   l.image1, l.image2, l.image3, l.image4,
+                   l.price, l.required_cash, l.additional_cash, l.desired_swap,
                    l.location, l.contact, u.username, IFNULL(m.impressions,0) AS impressions
             FROM listings l
             JOIN users u ON l.user_id = u.id
             LEFT JOIN listing_metrics m ON l.listing_id = m.listing_id
-            ORDER BY m.impressions DESC, l.created_at DESC
-            LIMIT 24
+            WHERE {where_clause}
         """
-        cursor.execute(q)
+        if deal_type and deal_type != 'All':
+            q += " AND l.deal_type=%s"
+            params.append(deal_type)
+
+        q += " ORDER BY m.impressions DESC, l.created_at DESC LIMIT 24"
+        cursor.execute(q, tuple(params))
         listings = cursor.fetchall()
+        _attach_offered_items(cursor, listings)
+
+    if not listings:
+        # fallback top listings
+        q = """
+            SELECT l.listing_id, l.title, l.description, l.category, l.deal_type, l.`Plan`,
+                   l.image1, l.image2, l.image3, l.image4,
+                   l.price, l.required_cash, l.additional_cash, l.desired_swap,
+                   l.location, l.contact, u.username, IFNULL(m.impressions,0) AS impressions
+            FROM listings l
+            JOIN users u ON l.user_id = u.id
+            LEFT JOIN listing_metrics m ON l.listing_id = m.listing_id
+        """
+        if deal_type and deal_type != 'All':
+            q += " WHERE l.deal_type=%s ORDER BY m.impressions DESC, l.created_at DESC LIMIT 24"
+            cursor.execute(q, (deal_type,))
+        else:
+            q += " ORDER BY m.impressions DESC, l.created_at DESC LIMIT 24"
+            cursor.execute(q)
+        listings = cursor.fetchall()
+        _attach_offered_items(cursor, listings)
 
     return listings
+
+
+
+
+
 
 
 def _rotate_weighted(listings):
@@ -866,26 +901,42 @@ def _rotate_weighted(listings):
     return out
 
 
-def _attach_offered_items(cursor, items):
-    swap_ids = [i['listing_id'] for i in items if i.get('deal_type') == 'Swap Deal']
-    offers = {}
-    if swap_ids:
-        ph = ','.join(['%s'] * len(swap_ids))
-        cursor.execute(f"""
-            SELECT listing_id, item_id, title, description, image1, `condition`
-            FROM offered_items
-            WHERE listing_id IN ({ph})
-            ORDER BY listing_id, item_id
-        """, tuple(swap_ids))
-        for o in cursor.fetchall():
-            raw_image = o.get('image1')
-            if raw_image and raw_image.startswith('http'):
-                o['image1'] = raw_image
-            else:
-                name = raw_image or 'placeholder.jpg'
-                o['image1'] = url_for('static', filename=f'images/{name}')
-            offers.setdefault(o['listing_id'], []).append(o)
-    return offers
+def _attach_offered_items(cursor, listings):
+    """
+    Attaches offered items and main images to listings.
+    Previously relied on a non-existent `listing_images` table.
+    Now uses `image1`–`image4` columns in `listings`.
+    """
+    if not listings:
+        return {}
+
+    # Map listing_id → offers
+    listing_ids = [l['listing_id'] for l in listings]
+    ph = ",".join(["%s"] * len(listing_ids))
+
+    # Fetch offered items
+    cursor.execute(f"SELECT * FROM offered_items WHERE listing_id IN ({ph})", tuple(listing_ids))
+    offered_rows = cursor.fetchall()
+    offers_map = {}
+    for o in offered_rows:
+        offers_map.setdefault(o['listing_id'], []).append(o)
+
+    # Attach images
+    for l in listings:
+        # Determine main image
+        l['image_url'] = l.get('image1') or l.get('image2') or l.get('image3') or l.get('image4') \
+                         or url_for('static', filename='images/placeholder.jpg')
+        # Attach offered items
+        l['offers'] = offers_map.get(l['listing_id'], [])
+        # Safe defaults
+        l.setdefault('required_cash', 0)
+        l.setdefault('additional_cash', 0)
+        l.setdefault('desired_swap', l.get('desired_swap') or '')
+        l.setdefault('price', l.get('price', 0))
+        l.setdefault('location', l.get('location', ''))
+        l.setdefault('contact', l.get('contact', ''))
+
+    return offers_map
 
 
 
