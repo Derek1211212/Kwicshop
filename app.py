@@ -299,6 +299,7 @@ def _get_category_counts(cursor, *, search, deal_type, location):
 
 
 
+
 # -------------------------------
 # SEARCH SYNONYMS (GLOBAL)
 # -------------------------------
