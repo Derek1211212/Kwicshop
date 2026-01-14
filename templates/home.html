@@ -1041,8 +1041,17 @@
       <!-- 🔹 New Listing – logged in → go directly to section -->
       <a href="{{ create_target }}" class="mb-item">
         <i class="fas fa-plus-circle mb-icon" aria-hidden="true"></i>
-        <span class="nav-label">Upload Ads</span>
+        <span class="nav-label">Ads</span>
       </a>
+
+
+<a href="/shops" 
+   class="mb-item {% if request.path=='/shops' %}active{% endif %}">
+    <i class="fas fa-store mb-icon" aria-hidden="true"></i>
+    <span class="nav-label">Stores</span>
+</a>
+
+
 
       <a href="{{ url_for('dashboard') }}"
          class="mb-item {% if request.path=='/dashboard' %}active{% endif %}">
@@ -1050,12 +1059,6 @@
         <span class="nav-label">Dashboard</span>
       </a>
 
-
-            <a href="/my-proposals"
-         class="mb-item {% if request.path=='/my-proposals' %}active{% endif %}">
-        <i class="fas fa-exchange-alt mb-icon" aria-hidden="true"></i>
-        <span class="nav-label">Proposals</span>
-      </a>
 
 
       {# ⭐ Wishlist with its own relative container #}

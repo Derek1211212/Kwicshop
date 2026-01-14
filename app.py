@@ -55,6 +55,9 @@ import cloudinary.uploader
 from twilio.rest import Client
 from urllib.parse import quote_plus
 import atexit
+from slugify import slugify
+from flask_login import current_user
+
 
 
 
@@ -65,7 +68,6 @@ import atexit
 
 
 import logging
-
 # Set up logging
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -79,8 +81,12 @@ PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY')
 if not PAYSTACK_SECRET_KEY:
     raise ValueError("PAYSTACK_SECRET_KEY is not set in the environment")
 
+
+
+
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__, template_folder=os.path.join(BASE_DIR, 'templates'))
+
 
 app.config['SECRET_KEY'] = 'fa470fe714e44404511cbad16224f52777068d05bb5c29ed'
 app.config['SMTP_SERVER'] = os.getenv('SMTP_SERVER', 'in-v3.mailjet.com')
@@ -3273,43 +3279,46 @@ def create_listing():
 def paystack_payment():
     plan = request.args.get('plan')
     amount = request.args.get('amount', type=float)
-    if amount is None or not plan:
-        flash("Invalid payment parameters.", "error")
-        logger.error(f"Invalid payment parameters: plan={plan}, amount={amount}")
+
+    if not plan or not amount:
+        flash("Invalid payment request.", "error")
         return redirect(url_for('home'))
 
-    amount_kobo = int(amount * 100)
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT email FROM users WHERE id=%s", (session['user_id'],))
-    user = cursor.fetchone()
-    cursor.close()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("SELECT email FROM users WHERE id = %s", (session['user_id'],))  # ← Fixed: 'id'
+    user = cur.fetchone()
+    cur.close()
     conn.close()
+
     if not user:
         flash("User not found.", "error")
-        logger.error(f"User not found for id: {session['user_id']}")
         return redirect(url_for('home'))
 
     payload = {
         "email": user['email'],
-        "amount": amount_kobo,
-        "metadata": {"pending_listing": session.get('pending_listing')},
+        "amount": int(amount * 100),
+        "metadata": session.get('pending_listing'),
         "callback_url": url_for('paystack_verify', _external=True)
     }
+
     headers = {
-        "Authorization": "Bearer sk_test_38d38a400d7c1a34c826930691e8c23fce8dde98",
+        "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}",
         "Content-Type": "application/json"
     }
-    logger.debug(f"Initiating Paystack payment: plan={plan}, amount_kobo={amount_kobo}, user_email={user['email']}")
-    resp = requests.post("https://api.paystack.co/transaction/initialize",
-                         json=payload, headers=headers)
-    data = resp.json()
-    if data.get('status'):
-        logger.debug(f"Payment initialized, redirecting to: {data['data']['authorization_url']}")
-        return redirect(data['data']['authorization_url'])
+
+    resp = requests.post(
+        "https://api.paystack.co/transaction/initialize",
+        json=payload,
+        headers=headers
+    ).json()
+
+    if resp.get('status'):
+        return redirect(resp['data']['authorization_url'])
+
     flash("Payment initialization failed.", "error")
-    logger.error(f"Payment initialization failed: {data}")
     return redirect(url_for('home'))
+
 
 
 
@@ -3319,134 +3328,159 @@ def paystack_payment():
 @app.route('/paystack_verify')
 @login_required
 def paystack_verify():
-    logger.debug("Verifying Paystack payment")
     ref = request.args.get('reference')
     if not ref:
-        flash("Payment reference missing.", "error")
-        logger.error("Missing payment reference")
+        flash("Missing payment reference.", "error")
         return redirect(url_for('home'))
 
-    # Verify with Paystack
-    headers = {"Authorization": "Bearer sk_test_38d38a400d7c1a34c826930691e8c23fce8dde98"}
-    resp = requests.get(f"https://api.paystack.co/transaction/verify/{ref}", headers=headers)
-    result = resp.json()
-    if not (result.get('status') and result['data']['status'] == 'success'):
-        flash("Payment verification failed.", "error")
-        logger.error(f"Payment verification failed: {result}")
+    headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
+    resp = requests.get(f"https://api.paystack.co/transaction/verify/{ref}", headers=headers).json()
+
+    if not (resp.get('status') and resp['data']['status'] == 'success'):
+        flash("Payment failed.", "error")
         return redirect(url_for('home'))
 
-    # Pull pending listing
-    # Pull pending listing
-    p = result['data']['metadata'].get('pending_listing') or session.pop('pending_listing', None)
-    if not p:
-        flash("No pending listing.", "error")
-        logger.error("No pending listing found")
+    p = resp['data']['metadata']
+    if not p or p.get('source') != 'store':
+        flash("Invalid payment metadata.", "error")
         return redirect(url_for('home'))
 
-    logger.debug(f"Pending listing: {p}")
-
-    # -----------------------------
-    # Restore expires_at SAFELY
-    # -----------------------------
-    expires_at = None
-    if p.get('expires_at'):
-        try:
-            expires_at = datetime.fromisoformat(p['expires_at'])
-        except ValueError:
-            logger.error(f"Invalid expires_at format: {p['expires_at']}")
-            expires_at = None
-
-    logger.debug(f"Restored expires_at: {expires_at}")
-
-    # -----------------------------
-    # Clean up numeric fields
-    # -----------------------------
-    raw_additional = str(p.get('additional_cash', '')).strip()
-    raw_required = str(p.get('required_cash', '')).strip()
-    raw_price = str(p.get('price', '')).strip()
-
-    additional_cash = Decimal(raw_additional).quantize(Decimal('0.01')) if raw_additional else None
-    required_cash = Decimal(raw_required).quantize(Decimal('0.01')) if raw_required else None
-    price = Decimal(raw_price).quantize(Decimal('0.01')) if raw_price else None
-
-    # -----------------------------
-    # Validate offered items (Swap Deal)
-    # -----------------------------
+    # Extract data from pending_listing
+    user_id = p['user_id']
+    store_id = p['store_id']
+    store_slug = p.get('store_slug')
+    title = p['title']
+    description = p['description']
+    category = p['category']
+    location = p['location']
+    contact = p['contact']
+    deal_type = p['deal_type']
+    price = p.get('price')
+    main_images = p.get('main_images', [])
     offered_items = p.get('offered_items', [])
-    if p['deal_type'] == 'Swap Deal':
-        if not (1 <= len(offered_items) <= 2):
-            flash("Invalid number of offered items.", "error")
-            logger.error(f"Invalid number of offered items: {len(offered_items)}")
-            return redirect(url_for('home'))
+    desired_swap = p.get('desired_swap', '')
+    plan = p.get('plan', 'Free')
 
-        for i, item in enumerate(offered_items, 1):
-            if not (item.get('condition') and item.get('description') and item['images'][0]):
-                flash(f"Item {i} is incomplete.", "error")
-                logger.error(f"Item {i} incomplete: {item}")
-                return redirect(url_for('home'))
+    # Swap-specific fields
+    desired_condition = p.get('desired_condition', '')
+    swap_notes = p.get('swap_notes', '')
+    required_cash = p.get('required_cash')
+    additional_cash = p.get('additional_cash')
 
-    # -----------------------------
-    # Insert into listings
-    # -----------------------------
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cur = conn.cursor()
 
-    listing_params = [
-        p['user_id'], p['title'], p['description'], p['category'],
-        p.get('desired_swap'), p.get('desired_swap_description'),
-        additional_cash, required_cash,
-        (offered_items[0]['condition'] if offered_items else None),
-        p['location'], p['contact']
-    ]
+    def to_int_or_none(value):
+        try:
+            return int(value) if value not in ('', None) else None
+        except (ValueError, TypeError):
+            return None
 
-    main_images = p.get('main_images', [])[:4]
-    listing_params += main_images + [None] * (5 - len(main_images))
+    required_cash = to_int_or_none(p.get('required_cash'))
+    additional_cash = to_int_or_none(p.get('additional_cash'))
 
-    # 👉 expires_at INCLUDED HERE
-    listing_params += [p['plan'], p['deal_type'], price, expires_at]
 
-    logger.debug(f"Listing params for verification: {listing_params}")
+    try:
+        if deal_type == 'Outright Sales':
+            # Prepare 5 images
+            padded_images = (main_images + [None] * 5)[:5]
 
-    cursor.execute("""
-        INSERT INTO listings (
-            user_id, title, description, category,
-            desired_swap, desired_swap_description,
-            additional_cash, required_cash,
-            `condition`, location, contact,
-            image_url, image1, image2, image3, image4,
-            plan, deal_type, price, expires_at
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                  %s, %s, %s, %s, %s,
-                  %s, %s, %s, %s)
-    """, listing_params)
+            sql = """
+                INSERT INTO listings
+                (user_id, store_id, title, description, category, location, contact,
+                 price, deal_type, Plan, image_url, image1, image2, image3, image4)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            values = (
+                user_id, store_id, title, description, category, location, contact,
+                price, deal_type, plan,
+                padded_images[0], padded_images[1], padded_images[2], padded_images[3], padded_images[4]
+            )
 
-    lid = cursor.lastrowid
-    logger.debug(f"Inserted listing with ID: {lid}")
+            print("\n=== PAID SALES LISTING INSERT ===")
+            print("Table: listings")
+            print("SQL:", sql.strip())
+            print("Values:", values)
 
-    # Insert offered items (only for Swap Deal)
-    if p['deal_type'] == 'Swap Deal':
-        for item in offered_items:
-            cursor.execute("""
-                INSERT INTO offered_items (
-                    listing_id, title, description, `condition`,
-                    image1, image2, image3, image4
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                lid, item['title'], item['description'], item['condition'],
-                item['images'][0], item['images'][1], item['images'][2], item['images'][3]
-            ))
-            logger.debug(f"Inserted offered item: {item}")
+            cur.execute(sql, values)
+            listing_id = cur.lastrowid
+            print(f"Success: Inserted into listings with ID {listing_id}\n")
 
-    conn.commit()
-    cursor.close()
-    conn.close()
+        else:  # Swap Deal
+            # Preview images from first offered item
+            preview_images = offered_items[0]['images'][:5] if offered_items else []
+            padded_preview = (preview_images + [None] * 5)[:5]
+
+            sql = """
+                INSERT INTO listings
+                (user_id, store_id, title, description, category, location, contact,
+                 deal_type, desired_swap, `condition`, swap_notes,
+                 required_cash, additional_cash, Plan, image_url, image1, image2, image3, image4)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            values = (
+                user_id, store_id, title, description, category, location, contact,
+                deal_type, desired_swap, desired_condition, swap_notes,
+                required_cash, additional_cash, plan,
+                padded_preview[0], padded_preview[1], padded_preview[2], padded_preview[3], padded_preview[4]
+            )
+
+            print("\n=== PAID SWAP DEAL LISTING INSERT ===")
+            print("Table: listings")
+            print("SQL:", sql.strip())
+            print("Values:", values)
+
+            cur.execute(sql, values)
+            listing_id = cur.lastrowid
+            print(f"Success: Inserted into listings with ID {listing_id}")
+
+            # Insert offered items
+            if offered_items:
+                offered_ids = []
+                for idx, item in enumerate(offered_items, 1):
+                    padded_item_images = (item['images'] + [None] * 4)[:4]
+
+                    sql_offered = """
+                        INSERT INTO offered_items
+                        (listing_id, title, description, `condition`, image1, image2, image3, image4)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    """
+                    values_offered = (
+                        listing_id,
+                        item['title'], item['description'], item['condition'],
+                        padded_item_images[0], padded_item_images[1], padded_item_images[2], padded_item_images[3]
+                    )
+
+                    print(f"\nOffered Item #{idx}")
+                    print("Table: offered_items")
+                    print("SQL:", sql_offered.strip())
+                    print("Values:", values_offered)
+
+                    cur.execute(sql_offered, values_offered)
+                    offered_id = cur.lastrowid
+                    offered_ids.append(offered_id)
+                    print(f"Success: Inserted offered_item with ID {offered_id}")
+
+                print(f"\nAll offered items inserted: IDs {offered_ids}")
+
+        conn.commit()
+        print("\n=== COMMIT SUCCESSFUL ===\n")
+        flash("Payment successful! Your promoted item has been listed.", "success")
+
+    except Exception as e:
+        conn.rollback()
+        print("\n=== DATABASE ERROR ===")
+        print("Error:", str(e))
+        print("Traceback:", __import__('traceback').format_exc())
+        flash("Payment succeeded but listing failed. Contact support.", "error")
+
+    finally:
+        cur.close()
+        conn.close()
 
     session.pop('pending_listing', None)
-    flash("Your product has been listed!", "success")
-    logger.debug("Payment verified and listing created")
-    return redirect(url_for('dashboard'))
 
-
+    return redirect(url_for('store_home', slug=store_slug) if store_slug else url_for('dashboard'))
 
 
 
@@ -6109,6 +6143,229 @@ def auction_delete(auction_id):
 
 
 
+# Set upload folder inside static/images
+UPLOAD_FOLDER = os.path.join('static', 'images')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'avif'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def upload_to_cloudinary(file, folder):
+    """
+    Uploads file to Cloudinary
+    Returns secure URL or None
+    """
+    if not file or not file.filename:
+        return None
+
+    if not allowed_file(file.filename):
+        return None
+
+    try:
+        result = cloudinary.uploader.upload(
+            file,
+            folder=folder,
+            resource_type="image",
+            use_filename=True,
+            unique_filename=True
+        )
+        return result.get("secure_url")
+    except Exception as e:
+        print("Cloudinary upload error:", e)
+        return None
+
+
+
+
+
+@app.route('/create-store', methods=['GET', 'POST'])
+@login_required
+def create_store():
+    user_id = session['user_id']
+
+    if request.method == 'POST':
+        name = request.form['name'].strip()
+        description = request.form.get('description', '').strip()
+        location = request.form.get('location', '').strip()
+        contact = request.form.get('contact', '').strip()
+        store_type = request.form.get('store_type', '').strip()
+
+        # files
+        logo = request.files.get('logo')
+        banner = request.files.get('banner')
+
+        # ✅ Upload to Cloudinary
+        logo_path = upload_to_cloudinary(logo, 'stores/logos') if logo else None
+        banner_path = upload_to_cloudinary(banner, 'stores/banners') if banner else None
+
+        slug = slugify(name)
+        store_link = f"{request.host_url}store/{slug}"
+
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        try:
+            cur.execute("""
+                INSERT INTO stores 
+                (user_id, name, slug, logo, banner, description, location, contact, store_type, store_link)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                user_id, name, slug, logo_path, banner_path,
+                description, location, contact, store_type, store_link
+            ))
+            conn.commit()
+
+            return jsonify({
+                "success": True,
+                "redirect": f"/store/{slug}"
+            })
+
+        except Exception as e:
+            conn.rollback()
+            print("Create store error:", e)
+            return jsonify({
+                "success": False,
+                "message": "Failed to create store."
+            }), 500
+
+        finally:
+            cur.close()
+            conn.close()
+
+    return render_template('create_store.html')
+
+
+
+
+
+
+@app.route('/store/<slug>')
+def store_home(slug):
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+
+    cur.execute("SELECT * FROM stores WHERE slug = %s", (slug,))
+    store = cur.fetchone()
+
+    if not store:
+        flash("Store not found.", "error")
+        return redirect(url_for('home'))
+
+    # Optional ownership check
+    if 'user_id' in session and store['user_id'] != session['user_id']:
+        flash("You don't have permission to view this store.", "error")
+        return redirect(url_for('home'))
+
+    store_id = store['store_id']
+
+    cur.execute("""
+        SELECT category, COUNT(*) AS total
+        FROM listings
+        WHERE store_id = %s
+        GROUP BY category
+    """, (store_id,))
+    category_counts = cur.fetchall()
+
+    cur.execute("""
+        SELECT
+            COALESCE(SUM(lm.impressions), 0) AS views,
+            COALESCE(SUM(lm.clicks), 0) AS clicks
+        FROM listings l
+        LEFT JOIN listing_metrics lm ON l.listing_id = lm.listing_id
+        WHERE l.store_id = %s
+    """, (store_id,))
+    totals = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    return render_template(
+        'store_home.html',
+        store=store,
+        category_counts=category_counts,
+        totals=totals or {'views': 0, 'clicks': 0}
+    )
+
+
+
+
+
+def save_file(file, subfolder):
+    if not file or not file.filename:
+        return None
+
+    filename = secure_filename(file.filename)
+    # Generate unique filename to prevent collisions
+    import uuid
+    ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+    filename = f"{uuid.uuid4().hex}.{ext}"
+
+    # Base upload folder
+    upload_folder = os.path.join(current_app.static_folder, subfolder)  # e.g., static/videos
+
+    if not os.path.exists(upload_folder):
+        os.makedirs(upload_folder)
+
+    filepath = os.path.join(upload_folder, filename)
+    file.save(filepath)
+
+    # Return URL path that Flask can serve via /static/
+    return f"/static/{subfolder}/{filename}"
+
+
+
+@app.route('/store/<slug>/upload-tour-video', methods=['POST'])
+@login_required
+def upload_tour_video(slug):
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("SELECT store_id, user_id FROM stores WHERE slug=%s", (slug,))
+    store = cur.fetchone()
+
+    if not store or store['user_id'] != session['user_id']:
+        cur.close()
+        conn.close()
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+
+    video = request.files.get('tour_video')
+    allowed_extensions = {'mp4', 'mov', 'webm', 'avi'}
+
+    if video and video.filename:
+        ext = video.filename.rsplit('.', 1)[1].lower() if '.' in video.filename else ''
+        if ext not in allowed_extensions:
+            return jsonify({'success': False, 'message': 'Invalid video format'}), 400
+
+        # Save in static/videos/
+        video_path = save_file(video, 'videos')  # This will return /static/videos/unique.mp4
+
+        if video_path:
+            cur.execute("""
+                UPDATE stores 
+                SET tour_video = %s 
+                WHERE store_id = %s
+            """, (video_path, store['store_id']))
+            conn.commit()
+            cur.close()
+            conn.close()
+            return jsonify({'success': True, 'video_url': video_path})
+
+    cur.close()
+    conn.close()
+    return jsonify({'success': False, 'message': 'No valid video uploaded'}), 400
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @app.route('/admin/usage')
 def admin_usage():
     return render_template('admin_usage.html')
@@ -6174,6 +6431,518 @@ scheduler.add_job(
     replace_existing=True,
     next_run_time=datetime.utcnow()
 )
+
+
+
+PLAN_PRICES = {
+    'Free': 0,
+    'Silver': 40,
+    'Gold': 70,
+    'Diamond': 100
+}
+
+
+
+
+@app.route('/store/add-item', methods=['POST'])
+@login_required
+def store_add_item():
+    user_id = session['user_id']
+
+    # ── First connection: just to check if user has a store ──
+    conn = get_db_connection()
+    # Use buffered cursor → prevents "Unread result found" error
+    cur = conn.cursor(dictionary=True, buffered=True)
+
+    try:
+        cur.execute("""
+            SELECT store_id, slug 
+            FROM stores 
+            WHERE user_id = %s 
+            LIMIT 1
+        """, (user_id,))
+        
+        store_row = cur.fetchone()
+
+        if not store_row:
+            return jsonify({
+                "success": False,
+                "message": "You don't have a store yet. Please create one first."
+            }), 400
+
+        store_id = store_row['store_id']
+        store_slug = store_row['slug']
+
+    finally:
+        cur.close()
+        conn.close()
+
+    # ── Get form data ───────────────────────────────────────────────
+    deal_type = request.form.get('deal_type')
+    plan = request.form.get('plan', 'Free')
+
+    location = request.form.get('location', '').strip()
+    contact = request.form.get('contact', '').strip()
+
+    if not location or not contact:
+        return jsonify({"success": False, "message": "Location and contact are required."}), 400
+
+    category = request.form.get('category', '').strip()
+    if not category:
+        return jsonify({"success": False, "message": "Category is required."}), 400
+
+    # Prepare common variables
+    main_images = []
+    price = None
+    offered_items = []
+    title = ""
+    description = ""
+
+    # ── Outright Sales ──────────────────────────────────────────────
+    if deal_type == 'Outright Sales':
+        title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+
+        if not title or not description:
+            return jsonify({"success": False, "message": "Title and description are required for sale."}), 400
+
+        price_raw = request.form.get('price', '').strip()
+        if not price_raw:
+            return jsonify({"success": False, "message": "Price is required for sale."}), 400
+        
+        try:
+            price = Decimal(price_raw)
+        except:
+            return jsonify({"success": False, "message": "Invalid price format."}), 400
+
+        # Handle images
+        for f in request.files.getlist('images[]'):
+            if f and allowed_file(f.filename):
+                try:
+                    upload = cloudinary.uploader.upload(f, folder="swaphub/listings")
+                    main_images.append(upload['secure_url'])
+                except Exception as e:
+                    print("Cloudinary upload error:", e)
+
+        if not main_images:
+            return jsonify({"success": False, "message": "At least one image is required."}), 400
+
+    # ── Swap Deal ───────────────────────────────────────────────────
+    elif deal_type == 'Swap Deal':
+        desired_swap = request.form.get('desired_swap', '').strip()
+        if not desired_swap:
+            return jsonify({"success": False, "message": "Desired item is required for swap."}), 400
+
+        offer_titles = request.form.getlist('offer_title[]')
+        offer_conds = request.form.getlist('offer_condition[]')
+        offer_descs = request.form.getlist('offer_description[]')
+
+        if not offer_titles:
+            return jsonify({"success": False, "message": "At least one offered item is required."}), 400
+
+        for i in range(len(offer_titles)):
+            images = []
+            file_key = f'offer_images_{i+1}[]'
+            for f in request.files.getlist(file_key):
+                if f and allowed_file(f.filename):
+                    try:
+                        upload = cloudinary.uploader.upload(f, folder="swaphub/offers")
+                        images.append(upload['secure_url'])
+                    except Exception as e:
+                        print("Cloudinary upload error (offer item):", e)
+
+            if not images:
+                return jsonify({
+                    "success": False,
+                    "message": f"Images required for offered item #{i+1}."
+                }), 400
+
+            item_title = offer_titles[i].strip()
+            item_desc = offer_descs[i].strip()
+
+            offered_items.append({
+                "title": item_title,
+                "condition": offer_conds[i],
+                "description": item_desc,
+                "images": images
+            })
+
+            # Use first item as main listing preview
+            if i == 0:
+                title = item_title or "Swap Deal"
+                description = item_desc or "Looking to swap items"
+
+    else:
+        return jsonify({"success": False, "message": "Invalid deal type."}), 400
+
+    # ── PAID PLAN - Store in session and redirect to payment ───────
+    if plan != 'Free':
+        session['pending_listing'] = {
+            "source": "store",
+            "store_id": store_id,
+            "store_slug": store_slug,
+            "user_id": user_id,
+            "title": title,
+            "description": description,
+            "category": category,
+            "location": location,
+            "contact": contact,
+            "deal_type": deal_type,
+            "price": str(price) if price else None,
+            "main_images": main_images,
+            "offered_items": offered_items,
+            "desired_swap": request.form.get('desired_swap', ''),
+            "desired_condition": request.form.get('desired_condition', ''),
+            "swap_notes": request.form.get('swap_notes', ''),
+            "required_cash": request.form.get('required_cash'),
+            "additional_cash": request.form.get('additional_cash'),
+            "plan": plan
+        }
+
+        return jsonify({
+            "success": True,
+            "redirect": url_for('paystack_payment', plan=plan, amount=PLAN_PRICES[plan], _external=True)
+        })
+
+    # ── FREE PLAN - Save directly to database ───────────────────────
+    conn = get_db_connection()
+    cur = conn.cursor(buffered=True)  # safer here too
+
+    try:
+        if deal_type == 'Outright Sales':
+            padded_images = (main_images + [None] * 5)[:5]
+            cur.execute("""
+                INSERT INTO listings
+                (user_id, store_id, title, description, category, location, contact,
+                 price, deal_type, Plan, image_url, image1, image2, image3, image4)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                user_id, store_id, title, description, category, location, contact,
+                str(price), deal_type, plan,
+                padded_images[0], padded_images[1], padded_images[2], padded_images[3], padded_images[4]
+            ))
+
+        else:  # Swap Deal
+            desired_swap = request.form.get('desired_swap', '')
+            desired_condition = request.form.get('desired_condition', '')
+            swap_notes = request.form.get('swap_notes', '')
+            required_cash = request.form.get('required_cash') or None
+            additional_cash = request.form.get('additional_cash') or None
+
+            preview_images = offered_items[0]['images'][:5] if offered_items else []
+            padded_preview = (preview_images + [None] * 5)[:5]
+
+            cur.execute("""
+                INSERT INTO listings
+                (user_id, store_id, title, description, category, location, contact,
+                 deal_type, desired_swap, `condition`, swap_notes,
+                 required_cash, additional_cash, Plan,
+                 image_url, image1, image2, image3, image4)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                user_id, store_id, title, description, category, location, contact,
+                deal_type, desired_swap, desired_condition, swap_notes,
+                required_cash, additional_cash, plan,
+                padded_preview[0], padded_preview[1], padded_preview[2], padded_preview[3], padded_preview[4]
+            ))
+
+        listing_id = cur.lastrowid
+
+        # Save offered items for swaps
+        if deal_type == 'Swap Deal':
+            for item in offered_items:
+                padded_item_images = (item['images'] + [None] * 4)[:4]
+                cur.execute("""
+                    INSERT INTO offered_items
+                    (listing_id, title, description, `condition`, image1, image2, image3, image4)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    listing_id,
+                    item['title'], item['description'], item['condition'],
+                    padded_item_images[0], padded_item_images[1],
+                    padded_item_images[2], padded_item_images[3]
+                ))
+
+        conn.commit()
+
+        return jsonify({
+            "success": True,
+            "message": "Item added successfully!",
+            "redirect": url_for('store_home', slug=store_slug)
+        })
+
+    except Exception as e:
+        conn.rollback()
+        print("Database error while saving listing:", str(e))
+        return jsonify({
+            "success": False,
+            "message": "Failed to save listing. Please try again."
+        }), 500
+
+    finally:
+        cur.close()
+        conn.close()
+
+        
+
+
+# Add custom filter
+@app.template_filter('from_json')
+def from_json_filter(value):
+    """Safely convert JSON string to Python object, return empty list if invalid"""
+    if value is None or value == '':
+        return []
+    try:
+        return json.loads(value)
+    except (TypeError, json.JSONDecodeError):
+        return []
+
+
+
+
+@app.route('/store/<slug>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_store(slug):
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("SELECT * FROM stores WHERE slug = %s AND user_id = %s", (slug, session['user_id']))
+    store = cur.fetchone()
+
+    if not store:
+        flash("Store not found or access denied.", "error")
+        return redirect(url_for('dashboard'))
+
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        new_slug = request.form.get('slug', '').strip()
+        location = request.form.get('location', '').strip()
+        contact = request.form.get('contact', '').strip()
+        description = request.form.get('description', '').strip()
+
+        delivery_options = request.form.getlist('delivery_options')
+        delivery_json = json.dumps(delivery_options) if delivery_options else None
+
+        logo_url = store['logo']
+        banner_url = store['banner']
+        tour_video_url = store['tour_video']
+
+        if 'logo' in request.files and request.files['logo'].filename:
+            logo_url = save_file(request.files['logo'], 'logos')
+
+        if 'banner' in request.files and request.files['banner'].filename:
+            banner_url = save_file(request.files['banner'], 'banners')
+
+        if 'tour_video' in request.files and request.files['tour_video'].filename:
+            tour_video_url = save_file(request.files['tour_video'], 'videos')
+
+        try:
+            cur.execute("""
+                UPDATE stores 
+                SET name=%s, slug=%s, location=%s, contact=%s, description=%s,
+                    logo=%s, banner=%s, tour_video=%s, delivery_options=%s, updated_at=NOW()
+                WHERE store_id=%s
+            """, (name, new_slug, location, contact, description, logo_url, banner_url, tour_video_url, delivery_json, store['store_id']))
+            conn.commit()
+            flash("Store updated successfully!", "success")
+            return redirect(url_for('store_home', slug=new_slug))
+        except Exception as e:
+            conn.rollback()
+            print("Edit store error:", e)
+            flash("Failed to update store.", "error")
+
+    cur.close()
+    conn.close()
+    return render_template('edit_store.html', store=store)
+
+
+
+@app.route('/shops')
+def all_shops():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    search = request.args.get('search', '').strip()
+    location = request.args.get('location', '').strip()
+    store_type = request.args.get('store_type', '').strip()
+
+    query = """
+        SELECT *
+        FROM stores
+        WHERE is_active = 1
+    """
+    params = []
+
+    if search:
+        query += " AND name LIKE %s"
+        params.append(f"%{search}%")
+
+    if location:
+        query += " AND location LIKE %s"
+        params.append(f"%{location}%")
+
+    if store_type:
+        query += " AND store_type = %s"
+        params.append(store_type)
+
+    query += " ORDER BY created_at DESC"
+
+    cursor.execute(query, params)
+    stores = cursor.fetchall()
+
+    # Fetch distinct store types for filter
+    cursor.execute("""
+        SELECT DISTINCT store_type
+        FROM stores
+        WHERE store_type IS NOT NULL AND store_type != ''
+    """)
+    store_types = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        'shops.html',
+        stores=stores,
+        store_types=store_types
+    )
+
+
+
+def datetimeformat(value, format='%Y'):
+    if value is None:
+        value = datetime.now()
+    return value.strftime(format)
+
+# Add the filter
+app.jinja_env.filters['date'] = datetimeformat
+
+
+
+@app.route('/store/<int:store_id>')
+def store_detail(store_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        # 1. Get store information
+        cursor.execute("""
+            SELECT 
+                name, logo, banner, tour_video, description, location, contact,
+                delivery_options, verified, store_type
+            FROM stores
+            WHERE store_id = %s 
+              AND is_active = 1
+        """, (store_id,))
+        
+        store = cursor.fetchone()
+        if not store:
+            abort(404)
+
+        # 2. Get all active listings for this store
+        cursor.execute("""
+            SELECT 
+                listing_id,
+                title,
+                description,
+                image_url,
+                image1,
+                image2,
+                image3,
+                image4,
+                category,
+                price,                -- varchar
+                deal_type,
+                `condition`,
+                desired_swap,
+                required_cash,        -- int
+                additional_cash,      -- decimal
+                swap_notes,
+                created_at
+            FROM listings
+            WHERE store_id = %s 
+              AND status = 'Active'
+            ORDER BY created_at DESC
+        """, (store_id,))
+        
+        listings = cursor.fetchall()
+
+        # 3. Process each listing: attach offers + convert numeric fields safely
+        for listing in listings:
+            # Attach offered items for swap deals
+            if listing['deal_type'] == 'Swap Deal':
+                cursor.execute("""
+                    SELECT 
+                        item_id,
+                        title,
+                        description,
+                        `condition`,
+                        image_url,
+                        image1,
+                        image2,
+                        image3,
+                        image4
+                    FROM offered_items
+                    WHERE listing_id = %s
+                    ORDER BY item_id
+                """, (listing['listing_id'],))
+                listing['offers'] = cursor.fetchall()
+            else:
+                listing['offers'] = []
+
+            # Prepare main/preview image
+            images = [img for img in [
+                listing['image_url'],
+                listing['image1'],
+                listing['image2'],
+                listing['image3'],
+                listing['image4']
+            ] if img]
+            listing['main_image'] = images[0] if images else '/static/images/placeholder.jpg'
+
+            # ── Safe numeric conversions ───────────────────────────────────────
+            # Price (varchar → float)
+            try:
+                listing['price_float'] = float(listing['price']) if listing['price'] else 0.0
+            except (ValueError, TypeError):
+                listing['price_float'] = 0.0
+
+            # Required cash (int → float)
+            try:
+                listing['required_cash_float'] = float(listing['required_cash']) if listing['required_cash'] is not None else 0.0
+            except (ValueError, TypeError):
+                listing['required_cash_float'] = 0.0
+
+            # Additional cash (decimal → float)
+            try:
+                listing['additional_cash_float'] = float(listing['additional_cash']) if listing['additional_cash'] is not None else 0.0
+            except (ValueError, TypeError):
+                listing['additional_cash_float'] = 0.0
+
+        # 4. Collect categories
+        categories = set()
+        for listing in listings:
+            if listing.get('category'):
+                categories.add(listing['category'])
+        
+        sorted_categories = sorted(categories)
+
+        # 5. Render
+        return render_template(
+            'store_detail.html',
+            store=store,
+            listings=listings,
+            categories=sorted_categories,
+            current_year=datetime.now().year
+        )
+
+    except Exception as e:
+        print(f"Error in store_detail route: {str(e)}")
+        abort(500)
+    
+    finally:
+        cursor.close()
+        conn.close()
+
 
 
 

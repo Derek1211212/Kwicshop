@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ store.name }} | SwapHub</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ===== VARIABLES ===== */
+        :root {
+            --primary-green: #4CAF50;
+            --light-green: #E8F5E9;
+            --dark-green: #2E7D32;
+            --blue-verified: #1DA1F2;
+            --text-dark: #0F1419;
+            --text-light: #536471;
+            --background: #F7F9FA;
+            --card-bg: #FFFFFF;
+            --radius: 12px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.1);
+        }
+
+        /* ===== RESET & BASE ===== */
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+
+        html {
+            font-size: 14px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--background);
+            color: var(--text-dark);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ===== CONTAINER ===== */
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        /* ===== HEADER ===== */
+        .store-header {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 100%);
+            color: white;
+            padding: 24px 0 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .store-header::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: var(--card-bg);
+            border-radius: 24px 24px 0 0;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .store-title-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .store-name {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            line-height: 1.2;
+            flex: 1;
+        }
+
+        .verified-badge {
+            background: var(--blue-verified);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .store-tagline {
+            font-size: 1rem;
+            opacity: 0.95;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .store-stats {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .store-stats::-webkit-scrollbar {
+            display: none;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            background: rgba(255,255,255,0.15);
+            padding: 8px 14px;
+            border-radius: var(--radius);
+            backdrop-filter: blur(8px);
+            flex-shrink: 0;
+        }
+
+        .stat-item i {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* ===== SEARCH & FILTERS ===== */
+        .search-section {
+            background: var(--card-bg);
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .search-bar {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: var(--radius);
+            background: var(--background);
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            background: white;
+        }
+
+        .search-bar i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 1.2rem;
+        }
+
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .filter-chips::-webkit-scrollbar {
+            display: none;
+        }
+
+        .chip {
+            padding: 10px 18px;
+            background: var(--light-green);
+            color: var(--dark-green);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 2px solid transparent;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .chip.active {
+            background: var(--primary-green);
+            color: white;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            padding-top: 24px;
+            padding-bottom: 40px;
+        }
+
+        .info-section {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        @media (min-width: 768px) {
+            .info-section {
+                grid-template-columns: 1fr 1fr;
+                gap: 24px;
+            }
+        }
+
+        .info-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--light-green);
+        }
+
+        .card-header i {
+            color: var(--primary-green);
+            font-size: 1.3rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            flex: 1;
+        }
+
+        /* ===== DELIVERY OPTIONS ===== */
+        .delivery-options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        @media (min-width: 480px) {
+            .delivery-options {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .delivery-option {
+            background: var(--light-green);
+            padding: 16px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .delivery-option:active {
+            transform: scale(0.98);
+        }
+
+        .delivery-option i {
+            color: var(--dark-green);
+            font-size: 1.2rem;
+            width: 24px;
+        }
+
+        .delivery-text {
+            font-size: 0.95rem;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        /* ===== TOUR VIDEO ===== */
+        .tour-section {
+            position: relative;
+        }
+
+        .tour-label {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tour-video-wrapper {
+            border-radius: var(--radius);
+            overflow: hidden;
+            background: #000;
+            aspect-ratio: 16 / 9;
+            position: relative;
+        }
+
+        .video-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .video-placeholder i {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            opacity: 0.9;
+        }
+
+        /* ===== PRODUCTS GRID ===== */
+        .products-section {
+            margin-top: 8px;
+        }
+
+        .section-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 0 4px;
+        }
+
+        .section-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .product-count {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            background: var(--light-green);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        /* FIXED: Always 2 columns for product grid with normal width */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        @media (min-width: 480px) {
+            .products-grid {
+                gap: 16px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 24px;
+            }
+        }
+
+        .product-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            position: relative; /* Added for badge positioning */
+        }
+
+        .product-card:active {
+            transform: scale(0.98);
+        }
+
+        .product-image {
+            height: 160px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        @media (min-width: 768px) {
+            .product-image {
+                height: 180px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .product-image {
+                height: 200px;
+            }
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* ===== DEAL BADGES - FIXED POSITIONING ===== */
+        .deal-badge {
+            position: absolute;
+            top: 12px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 2;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Sale badge on LEFT */
+        .deal-badge.sale {
+            left: 12px;
+            background: var(--primary-green);
+        }
+
+        /* Swap badge on RIGHT */
+        .deal-badge.swap {
+            right: 12px;
+            background: #4f46e5;
+        }
+
+        /* ===== SWAP DEAL SPECIFIC STYLES ===== */
+        .swap-card .product-image {
+            display: none; /* hidden when we show swap-row */
+        }
+
+        .swap-row {
+            display: flex;
+            gap: 4px;
+            padding: 12px 12px 0;
+            background: #f8fafc;
+            position: relative; /* For badge positioning */
+        }
+        
+        .swap-photo {
+            flex: 1;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+        
+        .swap-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .swap-offer-line, .swap-wants-line, .swap-cash-line {
+            font-size: 0.9rem;
+            margin: 6px 0;
+            color: #4b5563;
+            line-height: 1.4;
+        }
+        
+        .swap-offer-line strong,
+        .swap-wants-line strong {
+            color: #1f2937;
+        }
+
+        .product-content {
+            padding: 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .product-price {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-green);
+            margin-bottom: 12px;
+        }
+
+        .product-category {
+            background: var(--light-green);
+            color: var(--dark-green);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            align-self: flex-start;
+            margin-top: auto;
+        }
+
+        .product-condition {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 8px;
+            padding: 4px 8px;
+            background: #f3f4f6;
+            border-radius: 6px;
+            align-self: flex-start;
+        }
+
+        /* ===== STORE ACTIONS ===== */
+        .store-actions {
+            display: flex;
+            gap: 12px;
+            margin: 24px 0 32px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            flex: 1;
+            min-width: 140px;
+            padding: 14px 20px;
+            border-radius: var(--radius);
+            border: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        @media (max-width: 480px) {
+            .action-btn {
+                min-width: 100%;
+            }
+        }
+
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+
+        .action-btn.primary {
+            background: var(--primary-green);
+            color: white;
+        }
+
+        .action-btn.secondary {
+            background: var(--light-green);
+            color: var(--dark-green);
+            border: 2px solid var(--light-green);
+        }
+
+        .action-btn.outline {
+            background: transparent;
+            color: var(--primary-green);
+            border: 2px solid var(--primary-green);
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            margin: 20px 0;
+            grid-column: 1 / -1;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #ddd;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+        }
+
+        .empty-state p {
+            color: var(--text-light);
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            background: white;
+            padding: 40px 0;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 40px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 32px;
+        }
+
+        @media (min-width: 768px) {
+            .footer-content {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .footer-section {
+            padding: 0 8px;
+        }
+
+        .footer-logo {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-green);
+            margin-bottom: 12px;
+        }
+
+        .footer-section p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .footer-links h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-dark);
+        }
+
+        .footer-links ul {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-green);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .social-links a {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--light-green);
+            color: var(--dark-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .social-links a:hover {
+            background: var(--primary-green);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .copyright {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 0.85rem;
+            padding-top: 32px;
+            margin-top: 32px;
+            border-top: 1px solid #e0e0e0;
+            grid-column: 1 / -1;
+        }
+
+        /* ===== UTILITY CLASSES ===== */
+        .mb-4 { margin-bottom: 16px; }
+        .mb-8 { margin-bottom: 32px; }
+        .text-center { text-align: center; }
+        .text-muted { color: var(--text-light); }
+
+        /* ===== MEDIA QUERIES ===== */
+        @media (min-width: 768px) {
+            html {
+                font-size: 16px;
+            }
+            
+            .container {
+                max-width: 720px;
+                padding: 0 24px;
+            }
+            
+            .store-header {
+                padding: 40px 0 60px;
+                border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+            }
+            
+            .store-header::after {
+                bottom: -30px;
+                height: 60px;
+                border-radius: 40px 40px 0 0;
+            }
+            
+            .store-name {
+                font-size: 2.2rem;
+            }
+            
+            .store-stats {
+                flex-wrap: wrap;
+                overflow-x: visible;
+            }
+            
+            .products-grid {
+                padding: 24px 0;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                max-width: 960px;
+            }
+        }
+
+        @media (min-width: 1280px) {
+            .container {
+                max-width: 1200px;
+            }
+        }
+
+        /* Make the entire card clickable without affecting inner elements */
+.product-card-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    height: 100%;
+}
+
+.product-card-link:hover .product-card {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+    transition: all 0.3s ease;
+}
+
+/* Prevent badge from being affected by hover */
+.product-card-link:hover .deal-badge {
+    transform: none;
+}
+
+/* Make sure content doesn't get pointer events blocked */
+.product-content,
+.product-media {
+    pointer-events: none; /* allows click to pass through to <a> */
+}
+
+.product-card {
+    pointer-events: auto; /* re-enable on card itself */
+}
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="store-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="store-title-row">
+                    <h1 class="store-name">{{ store.name }}</h1>
+                    {% if store.verified %}
+                    <span class="verified-badge">
+                        <i class="fas fa-check-circle"></i>Verified
+                    </span>
+                    {% endif %}
+                </div>
+                <p class="store-tagline">
+                    {{ store.description or "Quality products • Fast delivery • Secure shopping" }}
+                </p>
+                <div class="store-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>{{ store.location or "Accra, Ghana" }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-star"></i>
+                        <span>4.8 (128 reviews)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Search & Filters -->
+    <div class="search-section">
+        <div class="container">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search products in this store...">
+            </div>
+            <div class="filter-chips">
+                <button class="chip active" data-category="">All Products</button>
+                {% for category in categories %}
+                    <button class="chip" data-category="{{ category|lower }}">{{ category }}</button>
+                {% endfor %}
+                <button class="chip" data-category="sale">
+                    <i class="fas fa-tag"></i> On Sale
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Delivery & Tour Section -->
+            <div class="info-section">
+                <!-- Delivery Options Card -->
+                <div class="info-card">
+                    <div class="card-header">
+                        <i class="fas fa-truck-fast"></i>
+                        <h3 class="card-title">Delivery Options</h3>
+                    </div>
+                    <div class="delivery-options">
+                        {% if store.delivery_options and store.delivery_options is iterable and not store.delivery_options is string %}
+                            {% for option in store.delivery_options %}
+                            <div class="delivery-option">
+                                <i class="fas fa-shipping-fast"></i>
+                                <span class="delivery-text">{{ option }}</span>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="delivery-option">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="delivery-text">Contact store for delivery options</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Tour Video Card -->
+                <div class="info-card tour-section">
+                    <div class="card-header">
+                        <i class="fas fa-video"></i>
+                        <h3 class="card-title">Store Tour</h3>
+                    </div>
+                    <div class="tour-video-wrapper">
+                        <div class="tour-label">
+                            <i class="fas fa-play-circle"></i>
+                            Shop Tour
+                        </div>
+                        {% if store.tour_video %}
+                            <iframe src="{{ store.tour_video }}" 
+                                    style="width:100%; height:100%; border:none;"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                    allowfullscreen></iframe>
+                        {% else %}
+                            <div class="video-placeholder">
+                                <i class="fas fa-store"></i>
+                                <h4 style="margin-bottom: 8px;">Store Tour Coming Soon</h4>
+                                <p style="font-size: 0.9rem; opacity: 0.9;">Check back later for a virtual tour</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Section -->
+            <div class="products-section">
+                <div class="section-title-row">
+                    <h2 class="section-title">Available Products</h2>
+                    <span class="product-count" id="productCount">{{ listings|length or 0 }} items</span>
+                </div>
+
+<div class="products-grid" id="productsGrid">
+    {% if listings %}
+        {% for listing in listings %}
+        <!-- Make the entire card clickable -->
+        <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
+           class="product-card-link">
+            <div class="product-card 
+                        {% if listing.deal_type == 'Swap Deal' %}swap-card{% endif %}"
+                 data-title="{{ listing.title|lower }}"
+                 data-description="{{ (listing.description or '')|lower }}"
+                 data-category="{{ (listing.category or '')|lower }}">
+
+                <!-- Deal Badge - positioned differently based on type -->
+                {% if listing.deal_type == 'Swap Deal' %}
+                <span class="deal-badge swap"> <!-- RIGHT side for swap -->
+                    {{ listing.deal_type }}
+                </span>
+                {% else %}
+                <span class="deal-badge sale"> <!-- LEFT side for sale -->
+                    {{ listing.deal_type or 'For Sale' }}
+                </span>
+                {% endif %}
+
+                <!-- Media container -->
+                <div class="product-media">
+                    {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 0 %}
+                    <div class="swap-row">
+                        {% for offer in listing.offers[:3] %}
+                        <div class="swap-photo">
+                            <img src="{{ offer.image1 or offer.image_url or '/static/images/placeholder.jpg' }}"
+                                 alt="{{ offer.title }}"
+                                 loading="lazy">
+                        </div>
+                        {% endfor %}
+                        {% if listing.offers|length > 3 %}
+                        <div class="swap-more">+{{ listing.offers|length - 3 }}</div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="product-image">
+                        <img src="{{ listing.main_image }}"
+                             alt="{{ listing.title }}"
+                             loading="lazy">
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="product-content">
+                    <!-- Swap Deal content -->
+                    {% if listing.deal_type == 'Swap Deal' %}
+                    <div class="swap-meta">
+                        {% set offer_titles = listing.offers | map(attribute='title') | list %}
+                        <div class="swap-offer-line">
+                            <strong>Offer:</strong> 
+                            {{ offer_titles | join(' + ') }}
+                            {% if listing.additional_cash_float > 0 %}
+                                + ₵{{ "{:,.2f}".format(listing.additional_cash_float) }}
+                            {% endif %}
+                        </div>
+
+                        <div class="swap-wants-line">
+                            <strong>Wants:</strong> {{ listing.desired_swap or 'Any reasonable offer' }}
+                        </div>
+
+                        {% if listing.required_cash_float > 0 %}
+                        <div class="swap-cash-line">
+                            <strong>Plus Cash:</strong> ₵{{ "{:,.2f}".format(listing.required_cash_float) }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Outright Sale -->
+                    {% else %}
+                    <h3 class="product-title">{{ listing.title }}</h3>
+                    <div class="product-price">
+                        {% if listing.price_float > 0 %}
+                            ₵{{ "{:,.2f}".format(listing.price_float) }}
+                        {% else %}
+                            Contact for price
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Footer elements -->
+                    <div class="product-footer">
+                        {% if listing.condition %}
+                        <div class="product-condition">{{ listing.condition }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-store-slash"></i>
+            <h3>No Products Available</h3>
+            <p>This store hasn't listed any products yet.</p>
+        </div>
+    {% endif %}
+</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">SwapHub</div>
+                    <p>Your trusted marketplace for buying, selling, and swapping items locally in Ghana.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-section footer-links">
+                    <h4>Shop</h4>
+                    <ul>
+                        <li><a href="#">All Stores</a></li>
+                        <li><a href="#">Categories</a></li>
+                        <li><a href="#">Featured Items</a></li>
+                        <li><a href="#">Deals & Offers</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section footer-links">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Safety Tips</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section footer-links">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Cookie Policy</a></li>
+                        <li><a href="#">Community Guidelines</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                © 2024 SwapHub. All rights reserved. • Accra, Ghana
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const chips = document.querySelectorAll('.chip');
+            const productCards = document.querySelectorAll('.product-card');
+            const productCount = document.getElementById('productCount');
+
+            // Filter products
+            function filterProducts() {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                const activeChip = document.querySelector('.chip.active');
+                const selectedCategory = activeChip ? activeChip.dataset.category : '';
+                
+                let visibleCount = 0;
+
+                productCards.forEach(card => {
+                    const title = card.dataset.title || '';
+                    const description = card.dataset.description || '';
+                    const category = card.dataset.category || '';
+
+                    const matchesSearch = title.includes(searchTerm) || description.includes(searchTerm);
+                    const matchesCategory = !selectedCategory || category === selectedCategory;
+
+                    if (matchesSearch && matchesCategory) {
+                        card.style.display = 'flex';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                // Update product count
+                if (productCount) {
+                    productCount.textContent = `${visibleCount} items${searchTerm ? ' found' : ''}`;
+                }
+            }
+
+            // Event listeners
+            searchInput.addEventListener('input', filterProducts);
+            
+            chips.forEach(chip => {
+                chip.addEventListener('click', function() {
+                    chips.forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    filterProducts();
+                });
+            });
+
+            // Add touch feedback to product cards
+            productCards.forEach(card => {
+                card.addEventListener('touchstart', function() {
+                    this.style.opacity = '0.9';
+                });
+                
+                card.addEventListener('touchend', function() {
+                    this.style.opacity = '1';
+                });
+            });
+
+            // Initialize filter
+            filterProducts();
+        });
+
+        // Prevent zoom on input focus (better mobile UX)
+        document.addEventListener('touchstart', function(event) {
+            if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+                event.target.style.fontSize = '16px'; // Prevent iOS zoom
+            }
+        }, { passive: true });
+    </script>
+</body>
+</html>

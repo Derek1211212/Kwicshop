@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Store - {{ store.name }} | Swaphub</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- SimpleMDE -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+
+    <style>
+        :root {
+            --primary-green: #10B981;
+            --green-light: #D1FAE5;
+            --green-medium: #34D399;
+            --green-dark: #059669;
+            --green-deep: #047857;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --text-tertiary: #9CA3AF;
+            --border-light: #E5E7EB;
+            --border-medium: #D1D5DB;
+            --background-light: #F9FAFB;
+            --background-white: #FFFFFF;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --radius-sm: 6px;
+            --radius: 10px;
+            --radius-lg: 14px;
+            --radius-xl: 20px;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        /* Page Header */
+        .page-header {
+            margin-bottom: 40px;
+            text-align: center;
+            position: relative;
+        }
+
+        .page-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--green-dark), var(--primary-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            display: inline-block;
+        }
+
+        .page-header h1::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--green-medium), var(--green-light));
+            border-radius: 2px;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+            font-size: 18px;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        .store-name-badge {
+            display: inline-block;
+            background: var(--green-light);
+            color: var(--green-deep);
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 15px;
+            border: 2px solid var(--green-medium);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Form Layout */
+        .form-wrapper {
+            background: var(--background-white);
+            border-radius: var(--radius-xl);
+            padding: 40px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-light);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary-green), var(--green-medium));
+        }
+
+        .form-section {
+            margin-bottom: 48px;
+            position: relative;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--border-light);
+        }
+
+        .section-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--green-light);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--green-dark);
+            font-size: 20px;
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .section-description {
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-top: 4px;
+        }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 15px;
+        }
+
+        .required {
+            color: #EF4444;
+            font-weight: 700;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input[type="text"],
+        textarea,
+        .input-prefix {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius);
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: var(--background-light);
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        .input-prefix:focus-within {
+            outline: none;
+            border-color: var(--green-medium);
+            background: var(--background-white);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+        }
+
+        .input-prefix {
+            display: flex;
+            align-items: center;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .prefix-text {
+            padding: 14px 16px;
+            background: var(--green-light);
+            color: var(--green-deep);
+            font-weight: 600;
+            font-size: 15px;
+            border-right: 2px solid var(--border-light);
+        }
+
+        .input-prefix input {
+            border: none;
+            flex: 1;
+            background: transparent;
+            padding: 14px 16px;
+        }
+
+        .input-prefix input:focus {
+            box-shadow: none;
+        }
+
+        .helper-text {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .helper-text i {
+            color: var(--green-medium);
+        }
+
+        /* Upload Cards */
+        .upload-card {
+            border: 2px dashed var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            text-align: center;
+            background: var(--background-light);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-card:hover {
+            border-color: var(--green-medium);
+            background: var(--green-light);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .upload-card.active {
+            border-color: var(--green-medium);
+            background: linear-gradient(135deg, var(--green-light) 0%, #E8F7F1 100%);
+        }
+
+        .upload-preview {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .upload-preview img,
+        .upload-preview video {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-light);
+        }
+
+        .upload-preview.vertical video {
+            max-height: 300px;
+        }
+
+        .upload-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .upload-placeholder {
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .upload-placeholder i {
+            font-size: 56px;
+            margin-bottom: 16px;
+            color: var(--green-medium);
+            opacity: 0.7;
+        }
+
+        .upload-placeholder h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .upload-placeholder p {
+            font-size: 14px;
+            color: var(--text-tertiary);
+        }
+
+        /* File Upload Dropzone */
+        .dropzone {
+            border: 3px dashed var(--green-medium);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .dropzone:hover {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--green-dark);
+        }
+
+        .dropzone i {
+            font-size: 48px;
+            color: var(--green-dark);
+            margin-bottom: 16px;
+        }
+
+        .dropzone p {
+            margin: 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .dropzone strong {
+            color: var(--green-deep);
+            font-weight: 600;
+        }
+
+        /* Checkbox Group */
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 12px;
+        }
+
+        .checkbox-card {
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--background-white);
+        }
+
+        .checkbox-card:hover {
+            border-color: var(--green-medium);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .checkbox-card.selected {
+            border-color: var(--green-medium);
+            background: var(--green-light);
+        }
+
+        .checkbox-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--green-light);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--green-dark);
+            font-size: 18px;
+        }
+
+        .checkbox-content {
+            flex: 1;
+        }
+
+        .checkbox-content h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .checkbox-content p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .checkbox-card input {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--green-dark);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-green), var(--green-dark));
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            background: linear-gradient(135deg, var(--green-dark), var(--green-deep));
+        }
+
+        .btn-secondary {
+            background: var(--background-light);
+            color: var(--text-primary);
+            border: 2px solid var(--border-light);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-light);
+            border-color: var(--border-medium);
+            transform: translateY(-2px);
+        }
+
+        .btn-sm {
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+
+        .btn-icon {
+            padding: 12px;
+            min-width: 44px;
+        }
+
+        /* Form Actions */
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid var(--border-light);
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .progress-indicator {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 6px;
+            background: var(--border-light);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--green-medium), var(--primary-green));
+            width: 75%;
+            border-radius: 3px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-section {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0;
+            }
+            
+            .form-wrapper {
+                padding: 25px;
+                border-radius: var(--radius-lg);
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .progress-indicator {
+                justify-content: center;
+                width: 100%;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            
+            .checkbox-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading States */
+        .loading {
+            position: relative;
+            pointer-events: none;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Success States */
+        .success-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--green-light);
+            color: var(--green-deep);
+            padding: 16px 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+            border-left: 4px solid var(--green-dark);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Tooltips */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background: var(--text-primary);
+            color: white;
+            text-align: center;
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 13px;
+            font-weight: normal;
+        }
+
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>Edit Store Details</h1>
+            <p>Update your store information to provide the best shopping experience for your customers</p>
+            <div class="store-name-badge">
+                <i class="fas fa-store"></i> Currently editing: {{ store.name }}
+            </div>
+        </div>
+
+        <form id="storeForm" action="{{ url_for('edit_store', slug=store.slug) }}" method="POST" enctype="multipart/form-data">
+            <div class="form-wrapper">
+                <!-- Basic Information Section -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div>
+                            <h2 class="section-title">Basic Information</h2>
+                            <p class="section-description">Core details that identify your store</p>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="name">
+                                <i class="fas fa-store"></i> Store Name 
+                                <span class="required">*</span>
+                            </label>
+                            <input type="text" 
+                                   name="name" 
+                                   id="name" 
+                                   value="{{ store.name }}" 
+                                   required 
+                                   maxlength="255"
+                                   placeholder="Enter your store name">
+                            <div class="helper-text">
+                                <i class="fas fa-lightbulb"></i> This name will be displayed to customers
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="slug">
+                                <i class="fas fa-link"></i> Store URL
+                            </label>
+                            <div class="input-prefix">
+                                <span class="prefix-text">swaphub.com/store/</span>
+                                <input type="text" 
+                                       name="slug" 
+                                       id="slug" 
+                                       value="{{ store.slug }}" 
+                                       required 
+                                       maxlength="255"
+                                       placeholder="your-store-name">
+                            </div>
+                            <div class="helper-text">
+                                <i class="fas fa-info-circle"></i> Use lowercase letters, numbers, and hyphens only
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="location">
+                                <i class="fas fa-map-marker-alt"></i> Location 
+                                <span class="required">*</span>
+                            </label>
+                            <input type="text" 
+                                   name="location" 
+                                   id="location" 
+                                   value="{{ store.location }}" 
+                                   required 
+                                   maxlength="255"
+                                   placeholder="e.g., New York, NY">
+                            <div class="helper-text">
+                                <i class="fas fa-lightbulb"></i> City, State or full address
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contact">
+                                <i class="fas fa-phone"></i> Contact Number 
+                                <span class="required">*</span>
+                            </label>
+                            <input type="text" 
+                                   name="contact" 
+                                   id="contact" 
+                                   value="{{ store.contact }}" 
+                                   required 
+                                   maxlength="100"
+                                   placeholder="+1 (555) 123-4567">
+                            <div class="helper-text">
+                                <i class="fas fa-shield-alt"></i> Only visible to you and confirmed customers
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description Section -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div>
+                            <h2 class="section-title">Store Description</h2>
+                            <p class="section-description">Tell customers about your store and what you offer</p>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <textarea name="description" 
+                                  id="description"
+                                  rows="6"
+                                  placeholder="Describe your store, products, delivery options, return policy, etc.">{{ store.description or '' }}</textarea>
+                        <div class="helper-text">
+                            <i class="fas fa-edit"></i> Markdown supported. Write a compelling story about your store
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Media Section -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-images"></i>
+                        </div>
+                        <div>
+                            <h2 class="section-title">Store Media</h2>
+                            <p class="section-description">Visuals that represent your store and build trust</p>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <!-- Logo Upload -->
+                        <div class="form-group full-width">
+                            <label>
+                                <i class="fas fa-camera"></i> Store Logo
+                            </label>
+                            <div class="upload-card {% if store.logo %}active{% endif %}">
+                                {% if store.logo %}
+                                    <div class="upload-preview">
+                                        <img src="{{ store.logo }}" alt="Current logo">
+                                    </div>
+                                    <div class="upload-actions">
+                                        <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('logoInput').click()">
+                                            <i class="fas fa-sync-alt"></i> Replace Logo
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-secondary" onclick="previewImage('{{ store.logo }}')">
+                                            <i class="fas fa-expand"></i> Preview
+                                        </button>
+                                    </div>
+                                {% else %}
+                                    <div class="dropzone" onclick="document.getElementById('logoInput').click()">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <h3>Upload Store Logo</h3>
+                                        <p><strong>Click to browse</strong> or drag and drop</p>
+                                        <p>Recommended: 400×400px PNG or JPG</p>
+                                    </div>
+                                {% endif %}
+                                <input type="file" name="logo" id="logoInput" accept="image/*" style="display:none;">
+                                <div class="helper-text">
+                                    <i class="fas fa-check-circle"></i> Square images work best for logos
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Banner Upload -->
+                        <div class="form-group full-width">
+                            <label>
+                                <i class="fas fa-image"></i> Store Banner
+                            </label>
+                            <div class="upload-card banner {% if store.banner %}active{% endif %}">
+                                {% if store.banner %}
+                                    <div class="upload-preview">
+                                        <img src="{{ store.banner }}" alt="Current banner">
+                                    </div>
+                                    <div class="upload-actions">
+                                        <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('bannerInput').click()">
+                                            <i class="fas fa-sync-alt"></i> Replace Banner
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-secondary" onclick="previewImage('{{ store.banner }}')">
+                                            <i class="fas fa-expand"></i> Preview
+                                        </button>
+                                    </div>
+                                {% else %}
+                                    <div class="dropzone" onclick="document.getElementById('bannerInput').click()">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <h3>Upload Store Banner</h3>
+                                        <p><strong>Click to browse</strong> or drag and drop</p>
+                                        <p>Recommended: 1200×400px JPG or PNG</p>
+                                    </div>
+                                {% endif %}
+                                <input type="file" name="banner" id="bannerInput" accept="image/*" style="display:none;">
+                                <div class="helper-text">
+                                    <i class="fas fa-check-circle"></i> Wide images create better visual impact
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Video Upload -->
+                        <div class="form-group full-width">
+                            <label>
+                                <i class="fas fa-video"></i> Shop Tour Video
+                                <span class="tooltip">
+                                    <i class="fas fa-question-circle" style="color: var(--green-medium);"></i>
+                                    <span class="tooltip-text">Short videos increase engagement by 85%</span>
+                                </span>
+                            </label>
+                            <div class="upload-card {% if store.tour_video %}active{% endif %}">
+                                {% if store.tour_video %}
+                                    <div class="upload-preview vertical">
+                                        <video controls muted playsinline preload="metadata" style="width:100%; border-radius: var(--radius);">
+                                            <source src="{{ store.tour_video }}" type="video/mp4">
+                                            Your browser does not support video.
+                                        </video>
+                                    </div>
+                                    <div class="upload-actions">
+                                        <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('tourVideoInput').click()">
+                                            <i class="fas fa-sync-alt"></i> Replace Video
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-secondary" onclick="previewVideo('{{ store.tour_video }}')">
+                                            <i class="fas fa-play"></i> Fullscreen
+                                        </button>
+                                    </div>
+                                {% else %}
+                                    <div class="dropzone" onclick="document.getElementById('tourVideoInput').click()" id="videoDropzone">
+                                        <i class="fas fa-video"></i>
+                                        <h3>Upload Shop Tour Video</h3>
+                                        <p><strong>Click to browse</strong> or drag and drop</p>
+                                        <p>MP4, MOV, WebM up to 100MB</p>
+                                        <p style="margin-top: 15px; color: var(--green-dark); font-weight: 500;">
+                                            <i class="fas fa-mobile-alt"></i> Vertical videos recommended for mobile
+                                        </p>
+                                    </div>
+                                {% endif %}
+                                <input type="file" name="tour_video" id="tourVideoInput" accept="video/*" style="display:none;">
+                                <div class="helper-text">
+                                    <i class="fas fa-bolt"></i> Short videos (30-60 seconds) perform best
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delivery Options -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-shipping-fast"></i>
+                        </div>
+                        <div>
+                            <h2 class="section-title">Delivery Options</h2>
+                            <p class="section-description">Choose how customers can receive their orders</p>
+                        </div>
+                    </div>
+
+                    <div class="checkbox-grid">
+                        {# Handle delivery options safely without try block #}
+                        {% set cleaned_delivery = [] %}
+                        
+                        {% if store.delivery_options %}
+                            {# If it's a string, check if it looks like JSON or comma-separated #}
+                            {% if store.delivery_options is string %}
+                                {% set options_str = store.delivery_options|trim %}
+                                
+                                {# Check if it looks like JSON array (starts with [ and ends with ]) #}
+                                {% if options_str.startswith('[') and options_str.endswith(']') %}
+                                    {# Try to parse as simple JSON by removing brackets and quotes #}
+                                    {% set json_content = options_str[1:-1]|replace('"', '')|replace("'", "")|trim %}
+                                    {% if json_content %}
+                                        {% set options_list = json_content.split(',') %}
+                                    {% else %}
+                                        {% set options_list = [] %}
+                                    {% endif %}
+                                {% else %}
+                                    {# Treat as comma-separated string #}
+                                    {% set options_list = options_str.split(',') %}
+                                {% endif %}
+                            {% else %}
+                                {# If it's already a list/array #}
+                                {% set options_list = store.delivery_options %}
+                            {% endif %}
+                            
+                            {# Clean up the options #}
+                            {% for option in options_list %}
+                                {% set cleaned_option = option|string|trim|lower %}
+                                {% if cleaned_option %}
+                                    {% set _ = cleaned_delivery.append(cleaned_option) %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                        
+                        <label class="checkbox-card {% if 'pickup' in cleaned_delivery %}selected{% endif %}" onclick="toggleCheckbox(this)">
+                            <div class="checkbox-icon">
+                                <i class="fas fa-store"></i>
+                            </div>
+                            <div class="checkbox-content">
+                                <h4>In-person Pickup</h4>
+                                <p>Customers collect items directly from your store location</p>
+                            </div>
+                            <input type="checkbox" 
+                                   name="delivery_options" 
+                                   value="pickup" 
+                                   {% if 'pickup' in cleaned_delivery %}checked{% endif %}
+                                   style="display: none;">
+                        </label>
+
+                        <label class="checkbox-card {% if 'local' in cleaned_delivery %}selected{% endif %}" onclick="toggleCheckbox(this)">
+                            <div class="checkbox-icon">
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <div class="checkbox-content">
+                                <h4>Local Delivery</h4>
+                                <p>Deliver within your city or local area</p>
+                            </div>
+                            <input type="checkbox" 
+                                   name="delivery_options" 
+                                   value="local" 
+                                   {% if 'local' in cleaned_delivery %}checked{% endif %}
+                                   style="display: none;">
+                        </label>
+
+                        <label class="checkbox-card {% if 'nationwide' in cleaned_delivery %}selected{% endif %}" onclick="toggleCheckbox(this)">
+                            <div class="checkbox-icon">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <div class="checkbox-content">
+                                <h4>Nationwide Shipping</h4>
+                                <p>Ship orders anywhere in the country</p>
+                            </div>
+                            <input type="checkbox" 
+                                   name="delivery_options" 
+                                   value="nationwide" 
+                                   {% if 'nationwide' in cleaned_delivery %}checked{% endif %}
+                                   style="display: none;">
+                        </label>
+
+                        <label class="checkbox-card {% if 'meetup' in cleaned_delivery %}selected{% endif %}" onclick="toggleCheckbox(this)">
+                            <div class="checkbox-icon">
+                                <i class="fas fa-handshake"></i>
+                            </div>
+                            <div class="checkbox-content">
+                                <h4>Meetup</h4>
+                                <p>Meet at a mutually agreed location</p>
+                            </div>
+                            <input type="checkbox" 
+                                   name="delivery_options" 
+                                   value="meetup" 
+                                   {% if 'meetup' in cleaned_delivery %}checked{% endif %}
+                                   style="display: none;">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <div class="progress-indicator">
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                        <span>75% Complete</span>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px;">
+                        <a href="{{ url_for('store_home', slug=store.slug) }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Success Message (hidden by default) -->
+    <div id="successMessage" class="success-message" style="display: none;">
+        <i class="fas fa-check-circle"></i>
+        <div>
+            <strong>Changes Saved Successfully!</strong>
+            <div style="font-size: 13px;">Your store has been updated</div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Markdown Editor
+            const mde = new SimpleMDE({
+                element: document.getElementById('description'),
+                spellChecker: false,
+                placeholder: "Describe your store, what makes it special, your products, policies, etc...",
+                toolbar: [
+                    "bold", "italic", "heading", "|",
+                    "quote", "unordered-list", "ordered-list", "|",
+                    "link", "image", "|",
+                    "preview", "guide"
+                ],
+                status: false,
+                autosave: {
+                    enabled: true,
+                    uniqueId: "store-description-{{ store.id }}",
+                    delay: 1000,
+                },
+                styleSelectedText: false,
+                forceSync: true
+            });
+
+            // Auto-generate slug from store name
+            const nameInput = document.getElementById('name');
+            const slugInput = document.getElementById('slug').querySelector('input');
+            
+            if (nameInput && slugInput) {
+                nameInput.addEventListener('input', function() {
+                    if (!slugInput.dataset.modified) {
+                        let slug = this.value
+                            .toLowerCase()
+                            .replace(/[^a-z0-9\s]/g, '')
+                            .replace(/\s+/g, '-')
+                            .replace(/^-+|-+$/g, '');
+                        slugInput.value = slug;
+                    }
+                });
+                
+                slugInput.addEventListener('input', function() {
+                    this.dataset.modified = 'true';
+                });
+            }
+
+            // Enhance form submission
+            const form = document.getElementById('storeForm');
+            form.addEventListener('submit', function(e) {
+                // Show loading state
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                submitBtn.disabled = true;
+                
+                // Show success message after delay (simulating save)
+                setTimeout(() => {
+                    const successMsg = document.getElementById('successMessage');
+                    successMsg.style.display = 'flex';
+                    
+                    // Auto-hide after 5 seconds
+                    setTimeout(() => {
+                        successMsg.style.display = 'none';
+                    }, 5000);
+                    
+                    // Reset button state
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }, 1500);
+            });
+
+            // File upload preview handlers
+            setupFileUpload('logoInput', 'logo');
+            setupFileUpload('bannerInput', 'banner');
+            setupFileUpload('tourVideoInput', 'video');
+        });
+
+        // File upload handling with preview
+        function setupFileUpload(inputId, type) {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.addEventListener('change', function(e) {
+                    if (this.files.length > 0) {
+                        const file = this.files[0];
+                        const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+                        
+                        // Validate file size
+                        if (type === 'video' && fileSize > 100) {
+                            alert('Video file must be less than 100MB');
+                            this.value = '';
+                            return;
+                        }
+                        
+                        // Show file info
+                        const card = this.closest('.upload-card');
+                        if (card) {
+                            card.classList.add('loading');
+                            
+                            // Simulate upload delay
+                            setTimeout(() => {
+                                card.classList.remove('loading');
+                                alert(`${type.charAt(0).toUpperCase() + type.slice(1)} selected: ${file.name} (${fileSize}MB)`);
+                                
+                                // In real implementation, you would upload the file here
+                                // and update the preview with the new URL
+                            }, 1000);
+                        }
+                    }
+                });
+            }
+        }
+
+        // Checkbox card toggle
+        function toggleCheckbox(card) {
+            const checkbox = card.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+            
+            if (checkbox.checked) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+        }
+
+        // Image preview modal
+        function previewImage(url) {
+            window.open(url, '_blank', 'noopener,noreferrer');
+        }
+
+        // Video preview modal
+        function previewVideo(url) {
+            window.open(url, '_blank', 'noopener,noreferrer');
+        }
+
+        // Drag and drop for file uploads
+        const dropzones = document.querySelectorAll('.dropzone');
+        dropzones.forEach(dropzone => {
+            dropzone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.borderColor = 'var(--green-dark)';
+                this.style.background = 'rgba(16, 185, 129, 0.2)';
+            });
+            
+            dropzone.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.style.borderColor = 'var(--green-medium)';
+                this.style.background = 'rgba(16, 185, 129, 0.05)';
+            });
+            
+            dropzone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.borderColor = 'var(--green-medium)';
+                this.style.background = 'rgba(16, 185, 129, 0.05)';
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const input = this.closest('.upload-card').querySelector('input[type="file"]');
+                    if (input) {
+                        input.files = files;
+                        input.dispatchEvent(new Event('change'));
+                    }
+                }
+            });
+        });
+
+        // Form validation
+        function validateForm() {
+            const requiredFields = document.querySelectorAll('input[required], textarea[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.style.borderColor = '#EF4444';
+                    isValid = false;
+                } else {
+                    field.style.borderColor = '';
+                }
+            });
+            
+            return isValid;
+        }
+    </script>
+</body>
+</html>

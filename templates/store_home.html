@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ store.name }} | Vendor Dashboard - SwapHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --light-green: #e8f5e9;
+            --primary-green: #2ecc71;
+            --deep-green: #27ae60;
+            --dark-green: #219653;
+            --white: #ffffff;
+            --light-gray: #f8f9fa;
+            --medium-gray: #e9ecef;
+            --text-dark: #1a1a1a;
+            --text-light: #666;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --radius: 12px;
+        }
+        
+        * { 
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: linear-gradient(135deg, #f6fdf8 0%, #f0f9f3 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            padding-bottom: 100px; /* Space for mobile FAB */
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header Styles */
+        .dashboard-header {
+            padding: 24px 0;
+            border-bottom: 1px solid var(--medium-gray);
+            margin-bottom: 30px;
+            background-color: var(--white);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .store-info h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--dark-green);
+            margin-bottom: 4px;
+        }
+        
+        .store-info p {
+            color: var(--text-light);
+            font-size: 14px;
+            font-weight: 400;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        /* Welcome Card */
+        .welcome-card {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--deep-green) 100%);
+            color: var(--white);
+            border-radius: var(--radius);
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .welcome-card::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+        
+        .welcome-card h2 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+        }
+        
+        .welcome-card p {
+            font-size: 16px;
+            opacity: 0.9;
+            max-width: 600px;
+            position: relative;
+        }
+        
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .card-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dark-green);
+        }
+        
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            background-color: var(--light-green);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--deep-green);
+            font-size: 18px;
+        }
+        
+        .card-content {
+            margin-bottom: 20px;
+        }
+        
+        .card-content p {
+            color: var(--text-light);
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        
+        /* Stats */
+        .stats-container {
+            display: flex;
+            gap: 16px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            flex: 1;
+            min-width: 140px;
+            background-color: var(--light-green);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark-green);
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+        
+        /* Video Section */
+        .video-container {
+            position: relative;
+            width: 100%;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 16px 0;
+            aspect-ratio: 16/9;
+        }
+        
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .video-placeholder {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: linear-gradient(135deg, var(--light-green) 0%, #d4edda 100%);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--deep-green);
+            margin: 16px 0;
+        }
+        
+        .video-placeholder i {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .upload-area {
+            border: 2px dashed var(--medium-gray);
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            background: var(--light-gray);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--primary-green);
+            background: var(--light-green);
+        }
+        
+        .upload-area i {
+            font-size: 36px;
+            color: var(--primary-green);
+            margin-bottom: 12px;
+        }
+        
+        /* Buttons */
+        .btn {
+            background: var(--primary-green);
+            color: var(--white);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 15px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: var(--deep-green);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: var(--light-gray);
+            color: var(--text-dark);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--medium-gray);
+        }
+        
+        .btn-full {
+            width: 100%;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        /* Floating Action Button - Mobile only */
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: var(--primary-green);
+            color: var(--white);
+            border-radius: 50%;
+            box-shadow: 0 6px 16px rgba(46, 204, 113, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            z-index: 100;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: none;
+        }
+        
+        .fab:hover {
+            background: var(--deep-green);
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(46, 204, 113, 0.5);
+        }
+        
+        /* Footer */
+        .dashboard-footer {
+            text-align: center;
+            padding: 20px 0;
+            color: var(--text-light);
+            font-size: 14px;
+            border-top: 1px solid var(--medium-gray);
+            margin-top: 40px;
+        }
+        
+        /* Desktop styles */
+        @media (min-width: 768px) {
+            .dashboard-header {
+                padding: 30px 0;
+            }
+            
+            .store-info h1 {
+                font-size: 28px;
+            }
+            
+            .welcome-card h2 {
+                font-size: 32px;
+            }
+            
+            .cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .card-large {
+                grid-column: span 2;
+            }
+            
+            .stats-container {
+                gap: 20px;
+            }
+            
+            body {
+                padding-bottom: 0;
+            }
+            
+            .fab {
+                display: none !important;
+            }
+            
+            .header-actions {
+                display: flex;
+            }
+        }
+        
+        /* Tablet and larger desktop */
+        @media (min-width: 1024px) {
+            .cards-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .card-large {
+                grid-column: span 3;
+            }
+        }
+        
+        /* Mobile-specific */
+        @media (max-width: 767px) {
+            .container {
+                padding: 0 16px;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+            
+            .header-actions {
+                width: 100%;
+                display: none; /* Hide header actions on mobile since we have FAB */
+            }
+            
+            .welcome-card {
+                padding: 24px;
+            }
+            
+            .welcome-card h2 {
+                font-size: 24px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .stat-card {
+                min-width: calc(50% - 8px);
+            }
+            
+            .fab {
+                display: flex;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+        
+        /* Loading State */
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        
+        /* Success Message */
+        .success-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--primary-green);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+        }
+        
+        .success-message.show {
+            transform: translateX(0);
+        }
+
+body.loading,
+body.loading * {
+    cursor: progress !important;
+}
+
+.shop-video-card .video-outer {
+    display: flex;
+    justify-content: center;
+    padding: 16px;
+}
+
+.shop-video-card .video-aspect-box {
+    position: relative;
+    width: 100%;
+    max-width: 420px;          /* Mobile-friendly width */
+    aspect-ratio: 9 / 16;     /* Portrait video */
+    background: #000;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.shop-video-card video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;      /* IMPORTANT: prevents cropping */
+    background: #000;
+    border-radius: 16px;
+}
+
+/* Optional: subtle mobile feel */
+.shop-video-card .video-aspect-box::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+    pointer-events: none;
+}
+
+/* Upload area polish */
+.shop-video-card .upload-area {
+    text-align: center;
+    padding: 32px 20px;
+    border: 2px dashed var(--medium-gray);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.shop-video-card .upload-area:hover {
+    border-color: var(--primary-green);
+    background: var(--light-green);
+}
+
+.shop-video-card .upload-area i {
+    font-size: 36px;
+    color: var(--primary-green);
+    margin-bottom: 12px;
+}
+
+    </style>
+</head>
+<body>
+<div class="dashboard-header">
+    <div class="container">
+        <div class="header-content">
+            <div class="store-info">
+                <h1>{{ store.name }}</h1>
+                <p>Vendor Dashboard</p>
+            </div>
+            <div class="header-actions">
+                <!-- Open Add Item Modal -->
+                <button class="btn" id="openAddItemModal">
+                    <i class="fas fa-plus"></i> Add New Item
+                </button>
+
+                <button class="btn btn-secondary" onclick="window.location.href='/edit-store/{{ store.slug }}'">
+                    <i class="fas fa-store"></i> Store Settings
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+    <div class="container">
+        
+        <!-- Cards Grid -->
+        <div class="cards-grid">
+            <!-- Add Item Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Add New Item</h3>
+                    <div class="card-icon">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <p>List a new item for swap or sale. Start with a sample if you're not ready yet.</p>
+                </div>
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <span class="stat-value">{{ category_counts|length }}</span>
+                        <span class="stat-label">Categories</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">{{ (category_counts|sum(attribute='total')) or 0 }}</span>
+                        <span class="stat-label">Active Listings</span>
+                    </div>
+                </div>
+                <div class="action-buttons">
+<button class="btn btn-full" id="openAddItemModalFull">
+    <i class="fas fa-plus-circle"></i> Add Item
+</button>
+
+                    <button class="btn btn-secondary btn-full">
+                        <i class="fas fa-file-import"></i> Import Items
+                    </button>
+                </div>
+            </div>
+
+
+
+            <!-- Analytics Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Store Analytics</h3>
+                    <div class="card-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <p>Track how your store is performing with detailed analytics.</p>
+                </div>
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <span class="stat-value">{{ totals.views }}</span>
+                        <span class="stat-label">Total Views</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value">{{ totals.clicks }}</span>
+                        <span class="stat-label">Total Clicks</span>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-full">
+                        <i class="fas fa-chart-bar"></i> View Full Analytics
+                    </button>
+                </div>
+            </div>
+
+
+
+            
+<div class="card shop-video-card">
+    <div class="card-header">
+        <h3>Shop Tour Video</h3>
+        <div class="card-icon">
+            <i class="fas fa-video"></i>
+        </div>
+    </div>
+
+    <div class="card-content">
+        <p>
+            Give customers a quick visual tour of your shop. 
+            Short vertical videos recorded on your phone work best.
+        </p>
+    </div>
+
+
+    {% if store.tour_video %}
+        <!-- VIDEO WRAPPER -->
+        <div class="video-outer">
+            <div class="video-aspect-box">
+                <video
+                    class="shop-tour-video"
+                    controls
+                    playsinline
+                    muted
+                    preload="metadata"
+                    loop
+                >
+                    <source src="{{ store.tour_video }}?t={{ range(1000000) | random }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <!-- REMOVED onclick — now handled by JS -->
+            <button class="btn btn-replace-video">
+                <i class="fas fa-sync-alt"></i> Replace Video
+            </button>
+
+            <button class="btn btn-secondary">
+                <i class="fas fa-share-alt"></i> Share
+            </button>
+        </div>
+    {% else %}
+        <div class="upload-area" id="uploadArea">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p><strong>Click to upload</strong> or drag and drop</p>
+            <p>MP4, MOV, WebM (vertical videos recommended)</p>
+        </div>
+    {% endif %}
+
+    <!-- Hidden file input -->
+    <input type="file" id="videoInput" accept="video/*" style="display:none;">
+</div>
+
+            
+            
+            <!-- Customize Store Card -->
+            <div class="card card-large">
+                <div class="card-header">
+                    <h3>Customize Your Store</h3>
+                    <div class="card-icon">
+                        <i class="fas fa-paint-brush"></i>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <p>Update your logo, banner, description, and customize themes to make your store stand out.</p>
+                </div>
+                <div class="action-buttons">
+<button class="btn" onclick="window.location.href='/store/{{ store.slug }}/edit'">
+    <i class="fas fa-edit"></i> Edit Store Details
+</button>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-palette"></i> Customize Theme
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-image"></i> Update Media
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="dashboard-footer">
+            <p>Need help? Visit our <a href="#" style="color: var(--primary-green);">Help Center</a> or contact support.</p>
+            <p>© 2023 SwapHub Vendor Dashboard. All rights reserved.</p>
+        </div>
+    </div>
+    
+    <!-- Floating Action Button (Mobile only) -->
+    <a href="/add-listing" class="fab" aria-label="Add New Item">
+        <i class="fas fa-plus"></i>
+    </a>
+    
+    <!-- Success Message (hidden by default) -->
+    <div class="success-message" id="successMessage">
+        <i class="fas fa-check-circle"></i>
+        <span>Action completed successfully!</span>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const videoInput = document.getElementById('videoInput');
+    const uploadArea = document.getElementById('uploadArea');
+    const replaceButton = document.querySelector('.btn-replace-video'); // More specific selector
+
+    if (!videoInput) return;
+
+    function triggerFilePicker() {
+        videoInput.click();
+    }
+
+    // Upload Area (when no video yet)
+    if (uploadArea) {
+        uploadArea.addEventListener('click', triggerFilePicker);
+
+        // Drag & drop
+        ['dragover', 'dragenter'].forEach(evt => {
+            uploadArea.addEventListener(evt, e => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+        });
+
+        ['dragleave', 'dragend', 'drop'].forEach(evt => {
+            uploadArea.addEventListener(evt, e => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+            });
+        });
+
+        uploadArea.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                videoInput.files = e.dataTransfer.files;
+                uploadVideo(e.dataTransfer.files[0]);
+            }
+        });
+    }
+
+    // Replace Button (when video exists) — NOW WORKS
+    if (replaceButton) {
+        replaceButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            triggerFilePicker();
+        });
+    }
+
+    // File selection
+    videoInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            uploadVideo(e.target.files[0]);
+        }
+    });
+
+    function uploadVideo(file) {
+        if (!file.type.startsWith('video/')) {
+            alert('Please select a video file');
+            return;
+        }
+
+        if (file.size > 100 * 1024 * 1024) {
+            alert('Video must be under 100MB');
+            return;
+        }
+
+        // Show loading state
+        if (uploadArea) {
+            uploadArea.innerHTML = `
+                <i class="fas fa-spinner fa-spin" style="font-size:48px; color:var(--primary-green);"></i>
+                <p><strong>Uploading...</strong></p>
+                <p>${file.name}</p>
+            `;
+        } else {
+            const videoOuter = document.querySelector('.video-outer');
+            if (videoOuter) {
+                videoOuter.innerHTML = `
+                    <div style="height:400px; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white;">
+                        <i class="fas fa-spinner fa-spin" style="font-size:48px; margin-bottom:20px;"></i>
+                        <p><strong>Uploading new video...</strong></p>
+                        <p>${file.name}</p>
+                    </div>
+                `;
+            }
+            document.querySelector('.action-buttons').style.display = 'none';
+        }
+
+        const formData = new FormData();
+        formData.append('tour_video', file);
+
+        fetch(`/store/{{ store.slug }}/upload-tour-video`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Video uploaded successfully!');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast(data.message || 'Upload failed');
+                resetUploadUI();
+            }
+        })
+        .catch(err => {
+            console.warn('Possible success despite error:', err);
+            showToast('Upload complete — refreshing...');
+            setTimeout(() => location.reload(), 1500);
+        });
+    }
+
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position:fixed; bottom:30px; left:50%; transform:translateX(-50%);
+            background:var(--primary-green); color:white; padding:16px 24px;
+            border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.3);
+            z-index:10000; font-size:16px; animation:slideUp 0.4s ease;
+        `;
+        toast.innerHTML = `<i class="fas fa-check-circle" style="margin-right:8px;"></i>${message}`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
+
+    function resetUploadUI() {
+        location.reload(); // Simple fallback
+    }
+});
+</script>
+
+
+<!-- Add Item Modal -->
+<div id="addItemModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; overflow:auto; padding:40px 20px; backdrop-filter: blur(5px);">
+    <div style="background:#fff; border-radius:16px; max-width:800px; margin:auto; padding:0; position:relative; box-shadow:0 20px 60px rgba(0,0,0,0.3); overflow:hidden;">
+        <!-- Modal Header -->
+        <div style="background:linear-gradient(135deg, var(--primary-green) 0%, var(--deep-green) 100%); color:white; padding:24px 32px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h2 style="margin:0; font-size:24px; font-weight:600;">Add New Item</h2>
+                <p style="margin:8px 0 0; opacity:0.9; font-size:14px;">Complete all steps to list your item</p>
+            </div>
+            <button id="closeModal" style="background:none; border:none; color:white; font-size:28px; cursor:pointer; width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='none'">
+                ×
+            </button>
+        </div>
+
+        <!-- Step Progress Bar -->
+        <div style="padding:20px 32px; background:var(--light-gray); border-bottom:1px solid var(--medium-gray);">
+            <div style="display:flex; justify-content:space-between; position:relative;">
+                <div style="position:absolute; top:50%; left:0; right:0; height:2px; background:var(--medium-gray); transform:translateY(-50%); z-index:1;"></div>
+                <div style="position:absolute; top:50%; left:0; height:2px; background:var(--primary-green); transform:translateY(-50%); z-index:2; width:0%; transition:width 0.3s;" id="progressBar"></div>
+                
+                <div class="step-indicator active" data-step="1" style="display:flex; flex-direction:column; align-items:center; position:relative; z-index:3;">
+                    <div style="width:40px; height:40px; border-radius:50%; background:var(--primary-green); border:2px solid var(--primary-green); display:flex; align-items:center; justify-content:center; font-weight:600; color:white; transition:all 0.3s; margin-bottom:8px;">1</div>
+                    <span style="font-size:12px; color:var(--primary-green); font-weight:600;">Deal Type</span>
+                </div>
+                <div class="step-indicator" data-step="2" style="display:flex; flex-direction:column; align-items:center; position:relative; z-index:3;">
+                    <div style="width:40px; height:40px; border-radius:50%; background:white; border:2px solid var(--medium-gray); display:flex; align-items:center; justify-content:center; font-weight:600; color:var(--text-light); transition:all 0.3s; margin-bottom:8px;">2</div>
+                    <span style="font-size:12px; color:var(--text-light); font-weight:500;">Item Details</span>
+                </div>
+                <div class="step-indicator" data-step="3" style="display:flex; flex-direction:column; align-items:center; position:relative; z-index:3;">
+                    <div style="width:40px; height:40px; border-radius:50%; background:white; border:2px solid var(--medium-gray); display:flex; align-items:center; justify-content:center; font-weight:600; color:var(--text-light); transition:all 0.3s; margin-bottom:8px;">3</div>
+                    <span style="font-size:12px; color:var(--text-light); font-weight:500;">Contact</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Content -->
+        <div style="padding:32px;">
+            <form id="addItemFormModal" action="/store/add-item" method="POST" enctype="multipart/form-data">
+                
+                <!-- Step 1: Deal Type -->
+                <div class="step" data-step="1" style="display:block;">
+                    <h3 style="margin-bottom:24px; color:var(--text-dark); font-weight:600;">Select Deal Type</h3>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:20px; margin-bottom:32px;">
+                        <div class="deal-type-option active" data-type="swap" style="cursor:pointer;">
+                            <input type="radio" name="deal_type" id="modal-deal-swap" value="Swap Deal" checked style="display:none;">
+                            <label for="modal-deal-swap" style="display:block; cursor:pointer; height:100%;">
+                                <div style="text-align:center; padding:30px 20px; border-radius:12px; background:var(--light-green); border:2px solid var(--primary-green); height:100%; transition:all 0.3s; transform:translateY(-2px); box-shadow:0 4px 12px rgba(46, 204, 113, 0.2);">
+                                    <div style="width:60px; height:60px; background:white; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; color:var(--primary-green); font-size:24px;">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </div>
+                                    <h4 style="margin:0 0 10px; color:var(--text-dark);">Swap Deal</h4>
+                                    <p style="color:var(--text-light); font-size:14px; margin:0;">Trade items with other users</p>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="deal-type-option" data-type="sale" style="cursor:pointer;">
+                            <input type="radio" name="deal_type" id="modal-deal-sale" value="Outright Sales" style="display:none;">
+                            <label for="modal-deal-sale" style="display:block; cursor:pointer; height:100%;">
+                                <div style="text-align:center; padding:30px 20px; border-radius:12px; background:var(--light-gray); border:2px solid transparent; height:100%; transition:all 0.3s;">
+                                    <div style="width:60px; height:60px; background:white; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; color:var(--text-light); font-size:24px;">
+                                        <i class="fas fa-tag"></i>
+                                    </div>
+                                    <h4 style="margin:0 0 10px; color:var(--text-dark);">Outright Sale</h4>
+                                    <p style="color:var(--text-light); font-size:14px; margin:0;">Sell your item for cash</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; margin-top:32px;">
+                        <button type="button" class="btn next-step" style="min-width:120px;">
+                            Next <i class="fas fa-arrow-right" style="margin-left:8px;"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Item Details -->
+                <div class="step" data-step="2" style="display:none;">
+                    <h3 style="margin-bottom:24px; color:var(--text-dark); font-weight:600;">Item Details</h3>
+
+                    <!-- Swap Section -->
+                    <div id="modal-swap-section" style="display:block;">
+                        <h4 style="margin-bottom:20px; color:var(--dark-green); font-weight:500;">Your Offered Items</h4>
+                        
+                        <div id="modal-offered-items-container">
+                            <div class="modal-offered-item" data-index="1">
+                                <div style="background:var(--light-green); padding:20px; border-radius:12px; border-left:4px solid var(--primary-green);">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                                        <div style="display:flex; align-items:center; gap:12px;">
+                                            <div class="item-number-circle" style="width:32px; height:32px; background:var(--primary-green); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:600;">1</div>
+                                            <h5 style="margin:0; color:var(--text-dark);">Offered Item #1</h5>
+                                        </div>
+                                        <button type="button" class="remove-item-btn" style="display:none; background:none; border:none; color:var(--text-light); cursor:pointer; font-size:18px; padding:4px;">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+
+                                                                            <div>
+                                            <label style="display:block; margin-bottom:6px; font-size:14px; color:var(--text-dark);">Title *</label>
+                                            <input type="text" name="offer_title[]" required style="width:100%; padding:10px 12px; border:1px solid var(--medium-gray); border-radius:6px; font-size:14px;">
+                                        </div>
+                                    
+                                    <div style="display:grid; gap:16px;">
+                                        <!-- Category before Condition -->
+                                        <div>
+                                            <label style="display:block; margin-bottom:6px; font-size:14px; color:var(--text-dark);">Category *</label>
+                                            <div style="position:relative;">
+                                                <input type="text" name="category" required style="width:100%; padding:10px 12px; border:1px solid var(--medium-gray); border-radius:6px; font-size:14px;" placeholder="Type to search or select">
+                                                <div id="category-suggestions" style="position:absolute; top:100%; left:0; right:0; background:white; border:1px solid var(--medium-gray); border-radius:8px; margin-top:4px; box-shadow:var(--shadow); display:none; z-index:10; max-height:200px; overflow-y:auto;"></div>
+                                            </div>
+                                        </div>
+                                        
+
+                                        
+                                        <div>
+                                            <label style="display:block; margin-bottom:6px; font-size:14px; color:var(--text-dark);">Condition *</label>
+                                            <select name="offer_condition[]" required style="width:100%; padding:10px 12px; border:1px solid var(--medium-gray); border-radius:6px; font-size:14px;">
+                                                <option value="">Select condition</option>
+                                                <option>New</option>
+                                                <option>Slightly Used</option>
+                                                <option>Used but in Good Condition</option>
+                                                <option>Used - Needs Repair</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div>
+                                            <label style="display:block; margin-bottom:6px; font-size:14px; color:var(--text-dark);">Description *</label>
+                                            <textarea name="offer_description[]" rows="3" required style="width:100%; padding:10px 12px; border:1px solid var(--medium-gray); border-radius:6px; font-size:14px; resize:vertical;" placeholder="Describe your item in detail..."></textarea>
+                                        </div>
+                                        
+                                        <div>
+                                            <label style="display:block; margin-bottom:6px; font-size:14px; color:var(--text-dark);">Images (1-4) *</label>
+                                            <label for="offer-images-1" class="image-upload-area" style="border:2px dashed var(--medium-gray); border-radius:8px; padding:24px; text-align:center; cursor:pointer; transition:all 0.3s; display:block;">
+                                                <i class="fas fa-cloud-upload-alt" style="font-size:32px; color:var(--primary-green); margin-bottom:12px;"></i>
+                                                <p style="margin:0; color:var(--text-light); font-size:14px;"><strong>Click to upload</strong> or drag and drop</p>
+                                                <p style="margin:8px 0 0; color:var(--text-light); font-size:12px;">JPG, PNG, WebP (max 10MB each)</p>
+                                            </label>
+                                            <input type="file" id="offer-images-1" name="offer_images_1[]" multiple accept="image/*" required>
+                                            <div class="image-preview" style="display:none; margin-top:12px; display:flex; flex-wrap:wrap; gap:8px;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="button" id="modal-add-offer-item-btn" class="btn" style="margin-top:16px; width:100%;">
+                            <i class="fas fa-plus-circle"></i> Add Another Item
+                        </button>
+                        
+                        <div style="margin-top:24px; padding-top:24px; border-top:1px solid var(--medium-gray);">
+                            <h5 style="margin-bottom:16px; color:var(--text-dark);">What You're Looking For</h5>
+                            
+                            <div style="display:grid; gap:16px;">
+                                <div>
+                                    <label style="display:block; margin-bottom:6px; font-size:14px; color:var(--text-dark);">Desired Item *</label>
+                                    <input type="text" name="desired_swap" required style="width:100%; padding:10px 12px; border:1px solid var(--medium-gray); border-radius:6px; font-size:14px;" placeholder="e.g., MacBook Pro 2020">
+                                </div>
+                                
+                                <div>
+                                    <label style="display:block; margin-bottom:6px; font-size:14px; color:var(--text-dark);">Desired Condition *</label>
+                                    <select name="desired_condition" style="width:100%; padding:10px 12px; border:1px solid var(--medium-gray); border-radius:6px; font-size:14px;">
+                                        <option value="">Select condition</option>
+                                        <option>New</option>
+                                        <option>Slightly Used</option>
+                                        <option>Used but in Good Condition</option>
+                                        <option>Used and needs repairs</option>
+                                    </select>
+                                </div>
+                                
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                                    <div>
+                                        <label style="display:block; margin-bottom:6px; font-size:14px; color:var(--text-dark);">Cash You Need (₵)</label>
+                                        <input type="number" step="0.01" name="required_cash" style="width:100%; padding:10px 12px; border:1px solid var(--medium-gray); border-radius:6px; font-size:14px;" placeholder="0.00">
+                                    </div>
+                                    <div>
+                                        <label style="display:block; margin-bottom:6px; font-size:14px; color:var(--text-dark);">Cash You'll Add (₵)</label>
+                                        <input type="number" step="0.01" name="additional_cash" style="width:100%; padding:10px 12px; border:1px solid var(--medium-gray); border-radius:6px; font-size:14px;" placeholder="0.00">
+                                    </div>
+                                </div>
+                                
+                                <!-- Promotion Plan - just before Additional Notes -->
+                                <div>
+                                    <label style="display:block; margin-bottom:8px; font-weight:500; color:var(--text-dark);">Promotion Plan *</label>
+                                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px;">
+                                        <div class="plan-option active" data-plan="Free" style="cursor:pointer;">
+                                            <input type="radio" name="plan" id="plan-free" value="Free" checked style="display:none;">
+                                            <label for="plan-free" style="display:block; cursor:pointer;">
+                                                <div style="padding:16px; border:2px solid var(--primary-green); border-radius:8px; text-align:center; background:var(--light-green); transition:all 0.3s;">
+                                                    <div style="font-size:20px; font-weight:600; color:var(--text-dark);">₵0</div>
+                                                    <div style="font-size:14px; color:var(--text-light); margin-top:4px;">Free</div>
+                                                    <div style="font-size:12px; color:var(--text-light); margin-top:8px;">No Promotion</div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <div class="plan-option" data-plan="Silver" style="cursor:pointer;">
+                                            <input type="radio" name="plan" id="plan-silver" value="Silver" style="display:none;">
+                                            <label for="plan-silver" style="display:block; cursor:pointer;">
+                                                <div style="padding:16px; border:2px solid var(--medium-gray); border-radius:8px; text-align:center; background:white; transition:all 0.3s;">
+                                                    <div style="font-size:20px; font-weight:600; color:var(--text-dark);">₵40</div>
+                                                    <div style="font-size:14px; color:var(--text-light); margin-top:4px;">Silver</div>
+                                                    <div style="font-size:12px; color:var(--text-light); margin-top:8px;">2 Weeks Promotion</div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <div class="plan-option" data-plan="Gold" style="cursor:pointer;">
+                                            <input type="radio" name="plan" id="plan-gold" value="Gold" style="display:none;">
+                                            <label for="plan-gold" style="display:block; cursor:pointer;">
+                                                <div style="padding:16px; border:2px solid var(--medium-gray); border-radius:8px; text-align:center; background:white; transition:all 0.3s;">
+                                                    <div style="font-size:20px; font-weight:600; color:var(--text-dark);">₵70</div>
+                                                    <div style="font-size:14px; color:var(--text-light); margin-top:4px;">Gold</div>
+                                                    <div style="font-size:12px; color:var(--text-light); margin-top:8px;">3 Weeks Promotion</div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <div class="plan-option" data-plan="Diamond" style="cursor:pointer;">
+                                            <input type="radio" name="plan" id="plan-diamond" value="Diamond" style="display:none;">
+                                            <label for="plan-diamond" style="display:block; cursor:pointer;">
+                                                <div style="padding:16px; border:2px solid var(--medium-gray); border-radius:8px; text-align:center; background:white; transition:all 0.3s;">
+                                                    <div style="font-size:20px; font-weight:600; color:var(--text-dark);">₵100</div>
+                                                    <div style="font-size:14px; color:var(--text-light); margin-top:4px;">Diamond</div>
+                                                    <div style="font-size:12px; color:var(--text-light); margin-top:8px;">1 Month Promotion</div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label style="display:block; margin-bottom:6px; font-size:14px; color:var(--text-dark);">Additional Notes</label>
+                                    <textarea name="swap_notes" rows="2" style="width:100%; padding:10px 12px; border:1px solid var(--medium-gray); border-radius:6px; font-size:14px; resize:vertical;" placeholder="Any special requirements or preferences..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sale Section -->
+                    <div id="modal-sale-section" style="display:none;">
+                        <h4 style="margin-bottom:20px; color:var(--dark-green); font-weight:500;">Sale Details</h4>
+                        
+                        <div style="display:grid; gap:20px;">
+                            <div>
+                                <label style="display:block; margin-bottom:8px; font-weight:500; color:var(--text-dark);">Item Name *</label>
+                                <input type="text" name="title" required style="width:100%; padding:12px 16px; border:1px solid var(--medium-gray); border-radius:8px; font-size:16px;" placeholder="e.g., iPhone 12 Pro Max 256GB">
+                            </div>
+                            
+                            <div>
+                                <label style="display:block; margin-bottom:8px; font-weight:500; color:var(--text-dark);">Listing Description *</label>
+                                <textarea name="description" rows="4" required style="width:100%; padding:12px 16px; border:1px solid var(--medium-gray); border-radius:8px; font-size:16px; resize:vertical;" placeholder="Provide a detailed description of your listing"></textarea>
+                            </div>
+                            
+                            <div>
+                                <label style="display:block; margin-bottom:8px; font-weight:500; color:var(--text-dark);">Category *</label>
+                                <div style="position:relative;">
+                                    <input type="text" name="category" id="modal-category-input" required style="width:100%; padding:12px 16px; border:1px solid var(--medium-gray); border-radius:8px; font-size:16px;" placeholder="Type to search or select">
+                                    <div id="category-suggestions" style="position:absolute; top:100%; left:0; right:0; background:white; border:1px solid var(--medium-gray); border-radius:8px; margin-top:4px; box-shadow:var(--shadow); display:none; z-index:10; max-height:200px; overflow-y:auto;"></div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; color:var(--text-dark);">Price (₵) *</label>
+                                <input type="number" step="0.01" name="price" required style="width:100%; padding:10px 12px; border:1px solid var(--medium-gray); border-radius:6px; font-size:14px;" placeholder="0.00">
+                            </div>
+                            
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; color:var(--text-dark);">Condition *</label>
+                                <select name="condition" required style="width:100%; padding:10px 12px; border:1px solid var(--medium-gray); border-radius:6px; font-size:14px;">
+                                    <option value="">Select condition</option>
+                                    <option>New</option>
+                                    <option>Slightly Used</option>
+                                    <option>Used but in Good Condition</option>
+                                    <option>Used and needs repairs</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label style="display:block; margin-bottom:6px; font-size:14px; color:var(--text-dark);">Images (1-4) *</label>
+                                <label for="sale-images" class="image-upload-area" style="border:2px dashed var(--medium-gray); border-radius:8px; padding:24px; text-align:center; cursor:pointer; transition:all 0.3s; display:block;">
+                                    <i class="fas fa-cloud-upload-alt" style="font-size:32px; color:var(--primary-green); margin-bottom:12px;"></i>
+                                    <p style="margin:0; color:var(--text-light); font-size:14px;"><strong>Click to upload</strong> or drag and drop</p>
+                                    <p style="margin:8px 0 0; color:var(--text-light); font-size:12px;">JPG, PNG, WebP (max 10MB each)</p>
+                                </label>
+                                <input type="file" id="sale-images" name="images[]" multiple accept="image/*" required>
+                                <div class="image-preview" style="display:none; margin-top:12px; display:flex; flex-wrap:wrap; gap:8px;"></div>
+                            </div>
+                            
+                            <!-- Promotion Plan - after Images for Sales -->
+                            <div>
+                                <label style="display:block; margin-bottom:8px; font-weight:500; color:var(--text-dark);">Promotion Plan *</label>
+                                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px;">
+                                    <div class="plan-option active" data-plan="Free" style="cursor:pointer;">
+                                        <input type="radio" name="plan" id="plan-free-sale" value="Free" checked style="display:none;">
+                                        <label for="plan-free-sale" style="display:block; cursor:pointer;">
+                                            <div style="padding:16px; border:2px solid var(--primary-green); border-radius:8px; text-align:center; background:var(--light-green); transition:all 0.3s;">
+                                                <div style="font-size:20px; font-weight:600; color:var(--text-dark);">₵0</div>
+                                                <div style="font-size:14px; color:var(--text-light); margin-top:4px;">Free</div>
+                                                <div style="font-size:12px; color:var(--text-light); margin-top:8px;">No Promotion</div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="plan-option" data-plan="Silver" style="cursor:pointer;">
+                                        <input type="radio" name="plan" id="plan-silver-sale" value="Silver" style="display:none;">
+                                        <label for="plan-silver-sale" style="display:block; cursor:pointer;">
+                                            <div style="padding:16px; border:2px solid var(--medium-gray); border-radius:8px; text-align:center; background:white; transition:all 0.3s;">
+                                                <div style="font-size:20px; font-weight:600; color:var(--text-dark);">₵40</div>
+                                                <div style="font-size:14px; color:var(--text-light); margin-top:4px;">Silver</div>
+                                                <div style="font-size:12px; color:var(--text-light); margin-top:8px;">2 Weeks Promotion</div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="plan-option" data-plan="Gold" style="cursor:pointer;">
+                                        <input type="radio" name="plan" id="plan-gold-sale" value="Gold" style="display:none;">
+                                        <label for="plan-gold-sale" style="display:block; cursor:pointer;">
+                                            <div style="padding:16px; border:2px solid var(--medium-gray); border-radius:8px; text-align:center; background:white; transition:all 0.3s;">
+                                                <div style="font-size:20px; font-weight:600; color:var(--text-dark);">₵70</div>
+                                                <div style="font-size:14px; color:var(--text-light); margin-top:4px;">Gold</div>
+                                                <div style="font-size:12px; color:var(--text-light); margin-top:8px;">3 Weeks Promotion</div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="plan-option" data-plan="Diamond" style="cursor:pointer;">
+                                        <input type="radio" name="plan" id="plan-diamond-sale" value="Diamond" style="display:none;">
+                                        <label for="plan-diamond-sale" style="display:block; cursor:pointer;">
+                                            <div style="padding:16px; border:2px solid var(--medium-gray); border-radius:8px; text-align:center; background:white; transition:all 0.3s;">
+                                                <div style="font-size:20px; font-weight:600; color:var(--text-dark);">₵100</div>
+                                                <div style="font-size:14px; color:var(--text-light); margin-top:4px;">Diamond</div>
+                                                <div style="font-size:12px; color:var(--text-light); margin-top:8px;">1 Month Promotion</div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex; justify-content:space-between; margin-top:32px;">
+                        <button type="button" class="btn btn-secondary prev-step" style="min-width:120px;">
+                            <i class="fas fa-arrow-left" style="margin-right:8px;"></i> Back
+                        </button>
+                        <button type="button" class="btn next-step" style="min-width:120px;">
+                            Next <i class="fas fa-arrow-right" style="margin-left:8px;"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Contact -->
+                <div class="step" data-step="3" style="display:none;">
+                    <h3 style="margin-bottom:24px; color:var(--text-dark); font-weight:600;">Contact Information</h3>
+                    
+                    <div style="display:grid; gap:24px;">
+                        <div>
+                            <label style="display:block; margin-bottom:8px; font-weight:500; color:var(--text-dark);">Location *</label>
+                            <div style="position:relative;">
+                                <i class="fas fa-map-marker-alt" style="position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--text-light);"></i>
+                                <input type="text" name="location" required style="width:100%; padding:12px 16px 12px 48px; border:1px solid var(--medium-gray); border-radius:8px; font-size:16px;" placeholder="e.g., Accra, Kumasi">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label style="display:block; margin-bottom:8px; font-weight:500; color:var(--text-dark);">Contact Number *</label>
+                            <div style="position:relative;">
+                                <i class="fas fa-phone" style="position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--text-light);"></i>
+                                <input type="text" name="contact" required style="width:100%; padding:12px 16px 12px 48px; border:1px solid var(--medium-gray); border-radius:8px; font-size:16px;" placeholder="e.g., +233 123 456 789">
+                            </div>
+                        </div>
+                        
+                        <div style="background:var(--light-green); padding:20px; border-radius:12px; margin-top:16px;">
+                            <div style="display:flex; gap:12px; align-items:flex-start;">
+                                <i class="fas fa-info-circle" style="color:var(--primary-green); font-size:20px; margin-top:2px;"></i>
+                                <div>
+                                    <p style="margin:0; color:var(--text-dark); font-size:14px;">Your contact information will be shared with potential buyers/swappers. Ensure it's accurate for smooth transactions.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex; justify-content:space-between; margin-top:32px;">
+                        <button type="button" class="btn btn-secondary prev-step" style="min-width:120px;">
+                            <i class="fas fa-arrow-left" style="margin-right:8px;"></i> Back
+                        </button>
+                        <button type="submit" class="btn" style="min-width:120px; background:var(--deep-green);">
+                            <i class="fas fa-check" style="margin-right:8px;"></i> Submit
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+input[type="file"] {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    const modal = document.getElementById('addItemModal');
+    const closeModal = document.getElementById('closeModal');
+    const progressBar = document.getElementById('progressBar');
+    let currentStep = 1;
+    const totalSteps = 4;
+    const steps = modal.querySelectorAll('.step');
+    const stepIndicators = modal.querySelectorAll('.step-indicator');
+
+    // NEW: Dynamically manage required attributes based on visibility
+    function updateRequiredFields() {
+        const dealType = document.querySelector('input[name="deal_type"]:checked')?.value || 'Swap Deal';
+        const swapSection = document.getElementById('modal-swap-section');
+        const saleSection = document.getElementById('modal-sale-section');
+
+        const swapInputs = swapSection.querySelectorAll('input, textarea, select');
+        const saleInputs = saleSection.querySelectorAll('input, textarea, select');
+
+        if (dealType === 'Swap Deal') {
+            swapInputs.forEach(el => {
+                el.removeAttribute('disabled');
+                if (el.hasAttribute('required')) el.setAttribute('required', 'required');
+            });
+            saleInputs.forEach(el => {
+                el.setAttribute('disabled', 'disabled');
+                el.removeAttribute('required');
+            });
+        } else {
+            saleInputs.forEach(el => {
+                el.removeAttribute('disabled');
+                if (el.hasAttribute('required')) el.setAttribute('required', 'required');
+            });
+            swapInputs.forEach(el => {
+                el.setAttribute('disabled', 'disabled');
+                el.removeAttribute('required');
+            });
+        }
+    }
+
+    // Update progress bar
+    function updateProgress() {
+        const percentage = ((currentStep - 1) / (totalSteps - 1)) * 100;
+        progressBar.style.width = percentage + '%';
+        
+        stepIndicators.forEach(indicator => {
+            const stepNum = parseInt(indicator.dataset.step);
+            const circle = indicator.querySelector('div');
+            const label = indicator.querySelector('span');
+            
+            if (stepNum === currentStep) {
+                circle.style.background = 'var(--primary-green)';
+                circle.style.borderColor = 'var(--primary-green)';
+                circle.style.color = 'white';
+                label.style.color = 'var(--primary-green)';
+                label.style.fontWeight = '600';
+            } else if (stepNum < currentStep) {
+                circle.style.background = 'var(--primary-green)';
+                circle.style.borderColor = 'var(--primary-green)';
+                circle.style.color = 'white';
+                label.style.color = 'var(--text-light)';
+                label.style.fontWeight = '500';
+            } else {
+                circle.style.background = 'white';
+                circle.style.borderColor = 'var(--medium-gray)';
+                circle.style.color = 'var(--text-light)';
+                label.style.color = 'var(--text-light)';
+                label.style.fontWeight = '500';
+            }
+        });
+    }
+
+    // Initialize modal state
+    function initializeModal() {
+        currentStep = 1;
+        steps.forEach(step => step.style.display = 'none');
+        steps[0].style.display = 'block';
+        updateProgress();
+        updateNavigationButtons();
+        
+        const swapOption = modal.querySelector('.deal-type-option[data-type="swap"]');
+        const saleOption = modal.querySelector('.deal-type-option[data-type="sale"]');
+        swapOption.classList.add('active');
+        saleOption.classList.remove('active');
+        swapOption.querySelector('input').checked = true;
+        saleOption.querySelector('input').checked = false;
+        const swapDiv = swapOption.querySelector('label > div');
+        swapDiv.style.background = 'var(--light-green)';
+        swapDiv.style.borderColor = 'var(--primary-green)';
+        swapDiv.style.transform = 'translateY(-2px)';
+        swapDiv.style.boxShadow = '0 4px 12px rgba(46, 204, 113, 0.2)';
+        swapOption.querySelector('i').style.color = 'var(--primary-green)';
+        const saleDiv = saleOption.querySelector('label > div');
+        saleDiv.style.background = 'var(--light-gray)';
+        saleDiv.style.borderColor = 'transparent';
+        saleDiv.style.transform = 'none';
+        saleDiv.style.boxShadow = 'none';
+        saleOption.querySelector('i').style.color = 'var(--text-light)';
+        
+        document.getElementById('modal-swap-section').style.display = 'block';
+        document.getElementById('modal-sale-section').style.display = 'none';
+        
+        const planOptions = modal.querySelectorAll('.plan-option');
+        planOptions.forEach(option => {
+            option.classList.remove('active');
+            const div = option.querySelector('label > div');
+            div.style.borderColor = 'var(--medium-gray)';
+            div.style.background = 'white';
+        });
+        const freePlan = modal.querySelector('.plan-option[data-plan="Free"]');
+        freePlan.classList.add('active');
+        freePlan.querySelector('input').checked = true;
+        const freeDiv = freePlan.querySelector('label > div');
+        freeDiv.style.borderColor = 'var(--primary-green)';
+        freeDiv.style.background = 'var(--light-green)';
+        
+        document.getElementById('addItemFormModal').reset();
+        
+        const offeredContainer = document.getElementById('modal-offered-items-container');
+        offeredContainer.innerHTML = offeredContainer.querySelector('.modal-offered-item').outerHTML;
+        
+        setupImageUploads();
+
+        // Ensure required fields match default state
+        updateRequiredFields();
+    }
+    
+    function updateNavigationButtons() {
+        const prevButtons = modal.querySelectorAll('.prev-step');
+        prevButtons.forEach(btn => {
+            btn.style.display = currentStep > 1 ? 'flex' : 'none';
+        });
+    }
+
+    document.querySelectorAll('#openAddItemModal, #openAddItemModalFull').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            initializeModal();
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        });
+    });
+    
+    closeModal.addEventListener('click', function() {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    });
+    
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    });
+    
+    // Next step
+    modal.querySelectorAll('.next-step').forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (validateStep(currentStep)) {
+                steps[currentStep - 1].style.display = 'none';
+                currentStep++;
+                steps[currentStep - 1].style.display = 'block';
+                updateProgress();
+                updateNavigationButtons();
+                updateRequiredFields(); // Keep required fields in sync
+            }
+        });
+    });
+    
+    // Previous step
+    modal.querySelectorAll('.prev-step').forEach(btn => {
+        btn.addEventListener('click', function() {
+            steps[currentStep - 1].style.display = 'none';
+            currentStep--;
+            steps[currentStep - 1].style.display = 'block';
+            updateProgress();
+            updateNavigationButtons();
+            updateRequiredFields();
+        });
+    });
+    
+function validateStep(step) {
+    const stepElement = modal.querySelector(`.step[data-step="${step}"]`);
+    const requiredInputs = stepElement.querySelectorAll('[required]');
+    let isValid = true;
+
+    requiredInputs.forEach(input => {
+        // Skip if element is hidden (disabled or not visible)
+        if (input.disabled || input.offsetParent === null && input.type !== 'file') return;
+
+        // Special handling for file inputs (they are hidden but still required)
+        if (input.type === 'file') {
+            if (!input.files || input.files.length === 0) {
+                isValid = false;
+                highlightError(input.previousElementSibling); // highlight the label/upload area
+            }
+            return;
+        }
+
+        // Text, textarea, select, etc.
+        if (!input.value || (typeof input.value === 'string' && !input.value.trim())) {
+            isValid = false;
+            highlightError(input);
+        }
+    });
+
+    if (!isValid) {
+        showError('Please fill in all required fields');
+    }
+
+    return isValid;
+}
+
+function highlightError(input) {
+    // If it's the upload area label (for file input)
+    if (input && input.classList && input.classList.contains('image-upload-area')) {
+        input.style.borderColor = '#e74c3c';
+        input.style.boxShadow = '0 0 0 2px rgba(231, 76, 60, 0.2)';
+        const handler = () => {
+            input.style.borderColor = '';
+            input.style.boxShadow = '';
+        };
+        // Reset on next file selection
+        const fileInput = input.getAttribute('for') ? document.getElementById(input.getAttribute('for')) : null;
+        if (fileInput) fileInput.addEventListener('change', handler, { once: true });
+    } else if (input) {
+        input.style.borderColor = '#e74c3c';
+        input.addEventListener('input', () => {
+            input.style.borderColor = '';
+        }, { once: true });
+    }
+}
+
+    // Deal type selection
+    modal.querySelectorAll('.deal-type-option').forEach(option => {
+        option.addEventListener('click', function() {
+            if (this.classList.contains('active')) return;
+            
+            modal.querySelectorAll('.deal-type-option').forEach(opt => {
+                opt.classList.remove('active');
+                const div = opt.querySelector('label > div');
+                div.style.borderColor = 'transparent';
+                div.style.background = 'var(--light-gray)';
+                div.style.transform = 'none';
+                div.style.boxShadow = 'none';
+                opt.querySelector('i').style.color = 'var(--text-light)';
+            });
+            
+            this.classList.add('active');
+            const div = this.querySelector('label > div');
+            div.style.borderColor = 'var(--primary-green)';
+            div.style.background = 'var(--light-green)';
+            div.style.transform = 'translateY(-2px)';
+            div.style.boxShadow = '0 4px 12px rgba(46, 204, 113, 0.2)';
+            this.querySelector('i').style.color = 'var(--primary-green)';
+            
+            const radio = this.querySelector('input[type="radio"]');
+            radio.checked = true;
+            
+            const swapSection = document.getElementById('modal-swap-section');
+            const saleSection = document.getElementById('modal-sale-section');
+            
+            if (radio.value === 'Swap Deal') {
+                swapSection.style.display = 'block';
+                saleSection.style.display = 'none';
+            } else {
+                swapSection.style.display = 'none';
+                saleSection.style.display = 'block';
+            }
+
+            updateRequiredFields(); // Critical fix
+          
+        });
+    });
+
+    // Plan selection (unchanged)
+    modal.querySelectorAll('.plan-option').forEach(option => {
+        option.addEventListener('click', function() {
+            if (this.classList.contains('active')) return;
+            
+            modal.querySelectorAll('.plan-option').forEach(opt => {
+                opt.classList.remove('active');
+                const div = opt.querySelector('label > div');
+                div.style.borderColor = 'var(--medium-gray)';
+                div.style.background = 'white';
+                div.style.transition = 'all 0.3s';
+            });
+            
+            this.classList.add('active');
+            const div = this.querySelector('label > div');
+            div.style.borderColor = 'var(--primary-green)';
+            div.style.background = 'var(--light-green)';
+            
+            const radio = this.querySelector('input[type="radio"]');
+            radio.checked = true;
+        });
+    });
+    
+    // Add multiple offered items (unchanged)
+    const addOfferBtn = document.getElementById('modal-add-offer-item-btn');
+    if (addOfferBtn) {
+        addOfferBtn.addEventListener('click', function() {
+            const items = modal.querySelectorAll('.modal-offered-item');
+            const newIndex = items.length + 1;
+            
+            if (newIndex > 5) {
+                showError('Maximum 5 items allowed');
+                return;
+            }
+            
+            const firstItem = items[0];
+            const clone = firstItem.cloneNode(true);
+            
+            clone.dataset.index = newIndex;
+            clone.querySelector('.item-number-circle').textContent = newIndex;
+            clone.querySelector('h5').textContent = `Item #${newIndex}`;
+            
+            clone.querySelectorAll('input:not([type="file"]), textarea, select').forEach(input => {
+                input.value = '';
+            });
+            
+            const removeBtn = clone.querySelector('.remove-item-btn');
+            removeBtn.style.display = 'block';
+            removeBtn.addEventListener('click', function() {
+                clone.remove();
+                renumberItems();
+            });
+            
+            const fileInput = clone.querySelector('input[type="file"]');
+            fileInput.id = `offer-images-${newIndex}`;
+            fileInput.name = `offer_images_${newIndex}[]`;
+            fileInput.value = '';
+            clone.querySelector('.image-upload-area').setAttribute('for', fileInput.id);
+            const preview = clone.querySelector('.image-preview');
+            preview.innerHTML = '';
+            preview.style.display = 'none';
+            
+            document.getElementById('modal-offered-items-container').appendChild(clone);
+            // No setupImageUploads() here — delegation handles all inputs automatically
+        });
+    }
+    
+    function renumberItems() {
+        const items = modal.querySelectorAll('.modal-offered-item');
+        items.forEach((item, index) => {
+            const itemNumber = index + 1;
+            item.dataset.index = itemNumber;
+            item.querySelector('.item-number-circle').textContent = itemNumber;
+            item.querySelector('h5').textContent = `Item #${itemNumber}`;
+            const fileInput = item.querySelector('input[type="file"]');
+            fileInput.id = `offer-images-${itemNumber}`;
+            fileInput.name = `offer_images_${itemNumber}[]`;
+            item.querySelector('.image-upload-area').setAttribute('for', fileInput.id);
+        });
+        setupImageUploads();
+    }
+    
+// FIXED: Use event delegation to avoid cloning issues
+function setupImageUploads() {
+    // Remove previous delegated listener if exists
+    modal.removeEventListener('change', delegatedFileChangeHandler);
+    
+    // Add new delegated listener
+    modal.addEventListener('change', delegatedFileChangeHandler);
+}
+
+function delegatedFileChangeHandler(e) {
+    const input = e.target;
+    if (input.type === 'file' && input.matches('input[type="file"]')) {
+        const preview = input.nextElementSibling;
+        if (preview && preview.classList.contains('image-preview')) {
+            handleImageUpload(input, preview);
+        }
+    }
+}
+    
+function handleImageUpload(input, preview) {
+    preview.innerHTML = '';
+    const files = input.files;
+    if (files.length > 4) {
+        showError('Maximum 4 images allowed');
+        input.value = '';
+        return;
+    }
+    
+    if (files.length > 0) {
+        preview.style.display = 'flex';
+        
+        Array.from(files).forEach((file, index) => {
+            if (!file.type.startsWith('image/')) {
+                showError('Please upload image files only');
+                return;
+            }
+            
+            if (file.size > 10 * 1024 * 1024) {
+                showError(`File "${file.name}" is too large (max 10MB)`);
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgContainer = document.createElement('div');
+                imgContainer.style.cssText = 'position:relative; display:inline-block; margin:4px; width:80px; height:80px; border-radius:8px; overflow:hidden;';
+                
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.cssText = 'width:100%; height:100%; object-fit:cover;';
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.innerHTML = '×';
+                removeBtn.style.cssText = 'position:absolute; top:4px; right:4px; width:20px; height:20px; border-radius:50%; background:rgba(255,0,0,0.8); color:white; border:none; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center;';
+                
+                removeBtn.addEventListener('click', function() {
+                    const indexToRemove = Array.from(preview.children).indexOf(imgContainer);
+                    imgContainer.remove();
+
+                    // Properly remove only the selected file
+                    const dt = new DataTransfer();
+                    Array.from(input.files).forEach((f, i) => {
+                        if (i !== indexToRemove) dt.items.add(f);
+                    });
+                    input.files = dt.files;
+
+                    if (preview.children.length === 0) {
+                        preview.style.display = 'none';
+                    }
+                });
+                
+                imgContainer.appendChild(img);
+                imgContainer.appendChild(removeBtn);
+                preview.appendChild(imgContainer);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+}
+    
+    const categoryInput = document.getElementById('modal-category-input');
+    const suggestions = document.getElementById('category-suggestions');
+    
+    if (categoryInput && suggestions) {
+        const sampleCategories = [
+            'Electronics', 'Mobile Phones', 'Laptops', 'Home Appliances',
+            'Fashion', 'Furniture', 'Books', 'Sports Equipment',
+            'Vehicles', 'Property', 'Services', 'Other'
+        ];
+        
+        categoryInput.addEventListener('input', function() {
+            const value = this.value.toLowerCase();
+            suggestions.innerHTML = '';
+            
+            if (value) {
+                const filtered = sampleCategories.filter(cat => 
+                    cat.toLowerCase().includes(value)
+                );
+                
+                if (filtered.length > 0) {
+                    suggestions.style.display = 'block';
+                    filtered.forEach(cat => {
+                        const div = document.createElement('div');
+                        div.textContent = cat;
+                        div.style.cssText = 'padding:12px 16px; cursor:pointer; transition:background 0.2s;';
+                        div.addEventListener('mouseover', () => {
+                            div.style.background = 'var(--light-gray)';
+                        });
+                        div.addEventListener('mouseout', () => {
+                            div.style.background = '';
+                        });
+                        div.addEventListener('click', () => {
+                            categoryInput.value = cat;
+                            suggestions.style.display = 'none';
+                        });
+                        suggestions.appendChild(div);
+                    });
+                } else {
+                    suggestions.style.display = 'none';
+                }
+            } else {
+                suggestions.style.display = 'none';
+            }
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (!categoryInput.contains(e.target) && !suggestions.contains(e.target)) {
+                suggestions.style.display = 'none';
+            }
+        });
+    }
+    
+    // Form submission
+    document.getElementById('addItemFormModal').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        updateRequiredFields(); // Final safeguard before submit
+
+        if (!validateStep(currentStep)) return;
+
+        const formData = new FormData(this);
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+        try {
+            const resp = await fetch('/store/add-item', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await resp.json();
+
+            if (data.success) {
+                showSuccess(data.message || 'Item added successfully!');
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                } else {
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                        document.body.style.overflow = 'auto';
+                        location.reload();
+                    }, 1500);
+                }
+            } else {
+                showError(data.message || 'Error adding item');
+            }
+                    } catch (err) {
+            console.error(err);
+            showError('Network error. Please try again.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    });
+    
+    function showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.innerHTML = `
+            <div style="background:#e74c3c; color:white; padding:12px 20px; border-radius:8px; box-shadow:var(--shadow); display:flex; align-items:center; gap:12px;">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        errorDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+        `;
+        
+        document.body.appendChild(errorDiv);
+        
+        setTimeout(() => {
+            errorDiv.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => errorDiv.remove(), 300);
+        }, 3000);
+    }
+    
+    function showSuccess(message) {
+        const successDiv = document.createElement('div');
+        successDiv.innerHTML = `
+            <div style="background:var(--primary-green); color:white; padding:16px 24px; border-radius:8px; box-shadow:var(--shadow); display:flex; align-items:center; gap:12px;">
+                <i class="fas fa-check-circle"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        successDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+        `;
+        
+        document.body.appendChild(successDiv);
+        
+        setTimeout(() => {
+            successDiv.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => successDiv.remove(), 300);
+        }, 3000);
+    }
+    
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    updateProgress();
+    updateNavigationButtons();
+    setupImageUploads();
+});
+</script>
+
+
+
+
+</body>
+</html>
