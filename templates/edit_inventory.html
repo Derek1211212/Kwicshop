@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Edit Listing – {{ listing.title }}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+:root {
+    --primary:#16a34a;
+    --dark:#1f2937;
+    --muted:#6b7280;
+    --bg:#f9fafb;
+    --card:#ffffff;
+    --danger:#dc2626;
+}
+
+body { margin:0; font-family:Inter,system-ui,sans-serif; background:var(--bg); color:var(--dark); }
+.container { max-width:1000px; margin:auto; padding:30px 20px; }
+.header { display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; }
+.header h2 { margin:0; }
+.back { text-decoration:none; color:var(--primary); font-weight:600; }
+
+.card { background:var(--card); border-radius:14px; padding:25px; box-shadow:0 8px 24px rgba(0,0,0,.06); margin-bottom:25px; }
+.section-title { font-size:1.1rem; margin-bottom:15px; font-weight:700; }
+.form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:15px; }
+label { font-size:.85rem; font-weight:600; }
+input, select, textarea { width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; font-size:.9rem; }
+textarea { resize:vertical; min-height:90px; }
+.image-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:10px; margin-top:10px; }
+.image-box { position:relative; }
+.image-box img { width:100%; height:100px; object-fit:cover; border-radius:6px; margin-bottom:5px; }
+.remove-img { position:absolute; top:2px; right:5px; background:#dc2626; color:#fff; border-radius:50%; width:18px; height:18px; text-align:center; cursor:pointer; line-height:18px; font-size:12px; display:flex; justify-content:center; align-items:center; }
+.badge { padding:4px 10px; font-size:.75rem; border-radius:20px; font-weight:600; }
+.swap { background:#eef2ff; color:#4338ca; }
+.sale { background:#ecfdf5; color:#047857; }
+.offer-card { border:1px dashed #ccc; border-radius:12px; padding:15px; margin-bottom:15px; }
+.actions { display:flex; justify-content:flex-end; gap:12px; margin-top:25px; }
+.btn { padding:10px 18px; border-radius:10px; border:none; font-weight:600; cursor:pointer; }
+.save { background:var(--primary); color:#fff; }
+.cancel { background:#e5e7eb; }
+.overlay {
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.5);
+    z-index:9999;
+    justify-content:center;
+    align-items:center;
+    color:#fff;
+    font-size:1.5rem;
+    font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div class="header">
+    <h2>Edit Listing</h2>
+    <a href="{{ url_for('store_inventory', slug=store.slug) }}" class="back">
+        ← Back to Inventory
+    </a>
+</div>
+
+<form method="POST" enctype="multipart/form-data" id="editForm">
+
+<!-- Listing Info -->
+<div class="card">
+    <div class="section-title">
+        Listing Details
+        {% if listing.deal_type == 'Swap Deal' %}
+            <span class="badge swap">Swap Deal</span>
+        {% else %}
+            <span class="badge sale">Outright Sale</span>
+        {% endif %}
+    </div>
+
+    <div class="form-grid">
+        <div><label>Title</label><input name="title" value="{{ listing.title }}" required></div>
+        <div><label>Category</label><input name="category" value="{{ listing.category }}"></div>
+        <div><label>Condition</label><input name="condition" value="{{ listing.condition }}"></div>
+        <div><label>Status</label>
+            <select name="status">
+                <option value="active" {{ 'selected' if listing.status=='active' }}>Active</option>
+                <option value="inactive" {{ 'selected' if listing.status=='inactive' }}>Inactive</option>
+            </select>
+        </div>
+        <div><label>Location</label><input name="location" value="{{ listing.location }}"></div>
+        <div><label>Contact</label><input name="contact" value="{{ listing.contact }}"></div>
+    </div>
+
+    <div style="margin-top:15px;">
+        <label>Description</label>
+        <textarea name="description">{{ listing.description }}</textarea>
+    </div>
+</div>
+
+<!-- Sale Fields -->
+{% if listing.deal_type != 'Swap Deal' %}
+<div class="card">
+    <div class="section-title">Pricing</div>
+    <input name="price" value="{{ listing.price }}">
+</div>
+{% endif %}
+
+<!-- Swap Preferences -->
+{% if listing.deal_type == 'Swap Deal' %}
+<div class="card">
+    <div class="section-title">Swap Preferences</div>
+    <div class="form-grid">
+        <div><label>Desired Swap</label><input name="desired_swap" value="{{ listing.desired_swap }}"></div>
+        <div><label>Required Cash</label><input type="number" name="required_cash" value="{{ listing.required_cash }}"></div>
+        <div><label>Additional Cash</label><input type="number" step="0.01" name="additional_cash" value="{{ listing.additional_cash }}"></div>
+    </div>
+    <div style="margin-top:15px;">
+        <label>Swap Notes</label>
+        <textarea name="swap_notes">{{ listing.swap_notes }}</textarea>
+    </div>
+</div>
+{% endif %}
+
+<!-- Main Images -->
+<div class="card">
+    <div class="section-title">Main Listing Images</div>
+    <div class="image-grid">
+        {% set main_imgs = ['image_url','image1','image2','image3','image4'] %}
+        {% for img_field in main_imgs %}
+        <div class="image-box">
+            {% if listing[img_field] %}
+            <img src="{{ listing[img_field] }}">
+            <span class="remove-img" onclick="this.previousElementSibling.src=''; this.parentNode.querySelector('input').value=''">×</span>
+            {% endif %}
+            <input type="file" name="{{ img_field }}_file">
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Offered Items -->
+{% if listing.deal_type=='Swap Deal' and offers %}
+<div class="card">
+    <div class="section-title">Offered Items</div>
+    {% set offer_idx = 0 %}
+    {% for offer in offers %}
+    <div class="offer-card">
+        <strong>Item {{ offer_idx + 1 }}</strong>
+
+        <label>Title</label>
+        <input name="offer_title[]" value="{{ offer.title }}">
+
+        <label>Description</label>
+        <textarea name="offer_description[]">{{ offer.description }}</textarea>
+
+        <label>Condition</label>
+        <input name="offer_condition[]" value="{{ offer.condition }}">
+
+        <div class="image-grid">
+            {% for img_field in ['image_url','image1','image2','image3','image4'] %}
+            <div class="image-box">
+                {% if offer[img_field] %}
+                <img src="{{ offer[img_field] }}">
+                <span class="remove-img" onclick="this.previousElementSibling.src=''; this.parentNode.querySelector('input').value=''">×</span>
+                {% endif %}
+                <input type="file" name="offer_{{ offer_idx }}_{{ img_field }}">
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% set offer_idx = offer_idx + 1 %}
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Actions -->
+<div class="actions">
+    <a href="{{ url_for('store_inventory', slug=store.slug) }}" class="btn cancel">Cancel</a>
+    <button type="submit" class="btn save">Save Changes</button>
+</div>
+
+</form>
+
+<div class="overlay" id="overlay">Saving...</div>
+
+<script>
+document.getElementById('editForm').addEventListener('submit', function(e){
+    document.getElementById('overlay').style.display = 'flex';
+});
+</script>
+
+</div>
+</body>
+</html>

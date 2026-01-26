@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{{ store.name }} – Inventory</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+:root {
+    --primary: #16a34a;
+    --dark: #1f2937;
+    --muted: #6b7280;
+    --bg: #f9fafb;
+    --card: #ffffff;
+}
+
+body {
+    margin: 0;
+    font-family: Inter, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--dark);
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 30px 20px;
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.header h2 {
+    margin: 0;
+    font-size: 1.6rem;
+}
+
+.back-btn {
+    text-decoration: none;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Grid */
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* Card */
+.card {
+    background: var(--card);
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform .25s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+}
+
+.card img {
+    width: 100%;
+    height: 190px;
+    object-fit: cover;
+    background: #eee;
+}
+
+.card-body {
+    padding: 15px;
+    flex: 1;
+}
+
+.card-body h4 {
+    margin: 0 0 6px;
+    font-size: 1.1rem;
+}
+
+.meta {
+    font-size: .85rem;
+    color: var(--muted);
+    margin-bottom: 10px;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: .75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.swap {
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+.sale {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.price {
+    font-weight: 700;
+    margin-top: 6px;
+}
+
+/* Actions */
+.card-actions {
+    padding: 12px 15px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.edit-btn {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: .85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.edit-btn:hover {
+    opacity: .9;
+}
+
+.status {
+    font-size: .8rem;
+    font-weight: 600;
+    color: {{ 'green' }};
+}
+
+/* Empty state */
+.empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+    <div class="header">
+        <h2>{{ store.name }} — Inventory</h2>
+        <a href="/store/{{ store.slug }}" class="back-btn">
+            ← Back to Store
+        </a>
+    </div>
+
+    {% if listings %}
+    <div class="inventory-grid">
+
+        {% for item in listings %}
+        <div class="card">
+
+            {% if item.image_url %}
+                <img src="{{ item.image_url }}" alt="{{ item.title }}">
+            {% else %}
+                <img src="https://via.placeholder.com/400x300?text=No+Image">
+            {% endif %}
+
+            <div class="card-body">
+
+                {% if item.deal_type == 'Swap Deal' %}
+                    <span class="badge swap">Swap Deal</span>
+                {% else %}
+                    <span class="badge sale">Outright Sale</span>
+                {% endif %}
+
+                <h4>{{ item.title }}</h4>
+
+                <div class="meta">
+                    {{ item.category }} • {{ item.condition }}
+                </div>
+
+                {% if item.deal_type != 'Swap Deal' %}
+                    <div class="price">₵{{ item.price }}</div>
+                {% else %}
+                    <div class="meta">
+                        Wants: {{ item.desired_swap or '—' }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="card-actions">
+                <span class="status">{{ item.status|capitalize }}</span>
+
+                <!-- ✅ FIXED EDIT LINK -->
+<a href="{{ url_for('edit_inventory', slug=store.slug, listing_id=item.listing_id) }}" class="btn btn-edit">
+    <i class="fas fa-edit"></i> Edit
+</a>
+
+
+            </div>
+
+        </div>
+        {% endfor %}
+
+    </div>
+
+    {% else %}
+        <div class="empty">
+            <h3>No inventory yet</h3>
+            <p>Your listed products will appear here.</p>
+        </div>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

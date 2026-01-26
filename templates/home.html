@@ -417,19 +417,81 @@
     .page-link:hover{background:#f8fafc}
     .page-current{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:800}
 
-    /* MOBILE NAV (keep; hamburger hidden on mobile per request) */
-    .mb-nav{display:none}
-    @media (max-width:768px){
-      .nav-links{display:none}   /* Hide desktop links on mobile */
-      .hamburger{display:none}   /* REMOVE hamburger on mobile */
-      .mb-nav{display:flex;position:fixed;left:0;right:0;bottom:0;background:#fff;box-shadow:0 -6px 18px rgba(0,0,0,.08);padding:.5rem .75rem calc(.5rem + env(safe-area-inset-bottom));z-index:999;border-top-left-radius:18px;border-top-right-radius:18px}
-      body{padding-bottom:76px}
-    }
-    .mb-items{display:flex;gap:6px;align-items:center;justify-content:space-between;width:100%}
-    .mb-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:.55rem;border-radius:12px;color:#6b7280}
-    .mb-item.active{color:var(--primary-dark);background:rgba(129,199,132,.12)}
-    .mb-icon{font-size:1.25rem}
-    .mb-badge{position:absolute;top:6px;right:16px;min-width:18px;height:18px;line-height:18px;text-align:center;border-radius:9px;background:#ef4444;color:#fff;font-size:.65rem}
+/* MOBILE NAV (keep; hamburger hidden on mobile per request) */
+.mb-nav{display:none}
+
+@media (max-width:768px){
+  .nav-links{display:none}   /* Hide desktop links on mobile */
+  .hamburger{display:none}   /* REMOVE hamburger on mobile */
+
+  .mb-nav{
+    display:flex;
+    position:fixed;
+    left:0; right:0; bottom:0;
+    background:#fff;
+    box-shadow:0 -6px 18px rgba(0,0,0,.08);
+    padding:.5rem .75rem calc(.5rem + env(safe-area-inset-bottom));
+    z-index:999;
+    border-top-left-radius:18px;
+    border-top-right-radius:18px;
+  }
+
+  body{padding-bottom:76px}
+}
+
+/* ✅ FIX: equal width buttons */
+.mb-items{
+  display:grid;
+  grid-template-columns: repeat(5, 1fr); /* 5 items: Ads, Stores, My Store, Dashboard, Wishlist */
+  align-items:center;
+  width:100%;
+  gap:6px;
+}
+
+/* ✅ FIX: consistent center alignment */
+.mb-item{
+  position:relative;              /* needed for badge positioning */
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  padding:.55rem .25rem;
+  border-radius:12px;
+  color:#6b7280;
+  min-height:56px;
+  text-decoration:none;
+}
+
+/* Prevent label wrapping (causes ugly layout) */
+.mb-item .nav-label{
+  font-size:.72rem;
+  line-height:1.1;
+  white-space:nowrap;
+}
+
+.mb-item.active{
+  color:var(--primary-dark);
+  background:rgba(129,199,132,.12);
+}
+
+.mb-icon{font-size:1.25rem}
+
+/* ✅ FIX: badge anchored to wishlist button */
+.mb-badge{
+  position:absolute;
+  top:6px;
+  right:14px;
+  min-width:18px;
+  height:18px;
+  line-height:18px;
+  text-align:center;
+  border-radius:9px;
+  background:#ef4444;
+  color:#fff;
+  font-size:.65rem;
+}
+
 
     /* FOOTER */
     .site-footer{background:#111827;color:#e5e7eb;margin-top:2rem}
@@ -996,6 +1058,15 @@
         {% endif %}
       </a>
 
+
+{% if session.get('user_id') %}
+  <a href="{{ url_for('my_store_redirect') }}" class="btn btn-outline">
+    <i class="fas fa-store"></i>
+    My Store
+  </a>
+{% endif %}
+
+
       {# 🔹 New Listing button – always visible #}
       {% set create_target = url_for('dashboard', section='create-listing') %}
       <a href="{% if session.get('user_id') %}{{ create_target }}{% else %}{{ url_for('login', next=create_target) }}{% endif %}"
@@ -1003,6 +1074,12 @@
         <i class="fas fa-plus-circle" aria-hidden="true"></i>
         <span>New Listing</span>
       </a>
+
+      <a href="/shops" 
+   class="mb-item {% if request.path=='/shops' %}active{% endif %}">
+    <i class="fas fa-store mb-icon" aria-hidden="true"></i>
+    <span class="nav-label">Stores</span>
+</a>
 
       {% if session.get('user_id') %}
         <!-- Desktop nav: Wishlist link -->
@@ -1052,6 +1129,14 @@
 </a>
 
 
+<a href="{{ url_for('my_store_redirect') }}"
+   class="mb-item {% if request.path.startswith('/store') %}active{% endif %}">
+  <i class="fas fa-store-alt mb-icon" aria-hidden="true"></i>
+  <span class="nav-label">My Store</span>
+</a>
+
+
+
 
       <a href="{{ url_for('dashboard') }}"
          class="mb-item {% if request.path=='/dashboard' %}active{% endif %}">
@@ -1077,6 +1162,14 @@
         <i class="fas fa-plus-circle mb-icon" aria-hidden="true"></i>
         <span class="nav-label">New Listing</span>
       </a>
+
+
+<a href="/shops" 
+   class="mb-item {% if request.path=='/shops' %}active{% endif %}">
+    <i class="fas fa-store mb-icon" aria-hidden="true"></i>
+    <span class="nav-label">Stores</span>
+</a>
+
 
       <a href="{{ url_for('login') }}" class="mb-item">
         <i class="fas fa-sign-in-alt mb-icon" aria-hidden="true"></i>

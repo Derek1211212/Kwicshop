@@ -6243,31 +6243,33 @@ def create_store():
 def store_home(slug):
     conn = get_db_connection()
     cur = conn.cursor(dictionary=True)
-
+    
     cur.execute("SELECT * FROM stores WHERE slug = %s", (slug,))
     store = cur.fetchone()
-
+    
     if not store:
         flash("Store not found.", "error")
         return redirect(url_for('home'))
-
+    
     # Optional ownership check
     if 'user_id' in session and store['user_id'] != session['user_id']:
         flash("You don't have permission to view this store.", "error")
         return redirect(url_for('home'))
-
+    
     store_id = store['store_id']
-
+    
+    # Category counts
     cur.execute("""
-        SELECT category, COUNT(*) AS total
-        FROM listings
-        WHERE store_id = %s
+        SELECT category, COUNT(*) AS total 
+        FROM listings 
+        WHERE store_id = %s 
         GROUP BY category
     """, (store_id,))
     category_counts = cur.fetchall()
-
+    
+    # Listing metrics totals
     cur.execute("""
-        SELECT
+        SELECT 
             COALESCE(SUM(lm.impressions), 0) AS views,
             COALESCE(SUM(lm.clicks), 0) AS clicks
         FROM listings l
@@ -6275,17 +6277,130 @@ def store_home(slug):
         WHERE l.store_id = %s
     """, (store_id,))
     totals = cur.fetchone()
-
+    
+    # Store metrics (30-day period)
+    cur.execute("""
+        SELECT 
+            COALESCE(SUM(views), 0) AS total_views,
+            COALESCE(SUM(clicks), 0) AS total_clicks,
+            COALESCE(SUM(chats), 0) AS total_chats,
+            COALESCE(SUM(swaps), 0) AS total_swaps,
+            COALESCE(SUM(sales), 0) AS total_sales
+        FROM store_metrics 
+        WHERE store_id = %s 
+        AND dt >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+    """, (store_id,))
+    store_metrics = cur.fetchone()
+    
+    # Previous period for comparison (30-60 days ago)
+    cur.execute("""
+        SELECT 
+            COALESCE(SUM(views), 0) AS prev_views,
+            COALESCE(SUM(clicks), 0) AS prev_clicks,
+            COALESCE(SUM(chats), 0) AS prev_chats,
+            COALESCE(SUM(swaps), 0) AS prev_swaps,
+            COALESCE(SUM(sales), 0) AS prev_sales
+        FROM store_metrics 
+        WHERE store_id = %s 
+        AND dt >= DATE_SUB(CURDATE(), INTERVAL 60 DAY)
+        AND dt < DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+    """, (store_id,))
+    prev_metrics = cur.fetchone()
+    
+    # Calculate percentage changes
+    def calculate_change(current, previous):
+        if previous == 0:
+            return 100 if current > 0 else 0
+        return round(((current - previous) / previous) * 100, 2)
+    
+    if store_metrics and prev_metrics:
+        metrics_with_change = {
+            'views': {
+                'current': store_metrics['total_views'],
+                'change': calculate_change(store_metrics['total_views'], prev_metrics['prev_views'])
+            },
+            'clicks': {
+                'current': store_metrics['total_clicks'],
+                'change': calculate_change(store_metrics['total_clicks'], prev_metrics['prev_clicks'])
+            },
+            'chats': {
+                'current': store_metrics['total_chats'],
+                'change': calculate_change(store_metrics['total_chats'], prev_metrics['prev_chats'])
+            },
+            'swaps': {
+                'current': store_metrics['total_swaps'],
+                'change': calculate_change(store_metrics['total_swaps'], prev_metrics['prev_swaps'])
+            },
+            'sales': {
+                'current': store_metrics['total_sales'],
+                'change': calculate_change(store_metrics['total_sales'], prev_metrics['prev_sales'])
+            }
+        }
+    else:
+        metrics_with_change = {
+            'views': {'current': 0, 'change': 0},
+            'clicks': {'current': 0, 'change': 0},
+            'chats': {'current': 0, 'change': 0},
+            'swaps': {'current': 0, 'change': 0},
+            'sales': {'current': 0, 'change': 0}
+        }
+    
+    # Top products by impressions
+    cur.execute("""
+        SELECT 
+            l.listing_id,
+            l.title,
+            l.image1,
+            COALESCE(lm.impressions, 0) AS impressions,
+            COALESCE(lm.clicks, 0) AS clicks,
+            ROUND(
+                CASE 
+                    WHEN COALESCE(lm.impressions, 0) = 0 THEN 0
+                    ELSE (COALESCE(lm.clicks, 0) * 100.0) / COALESCE(lm.impressions, 1)
+                END, 1
+            ) AS ctr
+        FROM listings l
+        LEFT JOIN listing_metrics lm ON l.listing_id = lm.listing_id
+        WHERE l.store_id = %s
+        ORDER BY lm.impressions DESC
+        LIMIT 5
+    """, (store_id,))
+    top_by_impressions = cur.fetchall()
+    
+    # Top products by clicks
+    cur.execute("""
+        SELECT 
+            l.listing_id,
+            l.title,
+            l.image1,
+            COALESCE(lm.impressions, 0) AS impressions,
+            COALESCE(lm.clicks, 0) AS clicks,
+            ROUND(
+                CASE 
+                    WHEN COALESCE(lm.impressions, 0) = 0 THEN 0
+                    ELSE (COALESCE(lm.clicks, 0) * 100.0) / COALESCE(lm.impressions, 1)
+                END, 1
+            ) AS ctr
+        FROM listings l
+        LEFT JOIN listing_metrics lm ON l.listing_id = lm.listing_id
+        WHERE l.store_id = %s
+        ORDER BY lm.clicks DESC
+        LIMIT 5
+    """, (store_id,))
+    top_by_clicks = cur.fetchall()
+    
     cur.close()
     conn.close()
-
+    
     return render_template(
         'store_home.html',
         store=store,
         category_counts=category_counts,
-        totals=totals or {'views': 0, 'clicks': 0}
+        totals=totals or {'views': 0, 'clicks': 0},
+        metrics=metrics_with_change,
+        top_by_impressions=top_by_impressions,
+        top_by_clicks=top_by_clicks
     )
-
 
 
 
@@ -6683,7 +6798,7 @@ def store_add_item():
         cur.close()
         conn.close()
 
-        
+
 
 
 # Add custom filter
@@ -6705,54 +6820,117 @@ def from_json_filter(value):
 def edit_store(slug):
     conn = get_db_connection()
     cur = conn.cursor(dictionary=True)
-    cur.execute("SELECT * FROM stores WHERE slug = %s AND user_id = %s", (slug, session['user_id']))
+
+    # Fetch store - only if it belongs to the logged-in user
+    cur.execute("""
+        SELECT * FROM stores 
+        WHERE slug = %s AND user_id = %s
+    """, (slug, session['user_id']))
+
     store = cur.fetchone()
 
     if not store:
-        flash("Store not found or access denied.", "error")
+        flash("Store not found or you don't have permission to edit it.", "danger")
+        cur.close()
+        conn.close()
         return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
-        name = request.form.get('name', '').strip()
-        new_slug = request.form.get('slug', '').strip()
-        location = request.form.get('location', '').strip()
-        contact = request.form.get('contact', '').strip()
-        description = request.form.get('description', '').strip()
+        # Basic fields (slug is NOT editable)
+        name = (request.form.get('name') or store['name'] or '').strip()
+        location = (request.form.get('location') or store.get('location') or '').strip()
+        contact = (request.form.get('contact') or store.get('contact') or '').strip()
+        description = (request.form.get('description') or store.get('description') or '').strip()
+        store_type = (request.form.get('store_type') or store.get('store_type') or '').strip()
 
+        # Delivery options (checkboxes -> JSON)
         delivery_options = request.form.getlist('delivery_options')
         delivery_json = json.dumps(delivery_options) if delivery_options else None
 
-        logo_url = store['logo']
-        banner_url = store['banner']
-        tour_video_url = store['tour_video']
+        # Existing media (keep unless removed/replaced)
+        logo_url = store.get('logo')
+        banner_url = store.get('banner')
+        tour_video_url = store.get('tour_video')
 
-        if 'logo' in request.files and request.files['logo'].filename:
-            logo_url = save_file(request.files['logo'], 'logos')
+        # Remove media if requested (checkboxes)
+        if request.form.get('remove_logo') == '1':
+            logo_url = None
 
-        if 'banner' in request.files and request.files['banner'].filename:
-            banner_url = save_file(request.files['banner'], 'banners')
+        if request.form.get('remove_banner') == '1':
+            banner_url = None
 
-        if 'tour_video' in request.files and request.files['tour_video'].filename:
-            tour_video_url = save_file(request.files['tour_video'], 'videos')
+        if request.form.get('remove_tour_video') == '1':
+            tour_video_url = None
+
+        # Upload new media (replaces existing, unless user chose "remove")
+        if logo_url is not None and 'logo' in request.files and request.files['logo'].filename:
+            try:
+                logo_url = save_file(request.files['logo'], 'logos')
+            except Exception as e:
+                flash(f"Failed to upload logo: {str(e)}", "danger")
+
+        if banner_url is not None and 'banner' in request.files and request.files['banner'].filename:
+            try:
+                banner_url = save_file(request.files['banner'], 'banners')
+            except Exception as e:
+                flash(f"Failed to upload banner: {str(e)}", "danger")
+
+        if tour_video_url is not None and 'tour_video' in request.files and request.files['tour_video'].filename:
+            try:
+                tour_video_url = save_file(request.files['tour_video'], 'videos')
+            except Exception as e:
+                flash(f"Failed to upload tour video: {str(e)}", "danger")
 
         try:
             cur.execute("""
                 UPDATE stores 
-                SET name=%s, slug=%s, location=%s, contact=%s, description=%s,
-                    logo=%s, banner=%s, tour_video=%s, delivery_options=%s, updated_at=NOW()
-                WHERE store_id=%s
-            """, (name, new_slug, location, contact, description, logo_url, banner_url, tour_video_url, delivery_json, store['store_id']))
+                SET 
+                    name = %s,
+                    location = %s,
+                    contact = %s,
+                    description = %s,
+                    store_type = %s,
+                    delivery_options = %s,
+                    logo = %s,
+                    banner = %s,
+                    tour_video = %s,
+                    updated_at = NOW()
+                WHERE store_id = %s
+            """, (
+                name,
+                location,
+                contact,
+                description,
+                store_type,
+                delivery_json,
+                logo_url,
+                banner_url,
+                tour_video_url,
+                store['store_id']
+            ))
+
             conn.commit()
             flash("Store updated successfully!", "success")
-            return redirect(url_for('store_home', slug=new_slug))
+            return redirect(url_for('store_home', slug=store['slug']))
+
         except Exception as e:
             conn.rollback()
-            print("Edit store error:", e)
-            flash("Failed to update store.", "error")
+            flash(f"Failed to update store: {str(e)}", "danger")
+            print("Store update error:", e)
 
+    # Convert JSON delivery_options back to list for checkboxes
     cur.close()
     conn.close()
-    return render_template('edit_store.html', store=store)
+
+    current_delivery = json.loads(store['delivery_options']) if store.get('delivery_options') else []
+
+    return render_template(
+        'edit_store.html',
+        store=store,
+        current_delivery=current_delivery
+    )
+
+
 
 
 
@@ -6945,6 +7123,283 @@ def store_detail(store_id):
 
 
 
+@app.route('/store/<slug>/inventory')
+@login_required
+def store_inventory(slug):
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+
+    # ── Fetch store info including slug ─────────────────────────
+    cur.execute("""
+        SELECT store_id, name, slug
+        FROM stores
+        WHERE slug=%s AND user_id=%s AND is_active=1
+    """, (slug, session['user_id']))
+    store = cur.fetchone()
+
+    if not store:
+        cur.close()
+        conn.close()
+        abort(403)
+
+    # ── Fetch all listings for this store ───────────────────────
+    cur.execute("""
+        SELECT *
+        FROM listings
+        WHERE store_id=%s
+        ORDER BY created_at DESC
+    """, (store['store_id'],))
+    listings = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    # ── Render inventory page ─────────────────────────────────
+    return render_template(
+        'store_inventory.html',
+        store=store,
+        listings=listings
+    )
+
+
+
+
+@app.route('/store/<slug>/inventory/<int:listing_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_inventory(slug, listing_id):
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+
+    # ── Verify store ownership ─────────────────────────
+    cur.execute("""
+        SELECT store_id, name 
+        FROM stores 
+        WHERE slug=%s AND user_id=%s AND is_active=1
+    """, (slug, session['user_id']))
+    store = cur.fetchone()
+
+    if not store:
+        cur.close()
+        conn.close()
+        abort(403)
+
+    store_id = store['store_id']
+
+    # ── Verify listing ownership ───────────────────────
+    cur.execute("""
+        SELECT *
+        FROM listings
+        WHERE listing_id=%s AND store_id=%s
+    """, (listing_id, store_id))
+    listing = cur.fetchone()
+
+    if not listing:
+        cur.close()
+        conn.close()
+        abort(404)
+
+    # ── Load additional offered items (skip first) ────
+    offers = []
+    if listing['deal_type'] == 'Swap Deal':
+        cur.execute("""
+            SELECT *
+            FROM offered_items
+            WHERE listing_id=%s
+            ORDER BY item_id ASC
+            LIMIT 100 OFFSET 1
+        """, (listing_id,))
+        offers = cur.fetchall()
+
+    # ── POST: UPDATE ─────────────────────────────────
+    if request.method == 'POST':
+
+        def upload_if_exists(field, folder):
+            file = request.files.get(field)
+            if file and file.filename:
+                return upload_to_cloudinary(file, folder)
+            return None
+
+        # ── Update main listing ─────────────────────
+        update_fields = {
+            'title': request.form.get('title'),
+            'description': request.form.get('description'),
+            'category': request.form.get('category'),
+            'condition': request.form.get('condition'),
+            'location': request.form.get('location'),
+            'contact': request.form.get('contact'),
+            'status': request.form.get('status'),
+            'price': request.form.get('price'),
+            'desired_swap': request.form.get('desired_swap'),
+            'required_cash': request.form.get('required_cash'),
+            'additional_cash': request.form.get('additional_cash'),
+            'swap_notes': request.form.get('swap_notes')
+        }
+
+        # Upload new main images
+        for img in ['image_url','image1','image2','image3','image4']:
+            uploaded = upload_if_exists(f"{img}_file", 'listings')
+            if uploaded:
+                update_fields[img] = uploaded
+
+        # Build SQL
+        set_sql = ", ".join(f"`{k}`=%s" for k,v in update_fields.items() if v is not None)
+        values = [v for v in update_fields.values() if v is not None]
+        values.append(listing_id)
+
+        cur.execute(f"""
+            UPDATE listings
+            SET {set_sql}
+            WHERE listing_id=%s
+        """, values)
+
+        # ── Swap Deal: Update offered items ─────────────
+        if listing['deal_type'] == 'Swap Deal':
+
+            # First offered item sync (main) if exists
+            cur.execute("""
+                SELECT item_id FROM offered_items
+                WHERE listing_id=%s
+                ORDER BY item_id ASC LIMIT 1
+            """, (listing_id,))
+            first = cur.fetchone()
+
+            if first:
+                cur.execute("""
+                    UPDATE offered_items
+                    SET `title`=%s, `description`=%s, `condition`=%s,
+                        image_url=%s, image1=%s, image2=%s, image3=%s, image4=%s
+                    WHERE item_id=%s
+                """, (
+                    update_fields['title'],
+                    update_fields['description'],
+                    update_fields['condition'],
+                    request.form.get('offer_image_url_0') or listing.get('image_url'),
+                    request.form.get('offer_image1_0') or listing.get('image1'),
+                    request.form.get('offer_image2_0') or listing.get('image2'),
+                    request.form.get('offer_image3_0') or listing.get('image3'),
+                    request.form.get('offer_image4_0') or listing.get('image4'),
+                    first['item_id']
+                ))
+
+            # Update additional offered items
+            titles = request.form.getlist('offer_title[]')
+            descs = request.form.getlist('offer_description[]')
+            conds = request.form.getlist('offer_condition[]')
+
+            for idx, offer in enumerate(offers):
+                if idx < len(titles):
+                    img_fields = []
+                    for i,img_name in enumerate(['image_url','image1','image2','image3','image4']):
+                        uploaded = upload_if_exists(f"offer_{img_name}_{idx+1}", 'offers')
+                        img_fields.append(uploaded or offer.get(img_name))
+                    cur.execute("""
+                        UPDATE offered_items
+                        SET title=%s, description=%s, `condition`=%s,
+                            image_url=%s, image1=%s, image2=%s, image3=%s, image4=%s
+                        WHERE item_id=%s
+                    """, (
+                        titles[idx], descs[idx], conds[idx],
+                        *img_fields,
+                        offer['item_id']
+                    ))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+        return redirect(url_for('store_inventory', slug=slug))
+
+    cur.close()
+    conn.close()
+    return render_template(
+        'edit_inventory.html',
+        store=store,
+        listing=listing,
+        offers=offers
+    )
+
+
+    
+
+
+
+
+
+@app.route('/api/listing/<int:listing_id>/edit', methods=['GET'])
+@login_required
+def get_edit_form(listing_id):
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    
+    # Get the listing with all images
+    cur.execute("""
+        SELECT 
+            listing_id, title, description, 
+            image_url, image1, image2, image3, image4,
+            category, price, deal_type, `condition`, 
+            location, contact, desired_swap, required_cash, 
+            additional_cash, swap_notes, status, store_id
+        FROM listings
+        WHERE listing_id = %s
+    """, (listing_id,))
+    
+    item = cur.fetchone()
+    
+    if not item:
+        return "Item not found", 404
+    
+    # Verify ownership
+    cur.execute("SELECT user_id FROM stores WHERE store_id = %s", (item['store_id'],))
+    store = cur.fetchone()
+    
+    if not store or store['user_id'] != session['user_id']:
+        return "Unauthorized", 403
+    
+    # Get offered items for swap deals
+    if item['deal_type'] == 'Swap Deal':
+        cur.execute("""
+            SELECT 
+                item_id, title, description, `condition`,
+                image_url, image1, image2, image3, image4
+            FROM offered_items
+            WHERE listing_id = %s
+            ORDER BY item_id ASC
+        """, (listing_id,))
+        item['offers'] = cur.fetchall()
+    else:
+        item['offers'] = []
+    
+    cur.close()
+    conn.close()
+    
+    # Render the edit form template
+    return render_template('edit_form_partial.html', item=item)
+
+
+
+
+@app.route('/my-store')
+@login_required
+def my_store_redirect():
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+
+    cur.execute(
+        "SELECT slug FROM stores WHERE user_id = %s LIMIT 1",
+        (session['user_id'],)
+    )
+    store = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    if store:
+        return redirect(url_for('store_home', slug=store['slug']))
+    else:
+        return redirect(url_for('create_store'))
+
+
+
+
 
 
 @app.route("/googlefbaf22f94e24fef4.html")
@@ -6960,6 +7415,16 @@ def sitemap():
     return send_from_directory(static_dir, "sitemap.xml")
 
 
+
+
+@app.template_filter('format_number')
+def format_number(value):
+    """Format large numbers with K/M suffix"""
+    if value >= 1000000:
+        return f'{value/1000000:.1f}M'
+    elif value >= 1000:
+        return f'{value/1000:.1f}K'
+    return str(value)
 
 
 
