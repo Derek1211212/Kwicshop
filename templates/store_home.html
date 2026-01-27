@@ -2109,280 +2109,530 @@
     </div>
   </div>
 
-  <script>
-    // All JavaScript remains exactly the same as provided
-    let toastTimer = null;
-    function showToast(message) {
-      const toast = document.getElementById("toast");
-      if (!toast) return;
-      toast.textContent = message;
-      toast.classList.add("show");
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => {
-        toast.classList.remove("show");
-      }, 3000);
+ <script>
+  // All JavaScript remains exactly the same as provided
+  let toastTimer = null;
+  function showToast(message) {
+    const toast = document.getElementById("toast");
+    if (!toast) return;
+    toast.textContent = message;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.classList.remove("show");
+    }, 3000);
+  }
+
+  function showSuccessBanner(message) {
+    const box = document.getElementById("successMessage");
+    const text = document.getElementById("successMessageText");
+    if (text) text.textContent = message || "Done!";
+    if (!box) return;
+    box.classList.add("show");
+    setTimeout(() => box.classList.remove("show"), 2500);
+  }
+
+  const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+  const closeMenuBtn = document.getElementById("closeMenuBtn");
+  const mobileMenuOverlay = document.getElementById("mobileMenuOverlay");
+  const mobileMenu = document.getElementById("mobileMenu");
+
+  function openMobileMenu() {
+    mobileMenu.classList.add("active");
+    mobileMenuOverlay.classList.add("active");
+    mobileMenu.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeMobileMenu() {
+    mobileMenu.classList.remove("active");
+    mobileMenuOverlay.classList.remove("active");
+    mobileMenu.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "auto";
+  }
+
+  if (mobileMenuBtn) mobileMenuBtn.addEventListener("click", openMobileMenu);
+  if (closeMenuBtn) closeMenuBtn.addEventListener("click", closeMobileMenu);
+  if (mobileMenuOverlay) mobileMenuOverlay.addEventListener("click", closeMobileMenu);
+
+  document.querySelectorAll(".mobile-menu-item").forEach((item) => {
+    item.addEventListener("click", closeMobileMenu);
+  });
+
+  document.querySelectorAll("[data-copy-link]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const link = btn.getAttribute("data-copy-link") || "";
+      try {
+        await navigator.clipboard.writeText(link);
+        showToast("Store link copied to clipboard!");
+      } catch (err) {
+        console.error("Failed to copy:", err);
+        showToast("Failed to copy link");
+      }
+    });
+  });
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const videoInput = document.getElementById("videoInput");
+    const uploadArea = document.getElementById("uploadArea");
+    const replaceButton = document.querySelector(".btn-replace-video");
+
+    if (!videoInput) return;
+
+    function triggerFilePicker() {
+      videoInput.click();
     }
 
-    function showSuccessBanner(message) {
-      const box = document.getElementById("successMessage");
-      const text = document.getElementById("successMessageText");
-      if (text) text.textContent = message || "Done!";
-      if (!box) return;
-      box.classList.add("show");
-      setTimeout(() => box.classList.remove("show"), 2500);
+    if (uploadArea) {
+      uploadArea.addEventListener("click", triggerFilePicker);
+      uploadArea.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          triggerFilePicker();
+        }
+      });
+
+      ["dragover", "dragenter"].forEach((evt) => {
+        uploadArea.addEventListener(evt, (e) => {
+          e.preventDefault();
+          uploadArea.classList.add("dragover");
+        });
+      });
+
+      ["dragleave", "dragend", "drop"].forEach((evt) => {
+        uploadArea.addEventListener(evt, (e) => {
+          e.preventDefault();
+          uploadArea.classList.remove("dragover");
+        });
+      });
+
+      uploadArea.addEventListener("drop", (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove("dragover");
+        if (e.dataTransfer.files && e.dataTransfer.files.length) {
+          videoInput.files = e.dataTransfer.files;
+          uploadVideo(e.dataTransfer.files[0]);
+        }
+      });
     }
 
-    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
-    const closeMenuBtn = document.getElementById("closeMenuBtn");
-    const mobileMenuOverlay = document.getElementById("mobileMenuOverlay");
-    const mobileMenu = document.getElementById("mobileMenu");
-
-    function openMobileMenu() {
-      mobileMenu.classList.add("active");
-      mobileMenuOverlay.classList.add("active");
-      mobileMenu.setAttribute("aria-hidden", "false");
-      document.body.style.overflow = "hidden";
+    if (replaceButton) {
+      replaceButton.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        triggerFilePicker();
+      });
     }
 
-    function closeMobileMenu() {
-      mobileMenu.classList.remove("active");
-      mobileMenuOverlay.classList.remove("active");
-      mobileMenu.setAttribute("aria-hidden", "true");
+    videoInput.addEventListener("change", function (e) {
+      if (e.target.files && e.target.files.length > 0) {
+        uploadVideo(e.target.files[0]);
+      }
+    });
+
+    function setUploadingUI(fileName) {
+      document.body.classList.add("loading");
+
+      if (uploadArea) {
+        uploadArea.innerHTML = `
+          <i class="fas fa-spinner fa-spin" style="font-size:40px; color:var(--primary-green);"></i>
+          <p><strong>Uploading...</strong></p>
+          <p style="word-break:break-word; font-size:13px;">${fileName}</p>
+        `;
+        return;
+      }
+
+      const videoOuter = document.querySelector(".video-outer");
+      if (videoOuter) {
+        videoOuter.innerHTML = `
+          <div style="height:380px; width:100%; max-width:380px; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; border-radius:14px;">
+            <i class="fas fa-spinner fa-spin" style="font-size:40px; margin-bottom:16px;"></i>
+            <p><strong>Uploading new video...</strong></p>
+            <p style="opacity:0.85; word-break:break-word; padding:0 16px; text-align:center; font-size:13px;">${fileName}</p>
+          </div>
+        `;
+      }
+
+      const actions = document.querySelector(".shop-video-card .action-buttons");
+      if (actions) actions.style.display = "none";
+    }
+
+    function clearUploadingUI() {
+      document.body.classList.remove("loading");
+    }
+
+    function uploadVideo(file) {
+      if (!file || !file.type || !file.type.startsWith("video/")) {
+        showToast("Please select a video file");
+        return;
+      }
+
+      if (file.size > 100 * 1024 * 1024) {
+        showToast("Video must be under 100MB");
+        return;
+      }
+
+      setUploadingUI(file.name);
+
+      const formData = new FormData();
+      formData.append("tour_video", file);
+
+      fetch(`/store/{{ store.slug }}/upload-tour-video`, {
+        method: "POST",
+        body: formData,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          clearUploadingUI();
+          if (data && data.success) {
+            showToast("Video uploaded successfully!");
+            setTimeout(() => location.reload(), 1200);
+          } else {
+            showToast((data && data.message) || "Upload failed");
+            setTimeout(() => location.reload(), 1200);
+          }
+        })
+        .catch((err) => {
+          console.warn("Upload error:", err);
+          clearUploadingUI();
+          showToast("Upload complete — refreshing...");
+          setTimeout(() => location.reload(), 1200);
+        });
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const periodButtons = document.querySelectorAll(".period-btn");
+
+    periodButtons.forEach((button) => {
+      button.addEventListener("click", function () {
+        periodButtons.forEach((btn) => btn.classList.remove("active"));
+        this.classList.add("active");
+        const period = this.textContent;
+        console.log(`Loading data for: ${period}`);
+      });
+    });
+  });
+
+  const fabBtn = document.getElementById("fabAddItem");
+  if (fabBtn) {
+    fabBtn.addEventListener("click", function () {
+      const modalBtn = document.getElementById("openAddItemModal");
+      if (modalBtn) modalBtn.click();
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("addItemModal");
+    const closeModalBtn = document.getElementById("closeModal");
+    const openModalBtns = document.querySelectorAll(
+      "#openAddItemModal, #openAddItemModalFull"
+    );
+    const steps = document.querySelectorAll(".modal-step");
+    const stepContents = document.querySelectorAll(".modal-step-content");
+    const nextButtons = document.querySelectorAll(".next-step");
+    const prevButtons = document.querySelectorAll(".prev-step");
+    const dealTypeOptions = document.querySelectorAll(".deal-type-option");
+    const planOptions = document.querySelectorAll(".plan-option");
+    const addOfferBtn = document.getElementById("modal-add-offer-item-btn");
+    const form = document.getElementById("addItemFormModal");
+    const swapSection = document.getElementById("modal-swap-section");
+    const saleSection = document.getElementById("modal-sale-section");
+
+    let currentStep = 1;
+    const totalSteps = 3;
+
+    /* =========================================================
+       ✅ [ADDED] Helper to disable/enable inputs so hidden section
+       does NOT submit (fixes "required fields" backend issues)
+       ========================================================= */
+    function setSectionEnabled(sectionEl, enabled) {
+      if (!sectionEl) return;
+      sectionEl.querySelectorAll("input, select, textarea").forEach((el) => {
+        el.disabled = !enabled;
+      });
+    }
+
+    openModalBtns.forEach((btn) => {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        initializeModal();
+        modal.style.display = "block";
+        document.body.style.overflow = "hidden";
+      });
+    });
+
+    closeModalBtn.addEventListener("click", closeModal);
+    modal.addEventListener("click", function (e) {
+      if (e.target === modal) closeModal();
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (modal.style.display === "block" && e.key === "Escape") closeModal();
+    });
+
+    function closeModal() {
+      modal.style.display = "none";
       document.body.style.overflow = "auto";
     }
 
-    if (mobileMenuBtn) mobileMenuBtn.addEventListener("click", openMobileMenu);
-    if (closeMenuBtn) closeMenuBtn.addEventListener("click", closeMobileMenu);
-    if (mobileMenuOverlay) mobileMenuOverlay.addEventListener("click", closeMobileMenu);
+    /* =========================================================
+       ✅ [CHANGED] initializeModal() to:
+       1) check Swap radio properly
+       2) disable Sale section fields
+       ========================================================= */
+    function initializeModal() {
+      currentStep = 1;
 
-    document.querySelectorAll(".mobile-menu-item").forEach((item) => {
-      item.addEventListener("click", closeMobileMenu);
-    });
-
-    document.querySelectorAll("[data-copy-link]").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const link = btn.getAttribute("data-copy-link") || "";
-        try {
-          await navigator.clipboard.writeText(link);
-          showToast("Store link copied to clipboard!");
-        } catch (err) {
-          console.error("Failed to copy:", err);
-          showToast("Failed to copy link");
-        }
+      steps.forEach((step) => {
+        step.classList.remove("active");
+        step.classList.add("inactive");
       });
-    });
+      steps[0].classList.remove("inactive");
+      steps[0].classList.add("active");
 
-    document.addEventListener("DOMContentLoaded", function () {
-      const videoInput = document.getElementById("videoInput");
-      const uploadArea = document.getElementById("uploadArea");
-      const replaceButton = document.querySelector(".btn-replace-video");
+      stepContents.forEach((content) => {
+        content.classList.remove("active");
+      });
+      stepContents[0].classList.add("active");
 
-      if (!videoInput) return;
+      form.reset();
 
-      function triggerFilePicker() {
-        videoInput.click();
-      }
-
-      if (uploadArea) {
-        uploadArea.addEventListener("click", triggerFilePicker);
-        uploadArea.addEventListener("keydown", (e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            triggerFilePicker();
-          }
-        });
-
-        ["dragover", "dragenter"].forEach((evt) => {
-          uploadArea.addEventListener(evt, (e) => {
-            e.preventDefault();
-            uploadArea.classList.add("dragover");
-          });
-        });
-
-        ["dragleave", "dragend", "drop"].forEach((evt) => {
-          uploadArea.addEventListener(evt, (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove("dragover");
-          });
-        });
-
-        uploadArea.addEventListener("drop", (e) => {
-          e.preventDefault();
-          uploadArea.classList.remove("dragover");
-          if (e.dataTransfer.files && e.dataTransfer.files.length) {
-            videoInput.files = e.dataTransfer.files;
-            uploadVideo(e.dataTransfer.files[0]);
-          }
-        });
-      }
-
-      if (replaceButton) {
-        replaceButton.addEventListener("click", function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          triggerFilePicker();
-        });
-      }
-
-      videoInput.addEventListener("change", function (e) {
-        if (e.target.files && e.target.files.length > 0) {
-          uploadVideo(e.target.files[0]);
+      dealTypeOptions.forEach((option) => {
+        option.classList.remove("active");
+        const card = option.querySelector(".deal-type-card");
+        if (card) {
+          card.style.background = "var(--light-gray)";
+          card.style.borderColor = "transparent";
+          card.style.transform = "none";
+          card.style.boxShadow = "none";
         }
       });
 
-      function setUploadingUI(fileName) {
-        document.body.classList.add("loading");
-
-        if (uploadArea) {
-          uploadArea.innerHTML = `
-            <i class="fas fa-spinner fa-spin" style="font-size:40px; color:var(--primary-green);"></i>
-            <p><strong>Uploading...</strong></p>
-            <p style="word-break:break-word; font-size:13px;">${fileName}</p>
-          `;
-          return;
+      const swapOption = document.querySelector(
+        '.deal-type-option[data-type="swap"]'
+      );
+      if (swapOption) {
+        swapOption.classList.add("active");
+        const card = swapOption.querySelector(".deal-type-card");
+        if (card) {
+          card.style.background = "var(--light-green)";
+          card.style.borderColor = "var(--primary-green)";
+          card.style.transform = "translateY(-2px)";
+          card.style.boxShadow = "0 4px 12px rgba(46, 204, 113, 0.2)";
         }
 
-        const videoOuter = document.querySelector(".video-outer");
-        if (videoOuter) {
-          videoOuter.innerHTML = `
-            <div style="height:380px; width:100%; max-width:380px; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; border-radius:14px;">
-              <i class="fas fa-spinner fa-spin" style="font-size:40px; margin-bottom:16px;"></i>
-              <p><strong>Uploading new video...</strong></p>
-              <p style="opacity:0.85; word-break:break-word; padding:0 16px; text-align:center; font-size:13px;">${fileName}</p>
-            </div>
-          `;
-        }
-
-        const actions = document.querySelector(".shop-video-card .action-buttons");
-        if (actions) actions.style.display = "none";
+        // ✅ [ADDED] ensure the hidden radio is checked
+        const radio = swapOption.querySelector('input[type="radio"]');
+        if (radio) radio.checked = true;
       }
 
-      function clearUploadingUI() {
-        document.body.classList.remove("loading");
-      }
+      // show swap, hide sale
+      swapSection.style.display = "block";
+      saleSection.style.display = "none";
 
-      function uploadVideo(file) {
-        if (!file || !file.type || !file.type.startsWith("video/")) {
-          showToast("Please select a video file");
-          return;
+      // ✅ [ADDED] disable hidden sale section so it won't submit
+      setSectionEnabled(swapSection, true);
+      setSectionEnabled(saleSection, false);
+
+      planOptions.forEach((option) => {
+        option.classList.remove("active");
+        const div = option.querySelector("label > div");
+        if (div) {
+          div.style.borderColor = "var(--medium-gray)";
+          div.style.background = "white";
         }
-
-        if (file.size > 100 * 1024 * 1024) {
-          showToast("Video must be under 100MB");
-          return;
-        }
-
-        setUploadingUI(file.name);
-
-        const formData = new FormData();
-        formData.append("tour_video", file);
-
-        fetch(`/store/{{ store.slug }}/upload-tour-video`, {
-          method: "POST",
-          body: formData,
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            clearUploadingUI();
-            if (data && data.success) {
-              showToast("Video uploaded successfully!");
-              setTimeout(() => location.reload(), 1200);
-            } else {
-              showToast((data && data.message) || "Upload failed");
-              setTimeout(() => location.reload(), 1200);
-            }
-          })
-          .catch((err) => {
-            console.warn("Upload error:", err);
-            clearUploadingUI();
-            showToast("Upload complete — refreshing...");
-            setTimeout(() => location.reload(), 1200);
-          });
-      }
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-      const periodButtons = document.querySelectorAll('.period-btn');
-      
-      periodButtons.forEach(button => {
-        button.addEventListener('click', function() {
-          periodButtons.forEach(btn => btn.classList.remove('active'));
-          this.classList.add('active');
-          const period = this.textContent;
-          console.log(`Loading data for: ${period}`);
-        });
       });
-    });
 
-    const fabBtn = document.getElementById("fabAddItem");
-    if (fabBtn) {
-      fabBtn.addEventListener("click", function() {
-        const modalBtn = document.getElementById("openAddItemModal");
-        if (modalBtn) modalBtn.click();
+      const firstPlanOption = document.querySelector(
+        '.plan-option[data-plan="Free"]'
+      );
+      if (firstPlanOption) {
+        firstPlanOption.classList.add("active");
+        const div = firstPlanOption.querySelector("label > div");
+        if (div) {
+          div.style.borderColor = "var(--primary-green)";
+          div.style.background = "var(--light-green)";
+        }
+
+        // ✅ [ADDED] ensure the radio is checked
+        const planRadio = firstPlanOption.querySelector('input[type="radio"]');
+        if (planRadio) planRadio.checked = true;
+      }
+
+      const offeredContainer = document.getElementById(
+        "modal-offered-items-container"
+      );
+      const firstItem = offeredContainer.querySelector(".modal-offered-item");
+      if (firstItem) {
+        offeredContainer.innerHTML = firstItem.outerHTML;
+      }
+
+      document.querySelectorAll(".image-preview").forEach((preview) => {
+        preview.innerHTML = "";
+        preview.style.display = "none";
       });
+
+      setupImageUploads();
+      setupCategoryAutocomplete();
     }
 
-    document.addEventListener("DOMContentLoaded", function() {
-      const modal = document.getElementById("addItemModal");
-      const closeModalBtn = document.getElementById("closeModal");
-      const openModalBtns = document.querySelectorAll("#openAddItemModal, #openAddItemModalFull");
-      const steps = document.querySelectorAll(".modal-step");
-      const stepContents = document.querySelectorAll(".modal-step-content");
-      const nextButtons = document.querySelectorAll(".next-step");
-      const prevButtons = document.querySelectorAll(".prev-step");
-      const dealTypeOptions = document.querySelectorAll(".deal-type-option");
-      const planOptions = document.querySelectorAll(".plan-option");
-      const addOfferBtn = document.getElementById("modal-add-offer-item-btn");
-      const form = document.getElementById("addItemFormModal");
-      const swapSection = document.getElementById("modal-swap-section");
-      const saleSection = document.getElementById("modal-sale-section");
-      
-      let currentStep = 1;
-      const totalSteps = 3;
-      
-      openModalBtns.forEach(btn => {
-        btn.addEventListener("click", function(e) {
-          e.preventDefault();
-          initializeModal();
-          modal.style.display = "block";
-          document.body.style.overflow = "hidden";
-        });
+    nextButtons.forEach((btn) => {
+      btn.addEventListener("click", function () {
+        if (validateStep(currentStep)) {
+          const currentContent = document.querySelector(
+            `.modal-step-content[data-step="${currentStep}"]`
+          );
+          currentContent.classList.remove("active");
+
+          const currentStepIndicator = document.querySelector(
+            `.modal-step[data-step="${currentStep}"]`
+          );
+          currentStepIndicator.classList.remove("active");
+          currentStepIndicator.classList.add("inactive");
+
+          currentStep++;
+
+          const nextContent = document.querySelector(
+            `.modal-step-content[data-step="${currentStep}"]`
+          );
+          nextContent.classList.add("active");
+
+          const nextStepIndicator = document.querySelector(
+            `.modal-step[data-step="${currentStep}"]`
+          );
+          nextStepIndicator.classList.remove("inactive");
+          nextStepIndicator.classList.add("active");
+        }
       });
-      
-      closeModalBtn.addEventListener("click", closeModal);
-      modal.addEventListener("click", function(e) {
-        if (e.target === modal) closeModal();
+    });
+
+    prevButtons.forEach((btn) => {
+      btn.addEventListener("click", function () {
+        const currentContent = document.querySelector(
+          `.modal-step-content[data-step="${currentStep}"]`
+        );
+        currentContent.classList.remove("active");
+
+        const currentStepIndicator = document.querySelector(
+          `.modal-step[data-step="${currentStep}"]`
+        );
+        currentStepIndicator.classList.remove("active");
+        currentStepIndicator.classList.add("inactive");
+
+        currentStep--;
+
+        const prevContent = document.querySelector(
+          `.modal-step-content[data-step="${currentStep}"]`
+        );
+        prevContent.classList.add("active");
+
+        const prevStepIndicator = document.querySelector(
+          `.modal-step[data-step="${currentStep}"]`
+        );
+        prevStepIndicator.classList.remove("inactive");
+        prevStepIndicator.classList.add("active");
       });
-      
-      document.addEventListener("keydown", function(e) {
-        if (modal.style.display === "block" && e.key === "Escape") closeModal();
-      });
-      
-      function closeModal() {
-        modal.style.display = "none";
-        document.body.style.overflow = "auto";
+    });
+
+function isActuallyVisible(el) {
+  if (!el) return false;
+
+  // If any parent is display:none, treat as invisible
+  let node = el;
+  while (node && node !== document.body) {
+    const style = window.getComputedStyle(node);
+    if (style.display === "none" || style.visibility === "hidden") return false;
+    node = node.parentElement;
+  }
+
+  return true;
+}
+
+function validateStep(step) {
+  const stepContent = document.querySelector(
+    `.modal-step-content[data-step="${step}"]`
+  );
+  if (!stepContent) return true;
+
+  const requiredInputs = stepContent.querySelectorAll("[required]");
+  let isValid = true;
+
+  requiredInputs.forEach((input) => {
+    // ✅ only skip if disabled
+    if (input.disabled) return;
+
+    // ✅ skip if truly not visible (e.g. hidden section)
+    if (!isActuallyVisible(input)) return;
+
+    // ✅ file validation (even if input is visually hidden by CSS)
+    if (input.type === "file") {
+      if (!input.files || input.files.length === 0) {
+        isValid = false;
+        highlightError(input);
       }
-      
-      function initializeModal() {
-        currentStep = 1;
-        
-        steps.forEach(step => {
-          step.classList.remove("active");
-          step.classList.add("inactive");
-        });
-        steps[0].classList.remove("inactive");
-        steps[0].classList.add("active");
-        
-        stepContents.forEach(content => {
-          content.classList.remove("active");
-        });
-        stepContents[0].classList.add("active");
-        
-        form.reset();
-        
-        dealTypeOptions.forEach(option => {
-          option.classList.remove("active");
-          const card = option.querySelector(".deal-type-card");
+      return;
+    }
+
+    // ✅ normal validation
+    const val = (input.value || "").toString().trim();
+    if (!val) {
+      isValid = false;
+      highlightError(input);
+    }
+  });
+
+  if (!isValid) showError("Please fill in all required fields");
+  return isValid;
+}
+
+function highlightError(input) {
+  // ✅ If it's a file input, highlight the label (upload area)
+  if (input && input.type === "file") {
+    const label = document.querySelector(`label[for="${input.id}"]`);
+    if (label) {
+      label.style.borderColor = "var(--danger)";
+      label.style.background = "rgba(231, 76, 60, 0.05)";
+      label.addEventListener(
+        "click",
+        () => {
+          label.style.borderColor = "";
+          label.style.background = "";
+        },
+        { once: true }
+      );
+    }
+    return;
+  }
+
+  // ✅ Normal inputs
+  input.style.borderColor = "var(--danger)";
+  input.addEventListener(
+    "input",
+    function () {
+      input.style.borderColor = "";
+    },
+    { once: true }
+  );
+}
+
+
+    function showError(message) {
+      showToast(message);
+    }
+
+    /* =========================================================
+       ✅ [CHANGED] Deal type toggle:
+       1) check the hidden radio
+       2) disable hidden section fields so they do NOT submit
+       ========================================================= */
+    dealTypeOptions.forEach((option) => {
+      option.addEventListener("click", function () {
+        if (this.classList.contains("active")) return;
+
+        dealTypeOptions.forEach((opt) => {
+          opt.classList.remove("active");
+          const card = opt.querySelector(".deal-type-card");
           if (card) {
             card.style.background = "var(--light-gray)";
             card.style.borderColor = "transparent";
@@ -2390,402 +2640,278 @@
             card.style.boxShadow = "none";
           }
         });
-        
-        const swapOption = document.querySelector('.deal-type-option[data-type="swap"]');
-        if (swapOption) {
-          swapOption.classList.add("active");
-          const card = swapOption.querySelector(".deal-type-card");
-          if (card) {
-            card.style.background = "var(--light-green)";
-            card.style.borderColor = "var(--primary-green)";
-            card.style.transform = "translateY(-2px)";
-            card.style.boxShadow = "0 4px 12px rgba(46, 204, 113, 0.2)";
-          }
+
+        this.classList.add("active");
+        const card = this.querySelector(".deal-type-card");
+        if (card) {
+          card.style.background = "var(--light-green)";
+          card.style.borderColor = "var(--primary-green)";
+          card.style.transform = "translateY(-2px)";
+          card.style.boxShadow = "0 4px 12px rgba(46, 204, 113, 0.2)";
         }
-        
-        swapSection.style.display = "block";
-        saleSection.style.display = "none";
-        
-        planOptions.forEach(option => {
-          option.classList.remove("active");
-          const div = option.querySelector("label > div");
+
+        // ✅ [ADDED] ensure the hidden radio is checked
+        const radio = this.querySelector('input[type="radio"]');
+        if (radio) radio.checked = true;
+
+        const dealType = this.getAttribute("data-type");
+        if (dealType === "swap") {
+          swapSection.style.display = "block";
+          saleSection.style.display = "none";
+
+          // ✅ [ADDED] critical: prevent sale fields from submitting
+          setSectionEnabled(swapSection, true);
+          setSectionEnabled(saleSection, false);
+        } else {
+          swapSection.style.display = "none";
+          saleSection.style.display = "block";
+
+          // ✅ [ADDED] critical: prevent swap fields from submitting
+          setSectionEnabled(swapSection, false);
+          setSectionEnabled(saleSection, true);
+        }
+      });
+    });
+
+    planOptions.forEach((option) => {
+      option.addEventListener("click", function () {
+        if (this.classList.contains("active")) return;
+
+        const grid = this.closest(".plan-grid");
+
+        grid.querySelectorAll(".plan-option").forEach((opt) => {
+          opt.classList.remove("active");
+          const div = opt.querySelector("label > div");
           if (div) {
             div.style.borderColor = "var(--medium-gray)";
             div.style.background = "white";
           }
         });
-        
-        const firstPlanOption = document.querySelector('.plan-option[data-plan="Free"]');
-        if (firstPlanOption) {
-          firstPlanOption.classList.add("active");
-          const div = firstPlanOption.querySelector("label > div");
-          if (div) {
-            div.style.borderColor = "var(--primary-green)";
-            div.style.background = "var(--light-green)";
-          }
+
+        this.classList.add("active");
+        const div = this.querySelector("label > div");
+        if (div) {
+          div.style.borderColor = "var(--primary-green)";
+          div.style.background = "var(--light-green)";
         }
-        
-        const offeredContainer = document.getElementById("modal-offered-items-container");
-        const firstItem = offeredContainer.querySelector(".modal-offered-item");
-        if (firstItem) {
-          offeredContainer.innerHTML = firstItem.outerHTML;
-        }
-        
-        document.querySelectorAll(".image-preview").forEach(preview => {
-          preview.innerHTML = "";
-          preview.style.display = "none";
-        });
-        
-        setupImageUploads();
-        setupCategoryAutocomplete();
-      }
-      
-      nextButtons.forEach(btn => {
-        btn.addEventListener("click", function() {
-          if (validateStep(currentStep)) {
-            const currentContent = document.querySelector(`.modal-step-content[data-step="${currentStep}"]`);
-            currentContent.classList.remove("active");
-            
-            const currentStepIndicator = document.querySelector(`.modal-step[data-step="${currentStep}"]`);
-            currentStepIndicator.classList.remove("active");
-            currentStepIndicator.classList.add("inactive");
-            
-            currentStep++;
-            
-            const nextContent = document.querySelector(`.modal-step-content[data-step="${currentStep}"]`);
-            nextContent.classList.add("active");
-            
-            const nextStepIndicator = document.querySelector(`.modal-step[data-step="${currentStep}"]`);
-            nextStepIndicator.classList.remove("inactive");
-            nextStepIndicator.classList.add("active");
-          }
-        });
+
+        const radio = this.querySelector('input[type="radio"]');
+        if (radio) radio.checked = true;
       });
-      
-      prevButtons.forEach(btn => {
-        btn.addEventListener("click", function() {
-          const currentContent = document.querySelector(`.modal-step-content[data-step="${currentStep}"]`);
-          currentContent.classList.remove("active");
-          
-          const currentStepIndicator = document.querySelector(`.modal-step[data-step="${currentStep}"]`);
-          currentStepIndicator.classList.remove("active");
-          currentStepIndicator.classList.add("inactive");
-          
-          currentStep--;
-          
-          const prevContent = document.querySelector(`.modal-step-content[data-step="${currentStep}"]`);
-          prevContent.classList.add("active");
-          
-          const prevStepIndicator = document.querySelector(`.modal-step[data-step="${currentStep}"]`);
-          prevStepIndicator.classList.remove("inactive");
-          prevStepIndicator.classList.add("active");
-        });
-      });
-      
-      function validateStep(step) {
-        const stepContent = document.querySelector(`.modal-step-content[data-step="${step}"]`);
-        const requiredInputs = stepContent.querySelectorAll("[required]");
-        let isValid = true;
-        
-        requiredInputs.forEach(input => {
-          if (input.offsetParent === null) return;
-          if (input.disabled) return;
-          
-          if (input.type === "file") {
-            if (!input.files || input.files.length === 0) {
-              isValid = false;
-              highlightError(input);
-            }
-            return;
-          }
-          
-          if (!input.value || (typeof input.value === "string" && !input.value.trim())) {
-            isValid = false;
-            highlightError(input);
-          }
-        });
-        
-        if (!isValid) {
-          showError("Please fill in all required fields");
-        }
-        
-        return isValid;
-      }
-      
-      function highlightError(input) {
-        if (input.classList && input.classList.contains("image-upload-area")) {
-          input.style.borderColor = "var(--danger)";
-          input.addEventListener("click", function() {
-            input.style.borderColor = "";
-          }, { once: true });
+    });
+
+    if (addOfferBtn) {
+      addOfferBtn.addEventListener("click", function () {
+        const items = document.querySelectorAll(".modal-offered-item");
+        const newIndex = items.length + 1;
+
+        if (newIndex > 5) {
+          showError("Maximum 5 items allowed");
           return;
         }
-        
-        input.style.borderColor = "var(--danger)";
-        input.addEventListener("input", function() {
-          input.style.borderColor = "";
-        }, { once: true });
-      }
-      
-      function showError(message) {
-        showToast(message);
-      }
-      
-      dealTypeOptions.forEach(option => {
-        option.addEventListener("click", function() {
-          if (this.classList.contains("active")) return;
-          
-          dealTypeOptions.forEach(opt => {
-            opt.classList.remove("active");
-            const card = opt.querySelector(".deal-type-card");
-            if (card) {
-              card.style.background = "var(--light-gray)";
-              card.style.borderColor = "transparent";
-              card.style.transform = "none";
-              card.style.boxShadow = "none";
-            }
-          });
-          
-          this.classList.add("active");
-          const card = this.querySelector(".deal-type-card");
-          if (card) {
-            card.style.background = "var(--light-green)";
-            card.style.borderColor = "var(--primary-green)";
-            card.style.transform = "translateY(-2px)";
-            card.style.boxShadow = "0 4px 12px rgba(46, 204, 113, 0.2)";
-          }
-          
-          const dealType = this.getAttribute("data-type");
-          if (dealType === "swap") {
-            swapSection.style.display = "block";
-            saleSection.style.display = "none";
-          } else {
-            swapSection.style.display = "none";
-            saleSection.style.display = "block";
-          }
-        });
-      });
-      
-      planOptions.forEach(option => {
-        option.addEventListener("click", function() {
-          if (this.classList.contains("active")) return;
-          
-          const grid = this.closest(".plan-grid");
-          
-          grid.querySelectorAll(".plan-option").forEach(opt => {
-            opt.classList.remove("active");
-            const div = opt.querySelector("label > div");
-            if (div) {
-              div.style.borderColor = "var(--medium-gray)";
-              div.style.background = "white";
-            }
-          });
-          
-          this.classList.add("active");
-          const div = this.querySelector("label > div");
-          if (div) {
-            div.style.borderColor = "var(--primary-green)";
-            div.style.background = "var(--light-green)";
-          }
-          
-          const radio = this.querySelector('input[type="radio"]');
-          if (radio) radio.checked = true;
-        });
-      });
-      
-      if (addOfferBtn) {
-        addOfferBtn.addEventListener("click", function() {
-          const items = document.querySelectorAll(".modal-offered-item");
-          const newIndex = items.length + 1;
-          
-          if (newIndex > 5) {
-            showError("Maximum 5 items allowed");
-            return;
-          }
-          
-          const firstItem = items[0];
-          const clone = firstItem.cloneNode(true);
-          
-          clone.dataset.index = newIndex;
-          
-          const circle = clone.querySelector(".item-number-circle");
-          if (circle) circle.textContent = newIndex;
-          
-          const title = clone.querySelector("h5");
-          if (title) title.textContent = `Offered Item #${newIndex}`;
-          
-          clone.querySelectorAll('input:not([type="file"]), textarea, select').forEach(input => {
+
+        const firstItem = items[0];
+        const clone = firstItem.cloneNode(true);
+
+        clone.dataset.index = newIndex;
+
+        const circle = clone.querySelector(".item-number-circle");
+        if (circle) circle.textContent = newIndex;
+
+        const title = clone.querySelector("h5");
+        if (title) title.textContent = `Offered Item #${newIndex}`;
+
+        clone
+          .querySelectorAll('input:not([type="file"]), textarea, select')
+          .forEach((input) => {
             input.value = "";
           });
-          
-          const removeBtn = clone.querySelector(".remove-item-btn");
-          if (removeBtn) {
-            removeBtn.style.display = "block";
-            removeBtn.addEventListener("click", function() {
-              clone.remove();
-              renumberItems();
-            });
+
+        const removeBtn = clone.querySelector(".remove-item-btn");
+        if (removeBtn) {
+          removeBtn.style.display = "block";
+          removeBtn.addEventListener("click", function () {
+            clone.remove();
+            renumberItems();
+          });
+        }
+
+        const fileInput = clone.querySelector('input[type="file"]');
+        if (fileInput) {
+          fileInput.id = `offer-images-${newIndex}`;
+          fileInput.name = `offer_images_${newIndex}[]`;
+          fileInput.value = "";
+        }
+
+        const label = clone.querySelector('label[for^="offer-images-"]');
+        if (label && fileInput) {
+          label.setAttribute("for", fileInput.id);
+        }
+
+        const preview = clone.querySelector(".image-preview");
+        if (preview) {
+          preview.innerHTML = "";
+          preview.style.display = "none";
+        }
+
+        document.getElementById("modal-offered-items-container").appendChild(clone);
+
+        setupImageUploads();
+      });
+    }
+
+    function renumberItems() {
+      const items = document.querySelectorAll(".modal-offered-item");
+      items.forEach((item, index) => {
+        const itemNumber = index + 1;
+        item.dataset.index = itemNumber;
+
+        const circle = item.querySelector(".item-number-circle");
+        if (circle) circle.textContent = itemNumber;
+
+        const title = item.querySelector("h5");
+        if (title) title.textContent = `Offered Item #${itemNumber}`;
+
+        const fileInput = item.querySelector('input[type="file"]');
+        if (fileInput) {
+          fileInput.id = `offer-images-${itemNumber}`;
+          fileInput.name = `offer_images_${itemNumber}[]`;
+        }
+
+        const label = item.querySelector('label[for^="offer-images-"]');
+        if (label && fileInput) {
+          label.setAttribute("for", fileInput.id);
+        }
+      });
+    }
+
+    function setupImageUploads() {
+      document.querySelectorAll('input[type="file"]').forEach((input) => {
+        if (input.dataset.bound === "1") return; // ✅ prevents duplicate listeners
+        input.dataset.bound = "1";
+
+        input.addEventListener("change", function (e) {
+
+          const preview = this.nextElementSibling;
+          if (!preview || !preview.classList.contains("image-preview")) return;
+
+          preview.innerHTML = "";
+          const files = e.target.files;
+
+          if (files.length > 4) {
+            showError("Maximum 4 images allowed");
+            this.value = "";
+            return;
           }
-          
-          const fileInput = clone.querySelector('input[type="file"]');
-          if (fileInput) {
-            fileInput.id = `offer-images-${newIndex}`;
-            fileInput.name = `offer_images_${newIndex}[]`;
-            fileInput.value = "";
-          }
-          
-          const label = clone.querySelector('label[for^="offer-images-"]');
-          if (label && fileInput) {
-            label.setAttribute("for", fileInput.id);
-          }
-          
-          const preview = clone.querySelector(".image-preview");
-          if (preview) {
-            preview.innerHTML = "";
+
+          if (files.length === 0) {
             preview.style.display = "none";
+            return;
           }
-          
-          document.getElementById("modal-offered-items-container").appendChild(clone);
-          
-          setupImageUploads();
-        });
-      }
-      
-      function renumberItems() {
-        const items = document.querySelectorAll(".modal-offered-item");
-        items.forEach((item, index) => {
-          const itemNumber = index + 1;
-          item.dataset.index = itemNumber;
-          
-          const circle = item.querySelector(".item-number-circle");
-          if (circle) circle.textContent = itemNumber;
-          
-          const title = item.querySelector("h5");
-          if (title) title.textContent = `Offered Item #${itemNumber}`;
-          
-          const fileInput = item.querySelector('input[type="file"]');
-          if (fileInput) {
-            fileInput.id = `offer-images-${itemNumber}`;
-            fileInput.name = `offer_images_${itemNumber}[]`;
-          }
-          
-          const label = item.querySelector('label[for^="offer-images-"]');
-          if (label && fileInput) {
-            label.setAttribute("for", fileInput.id);
-          }
-        });
-      }
-      
-      function setupImageUploads() {
-        document.querySelectorAll('input[type="file"]').forEach(input => {
-          input.addEventListener("change", function(e) {
-            const preview = this.nextElementSibling;
-            if (!preview || !preview.classList.contains("image-preview")) return;
-            
-            preview.innerHTML = "";
-            const files = e.target.files;
-            
-            if (files.length > 4) {
-              showError("Maximum 4 images allowed");
-              this.value = "";
+
+          preview.style.display = "flex";
+
+          Array.from(files).forEach((file, index) => {
+            if (!file.type.startsWith("image/")) {
+              showError("Please upload image files only");
               return;
             }
-            
-            if (files.length === 0) {
-              preview.style.display = "none";
+
+            if (file.size > 10 * 1024 * 1024) {
+              showError(`File "${file.name}" is too large (max 10MB)`);
               return;
             }
-            
-            preview.style.display = "flex";
-            
-            Array.from(files).forEach((file, index) => {
-              if (!file.type.startsWith("image/")) {
-                showError("Please upload image files only");
-                return;
-              }
-              
-              if (file.size > 10 * 1024 * 1024) {
-                showError(`File "${file.name}" is too large (max 10MB)`);
-                return;
-              }
-              
-              const reader = new FileReader();
-              reader.onload = function(e) {
-                const container = document.createElement("div");
-                container.className = "preview-image";
-                
-                const img = document.createElement("img");
-                img.src = e.target.result;
-                
-                const removeBtn = document.createElement("button");
-                removeBtn.type = "button";
-                removeBtn.className = "remove-image";
-                removeBtn.innerHTML = "×";
-                removeBtn.addEventListener("click", function() {
-                  const dt = new DataTransfer();
-                  const filesArray = Array.from(input.files);
-                  filesArray.splice(index, 1);
-                  filesArray.forEach(file => dt.items.add(file));
-                  input.files = dt.files;
-                  
-                  container.remove();
-                  
-                  if (preview.children.length === 0) {
-                    preview.style.display = "none";
-                  }
-                });
-                
-                container.appendChild(img);
-                container.appendChild(removeBtn);
-                preview.appendChild(container);
-              };
-              reader.readAsDataURL(file);
-            });
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+              const container = document.createElement("div");
+              container.className = "preview-image";
+
+              const img = document.createElement("img");
+              img.src = e.target.result;
+
+              const removeBtn = document.createElement("button");
+              removeBtn.type = "button";
+              removeBtn.className = "remove-image";
+              removeBtn.innerHTML = "×";
+              removeBtn.addEventListener("click", function () {
+                const dt = new DataTransfer();
+                const filesArray = Array.from(input.files);
+                filesArray.splice(index, 1);
+                filesArray.forEach((file) => dt.items.add(file));
+                input.files = dt.files;
+
+                container.remove();
+
+                if (preview.children.length === 0) {
+                  preview.style.display = "none";
+                }
+              });
+
+              container.appendChild(img);
+              container.appendChild(removeBtn);
+              preview.appendChild(container);
+            };
+            reader.readAsDataURL(file);
           });
         });
-      }
-      
-      function setupCategoryAutocomplete() {
-        const sampleCategories = [
-          "Electronics", "Mobile Phones", "Laptops", "Home Appliances",
-          "Fashion", "Furniture", "Books", "Sports Equipment",
-          "Vehicles", "Property", "Services", "Other"
-        ];
-        
-        document.querySelectorAll('[data-category-autocomplete="true"]').forEach(input => {
+      });
+    }
+
+    function setupCategoryAutocomplete() {
+      const sampleCategories = [
+        "Electronics",
+        "Mobile Phones",
+        "Laptops",
+        "Home Appliances",
+        "Fashion",
+        "Furniture",
+        "Books",
+        "Sports Equipment",
+        "Vehicles",
+        "Property",
+        "Services",
+        "Other",
+        "Food & Drinks",
+      ];
+
+      document
+        .querySelectorAll('[data-category-autocomplete="true"]')
+        .forEach((input) => {
           const wrapper = input.parentElement;
           let suggestions = wrapper.querySelector(".category-suggestions");
-          
+
           if (!suggestions) {
             suggestions = document.createElement("div");
             suggestions.className = "category-suggestions";
             wrapper.appendChild(suggestions);
           }
-          
-          input.addEventListener("input", function() {
+
+          input.addEventListener("input", function () {
             const value = this.value.toLowerCase();
             suggestions.innerHTML = "";
-            
+
             if (!value) {
               suggestions.style.display = "none";
               return;
             }
-            
-            const filtered = sampleCategories.filter(cat => 
+
+            const filtered = sampleCategories.filter((cat) =>
               cat.toLowerCase().includes(value)
             );
-            
+
             if (filtered.length === 0) {
               suggestions.style.display = "none";
               return;
             }
-            
+
             suggestions.style.display = "block";
-            
-            filtered.forEach(cat => {
+
+            filtered.forEach((cat) => {
               const div = document.createElement("div");
               div.textContent = cat;
-              div.style.cssText = "padding:12px 16px; cursor:pointer; transition:background 0.2s;";
+              div.style.cssText =
+                "padding:12px 16px; cursor:pointer; transition:background 0.2s;";
               div.addEventListener("mouseover", () => {
                 div.style.background = "var(--light-gray)";
               });
@@ -2799,64 +2925,85 @@
               suggestions.appendChild(div);
             });
           });
-          
-          document.addEventListener("click", function(e) {
+
+          document.addEventListener("click", function (e) {
             if (!wrapper.contains(e.target)) {
               suggestions.style.display = "none";
             }
           });
         });
-      }
-      
-      if (form) {
-        form.addEventListener("submit", async function(e) {
-          e.preventDefault();
-          
-          if (!validateStep(currentStep)) return;
-          
-          const submitBtn = form.querySelector('button[type="submit"]');
-          const originalText = submitBtn.innerHTML;
-          
-          submitBtn.disabled = true;
-          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-          
-          try {
-            const formData = new FormData(this);
-            const response = await fetch("/store/add-item", {
-              method: "POST",
-              body: formData
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-              showSuccessBanner(data.message || "Item added successfully!");
-              
-              if (data.redirect) {
-                window.location.href = data.redirect;
-              } else {
-                setTimeout(() => {
-                  closeModal();
-                  location.reload();
-                }, 1500);
-              }
+    }
+
+    if (form) {
+      form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        if (!validateStep(currentStep)) return;
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+        try {
+          const formData = new FormData(this);
+
+          // ✅ OPTIONAL DEBUG (uncomment to confirm no duplicate empty fields)
+          for (const [k, v] of formData.entries()) console.log("SUBMIT:", k, v);
+
+          const response = await fetch("/store/add-item", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            showSuccessBanner(data.message || "Item added successfully!");
+
+            if (data.redirect) {
+              window.location.href = data.redirect;
             } else {
-              showError(data.message || "Error adding item");
-              submitBtn.disabled = false;
-              submitBtn.innerHTML = originalText;
+              setTimeout(() => {
+                closeModal();
+                location.reload();
+              }, 1500);
             }
-          } catch (error) {
-            console.error("Error:", error);
-            showError("Network error. Please try again.");
+          } else {
+            showError(data.message || "Error adding item");
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;
           }
-        });
+        } catch (error) {
+          console.error("Error:", error);
+          showError("Network error. Please try again.");
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
+        }
+      });
+    }
+
+    setupImageUploads();
+    setupCategoryAutocomplete();
+  });
+</script>
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const storeId = {{ store.store_id }};
+    // Count a view for the actual store page visit:
+    if (storeId) {
+      const payload = JSON.stringify({ store_id: Number(storeId) });
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon("/metrics/store/view", new Blob([payload], {type:"application/json"}));
+      } else {
+        fetch("/metrics/store/view", { method:"POST", headers:{ "Content-Type":"application/json" }, body: payload, keepalive:true });
       }
-      
-      setupImageUploads();
-      setupCategoryAutocomplete();
-    });
-  </script>
+    }
+  });
+</script>
+
 </body>
 </html>

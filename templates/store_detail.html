@@ -941,106 +941,101 @@ footer {
                 </div>
 
 <div class="products-grid" id="productsGrid">
-    {% if listings %}
-        {% for listing in listings %}
-        <!-- Make the entire card clickable -->
-        <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
-           class="product-card-link">
-            <div class="product-card 
-                        {% if listing.deal_type == 'Swap Deal' %}swap-card{% endif %}"
-                 data-title="{{ listing.title|lower }}"
-                 data-description="{{ (listing.description or '')|lower }}"
-                 data-category="{{ (listing.category or '')|lower }}">
+  {% if listings %}
+    {% for listing in listings %}
+      <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
+         class="product-card-link track-listing"
+         data-listing-id="{{ listing.listing_id }}">
 
-                <!-- Deal Badge - positioned differently based on type -->
-                {% if listing.deal_type == 'Swap Deal' %}
-                <span class="deal-badge swap"> <!-- RIGHT side for swap -->
-                    {{ listing.deal_type }}
-                </span>
-                {% else %}
-                <span class="deal-badge sale"> <!-- LEFT side for sale -->
-                    {{ listing.deal_type or 'For Sale' }}
-                </span>
+        <div class="product-card {% if listing.deal_type == 'Swap Deal' %}swap-card{% endif %}"
+             data-title="{{ listing.title|lower }}"
+             data-description="{{ (listing.description or '')|lower }}"
+             data-category="{{ (listing.category or '')|lower }}">
+
+          <!-- Deal Badge -->
+          {% if listing.deal_type == 'Swap Deal' %}
+            <span class="deal-badge swap">{{ listing.deal_type }}</span>
+          {% else %}
+            <span class="deal-badge sale">{{ listing.deal_type or 'For Sale' }}</span>
+          {% endif %}
+
+          <!-- Media -->
+          <div class="product-media">
+            {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 0 %}
+              <div class="swap-row">
+                {% for offer in listing.offers[:3] %}
+                  <div class="swap-photo">
+                    <img src="{{ offer.image1 or offer.image_url or '/static/images/placeholder.jpg' }}"
+                         alt="{{ offer.title }}"
+                         loading="lazy">
+                  </div>
+                {% endfor %}
+                {% if listing.offers|length > 3 %}
+                  <div class="swap-more">+{{ listing.offers|length - 3 }}</div>
                 {% endif %}
+              </div>
+            {% else %}
+              <div class="product-image">
+                <img src="{{ listing.main_image }}"
+                     alt="{{ listing.title }}"
+                     loading="lazy">
+              </div>
+            {% endif %}
+          </div>
 
-                <!-- Media container -->
-                <div class="product-media">
-                    {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 0 %}
-                    <div class="swap-row">
-                        {% for offer in listing.offers[:3] %}
-                        <div class="swap-photo">
-                            <img src="{{ offer.image1 or offer.image_url or '/static/images/placeholder.jpg' }}"
-                                 alt="{{ offer.title }}"
-                                 loading="lazy">
-                        </div>
-                        {% endfor %}
-                        {% if listing.offers|length > 3 %}
-                        <div class="swap-more">+{{ listing.offers|length - 3 }}</div>
-                        {% endif %}
-                    </div>
-                    {% else %}
-                    <div class="product-image">
-                        <img src="{{ listing.main_image }}"
-                             alt="{{ listing.title }}"
-                             loading="lazy">
-                    </div>
-                    {% endif %}
+          <!-- Content -->
+          <div class="product-content">
+            {% if listing.deal_type == 'Swap Deal' %}
+              <div class="swap-meta">
+                {% set offer_titles = listing.offers | map(attribute='title') | list %}
+                <div class="swap-offer-line">
+                  <strong>Offer:</strong>
+                  {{ offer_titles | join(' + ') }}
+                  {% if listing.additional_cash_float > 0 %}
+                    + ₵{{ "{:,.2f}".format(listing.additional_cash_float) }}
+                  {% endif %}
                 </div>
 
-                <div class="product-content">
-                    <!-- Swap Deal content -->
-                    {% if listing.deal_type == 'Swap Deal' %}
-                    <div class="swap-meta">
-                        {% set offer_titles = listing.offers | map(attribute='title') | list %}
-                        <div class="swap-offer-line">
-                            <strong>Offer:</strong> 
-                            {{ offer_titles | join(' + ') }}
-                            {% if listing.additional_cash_float > 0 %}
-                                + ₵{{ "{:,.2f}".format(listing.additional_cash_float) }}
-                            {% endif %}
-                        </div>
-
-                        <div class="swap-wants-line">
-                            <strong>Wants:</strong> {{ listing.desired_swap or 'Any reasonable offer' }}
-                        </div>
-
-                        {% if listing.required_cash_float > 0 %}
-                        <div class="swap-cash-line">
-                            <strong>Plus Cash:</strong> ₵{{ "{:,.2f}".format(listing.required_cash_float) }}
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Outright Sale -->
-                    {% else %}
-                    <h3 class="product-title">{{ listing.title }}</h3>
-                    <div class="product-price">
-                        {% if listing.price_float > 0 %}
-                            ₵{{ "{:,.2f}".format(listing.price_float) }}
-                        {% else %}
-                            Contact for price
-                        {% endif %}
-                    </div>
-                    {% endif %}
-
-                    <!-- Footer elements -->
-                    <div class="product-footer">
-                        {% if listing.condition %}
-                        <div class="product-condition">{{ listing.condition }}</div>
-                        {% endif %}
-                    </div>
+                <div class="swap-wants-line">
+                  <strong>Wants:</strong> {{ listing.desired_swap or 'Any reasonable offer' }}
                 </div>
+
+                {% if listing.required_cash_float > 0 %}
+                  <div class="swap-cash-line">
+                    <strong>Plus Cash:</strong> ₵{{ "{:,.2f}".format(listing.required_cash_float) }}
+                  </div>
+                {% endif %}
+              </div>
+            {% else %}
+              <h3 class="product-title">{{ listing.title }}</h3>
+              <div class="product-price">
+                {% if listing.price_float > 0 %}
+                  ₵{{ "{:,.2f}".format(listing.price_float) }}
+                {% else %}
+                  Contact for price
+                {% endif %}
+              </div>
+            {% endif %}
+
+            <div class="product-footer">
+              {% if listing.condition %}
+                <div class="product-condition">{{ listing.condition }}</div>
+              {% endif %}
             </div>
-        </a>
-        {% endfor %}
-    {% else %}
-        <div class="empty-state">
-            <i class="fas fa-store-slash"></i>
-            <h3>No Products Available</h3>
-            <p>This store hasn't listed any products yet.</p>
+          </div>
+
         </div>
-    {% endif %}
+      </a>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      <i class="fas fa-store-slash"></i>
+      <h3>No Products Available</h3>
+      <p>This store hasn't listed any products yet.</p>
+    </div>
+  {% endif %}
 </div>
+
             </div>
         </div>
     </main>
@@ -1097,75 +1092,150 @@ footer {
         </div>
     </footer>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('searchInput');
-            const chips = document.querySelectorAll('.chip');
-            const productCards = document.querySelectorAll('.product-card');
-            const productCount = document.getElementById('productCount');
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // ============ Filter ============
+    const searchInput = document.getElementById("searchInput");
+    const chips = document.querySelectorAll(".chip");
+    const productCount = document.getElementById("productCount");
 
-            // Filter products
-            function filterProducts() {
-                const searchTerm = searchInput.value.toLowerCase().trim();
-                const activeChip = document.querySelector('.chip.active');
-                const selectedCategory = activeChip ? activeChip.dataset.category : '';
-                
-                let visibleCount = 0;
+    const cardLinks = document.querySelectorAll(".product-card-link");
+    const cardDivs = document.querySelectorAll(".product-card");
+    const filterTargets = cardLinks.length ? cardLinks : cardDivs;
 
-                productCards.forEach(card => {
-                    const title = card.dataset.title || '';
-                    const description = card.dataset.description || '';
-                    const category = card.dataset.category || '';
+    function filterProducts() {
+      const term = (searchInput ? searchInput.value : "").toLowerCase().trim();
+      const activeChip = document.querySelector(".chip.active");
+      const selectedCategory = activeChip ? (activeChip.dataset.category || "") : "";
 
-                    const matchesSearch = title.includes(searchTerm) || description.includes(searchTerm);
-                    const matchesCategory = !selectedCategory || category === selectedCategory;
+      let visibleCount = 0;
 
-                    if (matchesSearch && matchesCategory) {
-                        card.style.display = 'flex';
-                        visibleCount++;
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
+      filterTargets.forEach((el) => {
+        const dataSource =
+          el.classList.contains("product-card")
+            ? el
+            : (el.querySelector(".product-card") || el);
 
-                // Update product count
-                if (productCount) {
-                    productCount.textContent = `${visibleCount} items${searchTerm ? ' found' : ''}`;
-                }
-            }
+        const title = (dataSource.dataset.title || "").toLowerCase();
+        const description = (dataSource.dataset.description || "").toLowerCase();
+        const category = (dataSource.dataset.category || "").toLowerCase();
 
-            // Event listeners
-            searchInput.addEventListener('input', filterProducts);
-            
-            chips.forEach(chip => {
-                chip.addEventListener('click', function() {
-                    chips.forEach(c => c.classList.remove('active'));
-                    this.classList.add('active');
-                    filterProducts();
-                });
+        const matchesSearch = !term || title.includes(term) || description.includes(term);
+        const matchesCategory = !selectedCategory || category === selectedCategory.toLowerCase();
+
+        if (matchesSearch && matchesCategory) {
+          el.style.display = "";
+          visibleCount++;
+        } else {
+          el.style.display = "none";
+        }
+      });
+
+      if (productCount) {
+        productCount.textContent = `${visibleCount} items${term ? " found" : ""}`;
+      }
+    }
+
+    if (searchInput) searchInput.addEventListener("input", filterProducts);
+
+    chips.forEach((chip) => {
+      chip.addEventListener("click", function () {
+        chips.forEach((c) => c.classList.remove("active"));
+        this.classList.add("active");
+        filterProducts();
+      });
+    });
+
+    // Touch feedback
+    filterTargets.forEach((el) => {
+      el.addEventListener("touchstart", () => (el.style.opacity = "0.9"), { passive: true });
+      el.addEventListener("touchend", () => (el.style.opacity = "1"), { passive: true });
+    });
+
+    filterProducts();
+
+    // ============ Metrics (listing impressions + clicks) ============
+    function postMetric(url, payload) {
+      try {
+        const data = JSON.stringify(payload);
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(url, new Blob([data], { type: "application/json" }));
+          return;
+        }
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: data,
+          keepalive: true,
+          credentials: "same-origin",
+        }).catch(() => {});
+      } catch (_) {}
+    }
+
+    function trackListingClick(id) {
+      const n = Number(id);
+      if (!n) return;
+      postMetric("/metrics/listing/click", { listing_id: n });
+    }
+
+    function trackListingImpression(id) {
+      const n = Number(id);
+      if (!n) return;
+      postMetric("/metrics/listing/impression", { listing_id: n });
+    }
+
+    const trackEls = document.querySelectorAll(".track-listing[data-listing-id]");
+    if (trackEls.length) {
+      trackEls.forEach((el) => {
+        el.addEventListener(
+          "click",
+          () => trackListingClick(el.getAttribute("data-listing-id")),
+          { passive: true }
+        );
+      });
+
+      const seen = new Set();
+
+      if ("IntersectionObserver" in window) {
+        const io = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting || entry.intersectionRatio < 0.35) return;
+              const el = entry.target;
+              const id = el.getAttribute("data-listing-id");
+              if (!id || seen.has(id)) return;
+
+              seen.add(id);
+              trackListingImpression(id);
+              io.unobserve(el);
             });
+          },
+          { threshold: [0.35] }
+        );
 
-            // Add touch feedback to product cards
-            productCards.forEach(card => {
-                card.addEventListener('touchstart', function() {
-                    this.style.opacity = '0.9';
-                });
-                
-                card.addEventListener('touchend', function() {
-                    this.style.opacity = '1';
-                });
-            });
-
-            // Initialize filter
-            filterProducts();
+        trackEls.forEach((el) => io.observe(el));
+      } else {
+        trackEls.forEach((el) => {
+          const id = el.getAttribute("data-listing-id");
+          if (id && !seen.has(id)) {
+            seen.add(id);
+            trackListingImpression(id);
+          }
         });
+      }
+    }
+  });
 
-        // Prevent zoom on input focus (better mobile UX)
-        document.addEventListener('touchstart', function(event) {
-            if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
-                event.target.style.fontSize = '16px'; // Prevent iOS zoom
-            }
-        }, { passive: true });
-    </script>
+  // Prevent iOS zoom
+  document.addEventListener(
+    "touchstart",
+    function (event) {
+      const tag = (event.target && event.target.tagName) || "";
+      if (tag === "INPUT" || tag === "TEXTAREA") event.target.style.fontSize = "16px";
+    },
+    { passive: true }
+  );
+</script>
+
 </body>
 </html>

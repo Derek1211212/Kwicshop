@@ -6602,9 +6602,12 @@ def store_add_item():
     if not location or not contact:
         return jsonify({"success": False, "message": "Location and contact are required."}), 400
 
-    category = request.form.get('category', '').strip()
+    categories = [c.strip() for c in request.form.getlist('category') if c and c.strip()]
+    category = categories[0] if categories else ""
+
     if not category:
         return jsonify({"success": False, "message": "Category is required."}), 400
+
 
     # Prepare common variables
     main_images = []
@@ -7396,6 +7399,125 @@ def my_store_redirect():
         return redirect(url_for('store_home', slug=store['slug']))
     else:
         return redirect(url_for('create_store'))
+
+
+
+
+def _inc_store_metric(store_id: int, field: str, amount: int = 1):
+    """Increment one metric field for (store_id, today). Requires UNIQUE(store_id, dt)."""
+    if field not in {"views", "clicks", "chats", "swaps", "sales"}:
+        raise ValueError("Invalid metric field")
+
+    conn = get_db_connection()
+    cur = conn.cursor(buffered=True)
+    try:
+        today = date.today()
+
+        # Requires UNIQUE KEY on (store_id, dt)
+        sql = f"""
+            INSERT INTO store_metrics (store_id, dt, {field})
+            VALUES (%s, %s, %s)
+            ON DUPLICATE KEY UPDATE {field} = COALESCE({field}, 0) + VALUES({field})
+        """
+        cur.execute(sql, (store_id, today, amount))
+        conn.commit()
+        return True
+    except Exception as e:
+        conn.rollback()
+        print("Store metrics error:", str(e))
+        return False
+    finally:
+        cur.close()
+        conn.close()
+
+
+
+  
+
+
+@app.route("/metrics/store/view", methods=["POST"])
+def metric_store_view():
+    data = request.get_json(silent=True) or {}
+    store_id = data.get("store_id")
+
+    try:
+        store_id = int(store_id)
+    except:
+        return jsonify({"success": False, "message": "Invalid store_id"}), 400
+
+    ok = _inc_store_metric(store_id, "views", 1)
+    return jsonify({"success": ok})
+
+
+@app.route("/metrics/store/click", methods=["POST"])
+def metric_store_click():
+    data = request.get_json(silent=True) or {}
+    store_id = data.get("store_id")
+
+    try:
+        store_id = int(store_id)
+    except:
+        return jsonify({"success": False, "message": "Invalid store_id"}), 400
+
+    ok = _inc_store_metric(store_id, "clicks", 1)
+    return jsonify({"success": ok})
+
+
+
+def _inc_listing_metric(listing_id: int, field: str, amount: int = 1):
+    if field not in {"impressions", "clicks", "carousel_impressions"}:
+        raise ValueError("Invalid metric field")
+
+    conn = get_db_connection()
+    cur = conn.cursor(buffered=True)
+    try:
+        sql = f"""
+            INSERT INTO listing_metrics (listing_id, {field}, updated_at)
+            VALUES (%s, %s, NOW())
+            ON DUPLICATE KEY UPDATE
+                {field} = COALESCE({field}, 0) + VALUES({field}),
+                updated_at = NOW()
+        """
+        cur.execute(sql, (listing_id, amount))
+        conn.commit()
+        return True
+    except Exception as e:
+        conn.rollback()
+        print("Listing metrics error:", str(e))
+        return False
+    finally:
+        cur.close()
+        conn.close()
+
+
+@app.route("/metrics/listing/impression", methods=["POST"])
+def metric_listing_impression():
+    data = request.get_json(silent=True) or {}
+    listing_id = data.get("listing_id")
+
+    try:
+        listing_id = int(listing_id)
+    except:
+        return jsonify({"success": False, "message": "Invalid listing_id"}), 400
+
+    ok = _inc_listing_metric(listing_id, "impressions", 1)
+    return jsonify({"success": ok})
+
+
+@app.route("/metrics/listing/click", methods=["POST"])
+def metric_listing_click():
+    data = request.get_json(silent=True) or {}
+    listing_id = data.get("listing_id")
+
+    try:
+        listing_id = int(listing_id)
+    except:
+        return jsonify({"success": False, "message": "Invalid listing_id"}), 400
+
+    ok = _inc_listing_metric(listing_id, "clicks", 1)
+    return jsonify({"success": ok})
+        
+
 
 
 

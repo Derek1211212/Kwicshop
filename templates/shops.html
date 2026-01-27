@@ -693,7 +693,7 @@
         <!-- Shops Grid - UPDATED: Will show 2 columns on mobile -->
         <div class="shops-grid">
             {% for store in stores %}
-                <a href="/store/{{ store.store_id }}" class="shop-card">
+                <a href="/store/{{ store.store_id }}" class="shop-card" data-store-id="{{ store.store_id }}">
                     <div class="shop-image">
                         <img 
                             src="{{ store.logo or 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' }}"
@@ -858,5 +858,93 @@
             }
         });
     </script>
+
+
+    <script>
+  // ===== Store metrics tracking (clicks + views) =====
+  // Uses sendBeacon when possible (reliable during navigation), else fetch
+
+  function postMetric(url, payload) {
+    try {
+      const data = JSON.stringify(payload);
+
+      if (navigator.sendBeacon) {
+        const blob = new Blob([data], { type: "application/json" });
+        navigator.sendBeacon(url, blob);
+        return;
+      }
+
+      // fallback
+      fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: data,
+        keepalive: true, // helps when navigating away
+        credentials: "same-origin",
+      }).catch(() => {});
+    } catch (_) {}
+  }
+
+  function trackStoreClick(storeId) {
+    postMetric("/metrics/store/click", { store_id: Number(storeId) });
+  }
+
+  function trackStoreView(storeId) {
+    postMetric("/metrics/store/view", { store_id: Number(storeId) });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const cards = document.querySelectorAll(".shop-card[data-store-id]");
+    if (!cards.length) return;
+
+    // --- Click tracking ---
+    cards.forEach((card) => {
+      card.addEventListener("click", () => {
+        const storeId = card.getAttribute("data-store-id");
+        if (storeId) trackStoreClick(storeId);
+      }, { passive: true });
+    });
+
+    // --- View (impression) tracking ---
+    // Count a "view" once per page load per store when card becomes visible.
+    const seen = new Set();
+
+    if ("IntersectionObserver" in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            if (entry.intersectionRatio < 0.35) return; // threshold to reduce false views
+
+            const card = entry.target;
+            const storeId = card.getAttribute("data-store-id");
+            if (!storeId) return;
+
+            if (!seen.has(storeId)) {
+              seen.add(storeId);
+              trackStoreView(storeId);
+            }
+
+            // once counted, stop observing that card
+            io.unobserve(card);
+          });
+        },
+        { threshold: [0.35] }
+      );
+
+      cards.forEach((card) => io.observe(card));
+    } else {
+      // fallback: count as viewed on load (less accurate)
+      cards.forEach((card) => {
+        const storeId = card.getAttribute("data-store-id");
+        if (storeId && !seen.has(storeId)) {
+          seen.add(storeId);
+          trackStoreView(storeId);
+        }
+      });
+    }
+  });
+</script>
+
 </body>
 </html>
