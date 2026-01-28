@@ -259,7 +259,7 @@
             }
         }
 
-        /* FINE-TUNED Shop Card */
+        /* COMPACT Shop Card */
         .shop-card {
             background: white;
             border-radius: var(--radius);
@@ -268,48 +268,42 @@
             border: 1px solid var(--border-light);
             text-decoration: none;
             color: inherit;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
+            display: block;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+            height: 100%;
         }
 
         .shop-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            border-color: var(--green-medium);
         }
 
         .shop-image {
-            height: 160px;
+            height: 120px;
             background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
             position: relative;
             overflow: hidden;
-            flex-shrink: 0;
         }
 
         .shop-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.3s ease;
-        }
-
-        .shop-card:hover .shop-image img {
-            transform: scale(1.05);
         }
 
         .shop-badge {
             position: absolute;
-            top: 12px;
-            left: 12px;
+            top: 8px;
+            left: 8px;
             background: rgba(255, 255, 255, 0.95);
-            padding: 4px 10px;
-            border-radius: 14px;
-            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 10px;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             backdrop-filter: blur(4px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
@@ -318,143 +312,126 @@
             color: var(--green-dark);
         }
 
-        .badge-featured {
-            background: var(--accent-gold);
-            color: white;
-        }
-
-        /* FINE-TUNED Shop Content */
+        /* COMPACT Shop Content */
         .shop-content {
-            padding: 18px;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .shop-header {
-            margin-bottom: 12px;
+            padding: 14px;
         }
 
         .shop-title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             color: var(--text-primary);
-            line-height: 1.4;
-            margin-bottom: 8px;
+            line-height: 1.3;
+            margin-bottom: 6px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
 
+        /* COMPACT Category & Rating Row */
+        .shop-meta-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
         .shop-category {
             display: inline-block;
             background: var(--green-light);
             color: var(--green-dark);
-            padding: 4px 10px;
-            border-radius: 14px;
-            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
             font-weight: 600;
-            margin-bottom: 12px;
-            align-self: flex-start;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
 
-        /* FINE-TUNED Rating Row */
         .shop-rating-row {
             display: flex;
             align-items: center;
-            gap: 6px;
-            margin: 8px 0 14px;
-            font-size: 13px;
+            gap: 4px;
+            font-size: 12px;
             color: var(--text-secondary);
-            flex-wrap: wrap;
         }
 
         .shop-rating-row .fa-star { 
             color: var(--accent-gold); 
-            font-size: 12px;
+            font-size: 11px;
         }
 
         .shop-rating-row .rating-val { 
             font-weight: 700; 
             color: var(--text-primary); 
-            font-size: 14px;
-        }
-
-        .shop-rating-row .rating-count {
-            color: var(--text-tertiary);
         }
 
         .shop-rating-row .trust-pill {
-            margin-left: auto;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
-            padding: 4px 10px;
-            border-radius: 999px;
+            padding: 2px 6px;
+            border-radius: 8px;
             background: var(--green-light);
             color: var(--green-dark);
             white-space: nowrap;
         }
 
-        /* FINE-TUNED Meta Section */
-        .shop-meta {
-            margin-top: auto;
-            padding-top: 14px;
-            border-top: 1px solid var(--border-light);
-        }
-
-        .meta-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-        }
-
-        .meta-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .meta-item i {
-            color: var(--green-medium);
-            width: 14px;
-            flex-shrink: 0;
-        }
-
-        /* Shop Footer */
-        .shop-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding-top: 14px;
-            margin-top: 14px;
-            border-top: 1px solid var(--border-light);
-        }
-
-        .shop-status {
+        /* COMPACT Location */
+        .shop-location {
             display: flex;
             align-items: center;
             gap: 6px;
             font-size: 12px;
             color: var(--text-secondary);
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .shop-location i {
+            color: var(--green-medium);
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+
+        .shop-location span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* COMPACT Footer */
+        .shop-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .shop-status {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: var(--text-secondary);
         }
 
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background: var(--green-medium);
-            box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.2);
         }
 
         .shop-cta {
             color: var(--primary-green);
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             transition: color 0.2s ease;
         }
 
@@ -645,35 +622,33 @@
             }
 
             .shop-image {
-                height: 140px;
+                height: 100px;
             }
 
             .shop-content {
-                padding: 14px;
+                padding: 12px;
             }
 
             .shop-title {
-                font-size: 15px;
+                font-size: 14px;
                 -webkit-line-clamp: 2;
             }
 
             .shop-category {
-                font-size: 10px;
-                padding: 3px 8px;
+                font-size: 9px;
+                padding: 1px 6px;
             }
 
             .shop-rating-row {
-                font-size: 12px;
-                gap: 4px;
+                font-size: 11px;
             }
 
-            .shop-rating-row .trust-pill {
-                font-size: 10px;
-                padding: 3px 8px;
+            .shop-location {
+                font-size: 11px;
             }
 
-            .meta-item {
-                font-size: 12px;
+            .shop-cta {
+                font-size: 11px;
             }
 
             .simple-filters {
@@ -684,17 +659,13 @@
         /* Optimize shop cards for 2-column mobile layout */
         @media (max-width: 768px) {
             .shop-card {
-                min-height: 300px;
+                min-height: auto;
             }
         }
 
         @media (max-width: 480px) {
             .shop-card {
-                min-height: 280px;
-            }
-            
-            .shop-image {
-                height: 120px;
+                min-height: auto;
             }
         }
     </style>
@@ -770,7 +741,7 @@
             </div>
         </div>
 
-        <!-- Shops Grid with FINE-TUNED cards -->
+        <!-- Shops Grid with COMPACT cards -->
         <div class="shops-grid">
             {% for store in stores %}
                 <a href="/store/{{ store.store_id }}" class="shop-card" data-store-id="{{ store.store_id }}">
@@ -789,34 +760,31 @@
                     </div>
 
                     <div class="shop-content">
-                        <div class="shop-header">
-                            <h3 class="shop-title">{{ store.name }}</h3>
-                            <span class="shop-category">{{ store.store_type }}</span>
-                        </div>
-
-                        <div class="shop-rating-row">
-                            <i class="fas fa-star"></i>
-                            <span class="rating-val">{{ store.rating_avg or '0.0' }}</span>
-                            <span class="rating-count">({{ store.rating_count or '0' }})</span>
-                            <span class="trust-pill" title="Trust score">
-                                Trust: {{ store.trust_score or '0.00' }}/5
-                            </span>
-                        </div>
-
-                        <div class="shop-meta">
-                            <div class="meta-item">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <span>{{ store.location }}</span>
+                        <h3 class="shop-title">{{ store.name }}</h3>
+                        
+                        <div class="shop-meta-header">
+                            
+                            <div class="shop-rating-row">
+                                <i class="fas fa-star"></i>
+                                <span class="rating-val">{{ store.rating_avg or '0.0' }}</span>
+                                <span class="trust-pill" title="Trust score">Trust Score
+                                    {{ store.trust_score or '0.00' }}/5
+                                </span>
                             </div>
+                        </div>
+
+                        <div class="shop-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>{{ store.location }}</span>
                         </div>
 
                         <div class="shop-footer">
                             <div class="shop-status">
                                 <div class="status-dot"></div>
-                                <span>Open Now</span>
+                                <span>Active</span>
                             </div>
                             <div class="shop-cta">
-                                Visit Shop <i class="fas fa-arrow-right"></i>
+                                View <i class="fas fa-arrow-right"></i>
                             </div>
                         </div>
                     </div>
