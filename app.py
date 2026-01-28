@@ -57,7 +57,7 @@ from urllib.parse import quote_plus
 import atexit
 from slugify import slugify
 from flask_login import current_user
-
+import math
 
 
 
@@ -6965,7 +6965,7 @@ def all_shops():
         query += " AND store_type = %s"
         params.append(store_type)
 
-    query += " ORDER BY created_at DESC"
+    query += " ORDER BY verified DESC, trust_score DESC, created_at DESC"
 
     cursor.execute(query, params)
     stores = cursor.fetchall()
@@ -7001,25 +7001,69 @@ app.jinja_env.filters['date'] = datetimeformat
 
 @app.route('/store/<int:store_id>')
 def store_detail(store_id):
+    """
+    Display a single store page with:
+    - Store info
+    - Active product listings (including swap deal offers)
+    - Rating form (conditional on login & not owner)
+    - List of all existing ratings/comments
+    """
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
     try:
-        # 1. Get store information
+        # ────────────────────────────────────────────────
+        # 1. Fetch store data
+        # ────────────────────────────────────────────────
         cursor.execute("""
             SELECT 
-                name, logo, banner, tour_video, description, location, contact,
-                delivery_options, verified, store_type
+                store_id,
+                user_id,
+                name,
+                logo,
+                banner,
+                tour_video,
+                description,
+                location,
+                contact,
+                delivery_options,
+                verified,
+                store_type,
+                rating_avg,
+                rating_count
             FROM stores
             WHERE store_id = %s 
               AND is_active = 1
+            LIMIT 1
         """, (store_id,))
         
         store = cursor.fetchone()
         if not store:
             abort(404)
 
-        # 2. Get all active listings for this store
+        # Apply safe defaults & type normalization
+        store['store_id']          = int(store['store_id'])
+        store['user_id']           = int(store['user_id']) if store.get('user_id') is not None else None
+        store['name']              = store.get('name', 'Unnamed Store')
+        store['description']       = store.get('description', 'No description available.')
+        store['location']          = store.get('location', 'Location not specified')
+        store['contact']           = store.get('contact', 'No contact information')
+        store['delivery_options']  = store.get('delivery_options', [])  # assuming list or JSON
+        store['tour_video']        = store.get('tour_video', None)
+        store['verified']          = bool(store.get('verified', False))
+        store['store_type']        = store.get('store_type', 'General')
+        store['rating_avg']        = float(store.get('rating_avg') or 0.0)
+        store['rating_count']      = int(store.get('rating_count') or 0)
+
+        # ────────────────────────────────────────────────
+        # 2. Determine login & ownership status
+        # ────────────────────────────────────────────────
+        is_logged_in = 'user_id' in session
+        is_owner = is_logged_in and session.get('user_id') == store['user_id']
+
+        # ────────────────────────────────────────────────
+        # 3. Fetch active listings
+        # ────────────────────────────────────────────────
         cursor.execute("""
             SELECT 
                 listing_id,
@@ -7031,12 +7075,12 @@ def store_detail(store_id):
                 image3,
                 image4,
                 category,
-                price,                -- varchar
+                price,
                 deal_type,
                 `condition`,
                 desired_swap,
-                required_cash,        -- int
-                additional_cash,      -- decimal
+                required_cash,
+                additional_cash,
                 swap_notes,
                 created_at
             FROM listings
@@ -7047,10 +7091,10 @@ def store_detail(store_id):
         
         listings = cursor.fetchall()
 
-        # 3. Process each listing: attach offers + convert numeric fields safely
+        # Enrich listings with offers & safe numeric values
         for listing in listings:
-            # Attach offered items for swap deals
-            if listing['deal_type'] == 'Swap Deal':
+            # Swap deal offers
+            if listing.get('deal_type') == 'Swap Deal':
                 cursor.execute("""
                     SELECT 
                         item_id,
@@ -7070,56 +7114,69 @@ def store_detail(store_id):
             else:
                 listing['offers'] = []
 
-            # Prepare main/preview image
+            # Main/preview image
             images = [img for img in [
-                listing['image_url'],
-                listing['image1'],
-                listing['image2'],
-                listing['image3'],
-                listing['image4']
+                listing.get('image_url'),
+                listing.get('image1'),
+                listing.get('image2'),
+                listing.get('image3'),
+                listing.get('image4')
             ] if img]
             listing['main_image'] = images[0] if images else '/static/images/placeholder.jpg'
 
-            # ── Safe numeric conversions ───────────────────────────────────────
-            # Price (varchar → float)
+            # Safe numeric conversions
             try:
                 listing['price_float'] = float(listing['price']) if listing['price'] else 0.0
             except (ValueError, TypeError):
                 listing['price_float'] = 0.0
 
-            # Required cash (int → float)
             try:
                 listing['required_cash_float'] = float(listing['required_cash']) if listing['required_cash'] is not None else 0.0
             except (ValueError, TypeError):
                 listing['required_cash_float'] = 0.0
 
-            # Additional cash (decimal → float)
             try:
                 listing['additional_cash_float'] = float(listing['additional_cash']) if listing['additional_cash'] is not None else 0.0
             except (ValueError, TypeError):
                 listing['additional_cash_float'] = 0.0
 
-        # 4. Collect categories
-        categories = set()
-        for listing in listings:
-            if listing.get('category'):
-                categories.add(listing['category'])
-        
-        sorted_categories = sorted(categories)
+        # Unique categories for filters
+        categories_set = {l.get('category') for l in listings if l.get('category')}
+        sorted_categories = sorted(categories_set)
 
-        # 5. Render
+        # ────────────────────────────────────────────────
+        # 4. Fetch all ratings & comments for display
+        # ────────────────────────────────────────────────
+        cursor.execute("""
+            SELECT 
+                rating,
+                comment,
+                created_at
+            FROM store_ratings
+            WHERE store_id = %s
+            ORDER BY created_at DESC
+            LIMIT 100   -- adjust as needed (or add pagination later)
+        """, (store_id,))
+        ratings = cursor.fetchall()
+
+        # ────────────────────────────────────────────────
+        # 5. Render template with all data
+        # ────────────────────────────────────────────────
         return render_template(
             'store_detail.html',
             store=store,
             listings=listings,
             categories=sorted_categories,
+            ratings=ratings,
+            is_logged_in=is_logged_in,
+            is_owner=is_owner,
             current_year=datetime.now().year
         )
 
     except Exception as e:
-        print(f"Error in store_detail route: {str(e)}")
+        current_app.logger.error(f"Error in store_detail route (store_id={store_id}): {str(e)}")
         abort(500)
-    
+
     finally:
         cursor.close()
         conn.close()
@@ -7517,6 +7574,272 @@ def metric_listing_click():
     ok = _inc_listing_metric(listing_id, "clicks", 1)
     return jsonify({"success": ok})
         
+
+
+
+
+
+VERIFY_THRESHOLD       = 3.5
+MIN_REVIEWS_FOR_VERIFY = 10   # or 10 — your choice
+M_BAYES                = 10  # prior strength
+
+
+def clamp(val, lo=0.0, hi=5.0):
+    return max(lo, min(hi, float(val)))
+
+
+def recompute_store_rating(store_id: int) -> bool:
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    try:
+        cur.execute("""
+            SELECT 
+                ROUND(COALESCE(AVG(rating), 0), 2) AS avg_rating,
+                COUNT(*) AS cnt
+            FROM store_ratings 
+            WHERE store_id = %s
+        """, (store_id,))
+        row = cur.fetchone() or {"avg_rating": 0.0, "cnt": 0}
+
+        cur.execute("""
+            UPDATE stores 
+            SET 
+                rating_avg   = %s,
+                rating_count = %s,
+                updated_at   = NOW()
+            WHERE store_id = %s
+        """, (row["avg_rating"], row["cnt"], store_id))
+
+        conn.commit()
+        return True
+
+    except Exception as e:
+        conn.rollback()
+        print(f"Rating recalc error (store {store_id}): {e}")
+        return False
+    finally:
+        cur.close()
+        conn.close()
+
+
+def recompute_store_trust_and_verification(store_id: int) -> bool:
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    try:
+        # 1. Load store
+        cur.execute("""
+            SELECT store_id, user_id, rating_avg, rating_count, is_active,
+                   logo, banner, description, location, contact, 
+                   store_link, created_at
+            FROM stores 
+            WHERE store_id = %s
+        """, (store_id,))
+        store = cur.fetchone()
+        if not store:
+            return False
+
+        if not store["is_active"]:
+            cur.execute("""
+                UPDATE stores 
+                SET trust_score = 0, verified = 0, updated_at = NOW() 
+                WHERE store_id = %s
+            """, (store_id,))
+            conn.commit()
+            return True
+
+        R = float(store["rating_avg"] or 0.0)
+        v = int(store["rating_count"] or 0)
+
+        # 2. Global average rating C (fallback 4.0)
+        cur.execute("""
+            SELECT COALESCE(AVG(rating_avg), 4.0) AS C 
+            FROM stores 
+            WHERE rating_count > 0
+        """)
+        C = float(cur.fetchone()["C"] or 4.0)
+
+        # 3. Bayesian adjusted rating
+        denom = v + M_BAYES
+        R_adj = (v / denom) * R + (M_BAYES / denom) * C
+        R_adj = clamp(R_adj)
+
+        # 4. Activity score A — only views and clicks now
+        cur.execute("""
+            SELECT 
+                COALESCE(SUM(views), 0)  AS views,
+                COALESCE(SUM(clicks), 0) AS clicks
+            FROM store_metrics
+            WHERE store_id = %s
+              AND dt >= CURDATE() - INTERVAL 30 DAY
+        """, (store_id,))
+        mrow = cur.fetchone() or {"views": 0, "clicks": 0}
+
+        # Weighted engagement (only views × 1, clicks × 3)
+        engagement = (mrow["views"] * 1) + (mrow["clicks"] * 3)
+
+        # Log scaling — same target of ~1500 points
+        A = 5.0 * (math.log1p(engagement) / math.log1p(1500))
+        A = clamp(A)
+
+        # 5. Profile completeness P — removed delivery_options
+        fields = ["logo", "banner", "description", "location", "contact", "store_link"]
+        present = sum(1 for f in fields if store.get(f))
+        P = 5.0 * (present / len(fields))
+        P = clamp(P)
+
+        # 6. Age score G (unchanged)
+        days = 0
+        if store["created_at"]:
+            if isinstance(store["created_at"], str):
+                try:
+                    created = datetime.fromisoformat(store["created_at"])
+                except:
+                    created = None
+            else:
+                created = store["created_at"]
+            
+            if created:
+                days = max(0, (datetime.utcnow() - created).days)
+
+        G = 5.0 * min(days, 180) / 180.0
+        G = clamp(G)
+
+        # 7. Final trust score (weights unchanged)
+        trust = clamp(0.60 * R_adj + 0.20 * A + 0.10 * P + 0.10 * G)
+
+        # 8. Verification rule
+        should_verify = 1 if (trust >= VERIFY_THRESHOLD and v >= MIN_REVIEWS_FOR_VERIFY) else 0
+
+        cur.execute("""
+            UPDATE stores
+            SET 
+                trust_score = ROUND(%s, 2),
+                verified    = %s,
+                updated_at  = NOW()
+            WHERE store_id = %s
+        """, (trust, should_verify, store_id))
+
+        conn.commit()
+        return True
+
+    except Exception as e:
+        conn.rollback()
+        print(f"Trust update error (store {store_id}): {e}")
+        return False
+    finally:
+        cur.close()
+        conn.close()
+
+
+@app.route("/ratings/store", methods=["POST"])
+def rate_store():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"success": False, "message": "Please log in to rate"}), 401
+
+    data = request.get_json(silent=True) or {}
+    try:
+        store_id = int(data.get("store_id"))
+        rating   = int(data.get("rating"))
+        comment  = (data.get("comment") or "").strip()[:1000]  # reasonable limit
+    except (ValueError, TypeError):
+        return jsonify({"success": False, "message": "Invalid input"}), 400
+
+    if not (1 <= rating <= 5):
+        return jsonify({"success": False, "message": "Rating must be 1–5 stars"}), 400
+
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    try:
+        cur.execute("""
+            SELECT user_id, is_active 
+            FROM stores 
+            WHERE store_id = %s
+        """, (store_id,))
+        store = cur.fetchone()
+
+        if not store:
+            return jsonify({"success": False, "message": "Store not found"}), 404
+
+        if not store["is_active"]:
+            return jsonify({"success": False, "message": "Store is inactive"}), 400
+
+        if int(store["user_id"]) == int(user_id):
+            return jsonify({"success": False, "message": "Cannot rate your own store"}), 403
+
+        # UPSERT rating
+        cur.execute("""
+            INSERT INTO store_ratings (store_id, user_id, rating, comment)
+            VALUES (%s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                rating = VALUES(rating),
+                comment = VALUES(comment),
+                updated_at = NOW()
+        """, (store_id, user_id, rating, comment or None))
+
+        conn.commit()
+
+    except Exception as e:
+        conn.rollback()
+        print(f"Rate store error: {e}")
+        return jsonify({"success": False, "message": "Database error"}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+    # Update aggregates & trust
+    recompute_store_rating(store_id)
+    recompute_store_trust_and_verification(store_id)
+
+    # Return updated values
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    try:
+        cur.execute("""
+            SELECT rating_avg, rating_count, verified
+            FROM stores 
+            WHERE store_id = %s
+        """, (store_id,))
+        row = cur.fetchone() or {}
+
+        return jsonify({
+            "success":      True,
+            "rating_avg":   float(row.get("rating_avg") or 0.0),
+            "rating_count": int(row.get("rating_count") or 0),
+            "verified":     int(row.get("verified") or 0),
+        })
+    finally:
+        cur.close()
+        conn.close()
+
+
+# Optional – useful for debugging or manual trigger
+@app.route("/admin/recompute-store-trust", methods=["POST"])
+def admin_recompute_all_trust():
+    # ← Add admin auth check here in production
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    try:
+        cur.execute("SELECT store_id FROM stores WHERE is_active = 1")
+        store_ids = [r["store_id"] for r in cur.fetchall()]
+
+        success_count = 0
+        for sid in store_ids:
+            if recompute_store_trust_and_verification(sid):
+                success_count += 1
+
+        return jsonify({"success": True, "updated": success_count, "total": len(store_ids)})
+    except Exception as e:
+        print(f"Batch trust error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+
+
+
+
 
 
 

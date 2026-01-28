@@ -617,6 +617,28 @@
                 min-height: 260px;
             }
         }
+
+
+        .shop-rating-row{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin:6px 0 10px;
+  font-size:13px;
+  color:var(--text-secondary);
+}
+.shop-rating-row .fa-star{ color: var(--accent-gold); }
+.shop-rating-row .rating-val{ font-weight:700; color: var(--text-primary); }
+.shop-rating-row .trust-pill{
+  margin-left:auto;
+  font-size:11px;
+  font-weight:700;
+  padding:3px 8px;
+  border-radius:999px;
+  background: var(--green-light);
+  color: var(--green-dark);
+}
+
     </style>
 </head>
 <body>
@@ -694,21 +716,34 @@
         <div class="shops-grid">
             {% for store in stores %}
                 <a href="/store/{{ store.store_id }}" class="shop-card" data-store-id="{{ store.store_id }}">
-                    <div class="shop-image">
-                        <img 
-                            src="{{ store.logo or 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' }}"
-                            alt="{{ store.name }}"
-                            loading="lazy"
-                        >
-                        
-                        <div class="shop-badge {% if loop.index <= 2 %}badge-featured{% else %}badge-verified{% endif %}">
-                            <i class="fas fa-{% if loop.index <= 2 %}crown{% else %}check-circle{% endif %}"></i>
-                            {% if loop.index <= 2 %}Featured{% else %}Verified{% endif %}
-                        </div>
-                    </div>
+<div class="shop-image">
+  <img
+    src="{{ store.logo or 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' }}"
+    alt="{{ store.name }}"
+    loading="lazy"
+  >
+
+
+  {% if store.verified %}
+    <div class="shop-badge badge-verified" style="top: 44px;">
+      <i class="fas fa-check-circle"></i> Verified
+    </div>
+  {% endif %}
+</div>
+
 
                     <div class="shop-content">
                         <h3 class="shop-title">{{ store.name }}</h3>
+
+                        <div class="shop-rating-row">
+                          <i class="fas fa-star"></i>
+                          <span class="rating-val">{{ store.rating_avg or '0.0' }}</span>
+                          <span class="rating-count">({{ store.rating_count or '0' }})</span>
+
+                          <span class="trust-pill" title="Trust score">
+                            Trust: {{ store.trust_score or '0.00' }}/5
+                          </span>
+                        </div>
                         
                         <span class="shop-category">{{ store.store_type }}</span>
 
