@@ -20,7 +20,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
 /* === Global Variables === */
-/* === Global Variables === */
 :root {
     --primary: #2e7d32;
     --primary-light: #e8f5e9;
@@ -293,10 +292,10 @@ p {
     background: var(--light);
 }
 
-/* === Stats Grid === */
+/* === STATS GRID - Two Column Design === */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 2fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.25rem;
     margin-bottom: 2rem;
 }
@@ -310,30 +309,13 @@ p {
     align-items: center;
     gap: 1rem;
     transition: var(--transition);
+    border: 1px solid var(--light-gray);
 }
 
 .stat-card:hover {
     transform: translateY(-3px);
     box-shadow: var(--shadow-md);
 }
-
-
-@media (max-width: 768px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .stats-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .stat-card {
-    padding: 1rem !important;
-  }
-}
-
-
 
 .stat-icon {
     width: 60px;
@@ -345,17 +327,78 @@ p {
     font-size: 1.5rem;
     color: var(--primary);
     background: var(--primary-light);
+    flex-shrink: 0;
 }
 
 .stat-info h3 {
     font-size: 1.75rem;
     margin-bottom: 0.25rem;
+    color: var(--dark);
 }
 
 .stat-info p {
     color: var(--muted-text);
     margin-bottom: 0;
     font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* === Responsive Stats Grid === */
+@media (min-width: 992px) {
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        padding: 1.25rem;
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+    }
+    
+    .stat-info h3 {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+    }
+    
+    .stat-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 1.1rem;
+    }
+    
+    .stat-info h3 {
+        font-size: 1.35rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* === Listings Grid === */
@@ -1113,10 +1156,6 @@ select.form-control {
         display: block;
     }
     
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
     .dashboard-container {
         width: 100%;
         padding: 1.25rem;
@@ -1136,10 +1175,6 @@ select.form-control {
 }
 
 @media (max-width: 768px) {
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-    
     .listings-grid {
         grid-template-columns: 1fr;
     }
@@ -1469,30 +1504,7 @@ select.form-control {
     position: relative;
     z-index: 50;
 }
-
-
     </style>
-
-
-
-    <style>
-/* FINAL OVERRIDE – FORCE 2-COLUMN MOBILE STATS GRID */
-@media (min-width: 480px) and (max-width: 768px) {
-    .stats-grid {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 1.25rem !important;
-    }
-}
-@media (max-width: 479px) {
-    .stats-grid {
-        grid-template-columns: 1fr !important;
-    }
-    .stat-card {
-        padding: 1rem !important;
-    }
-}
-</style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -1549,7 +1561,7 @@ select.form-control {
                 </div>
             </header>
 
-            <!-- Stats Summary -->
+            <!-- Stats Summary - Now in Two Columns -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon">
@@ -1632,7 +1644,7 @@ select.form-control {
       {% endfor %}
     </div>
   {% else %}
-    {# default image logic: main listing image, or first offered item’s image for single-item swap #}
+    {# default image logic: main listing image, or first offered item's image for single-item swap #}
     {% set display_image = listing.image_url %}
     {% if listing.deal_type == 'Swap Deal' and listing.offered_items and listing.offered_items|length == 1 %}
       {% set display_image = listing.offered_items[0].image1 %}
@@ -2868,12 +2880,6 @@ document.addEventListener('DOMContentLoaded', () => {
   internalShowSection(initialSection);
 });
 </script>
-
-
-
-
-
-
     <script src="{{ url_for('static', filename='heartbeat.js') }}"></script>
 </body>
 </html>
