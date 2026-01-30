@@ -440,27 +440,30 @@
 }
 
 /* ✅ FIX: equal width buttons */
-.mb-items{
-  display:grid;
-  grid-template-columns: repeat(5, 1fr); /* 5 items: Ads, Stores, My Store, Dashboard, Wishlist */
-  align-items:center;
-  width:100%;
-  gap:6px;
+.mb-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); /* ← key change: auto-fit instead of fixed 5 */
+  align-items: center;
+  width: 100%;
+  gap: 6px;
 }
 
 /* ✅ FIX: consistent center alignment */
-.mb-item{
-  position:relative;              /* needed for badge positioning */
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:4px;
-  padding:.55rem .25rem;
-  border-radius:12px;
-  color:#6b7280;
-  min-height:56px;
-  text-decoration:none;
+.mb-item {
+  flex: 1;                    /* ← makes each item grow to fill available space */
+  min-width: 0;               /* prevents overflow on small screens */
+  text-align: center;
+}
+
+/* Optional: better spacing when fewer items */
+@media (max-width: 480px) {
+  .mb-items {
+    grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+    gap: 4px;
+  }
+  .mb-item .nav-label {
+    font-size: 0.68rem;       /* slightly smaller text on very small screens */
+  }
 }
 
 /* Prevent label wrapping (causes ugly layout) */
@@ -470,9 +473,20 @@
   white-space:nowrap;
 }
 
-.mb-item.active{
-  color:var(--primary-dark);
-  background:rgba(129,199,132,.12);
+.mb-items::before {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0; left: 50%;
+  width: 1px;
+  background: rgba(0,0,0,0.08);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.mb-item.active {
+  background: rgba(129,199,132,0.12);
+  color: var(--primary-dark);
+  border-radius: 12px;
 }
 
 .mb-icon{font-size:1.25rem}
@@ -1109,46 +1123,49 @@
 
 
 <!-- MOBILE BOTTOM NAV -->
-<nav class="mb-nav" aria-label="Mobile">
+<nav class="mb-nav" aria-label="Mobile Bottom Navigation">
   <div class="mb-items">
     {% set create_target = url_for('dashboard', section='create-listing') %}
 
+    <!-- Always visible: New Listing / Ads -->
     {% if session.get('user_id') %}
-
-      <!-- 🔹 New Listing – logged in → go directly to section -->
-      <a href="{{ create_target }}" class="mb-item">
+      <a href="{{ create_target }}" class="mb-item {% if request.path == create_target %}active{% endif %}">
         <i class="fas fa-plus-circle mb-icon" aria-hidden="true"></i>
         <span class="nav-label">Ads</span>
       </a>
+    {% else %}
+      <a href="{{ url_for('login', next=create_target) }}" class="mb-item">
+        <i class="fas fa-plus-circle mb-icon" aria-hidden="true"></i>
+        <span class="nav-label">New Listing</span>
+      </a>
+    {% endif %}
 
+    <!-- Always visible: Stores -->
+    <a href="/shops" class="mb-item {% if request.path == '/shops' %}active{% endif %}">
+      <i class="fas fa-store mb-icon" aria-hidden="true"></i>
+      <span class="nav-label">Stores</span>
+    </a>
 
-<a href="/shops" 
-   class="mb-item {% if request.path=='/shops' %}active{% endif %}">
-    <i class="fas fa-store mb-icon" aria-hidden="true"></i>
-    <span class="nav-label">Stores</span>
-</a>
+          <!-- My Store -->
+      <a href="{{ url_for('my_store_redirect') }}"
+         class="mb-item {% if request.path.startswith('/store') %}active{% endif %}">
+        <i class="fas fa-store-alt mb-icon" aria-hidden="true"></i>
+        <span class="nav-label">My Store</span>
+      </a>
 
+    <!-- Logged-in only items -->
+    {% if session.get('user_id') %}
 
-<a href="{{ url_for('my_store_redirect') }}"
-   class="mb-item {% if request.path.startswith('/store') %}active{% endif %}">
-  <i class="fas fa-store-alt mb-icon" aria-hidden="true"></i>
-  <span class="nav-label">My Store</span>
-</a>
-
-
-
-
+      <!-- Dashboard -->
       <a href="{{ url_for('dashboard') }}"
-         class="mb-item {% if request.path=='/dashboard' %}active{% endif %}">
+         class="mb-item {% if request.path == '/dashboard' %}active{% endif %}">
         <i class="fas fa-user mb-icon" aria-hidden="true"></i>
         <span class="nav-label">Dashboard</span>
       </a>
 
-
-
-      {# ⭐ Wishlist with its own relative container #}
+      <!-- Wishlist -->
       <a href="{{ url_for('view_wishlist') }}"
-         class="mb-item mb-item-wishlist {% if request.path.startswith('/wishlist') %}active{% endif %}">
+         class="mb-item {% if request.path.startswith('/wishlist') %}active{% endif %}">
         <i class="fas fa-heart mb-icon" aria-hidden="true"></i>
         <span class="nav-label">Wishlist</span>
         <span id="wishlist-count-mobile" class="mb-badge" aria-live="polite">
@@ -1157,33 +1174,14 @@
       </a>
 
     {% else %}
-      <!-- 🔹 New Listing – NOT logged in → send to login with next -->
-      <a href="{{ url_for('login', next=create_target) }}" class="mb-item">
-        <i class="fas fa-plus-circle mb-icon" aria-hidden="true"></i>
-        <span class="nav-label">New Listing</span>
-      </a>
-
-
-<a href="/shops" 
-   class="mb-item {% if request.path=='/shops' %}active{% endif %}">
-    <i class="fas fa-store mb-icon" aria-hidden="true"></i>
-    <span class="nav-label">Stores</span>
-</a>
-
-
+      <!-- Login / Sign Up for non-logged-in users -->
       <a href="{{ url_for('login') }}" class="mb-item">
         <i class="fas fa-sign-in-alt mb-icon" aria-hidden="true"></i>
         <span class="nav-label">Login</span>
       </a>
-
-      <a href="{{ url_for('signup') }}" class="mb-item">
-        <i class="fas fa-user-plus mb-icon" aria-hidden="true"></i>
-        <span class="nav-label">Sign Up</span>
-      </a>
     {% endif %}
   </div>
 </nav>
-
 
 
 
