@@ -3012,18 +3012,26 @@ def create_listing():
 
     # 1) Common data
     dt = request.form.get('deal_type', 'Swap Deal')
-    deal_type = dt if dt == 'Swap Deal' else 'Outright Sales'
+    if dt == 'Swap Deal':
+        deal_type = 'Swap Deal'
+    elif dt == 'Outright Sales':
+        deal_type = 'Outright Sales'
+    elif dt == 'Service Offer':
+        deal_type = 'Service Offer'
+    else:
+        deal_type = 'Outright Sales'  # fallback
+
     title = request.form['title'].strip()
-    description = request.form.get('description', '').strip()
+    # description is taken from different fields depending on type
     category = request.form['category'].strip()
     location = request.form['location'].strip()
     contact = request.form['contact'].strip()
     plan = request.form.get('plan', 'Free')
     logger.debug(f"Common data: deal_type={deal_type}, title={title}, category={category}, plan={plan}")
 
-    # 2) Gather main images (only for Outright Sales)
+    # 2) Gather main images — used by Outright Sales AND Service Offer
     main_images = []
-    if deal_type == 'Outright Sales':
+    if deal_type in ('Outright Sales', 'Service Offer'):
         for f in request.files.getlist('images[]'):
             if f and allowed_file(f.filename):
                 try:
@@ -3041,31 +3049,29 @@ def create_listing():
 
                 if len(main_images) >= 5:
                     break
+
         if not main_images:
-            flash("At least one image is required for sales.", "error")
-            logger.error("No images uploaded for sale")
+            flash("At least one image is required for this listing type.", "error")
+            logger.error("No images uploaded for sale/service")
             return redirect(url_for('dashboard'))
+
     logger.debug(f"Main images: {main_images}")
 
-    # 3) Swap-offer fields
-    off_titles = request.form.getlist('offer_title[]')
-    off_conds = request.form.getlist('offer_condition[]')
-    off_descs = request.form.getlist('offer_description[]')
-    logger.debug(f"Offer data: titles={off_titles}, conditions={off_conds}, descriptions={off_descs}")
-
-    # Process offered items (only for Swap Deal)
+    # 3) Swap-offer fields (only for Swap Deal)
     offered_items = []
     if deal_type == 'Swap Deal':
+        off_titles = request.form.getlist('offer_title[]')
+        off_conds = request.form.getlist('offer_condition[]')
+        off_descs = request.form.getlist('offer_description[]')
+        logger.debug(f"Offer data: titles={off_titles}, conditions={off_conds}, descriptions={off_descs}")
+
         if not (1 <= len(off_conds) <= 2):
             flash("Offer between 1 and 2 items.", "error")
-            logger.error(f"Invalid number of offered items: {len(off_conds)}")
             return redirect(url_for('dashboard'))
 
-        # Group images by item
         offer_image_files_1 = request.files.getlist('offer_images_1[]')
         offer_image_files_2 = request.files.getlist('offer_images_2[]')
         image_lists = [offer_image_files_1, offer_image_files_2][:len(off_conds)]
-        logger.debug(f"Image lists: {[[f.filename for f in lst] for lst in image_lists]}")
 
         def save_files_to_cloudinary(file_list):
             out = []
@@ -3077,10 +3083,9 @@ def create_listing():
                             folder="swaphub/offers",
                             resource_type="image"
                         )
-                        image_url = upload_result.get("secure_url")
-                        out.append(image_url)
+                        out.append(upload_result.get("secure_url"))
                     except Exception as e:
-                        logger.exception(f"Cloudinary upload failed for offered item image: {e}")
+                        logger.exception(f"Cloudinary upload failed: {e}")
                         flash("Error uploading images. Please try again.", "error")
                         return None
             return out
@@ -3088,7 +3093,6 @@ def create_listing():
         for i in range(len(off_conds)):
             if not off_conds[i].strip() or not off_descs[i].strip():
                 flash(f"Item {i+1} must have a condition and description.", "error")
-                logger.error(f"Item {i+1} missing condition or description")
                 return redirect(url_for('dashboard'))
 
             item_title = off_titles[i].strip() if i < len(off_titles) and off_titles[i].strip() else title
@@ -3098,7 +3102,6 @@ def create_listing():
                 return redirect(url_for('dashboard'))
             if not item_images:
                 flash(f"Item {i+1} must have at least one image.", "error")
-                logger.error(f"Item {i+1} has no images: {image_lists[i] if i < len(image_lists) else []}")
                 return redirect(url_for('dashboard'))
 
             offered_items.append({
@@ -3107,17 +3110,18 @@ def create_listing():
                 'description': off_descs[i],
                 'images': item_images + [None] * (4 - len(item_images))
             })
-            logger.debug(f"Item {i+1}: title={item_title}, images={item_images}")
 
-    # 4) Deal-type specifics
+    # 4) Deal-type specific fields
     desired_swap = None
-    desired_swap_description = request.form.get('swap_notes', '').strip()
+    desired_swap_description = None
     additional_cash = None
     required_cash = None
     price = None
+    condition = None
 
     if deal_type == 'Swap Deal':
         desired_swap = (request.form.get('desired_swap') or '').strip()
+        desired_swap_description = request.form.get('swap_notes', '').strip()
 
         additional_cash_raw = (request.form.get('additional_cash') or '').replace(',', '').strip()
         required_cash_raw = (request.form.get('required_cash') or '').replace(',', '').strip()
@@ -3127,7 +3131,6 @@ def create_listing():
                 additional_cash = Decimal(additional_cash_raw).quantize(Decimal('0.01'))
             except InvalidOperation:
                 flash("Invalid value for additional cash.", "error")
-                logger.error(f"Invalid additional_cash: {additional_cash_raw}")
                 return redirect(url_for('dashboard'))
 
         if required_cash_raw:
@@ -3135,51 +3138,52 @@ def create_listing():
                 required_cash = Decimal(required_cash_raw).quantize(Decimal('0.01'))
             except InvalidOperation:
                 flash("Invalid value for required cash.", "error")
-                logger.error(f"Invalid required_cash: {required_cash_raw}")
                 return redirect(url_for('dashboard'))
 
         if not desired_swap:
             flash("Desired item is required for swap.", "error")
-            logger.error("Missing desired swap item")
             return redirect(url_for('dashboard'))
 
-        condition = offered_items[0]['condition']
+        condition = offered_items[0]['condition'] if offered_items else None
 
-    else:
+    elif deal_type == 'Outright Sales':
         price_raw = (request.form.get('price') or '').replace(',', '').strip()
         if price_raw:
             try:
                 price = Decimal(price_raw).quantize(Decimal('0.01'))
             except InvalidOperation:
                 flash("Invalid value for price.", "error")
-                logger.error(f"Invalid price: {price_raw}")
                 return redirect(url_for('dashboard'))
-        else:
-            price = None
         condition = request.form.get('condition')
-        off_conds = [condition]
-        off_descs = [description]
-        offered_items = []
+        description = request.form.get('description', '').strip()
 
-    # 5) Combine description
+    elif deal_type == 'Service Offer':
+        contact_for_price = request.form.get('contact_for_price') == '1'
+        if not contact_for_price:
+            price_raw = (request.form.get('price') or '').replace(',', '').strip()
+            if price_raw:
+                try:
+                    price = Decimal(price_raw).quantize(Decimal('0.01'))
+                except InvalidOperation:
+                    flash("Invalid value for price.", "error")
+                    return redirect(url_for('dashboard'))
+        # else: price remains None → "Contact for Price"
+        condition = None
+        description = request.form.get('description', '').strip()
+
+    # 5) Combine description (for swap only we append offered items)
     if deal_type == 'Swap Deal':
         joined_offers = "\n\n".join([item['description'] for item in offered_items])
         combined_description = f"{description}\n\n{joined_offers}" if joined_offers else description
     else:
         combined_description = description
 
-     # -------------------------------------------------
-    # Compute expires_at EARLY (before Paystack redirect)
-    # -------------------------------------------------
+    # 6) Compute expires_at early
     expires_at = None
-
     if plan in PLAN_DURATIONS:
         expires_at = datetime.utcnow() + timedelta(days=PLAN_DURATIONS[plan])
 
-    logger.debug(f"Computed expires_at in create_listing: {expires_at}")
-       
-
-    # 6) PAYSTACK flow
+    # 7) PAYSTACK flow for paid plans
     if plan != 'Free':
         pending_price = f"{price:.2f}" if isinstance(price, Decimal) else price
         pending_additional_cash = f"{additional_cash:.2f}" if isinstance(additional_cash, Decimal) else additional_cash
@@ -3196,30 +3200,23 @@ def create_listing():
             'required_cash': pending_required_cash,
             'location': location,
             'contact': contact,
-            'main_images': (
-                main_images if deal_type == 'Outright Sales'
-                else (offered_items[0]['images'][:4] if offered_items else [])
-            ),
+            'main_images': main_images if deal_type in ('Outright Sales', 'Service Offer') else 
+                           (offered_items[0]['images'][:4] if offered_items else []),
             'plan': plan,
             'deal_type': deal_type,
             'price': pending_price,
             'offered_items': offered_items,
+            'condition': condition,               # added
             'expires_at': expires_at.isoformat() if expires_at else None
         }
 
         plan_fees = {'Bronze': 20, 'Silver': 50, 'Gold': 100, 'Diamond': 200}
         return redirect(url_for('paystack_payment', plan=plan, amount=plan_fees.get(plan, 0)))
 
-
-    # 7) Compute expiry date
-    expires_at = None
-    if plan in PLAN_DURATIONS:
-        expires_at = datetime.utcnow() + timedelta(days=PLAN_DURATIONS[plan])
-        logger.debug(f"Computed expiry date for plan {plan}: {expires_at}")
-
-    # 8) INSERT INTO listings
+    # 8) Free plan → direct insert
     conn = get_db_connection()
     cursor = conn.cursor()
+
     listing_params = [
         session['user_id'], title, combined_description, category,
         desired_swap, desired_swap_description,
@@ -3227,13 +3224,16 @@ def create_listing():
         condition,
         location, contact
     ]
-    if deal_type == 'Outright Sales':
+
+    # Images
+    if deal_type in ('Outright Sales', 'Service Offer'):
         listing_params += main_images + [None] * (5 - len(main_images))
-    else:
+    else:  # Swap
         swap_images = offered_items[0]['images'][:4] if offered_items else []
         listing_params += swap_images + [None] * (5 - len(swap_images))
+
     listing_params += [plan, deal_type, price, expires_at]
-    
+
     cursor.execute("""
         INSERT INTO listings (
             user_id, title, description, category,
@@ -3244,10 +3244,11 @@ def create_listing():
             plan, deal_type, price, expires_at
         ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """, listing_params)
+
     lid = cursor.lastrowid
     logger.debug(f"Inserted listing with ID: {lid}")
 
-    # 9) Insert offered items
+    # 9) Insert offered items (only swap)
     if deal_type == 'Swap Deal':
         for item in offered_items:
             cursor.execute("""
@@ -3259,14 +3260,12 @@ def create_listing():
                 lid, item['title'], item['description'], item['condition'],
                 item['images'][0], item['images'][1], item['images'][2], item['images'][3]
             ))
-            logger.debug(f"Inserted offered item: {item}")
 
     conn.commit()
     cursor.close()
     conn.close()
 
     flash("Listing created successfully!", "success")
-    logger.debug("Listing creation completed successfully")
     return redirect(url_for('dashboard'))
 
 
@@ -3341,13 +3340,13 @@ def paystack_verify():
         return redirect(url_for('home'))
 
     p = resp['data']['metadata']
-    if not p or p.get('source') != 'store':
+    if not p:
         flash("Invalid payment metadata.", "error")
         return redirect(url_for('home'))
 
-    # Extract data from pending_listing
+    # Extract data
     user_id = p['user_id']
-    store_id = p['store_id']
+    store_id = p.get('store_id')
     store_slug = p.get('store_slug')
     title = p['title']
     description = p['description']
@@ -3355,66 +3354,52 @@ def paystack_verify():
     location = p['location']
     contact = p['contact']
     deal_type = p['deal_type']
-    price = p.get('price')
+    price_str = p.get('price')
+    price = Decimal(price_str) if price_str else None
     main_images = p.get('main_images', [])
     offered_items = p.get('offered_items', [])
     desired_swap = p.get('desired_swap', '')
     plan = p.get('plan', 'Free')
+    condition = p.get('condition')   # may be None for service
 
-    # Swap-specific fields
+    # Swap-specific
     desired_condition = p.get('desired_condition', '')
-    swap_notes = p.get('swap_notes', '')
-    required_cash = p.get('required_cash')
-    additional_cash = p.get('additional_cash')
+    swap_notes = p.get('desired_swap_description', '')
+    required_cash_str = p.get('required_cash')
+    additional_cash_str = p.get('additional_cash')
+    required_cash = Decimal(required_cash_str) if required_cash_str else None
+    additional_cash = Decimal(additional_cash_str) if additional_cash_str else None
 
     conn = get_db_connection()
     cur = conn.cursor()
 
-    def to_int_or_none(value):
-        try:
-            return int(value) if value not in ('', None) else None
-        except (ValueError, TypeError):
-            return None
-
-    required_cash = to_int_or_none(p.get('required_cash'))
-    additional_cash = to_int_or_none(p.get('additional_cash'))
-
-
     try:
-        if deal_type == 'Outright Sales':
-            # Prepare 5 images
+        if deal_type in ('Outright Sales', 'Service Offer'):
             padded_images = (main_images + [None] * 5)[:5]
 
             sql = """
                 INSERT INTO listings
                 (user_id, store_id, title, description, category, location, contact,
-                 price, deal_type, Plan, image_url, image1, image2, image3, image4)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                 price, deal_type, Plan, `condition`, image_url, image1, image2, image3, image4)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
             values = (
                 user_id, store_id, title, description, category, location, contact,
-                price, deal_type, plan,
+                price, deal_type, plan, condition,
                 padded_images[0], padded_images[1], padded_images[2], padded_images[3], padded_images[4]
             )
 
-            print("\n=== PAID SALES LISTING INSERT ===")
-            print("Table: listings")
-            print("SQL:", sql.strip())
-            print("Values:", values)
-
             cur.execute(sql, values)
             listing_id = cur.lastrowid
-            print(f"Success: Inserted into listings with ID {listing_id}\n")
 
         else:  # Swap Deal
-            # Preview images from first offered item
             preview_images = offered_items[0]['images'][:5] if offered_items else []
             padded_preview = (preview_images + [None] * 5)[:5]
 
             sql = """
                 INSERT INTO listings
                 (user_id, store_id, title, description, category, location, contact,
-                 deal_type, desired_swap, `condition`, swap_notes,
+                 deal_type, desired_swap, `condition`, desired_swap_description,
                  required_cash, additional_cash, Plan, image_url, image1, image2, image3, image4)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
@@ -3425,54 +3410,30 @@ def paystack_verify():
                 padded_preview[0], padded_preview[1], padded_preview[2], padded_preview[3], padded_preview[4]
             )
 
-            print("\n=== PAID SWAP DEAL LISTING INSERT ===")
-            print("Table: listings")
-            print("SQL:", sql.strip())
-            print("Values:", values)
-
             cur.execute(sql, values)
             listing_id = cur.lastrowid
-            print(f"Success: Inserted into listings with ID {listing_id}")
 
             # Insert offered items
             if offered_items:
-                offered_ids = []
-                for idx, item in enumerate(offered_items, 1):
-                    padded_item_images = (item['images'] + [None] * 4)[:4]
-
-                    sql_offered = """
+                for item in offered_items:
+                    padded_item = (item['images'] + [None] * 4)[:4]
+                    cur.execute("""
                         INSERT INTO offered_items
                         (listing_id, title, description, `condition`, image1, image2, image3, image4)
                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                    """
-                    values_offered = (
+                    """, (
                         listing_id,
                         item['title'], item['description'], item['condition'],
-                        padded_item_images[0], padded_item_images[1], padded_item_images[2], padded_item_images[3]
-                    )
-
-                    print(f"\nOffered Item #{idx}")
-                    print("Table: offered_items")
-                    print("SQL:", sql_offered.strip())
-                    print("Values:", values_offered)
-
-                    cur.execute(sql_offered, values_offered)
-                    offered_id = cur.lastrowid
-                    offered_ids.append(offered_id)
-                    print(f"Success: Inserted offered_item with ID {offered_id}")
-
-                print(f"\nAll offered items inserted: IDs {offered_ids}")
+                        padded_item[0], padded_item[1], padded_item[2], padded_item[3]
+                    ))
 
         conn.commit()
-        print("\n=== COMMIT SUCCESSFUL ===\n")
-        flash("Payment successful! Your promoted item has been listed.", "success")
+        flash("Payment successful! Your promoted listing has been created.", "success")
 
     except Exception as e:
         conn.rollback()
-        print("\n=== DATABASE ERROR ===")
-        print("Error:", str(e))
-        print("Traceback:", __import__('traceback').format_exc())
-        flash("Payment succeeded but listing failed. Contact support.", "error")
+        logger.exception("Error saving paid listing")
+        flash("Payment succeeded but listing creation failed. Contact support.", "error")
 
     finally:
         cur.close()
@@ -6399,6 +6360,7 @@ def store_home(slug):
         totals=totals or {'views': 0, 'clicks': 0},
         metrics=metrics_with_change,
         top_by_impressions=top_by_impressions,
+        now=datetime.utcnow(),
         top_by_clicks=top_by_clicks
     )
 
@@ -6564,9 +6526,8 @@ PLAN_PRICES = {
 def store_add_item():
     user_id = session['user_id']
 
-    # ── First connection: just to check if user has a store ──
+    # ── First connection: check if user has a store ──
     conn = get_db_connection()
-    # Use buffered cursor → prevents "Unread result found" error
     cur = conn.cursor(dictionary=True, buffered=True)
 
     try:
@@ -6592,7 +6553,7 @@ def store_add_item():
         cur.close()
         conn.close()
 
-    # ── Get form data ───────────────────────────────────────────────
+    # ── Get common form data ───────────────────────────────────────────────
     deal_type = request.form.get('deal_type')
     plan = request.form.get('plan', 'Free')
 
@@ -6608,16 +6569,47 @@ def store_add_item():
     if not category:
         return jsonify({"success": False, "message": "Category is required."}), 400
 
-
     # Prepare common variables
     main_images = []
     price = None
     offered_items = []
     title = ""
     description = ""
+    condition = None  # not used for service
 
-    # ── Outright Sales ──────────────────────────────────────────────
-    if deal_type == 'Outright Sales':
+    # ── Service Offer ──────────────────────────────────────────────────────
+    if deal_type == 'Service Offer':
+        title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+
+        if not title or not description:
+            return jsonify({"success": False, "message": "Service name and description are required."}), 400
+
+        contact_for_price = request.form.get('contact_for_price') == '1'
+
+        if not contact_for_price:
+            price_raw = request.form.get('price', '').strip()
+            if not price_raw:
+                return jsonify({"success": False, "message": "Please enter a price or select 'Contact for Price'."}), 400
+            try:
+                price = Decimal(price_raw)
+                if price <= 0:
+                    return jsonify({"success": False, "message": "Service price must be greater than zero when fixed."}), 400
+            except:
+                return jsonify({"success": False, "message": "Invalid price format."}), 400
+        # else: price remains None → Contact for Price
+
+        # Images are optional for services
+        for f in request.files.getlist('images[]'):
+            if f and allowed_file(f.filename):
+                try:
+                    upload = cloudinary.uploader.upload(f, folder="swaphub/listings")
+                    main_images.append(upload['secure_url'])
+                except Exception as e:
+                    print("Cloudinary upload error (service):", e)
+
+    # ── Outright Sales ─────────────────────────────────────────────────────
+    elif deal_type == 'Outright Sales':
         title = request.form.get('title', '').strip()
         description = request.form.get('description', '').strip()
 
@@ -6633,7 +6625,7 @@ def store_add_item():
         except:
             return jsonify({"success": False, "message": "Invalid price format."}), 400
 
-        # Handle images
+        # Handle images (required for sales)
         for f in request.files.getlist('images[]'):
             if f and allowed_file(f.filename):
                 try:
@@ -6645,7 +6637,7 @@ def store_add_item():
         if not main_images:
             return jsonify({"success": False, "message": "At least one image is required."}), 400
 
-    # ── Swap Deal ───────────────────────────────────────────────────
+    # ── Swap Deal ──────────────────────────────────────────────────────────
     elif deal_type == 'Swap Deal':
         desired_swap = request.form.get('desired_swap', '').strip()
         if not desired_swap:
@@ -6693,7 +6685,7 @@ def store_add_item():
     else:
         return jsonify({"success": False, "message": "Invalid deal type."}), 400
 
-    # ── PAID PLAN - Store in session and redirect to payment ───────
+    # ── PAID PLAN - Store in session and redirect to payment ──────────────
     if plan != 'Free':
         session['pending_listing'] = {
             "source": "store",
@@ -6706,7 +6698,7 @@ def store_add_item():
             "location": location,
             "contact": contact,
             "deal_type": deal_type,
-            "price": str(price) if price else None,
+            "price": str(price) if price is not None else None,
             "main_images": main_images,
             "offered_items": offered_items,
             "desired_swap": request.form.get('desired_swap', ''),
@@ -6714,7 +6706,8 @@ def store_add_item():
             "swap_notes": request.form.get('swap_notes', ''),
             "required_cash": request.form.get('required_cash'),
             "additional_cash": request.form.get('additional_cash'),
-            "plan": plan
+            "plan": plan,
+            "condition": condition  # None for service
         }
 
         return jsonify({
@@ -6722,12 +6715,12 @@ def store_add_item():
             "redirect": url_for('paystack_payment', plan=plan, amount=PLAN_PRICES[plan], _external=True)
         })
 
-    # ── FREE PLAN - Save directly to database ───────────────────────
+    # ── FREE PLAN - Save directly to database ─────────────────────────────
     conn = get_db_connection()
-    cur = conn.cursor(buffered=True)  # safer here too
+    cur = conn.cursor(buffered=True)
 
     try:
-        if deal_type == 'Outright Sales':
+        if deal_type in ('Outright Sales', 'Service Offer'):
             padded_images = (main_images + [None] * 5)[:5]
             cur.execute("""
                 INSERT INTO listings
@@ -6736,7 +6729,8 @@ def store_add_item():
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 user_id, store_id, title, description, category, location, contact,
-                str(price), deal_type, plan,
+                str(price) if price is not None else None,
+                deal_type, plan,
                 padded_images[0], padded_images[1], padded_images[2], padded_images[3], padded_images[4]
             ))
 
@@ -6766,7 +6760,7 @@ def store_add_item():
 
         listing_id = cur.lastrowid
 
-        # Save offered items for swaps
+        # Save offered items (only for swaps)
         if deal_type == 'Swap Deal':
             for item in offered_items:
                 padded_item_images = (item['images'] + [None] * 4)[:4]
@@ -6946,13 +6940,21 @@ def all_shops():
     location = request.args.get('location', '').strip()
     store_type = request.args.get('store_type', '').strip()
 
+    # Base query
     query = """
-        SELECT *
+        SELECT *,
+               CASE 
+                   WHEN Plan = 'Diamond' THEN 4
+                   WHEN Plan = 'Gold'    THEN 3
+                   WHEN Plan = 'Silver'  THEN 2
+                   ELSE 1  -- Basic or NULL
+               END AS plan_priority
         FROM stores
         WHERE is_active = 1
     """
     params = []
 
+    # Search filters
     if search:
         query += " AND name LIKE %s"
         params.append(f"%{search}%")
@@ -6965,16 +6967,24 @@ def all_shops():
         query += " AND store_type = %s"
         params.append(store_type)
 
-    query += " ORDER BY verified DESC, trust_score DESC, created_at DESC"
+    # Sorting – most important first
+    query += """
+        ORDER BY 
+            plan_priority DESC,          -- Diamond (4) first, then Gold (3), Silver (2), Basic (1)
+            trust_score DESC,            -- Higher trust first within same plan
+            verified DESC,               -- Verified (1) before non-verified (0)
+            created_at DESC              -- Newest first as final tie-breaker
+    """
 
     cursor.execute(query, params)
     stores = cursor.fetchall()
 
-    # Fetch distinct store types for filter
+    # Fetch distinct store types for filter dropdown
     cursor.execute("""
         SELECT DISTINCT store_type
         FROM stores
         WHERE store_type IS NOT NULL AND store_type != ''
+        ORDER BY store_type
     """)
     store_types = cursor.fetchall()
 
@@ -6984,7 +6994,10 @@ def all_shops():
     return render_template(
         'shops.html',
         stores=stores,
-        store_types=store_types
+        store_types=store_types,
+        search=search,
+        location=location,
+        store_type=store_type
     )
 
 
@@ -7836,6 +7849,194 @@ def admin_recompute_all_trust():
         cur.close()
         conn.close()
 
+
+
+
+
+
+
+
+
+PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY")
+
+# Plan configuration (prices in GHS, duration in days)
+STORE_PLANS = {
+    "Silver":   {"price": 25,  "days": 14,  "label": "Silver - 2 Weeks"},
+    "Gold":     {"price": 50,  "days": 21,  "label": "Gold - 3 Weeks"},
+    "Diamond":  {"price": 100, "days": 30,  "label": "Diamond - 1 Month"},
+}
+
+@app.route('/store/<slug>/boost', methods=['GET', 'POST'])
+@login_required
+def store_boost(slug):
+    # Verify this is the user's store
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("""
+        SELECT store_id, name, slug, Plan, Plan_expiry_date 
+        FROM stores 
+        WHERE slug = %s AND user_id = %s
+    """, (slug, session['user_id']))
+    store = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    if not store:
+        flash("Store not found or you don't have permission.", "error")
+        return redirect(url_for('dashboard'))
+
+    current_plan = store['Plan'] or "Basic"
+    expiry = store['Plan_expiry_date']
+
+    if request.method == 'POST':
+        selected_plan = request.form.get('plan')
+
+        if selected_plan not in STORE_PLANS:
+            flash("Invalid plan selected.", "error")
+            return redirect(url_for('store_boost', slug=slug))
+
+        plan_info = STORE_PLANS[selected_plan]
+        amount_ghs = plan_info['price']
+
+        if amount_ghs == 0:
+            # Free plan (downgrade or reset)
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute("""
+                UPDATE stores 
+                SET Plan = %s, Plan_expiry_date = NULL 
+                WHERE store_id = %s
+            """, ("Basic", store['store_id']))
+            conn.commit()
+            cur.close()
+            conn.close()
+
+            flash("Store plan reset to Basic.", "success")
+            return redirect(url_for('store_home', slug=slug))
+
+        # Paid plan → initialize Paystack transaction
+        conn = get_db_connection()
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT email FROM users WHERE id = %s", (session['user_id'],))
+        user = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if not user or not user['email']:
+            flash("Cannot start payment – email not found.", "error")
+            return redirect(url_for('store_boost', slug=slug))
+
+        # Save pending promotion in session
+        session['pending_store_promotion'] = {
+            'store_id': store['store_id'],
+            'store_slug': slug,
+            'user_id': session['user_id'],
+            'plan': selected_plan,
+            'amount_ghs': amount_ghs,
+            'days': plan_info['days']
+        }
+
+        # Paystack payload (amount in kobo = GHS × 100)
+        payload = {
+            "email": user['email'],
+            "amount": int(amount_ghs * 100),  # e.g. 2500 for GHS 25
+            "currency": "GHS",
+            "reference": f"store_promo_{store['store_id']}_{int(datetime.now().timestamp())}",
+            "callback_url": url_for('store_boost_verify', _external=True),
+            "metadata": {
+                "store_id": store['store_id'],
+                "plan": selected_plan
+            }
+        }
+
+        headers = {
+            "Authorization": f"Bearer {PAYSTACK_SECRET_KEY}",
+            "Content-Type": "application/json"
+        }
+
+        resp = requests.post(
+            "https://api.paystack.co/transaction/initialize",
+            json=payload,
+            headers=headers
+        ).json()
+
+        if resp.get('status'):
+            return redirect(resp['data']['authorization_url'])
+        else:
+            flash("Failed to initialize payment. Please try again.", "error")
+            return redirect(url_for('store_boost', slug=slug))
+
+    # GET → show plans page
+    return render_template(
+        'boost.html',
+        store=store,
+        current_plan=current_plan,
+        expiry=expiry,
+        plans=STORE_PLANS
+    )
+
+
+@app.route('/store/boost/verify')
+@login_required
+def store_boost_verify():
+    ref = request.args.get('reference')
+    if not ref:
+        flash("Payment verification failed – missing reference.", "error")
+        return redirect(url_for('dashboard'))
+
+    headers = {"Authorization": f"Bearer {PAYSTACK_SECRET_KEY}"}
+    resp = requests.get(
+        f"https://api.paystack.co/transaction/verify/{ref}",
+        headers=headers
+    ).json()
+
+    if not resp.get('status') or resp['data']['status'] != 'success':
+        flash("Payment failed or was not completed.", "error")
+        return redirect(url_for('dashboard'))
+
+    pending = session.get('pending_store_promotion')
+    if not pending:
+        flash("No pending promotion found.", "error")
+        return redirect(url_for('dashboard'))
+
+    # Verify this transaction belongs to this user/store
+    if pending['user_id'] != session['user_id']:
+        flash("Security error: transaction mismatch.", "error")
+        session.pop('pending_store_promotion', None)
+        return redirect(url_for('dashboard'))
+
+    plan = pending['plan']
+    days = pending['days']
+    store_id = pending['store_id']
+
+    # Calculate new expiry
+    expires_at = datetime.utcnow() + timedelta(days=days)
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            UPDATE stores 
+            SET Plan = %s, Plan_expiry_date = %s 
+            WHERE store_id = %s AND user_id = %s
+        """, (plan, expires_at, store_id, session['user_id']))
+
+        conn.commit()
+
+        flash(f"Store successfully boosted! {STORE_PLANS[plan]['label']} activated until {expires_at.strftime('%Y-%m-%d')}.", "success")
+
+    except Exception as e:
+        conn.rollback()
+        print("Boost update error:", str(e))
+        flash("Payment succeeded but failed to update store plan. Contact support.", "error")
+
+    finally:
+        cur.close()
+        conn.close()
+        session.pop('pending_store_promotion', None)
+
+    return redirect(url_for('store_home', slug=pending['store_slug']))
 
 
 

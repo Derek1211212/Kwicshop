@@ -1472,12 +1472,16 @@
             </a>
             {% endif %}
 
-            {% if not store.verified %}
-            <a href="/store/{{ store.slug }}/verify" class="nav-btn verify">
-              <i class="fas fa-shield-alt"></i>
-              Verify Store
-            </a>
-            {% endif %}
+{% if not store.verified %}
+  <a href="/store/{{ store.slug }}/boost" class="mobile-menu-item">
+    <i class="fas fa-rocket"></i>
+    {% if store.Plan and store.Plan != 'Basic' and store.Plan_expiry_date and store.Plan_expiry_date > now %}
+      {{ store.Plan }} until {{ store.Plan_expiry_date.strftime('%b %d, %Y') }}
+    {% else %}
+      Boost Store
+    {% endif %}
+  </a>
+{% endif %}
           </div>
 
           <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Open menu">
@@ -1510,12 +1514,16 @@
         <i class="fas fa-boxes"></i>
         View Inventory
       </a>
-      {% if not store.verified %}
-      <a href="/store/{{ store.slug }}/verify" class="mobile-menu-item">
-        <i class="fas fa-shield-alt"></i>
-        Verify Store
-      </a>
-      {% endif %}
+{% if not store.verified %}
+  <a href="/store/{{ store.slug }}/boost" class="mobile-menu-item">
+    <i class="fas fa-rocket"></i>
+    {% if store.Plan and store.Plan != 'Basic' and store.Plan_expiry_date and store.Plan_expiry_date > now %}
+      {{ store.Plan }} until {{ store.Plan_expiry_date.strftime('%b %d, %Y') }}
+    {% else %}
+      Boost Store
+    {% endif %}
+  </a>
+{% endif %}
     </div>
   </div>
 
@@ -1795,36 +1803,50 @@
       <div class="modal-body">
         <form id="addItemFormModal" action="/store/add-item" method="POST" enctype="multipart/form-data">
           <!-- Step 1: Deal Type -->
-          <div class="modal-step-content active" data-step="1">
-            <h3 style="margin-bottom:24px; color:var(--text-dark); font-weight:600;">Select Deal Type</h3>
-            <div class="deal-type-grid">
-              <div class="deal-type-option active" data-type="swap">
-                <input type="radio" name="deal_type" id="modal-deal-swap" value="Swap Deal" checked style="display:none;" />
-                <label for="modal-deal-swap" style="display:block; cursor:pointer; height:100%;">
-                  <div class="deal-type-card">
-                    <div class="deal-type-icon"><i class="fas fa-exchange-alt"></i></div>
-                    <h4>Swap Deal</h4>
-                    <p>Trade items with other users</p>
-                  </div>
-                </label>
-              </div>
-              <div class="deal-type-option" data-type="sale">
-                <input type="radio" name="deal_type" id="modal-deal-sale" value="Outright Sales" style="display:none;" />
-                <label for="modal-deal-sale" style="display:block; cursor:pointer; height:100%;">
-                  <div class="deal-type-card">
-                    <div class="deal-type-icon"><i class="fas fa-tag"></i></div>
-                    <h4>Outright Sale</h4>
-                    <p>Sell your item for cash</p>
-                  </div>
-                </label>
-              </div>
-            </div>
-            <div class="modal-actions">
-              <button type="button" class="btn modal-nav-btn next-step">
-                Next <i class="fas fa-arrow-right" style="margin-left:8px;"></i>
-              </button>
-            </div>
-          </div>
+<!-- Step 1: Deal Type -->
+<div class="modal-step-content active" data-step="1">
+  <h3 style="margin-bottom:24px; color:var(--text-dark); font-weight:600;">Select Deal Type</h3>
+  <div class="deal-type-grid">
+    <div class="deal-type-option active" data-type="swap">
+      <input type="radio" name="deal_type" id="modal-deal-swap" value="Swap Deal" checked style="display:none;" />
+      <label for="modal-deal-swap" style="display:block; cursor:pointer; height:100%;">
+        <div class="deal-type-card">
+          <div class="deal-type-icon"><i class="fas fa-exchange-alt"></i></div>
+          <h4>Swap Deal</h4>
+          <p>Trade items with other users</p>
+        </div>
+      </label>
+    </div>
+
+    <div class="deal-type-option" data-type="sale">
+      <input type="radio" name="deal_type" id="modal-deal-sale" value="Outright Sales" style="display:none;" />
+      <label for="modal-deal-sale" style="display:block; cursor:pointer; height:100%;">
+        <div class="deal-type-card">
+          <div class="deal-type-icon"><i class="fas fa-tag"></i></div>
+          <h4>Outright Sale</h4>
+          <p>Sell your item for cash</p>
+        </div>
+      </label>
+    </div>
+
+    <div class="deal-type-option" data-type="service">
+      <input type="radio" name="deal_type" id="modal-deal-service" value="Service Offer" style="display:none;" />
+      <label for="modal-deal-service" style="display:block; cursor:pointer; height:100%;">
+        <div class="deal-type-card">
+          <div class="deal-type-icon"><i class="fas fa-tools"></i></div>
+          <h4>Service</h4>
+          <p>Offer your professional service</p>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="modal-actions">
+    <button type="button" class="btn modal-nav-btn next-step">
+      Next <i class="fas fa-arrow-right" style="margin-left:8px;"></i>
+    </button>
+  </div>
+</div>
 
           <!-- Step 2: Item Details -->
           <div class="modal-step-content" data-step="2">
@@ -2056,6 +2078,118 @@
                 </div>
               </div>
             </div>
+
+
+  <!-- NEW: Service Section – fully written out         -->
+  <!-- ──────────────────────────────────────────────── -->
+  <div id="modal-service-section" style="display:none;">
+    <h4 style="margin-bottom:20px; color:var(--dark-green); font-weight:500;">Service Details</h4>
+    <div style="display:grid; gap:20px;">
+
+      <div class="modal-form-group">
+        <label>Service Name *</label>
+        <input type="text" name="title" class="modal-input" required placeholder="e.g., Home Cleaning, Logo Design, Guitar Lessons" />
+      </div>
+
+      <div class="modal-form-group">
+        <label>Listing Description *</label>
+        <textarea name="description" rows="4" class="modal-textarea" required placeholder="Describe the service: what's included, duration, experience..."></textarea>
+      </div>
+
+      <div class="modal-form-group">
+        <label>Category *</label>
+        <div style="position:relative;">
+          <input type="text" name="category" class="modal-input" required data-category-autocomplete="true" placeholder="Type to search or select" />
+          <div class="category-suggestions" style="position:absolute; top:100%; left:0; right:0; background:white; border:1px solid var(--medium-gray); border-radius:8px; margin-top:4px; box-shadow:var(--shadow); display:none; z-index:10; max-height:200px; overflow-y:auto;"></div>
+        </div>
+      </div>
+
+      <div class="modal-form-group">
+        <label>Price (₵)</label>
+        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="modal-contact-for-price" name="contact_for_price" value="1">
+            <label class="form-check-label" for="modal-contact-for-price">Contact for Price</label>
+          </div>
+        </div>
+        <div id="modal-fixed-price-wrapper" style="margin-top:12px;">
+          <div class="input-group">
+            <span class="input-group-text">₵</span>
+            <input type="number" step="0.01" min="0" name="price" id="modal-service-price" class="modal-input" placeholder="0.00" />
+          </div>
+        </div>
+        <small style="color:var(--text-light); display:block; margin-top:8px;">
+          Leave blank or check "Contact for Price" if the price is negotiable / varies
+        </small>
+      </div>
+
+      <div class="modal-form-group">
+        <label>Images (1-4) – optional but recommended</label>
+        <label for="service-images" class="image-upload-area">
+          <i class="fas fa-cloud-upload-alt" style="font-size:32px; color:var(--primary-green); margin-bottom:12px;"></i>
+          <p style="margin:0; color:var(--text-light); font-size:14px;"><strong>Click to upload</strong> or drag and drop</p>
+          <p style="margin:8px 0 0; color:var(--text-light); font-size:12px;">JPG, PNG, WebP (max 10MB each)</p>
+        </label>
+        <input type="file" id="service-images" name="images[]" multiple accept="image/*" />
+        <div class="image-preview" style="display:none;"></div>
+      </div>
+
+      <div class="modal-form-group">
+        <label>Promotion Plan *</label>
+        <div class="plan-grid" data-plan-group="service" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px;">
+
+          <div class="plan-option active" data-plan="Free">
+            <input type="radio" name="plan" id="plan-free-service" value="Free" checked style="display:none;" />
+            <label for="plan-free-service" style="display:block; cursor:pointer;">
+              <div style="padding:16px; border:2px solid var(--primary-green); border-radius:8px; text-align:center; background:var(--light-green); transition:all 0.3s;">
+                <div style="font-size:20px; font-weight:600; color:var(--text-dark);">₵0</div>
+                <div style="font-size:14px; color:var(--text-light); margin-top:4px;">Free</div>
+                <div style="font-size:12px; color:var(--text-light); margin-top:8px;">No Promotion</div>
+              </div>
+            </label>
+          </div>
+
+          <div class="plan-option" data-plan="Silver">
+            <input type="radio" name="plan" id="plan-silver-service" value="Silver" style="display:none;" />
+            <label for="plan-silver-service" style="display:block; cursor:pointer;">
+              <div style="padding:16px; border:2px solid var(--medium-gray); border-radius:8px; text-align:center; background:white; transition:all 0.3s;">
+                <div style="font-size:20px; font-weight:600; color:var(--text-dark);">₵40</div>
+                <div style="font-size:14px; color:var(--text-light); margin-top:4px;">Silver</div>
+                <div style="font-size:12px; color:var(--text-light); margin-top:8px;">2 Weeks Promotion</div>
+              </div>
+            </label>
+          </div>
+
+          <div class="plan-option" data-plan="Gold">
+            <input type="radio" name="plan" id="plan-gold-service" value="Gold" style="display:none;" />
+            <label for="plan-gold-service" style="display:block; cursor:pointer;">
+              <div style="padding:16px; border:2px solid var(--medium-gray); border-radius:8px; text-align:center; background:white; transition:all 0.3s;">
+                <div style="font-size:20px; font-weight:600; color:var(--text-dark);">₵70</div>
+                <div style="font-size:14px; color:var(--text-light); margin-top:4px;">Gold</div>
+                <div style="font-size:12px; color:var(--text-light); margin-top:8px;">3 Weeks Promotion</div>
+              </div>
+            </label>
+          </div>
+
+          <div class="plan-option" data-plan="Diamond">
+            <input type="radio" name="plan" id="plan-diamond-service" value="Diamond" style="display:none;" />
+            <label for="plan-diamond-service" style="display:block; cursor:pointer;">
+              <div style="padding:16px; border:2px solid var(--medium-gray); border-radius:8px; text-align:center; background:white; transition:all 0.3s;">
+                <div style="font-size:20px; font-weight:600; color:var(--text-dark);">₵100</div>
+                <div style="font-size:14px; color:var(--text-light); margin-top:4px;">Diamond</div>
+                <div style="font-size:12px; color:var(--text-light); margin-top:8px;">1 Month Promotion</div>
+              </div>
+            </label>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+
             <div style="display:flex; justify-content:space-between; margin-top:32px;">
               <button type="button" class="btn btn-secondary modal-nav-btn prev-step">
                 <i class="fas fa-arrow-left" style="margin-right:8px;"></i> Back
@@ -2322,6 +2456,9 @@
     });
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // MODAL LOGIC – FULLY UPDATED WITH SERVICE SUPPORT
+  // ─────────────────────────────────────────────────────────────
   document.addEventListener("DOMContentLoaded", function () {
     const modal = document.getElementById("addItemModal");
     const closeModalBtn = document.getElementById("closeModal");
@@ -2336,16 +2473,16 @@
     const planOptions = document.querySelectorAll(".plan-option");
     const addOfferBtn = document.getElementById("modal-add-offer-item-btn");
     const form = document.getElementById("addItemFormModal");
-    const swapSection = document.getElementById("modal-swap-section");
-    const saleSection = document.getElementById("modal-sale-section");
+
+    // Section references – now including service
+    const swapSection    = document.getElementById("modal-swap-section");
+    const saleSection    = document.getElementById("modal-sale-section");
+    const serviceSection = document.getElementById("modal-service-section");
 
     let currentStep = 1;
     const totalSteps = 3;
 
-    /* =========================================================
-       ✅ [ADDED] Helper to disable/enable inputs so hidden section
-       does NOT submit (fixes "required fields" backend issues)
-       ========================================================= */
+    // Helper: Enable/disable all form fields in a section
     function setSectionEnabled(sectionEl, enabled) {
       if (!sectionEl) return;
       sectionEl.querySelectorAll("input, select, textarea").forEach((el) => {
@@ -2376,11 +2513,6 @@
       document.body.style.overflow = "auto";
     }
 
-    /* =========================================================
-       ✅ [CHANGED] initializeModal() to:
-       1) check Swap radio properly
-       2) disable Sale section fields
-       ========================================================= */
     function initializeModal() {
       currentStep = 1;
 
@@ -2409,9 +2541,7 @@
         }
       });
 
-      const swapOption = document.querySelector(
-        '.deal-type-option[data-type="swap"]'
-      );
+      const swapOption = document.querySelector('.deal-type-option[data-type="swap"]');
       if (swapOption) {
         swapOption.classList.add("active");
         const card = swapOption.querySelector(".deal-type-card");
@@ -2421,19 +2551,18 @@
           card.style.transform = "translateY(-2px)";
           card.style.boxShadow = "0 4px 12px rgba(46, 204, 113, 0.2)";
         }
-
-        // ✅ [ADDED] ensure the hidden radio is checked
         const radio = swapOption.querySelector('input[type="radio"]');
         if (radio) radio.checked = true;
       }
 
-      // show swap, hide sale
-      swapSection.style.display = "block";
-      saleSection.style.display = "none";
+      // Show swap by default, hide others
+      if (swapSection)    swapSection.style.display = "block";
+      if (saleSection)    saleSection.style.display = "none";
+      if (serviceSection) serviceSection.style.display = "none";
 
-      // ✅ [ADDED] disable hidden sale section so it won't submit
       setSectionEnabled(swapSection, true);
       setSectionEnabled(saleSection, false);
+      setSectionEnabled(serviceSection, false);
 
       planOptions.forEach((option) => {
         option.classList.remove("active");
@@ -2444,9 +2573,7 @@
         }
       });
 
-      const firstPlanOption = document.querySelector(
-        '.plan-option[data-plan="Free"]'
-      );
+      const firstPlanOption = document.querySelector('.plan-option[data-plan="Free"]');
       if (firstPlanOption) {
         firstPlanOption.classList.add("active");
         const div = firstPlanOption.querySelector("label > div");
@@ -2454,16 +2581,12 @@
           div.style.borderColor = "var(--primary-green)";
           div.style.background = "var(--light-green)";
         }
-
-        // ✅ [ADDED] ensure the radio is checked
         const planRadio = firstPlanOption.querySelector('input[type="radio"]');
         if (planRadio) planRadio.checked = true;
       }
 
-      const offeredContainer = document.getElementById(
-        "modal-offered-items-container"
-      );
-      const firstItem = offeredContainer.querySelector(".modal-offered-item");
+      const offeredContainer = document.getElementById("modal-offered-items-container");
+      const firstItem = offeredContainer?.querySelector(".modal-offered-item");
       if (firstItem) {
         offeredContainer.innerHTML = firstItem.outerHTML;
       }
@@ -2473,6 +2596,17 @@
         preview.style.display = "none";
       });
 
+      // Reset contact-for-price in modal
+      const modalContact = document.getElementById("modal-contact-for-price");
+      const modalPriceWrap = document.getElementById("modal-fixed-price-wrapper");
+      const modalPriceIn = document.getElementById("modal-service-price");
+      if (modalContact) modalContact.checked = false;
+      if (modalPriceWrap) modalPriceWrap.style.display = "block";
+      if (modalPriceIn) {
+        modalPriceIn.value = "";
+        modalPriceIn.required = false;
+      }
+
       setupImageUploads();
       setupCategoryAutocomplete();
     }
@@ -2480,27 +2614,19 @@
     nextButtons.forEach((btn) => {
       btn.addEventListener("click", function () {
         if (validateStep(currentStep)) {
-          const currentContent = document.querySelector(
-            `.modal-step-content[data-step="${currentStep}"]`
-          );
+          const currentContent = document.querySelector(`.modal-step-content[data-step="${currentStep}"]`);
           currentContent.classList.remove("active");
 
-          const currentStepIndicator = document.querySelector(
-            `.modal-step[data-step="${currentStep}"]`
-          );
+          const currentStepIndicator = document.querySelector(`.modal-step[data-step="${currentStep}"]`);
           currentStepIndicator.classList.remove("active");
           currentStepIndicator.classList.add("inactive");
 
           currentStep++;
 
-          const nextContent = document.querySelector(
-            `.modal-step-content[data-step="${currentStep}"]`
-          );
+          const nextContent = document.querySelector(`.modal-step-content[data-step="${currentStep}"]`);
           nextContent.classList.add("active");
 
-          const nextStepIndicator = document.querySelector(
-            `.modal-step[data-step="${currentStep}"]`
-          );
+          const nextStepIndicator = document.querySelector(`.modal-step[data-step="${currentStep}"]`);
           nextStepIndicator.classList.remove("inactive");
           nextStepIndicator.classList.add("active");
         }
@@ -2509,123 +2635,92 @@
 
     prevButtons.forEach((btn) => {
       btn.addEventListener("click", function () {
-        const currentContent = document.querySelector(
-          `.modal-step-content[data-step="${currentStep}"]`
-        );
+        const currentContent = document.querySelector(`.modal-step-content[data-step="${currentStep}"]`);
         currentContent.classList.remove("active");
 
-        const currentStepIndicator = document.querySelector(
-          `.modal-step[data-step="${currentStep}"]`
-        );
+        const currentStepIndicator = document.querySelector(`.modal-step[data-step="${currentStep}"]`);
         currentStepIndicator.classList.remove("active");
         currentStepIndicator.classList.add("inactive");
 
         currentStep--;
 
-        const prevContent = document.querySelector(
-          `.modal-step-content[data-step="${currentStep}"]`
-        );
+        const prevContent = document.querySelector(`.modal-step-content[data-step="${currentStep}"]`);
         prevContent.classList.add("active");
 
-        const prevStepIndicator = document.querySelector(
-          `.modal-step[data-step="${currentStep}"]`
-        );
+        const prevStepIndicator = document.querySelector(`.modal-step[data-step="${currentStep}"]`);
         prevStepIndicator.classList.remove("inactive");
         prevStepIndicator.classList.add("active");
       });
     });
 
-function isActuallyVisible(el) {
-  if (!el) return false;
-
-  // If any parent is display:none, treat as invisible
-  let node = el;
-  while (node && node !== document.body) {
-    const style = window.getComputedStyle(node);
-    if (style.display === "none" || style.visibility === "hidden") return false;
-    node = node.parentElement;
-  }
-
-  return true;
-}
-
-function validateStep(step) {
-  const stepContent = document.querySelector(
-    `.modal-step-content[data-step="${step}"]`
-  );
-  if (!stepContent) return true;
-
-  const requiredInputs = stepContent.querySelectorAll("[required]");
-  let isValid = true;
-
-  requiredInputs.forEach((input) => {
-    // ✅ only skip if disabled
-    if (input.disabled) return;
-
-    // ✅ skip if truly not visible (e.g. hidden section)
-    if (!isActuallyVisible(input)) return;
-
-    // ✅ file validation (even if input is visually hidden by CSS)
-    if (input.type === "file") {
-      if (!input.files || input.files.length === 0) {
-        isValid = false;
-        highlightError(input);
+    function isActuallyVisible(el) {
+      if (!el) return false;
+      let node = el;
+      while (node && node !== document.body) {
+        const style = window.getComputedStyle(node);
+        if (style.display === "none" || style.visibility === "hidden") return false;
+        node = node.parentElement;
       }
-      return;
+      return true;
     }
 
-    // ✅ normal validation
-    const val = (input.value || "").toString().trim();
-    if (!val) {
-      isValid = false;
-      highlightError(input);
+    function validateStep(step) {
+      const stepContent = document.querySelector(`.modal-step-content[data-step="${step}"]`);
+      if (!stepContent) return true;
+
+      const requiredInputs = stepContent.querySelectorAll("[required]");
+      let isValid = true;
+
+      requiredInputs.forEach((input) => {
+        if (input.disabled) return;
+        if (!isActuallyVisible(input)) return;
+
+        if (input.type === "file") {
+          if (!input.files || input.files.length === 0) {
+            isValid = false;
+            highlightError(input);
+          }
+          return;
+        }
+
+        const val = (input.value || "").toString().trim();
+        if (!val) {
+          isValid = false;
+          highlightError(input);
+        }
+      });
+
+      if (!isValid) showError("Please fill in all required fields");
+      return isValid;
     }
-  });
 
-  if (!isValid) showError("Please fill in all required fields");
-  return isValid;
-}
+    function highlightError(input) {
+      if (input.type === "file") {
+        const label = document.querySelector(`label[for="${input.id}"]`);
+        if (label) {
+          label.style.borderColor = "var(--danger)";
+          label.style.background = "rgba(231, 76, 60, 0.05)";
+          label.addEventListener("click", () => {
+            label.style.borderColor = "";
+            label.style.background = "";
+          }, { once: true });
+        }
+        return;
+      }
 
-function highlightError(input) {
-  // ✅ If it's a file input, highlight the label (upload area)
-  if (input && input.type === "file") {
-    const label = document.querySelector(`label[for="${input.id}"]`);
-    if (label) {
-      label.style.borderColor = "var(--danger)";
-      label.style.background = "rgba(231, 76, 60, 0.05)";
-      label.addEventListener(
-        "click",
-        () => {
-          label.style.borderColor = "";
-          label.style.background = "";
-        },
-        { once: true }
-      );
+      input.style.borderColor = "var(--danger)";
+      input.addEventListener("input", function () {
+        input.style.borderColor = "";
+      }, { once: true });
     }
-    return;
-  }
-
-  // ✅ Normal inputs
-  input.style.borderColor = "var(--danger)";
-  input.addEventListener(
-    "input",
-    function () {
-      input.style.borderColor = "";
-    },
-    { once: true }
-  );
-}
-
 
     function showError(message) {
       showToast(message);
     }
 
-    /* =========================================================
-       ✅ [CHANGED] Deal type toggle:
-       1) check the hidden radio
-       2) disable hidden section fields so they do NOT submit
-       ========================================================= */
+    // ────────────────────────────────────────────────
+    // Deal type toggle – now includes Service
+    // ────────────────────────────────────────────────
     dealTypeOptions.forEach((option) => {
       option.addEventListener("click", function () {
         if (this.classList.contains("active")) return;
@@ -2650,29 +2745,37 @@ function highlightError(input) {
           card.style.boxShadow = "0 4px 12px rgba(46, 204, 113, 0.2)";
         }
 
-        // ✅ [ADDED] ensure the hidden radio is checked
         const radio = this.querySelector('input[type="radio"]');
         if (radio) radio.checked = true;
 
         const dealType = this.getAttribute("data-type");
-        if (dealType === "swap") {
-          swapSection.style.display = "block";
-          saleSection.style.display = "none";
 
-          // ✅ [ADDED] critical: prevent sale fields from submitting
+        if (swapSection)    swapSection.style.display    = "none";
+        if (saleSection)    saleSection.style.display    = "none";
+        if (serviceSection) serviceSection.style.display = "none";
+
+        if (dealType === "swap") {
+          if (swapSection) swapSection.style.display = "block";
           setSectionEnabled(swapSection, true);
           setSectionEnabled(saleSection, false);
-        } else {
-          swapSection.style.display = "none";
-          saleSection.style.display = "block";
-
-          // ✅ [ADDED] critical: prevent swap fields from submitting
+          setSectionEnabled(serviceSection, false);
+        } else if (dealType === "sale") {
+          if (saleSection) saleSection.style.display = "block";
           setSectionEnabled(swapSection, false);
           setSectionEnabled(saleSection, true);
+          setSectionEnabled(serviceSection, false);
+        } else if (dealType === "service") {
+          if (serviceSection) serviceSection.style.display = "block";
+          setSectionEnabled(swapSection, false);
+          setSectionEnabled(saleSection, false);
+          setSectionEnabled(serviceSection, true);
         }
       });
     });
 
+    // ────────────────────────────────────────────────
+    // Promotion plan selection (unchanged)
+    // ────────────────────────────────────────────────
     planOptions.forEach((option) => {
       option.addEventListener("click", function () {
         if (this.classList.contains("active")) return;
@@ -2700,6 +2803,9 @@ function highlightError(input) {
       });
     });
 
+    // ────────────────────────────────────────────────
+    // Add another offered item (swap only – unchanged)
+    // ────────────────────────────────────────────────
     if (addOfferBtn) {
       addOfferBtn.addEventListener("click", function () {
         const items = document.querySelectorAll(".modal-offered-item");
@@ -2721,11 +2827,9 @@ function highlightError(input) {
         const title = clone.querySelector("h5");
         if (title) title.textContent = `Offered Item #${newIndex}`;
 
-        clone
-          .querySelectorAll('input:not([type="file"]), textarea, select')
-          .forEach((input) => {
-            input.value = "";
-          });
+        clone.querySelectorAll('input:not([type="file"]), textarea, select').forEach((input) => {
+          input.value = "";
+        });
 
         const removeBtn = clone.querySelector(".remove-item-btn");
         if (removeBtn) {
@@ -2785,13 +2889,15 @@ function highlightError(input) {
       });
     }
 
+    // ────────────────────────────────────────────────
+    // Image preview & upload handling (unchanged)
+    // ────────────────────────────────────────────────
     function setupImageUploads() {
       document.querySelectorAll('input[type="file"]').forEach((input) => {
-        if (input.dataset.bound === "1") return; // ✅ prevents duplicate listeners
+        if (input.dataset.bound === "1") return;
         input.dataset.bound = "1";
 
         input.addEventListener("change", function (e) {
-
           const preview = this.nextElementSibling;
           if (!preview || !preview.classList.contains("image-preview")) return;
 
@@ -2858,6 +2964,9 @@ function highlightError(input) {
       });
     }
 
+    // ────────────────────────────────────────────────
+    // Category autocomplete (unchanged)
+    // ────────────────────────────────────────────────
     function setupCategoryAutocomplete() {
       const sampleCategories = [
         "Electronics",
@@ -2875,65 +2984,66 @@ function highlightError(input) {
         "Food & Drinks",
       ];
 
-      document
-        .querySelectorAll('[data-category-autocomplete="true"]')
-        .forEach((input) => {
-          const wrapper = input.parentElement;
-          let suggestions = wrapper.querySelector(".category-suggestions");
+      document.querySelectorAll('[data-category-autocomplete="true"]').forEach((input) => {
+        const wrapper = input.parentElement;
+        let suggestions = wrapper.querySelector(".category-suggestions");
 
-          if (!suggestions) {
-            suggestions = document.createElement("div");
-            suggestions.className = "category-suggestions";
-            wrapper.appendChild(suggestions);
+        if (!suggestions) {
+          suggestions = document.createElement("div");
+          suggestions.className = "category-suggestions";
+          wrapper.appendChild(suggestions);
+        }
+
+        input.addEventListener("input", function () {
+          const value = this.value.toLowerCase();
+          suggestions.innerHTML = "";
+
+          if (!value) {
+            suggestions.style.display = "none";
+            return;
           }
 
-          input.addEventListener("input", function () {
-            const value = this.value.toLowerCase();
-            suggestions.innerHTML = "";
+          const filtered = sampleCategories.filter((cat) =>
+            cat.toLowerCase().includes(value)
+          );
 
-            if (!value) {
-              suggestions.style.display = "none";
-              return;
-            }
+          if (filtered.length === 0) {
+            suggestions.style.display = "none";
+            return;
+          }
 
-            const filtered = sampleCategories.filter((cat) =>
-              cat.toLowerCase().includes(value)
-            );
+          suggestions.style.display = "block";
 
-            if (filtered.length === 0) {
-              suggestions.style.display = "none";
-              return;
-            }
-
-            suggestions.style.display = "block";
-
-            filtered.forEach((cat) => {
-              const div = document.createElement("div");
-              div.textContent = cat;
-              div.style.cssText =
-                "padding:12px 16px; cursor:pointer; transition:background 0.2s;";
-              div.addEventListener("mouseover", () => {
-                div.style.background = "var(--light-gray)";
-              });
-              div.addEventListener("mouseout", () => {
-                div.style.background = "";
-              });
-              div.addEventListener("click", () => {
-                input.value = cat;
-                suggestions.style.display = "none";
-              });
-              suggestions.appendChild(div);
+          filtered.forEach((cat) => {
+            const div = document.createElement("div");
+            div.textContent = cat;
+            div.style.cssText =
+              "padding:12px 16px; cursor:pointer; transition:background 0.2s;";
+            div.addEventListener("mouseover", () => {
+              div.style.background = "var(--light-gray)";
             });
-          });
-
-          document.addEventListener("click", function (e) {
-            if (!wrapper.contains(e.target)) {
+            div.addEventListener("mouseout", () => {
+              div.style.background = "";
+            });
+            div.addEventListener("click", () => {
+              input.value = cat;
               suggestions.style.display = "none";
-            }
+            });
+            suggestions.appendChild(div);
           });
         });
+
+        document.addEventListener("click", function (e) {
+          if (!wrapper.contains(e.target)) {
+            suggestions.style.display = "none";
+          }
+        });
+      });
     }
 
+    // ────────────────────────────────────────────────
+    // Form submit (unchanged – already good)
+    // ────────────────────────────────────────────────
     if (form) {
       form.addEventListener("submit", async function (e) {
         e.preventDefault();
@@ -2948,9 +3058,6 @@ function highlightError(input) {
 
         try {
           const formData = new FormData(this);
-
-          // ✅ OPTIONAL DEBUG (uncomment to confirm no duplicate empty fields)
-          for (const [k, v] of formData.entries()) console.log("SUBMIT:", k, v);
 
           const response = await fetch("/store/add-item", {
             method: "POST",
@@ -2987,13 +3094,50 @@ function highlightError(input) {
     setupImageUploads();
     setupCategoryAutocomplete();
   });
-</script>
 
+  // ────────────────────────────────────────────────
+  // NEW: Modal-specific Contact for Price toggle
+  // ────────────────────────────────────────────────
+  document.addEventListener("DOMContentLoaded", function () {
+    const modalContact = document.getElementById("modal-contact-for-price");
+    const modalPriceWrap = document.getElementById("modal-fixed-price-wrapper");
+    const modalPriceIn = document.getElementById("modal-service-price");
+
+    if (modalContact && modalPriceWrap && modalPriceIn) {
+      function updateModalPrice() {
+        if (modalContact.checked) {
+          modalPriceWrap.style.display = "none";
+          modalPriceIn.value = "";
+          modalPriceIn.removeAttribute("required");
+        } else {
+          modalPriceWrap.style.display = "block";
+          modalPriceIn.setAttribute("required", "required");
+        }
+      }
+
+      modalContact.addEventListener("change", updateModalPrice);
+
+      // Also reset when modal opens or deal type changes to service
+      document.querySelectorAll('input[name="deal_type"]').forEach(radio => {
+        radio.addEventListener("change", () => {
+          if (radio.value === "Service Offer") {
+            updateModalPrice();
+          } else {
+            modalPriceWrap.style.display = "none";
+            modalPriceIn.removeAttribute("required");
+          }
+        });
+      });
+
+      // Initial call
+      updateModalPrice();
+    }
+  });
+</script>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const storeId = {{ store.store_id }};
-    // Count a view for the actual store page visit:
     if (storeId) {
       const payload = JSON.stringify({ store_id: Number(storeId) });
       if (navigator.sendBeacon) {

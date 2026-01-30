@@ -1490,10 +1490,13 @@ document.getElementById('search-form').addEventListener('submit', e => {
 
 {# ================= LISTINGS GRID ================= #}
 <section class="listings">
-  {% set ns = namespace(idx=0) %}
+
   {% if listings or suggestion_listings %}
+  
     <div class="grid">
       {% set display_list = listings if listings else suggestion_listings %}
+      {% set ns = namespace(idx=0) %}
+
       {% for listing in display_list %}
         {% set ns.idx = loop.index0 %}
 
@@ -1504,61 +1507,58 @@ document.getElementById('search-form').addEventListener('submit', e => {
            aria-label="{{ listing.title }}">
 
           {# Deal type badge #}
-          <span class="deal-badge {{ 'swap' if listing.deal_type == 'Swap Deal' else 'sale' }}">
-            {{ listing.deal_type }}
+          <span class="deal-badge 
+                {{ 'swap'    if listing.deal_type == 'Swap Deal' 
+            else 'service' if listing.deal_type == 'Service Offer' 
+            else 'sale' }}">
+            {% if listing.deal_type == 'Service Offer' %}Service{% else %}{{ listing.deal_type }}{% endif %}
           </span>
 
-          {# Wishlist button (only when logged in) #}
+          {# Wishlist button #}
           {% if user_logged_in %}
-            <button
-              class="wishlist-btn"
-              type="button"
-              aria-label="Toggle wishlist"
-              data-listing-id="{{ listing.listing_id }}"
-              aria-pressed="{{ 'true' if listing.is_wishlisted else 'false' }}">
+            <button class="wishlist-btn"
+                    type="button"
+                    aria-label="Toggle wishlist"
+                    data-listing-id="{{ listing.listing_id }}"
+                    aria-pressed="{{ 'true' if listing.is_wishlisted else 'false' }}">
               <i class="fas fa-heart {{ 'wishlisted' if listing.is_wishlisted else '' }}"></i>
             </button>
           {% endif %}
 
-          {# SWAP DEAL: multiple offer images strip #}
+          {# Image display logic #}
           {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 1 %}
             <div class="swap-row" aria-hidden="true">
               {% for o in listing.offers[:3] %}
                 <div class="swap-photo">
-                  {# o.image1 is already normalized (Cloudinary thumb or static) #}
-                  <img
-                    src="{{ url_for('static', filename='images/placeholder.jpg') }}"
-                    data-src="{{ o.image1 }}"
-                    alt="{{ o.title }}"
-                    class="lazy-img"
-                    {% if ns.idx < 3 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}
-                    decoding="async">
+                  <img src="{{ url_for('static', filename='images/placeholder.jpg') }}"
+                       data-src="{{ o.image1 }}"
+                       alt="{{ o.title }}"
+                       class="lazy-img"
+                       {% if ns.idx < 3 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}
+                       decoding="async">
                 </div>
               {% endfor %}
             </div>
 
-          {# ALL OTHER CASES: single main image for the card #}
           {% else %}
             <div class="media{% if listing.show_full_image %} media--safe{% endif %}"
-                 {% if listing.show_full_image %}style="--blur-url:url('{{ listing.image_url }}')" {% endif %}>
-              {# listing.image_url is already final URL (Cloudinary 4:3 thumb or static) #}
-              <img
-                src="{{ url_for('static', filename='images/placeholder.jpg') }}"
-                data-src="{{ listing.image_url }}"
-                alt="{{ listing.title }}"
-                class="lazy-img"
-                {% if ns.idx < 3 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}
-                decoding="async">
+                 {% if listing.show_full_image %}style="--blur-url:url('{{ listing.image_url }}')"{% endif %}>
+              <img src="{{ url_for('static', filename='images/placeholder.jpg') }}"
+                   data-src="{{ listing.image_url }}"
+                   alt="{{ listing.title }}"
+                   class="lazy-img"
+                   {% if ns.idx < 3 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}
+                   decoding="async">
             </div>
           {% endif %}
 
+          {# Content / title / price #}
           <div class="content">
             {% if listing.deal_type == 'Swap Deal' %}
               {% set titles = listing.offers | map(attribute='title') | list %}
               <div class="meta-line">
                 <span class="meta-label">Offer:</span>
-                <span>
-                  {{ titles | join(' + ') }}
+                <span>{{ titles | join(' + ') }}
                   {% if listing.additional_cash|float > 0 %}
                     + ₵{{ "{:,.2f}".format(listing.additional_cash|float) }}
                   {% endif %}
@@ -1574,7 +1574,19 @@ document.getElementById('search-form').addEventListener('submit', e => {
                   <span>+ ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span>
                 </div>
               {% endif %}
+
+            {% elif listing.deal_type == 'Service Offer' %}
+              <h3 class="title">{{ listing.title }}</h3>
+              <div class="price" style="margin-top:.25rem; font-weight: 600;">
+                {% if listing.price is none or listing.price|float == 0 %}
+                  <span style="color: #6c757d; font-style: italic;">Contact for Price</span>
+                {% else %}
+                  ₵{{ "{:,.2f}".format(listing.price|float) }} <small>per session</small>
+                {% endif %}
+              </div>
+
             {% else %}
+              {# Outright Sales #}
               <h3 class="title">
                 {{ listing.title }}
                 {% if listing.required_cash|float > 0 %}
@@ -1597,36 +1609,29 @@ document.getElementById('search-form').addEventListener('submit', e => {
     {% if listings and total_pages > 1 %}
       <nav class="pagination" role="navigation" aria-label="Pagination">
         {% if page > 1 %}
-          <a class="page-link"
-             href="?page={{ page-1 }}&search={{ search }}&category={{ selected_category }}&deal_type={{ deal_type_filter }}&location={{ location }}">
-            Previous
-          </a>
+          <a class="page-link" href="?page={{ page-1 }}&search={{ search }}&category={{ selected_category }}&deal_type={{ deal_type_filter }}&location={{ location }}">Previous</a>
         {% endif %}
 
         {% for p in range(1, total_pages + 1) %}
           {% if p == page %}
             <span class="page-current" aria-current="page">{{ p }}</span>
           {% else %}
-            <a class="page-link"
-               href="?page={{ p }}&search={{ search }}&category={{ selected_category }}&deal_type={{ deal_type_filter }}&location={{ location }}">
-              {{ p }}
-            </a>
+            <a class="page-link" href="?page={{ p }}&search={{ search }}&category={{ selected_category }}&deal_type={{ deal_type_filter }}&location={{ location }}">{{ p }}</a>
           {% endif %}
         {% endfor %}
 
         {% if page < total_pages %}
-          <a class="page-link"
-             href="?page={{ page+1 }}&search={{ search }}&category={{ selected_category }}&deal_type={{ deal_type_filter }}&location={{ location }}">
-            Next
-          </a>
+          <a class="page-link" href="?page={{ page+1 }}&search={{ search }}&category={{ selected_category }}&deal_type={{ deal_type_filter }}&location={{ location }}">Next</a>
         {% endif %}
       </nav>
     {% endif %}
+
   {% else %}
-    <p style="text-align:center;color:#6b7280;padding:3rem">
+    <p style="text-align:center; color:#6b7280; padding:3rem">
       No listings available right now.
     </p>
   {% endif %}
+
 </section>
 
 

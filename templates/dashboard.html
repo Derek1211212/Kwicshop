@@ -1721,24 +1721,32 @@ select.form-control {
                             <h5 class="section-title">
                                 <i class="fas fa-list"></i> Listing Type
                             </h5>
-                            <div class="deal-type-container">
-                                <div class="deal-type-card active">
-                                    <input type="radio" class="btn-check" name="deal_type" id="deal-swap" value="Swap Deal" checked>
-                                    <label class="w-100 h-100" for="deal-swap">
-                                        <i class="fas fa-exchange-alt"></i>
-                                        <h5>Swap Deal</h5>
-                                        <p>Trade items with other users</p>
-                                    </label>
-                                </div>
-                                <div class="deal-type-card">
-                                    <input type="radio" class="btn-check" name="deal_type" id="deal-sale" value="Outright Sales">
-                                    <label class="w-100 h-100" for="deal-sale">
-                                        <i class="fas fa-tag"></i>
-                                        <h5>Outright Sale</h5>
-                                        <p>Sell your item for cash</p>
-                                    </label>
-                                </div>
-                            </div>
+<div class="deal-type-container">
+    <div class="deal-type-card active">
+        <input type="radio" class="btn-check" name="deal_type" id="deal-swap" value="Swap Deal" checked>
+        <label class="w-100 h-100" for="deal-swap">
+            <i class="fas fa-exchange-alt"></i>
+            <h5>Swap Deal</h5>
+            <p>Trade items with other users</p>
+        </label>
+    </div>
+    <div class="deal-type-card">
+        <input type="radio" class="btn-check" name="deal_type" id="deal-sale" value="Outright Sales">
+        <label class="w-100 h-100" for="deal-sale">
+            <i class="fas fa-tag"></i>
+            <h5>Product</h5>
+            <p>Sell your item for cash</p>
+        </label>
+    </div>
+    <div class="deal-type-card">
+        <input type="radio" class="btn-check" name="deal_type" id="deal-service" value="Service Offer">
+        <label class="w-100 h-100" for="deal-service">
+            <i class="fas fa-tools"></i>
+            <h5>Service</h5>
+            <p>Offer your professional service</p>
+        </label>
+    </div>
+</div>
                         </div>
                         <!-- Basic Information -->
                         <div class="form-card">
@@ -1941,6 +1949,49 @@ select.form-control {
                                 </div>
                             </div>
                         </div>
+
+
+
+<!-- Service Section -->
+<div id="service-section" style="display:none;" class="form-card">
+    <h5 class="section-title">
+        <i class="fas fa-tools"></i> Service Details
+    </h5>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label required-field">Service Name</label>
+            <div class="input-group mb-3">
+                <span class="input-group-text input-icon"><i class="fas fa-heading"></i></span>
+                <input type="text" name="title" class="form-control" placeholder="e.g., Home Cleaning, Logo Design, Guitar Lessons" required>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Price</label>
+            <div class="input-group mb-3">
+                <div class="form-check form-switch me-3 pt-2">
+                    <input class="form-check-input" type="checkbox" id="contact-for-price" name="contact_for_price" value="1">
+                    <label class="form-check-label" for="contact-for-price">Contact for Price</label>
+                </div>
+            </div>
+            <div id="fixed-price-wrapper" class="input-group mb-3">
+                <span class="input-group-text">₵</span>
+                <input type="number" step="0.01" name="price" id="service-price" class="form-control" placeholder="0.00">
+            </div>
+            <small class="help-text">Leave blank or check "Contact for Price" if price is negotiable</small>
+        </div>
+
+        <div class="col-12">
+            <label class="form-label required-field">Description</label>
+            <textarea name="description" class="form-control" rows="5" required placeholder="Describe the service you offer, duration, what's included, experience..."></textarea>
+        </div>
+    </div>
+</div>
+
+
+
+
+
                         <!-- Location & Contact -->
                         <div class="form-card">
                             <h5 class="section-title">
@@ -2135,67 +2186,16 @@ select.form-control {
     {% endif %}
     {% endwith %}
 
-    <!-- JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Navigation Handling
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', function() {
-                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-                this.classList.add('active');
-                const sectionId = this.dataset.section;
-                document.querySelectorAll('.dashboard-section').forEach(section => section.classList.remove('active'));
-                document.getElementById(sectionId).classList.add('active');
-                
-                // Update section title
-                const titles = {
-                    'listings': 'My Listings',
-                    'create-listing': 'Create Listing',
-                    'proposals': 'Proposals',
-                    'profile': 'Profile Settings'
-                };
-                document.getElementById('section-title').textContent = titles[sectionId];
-                
-                // Close sidebar on mobile after clicking a nav item
-                if (window.innerWidth <= 992) {
-                    document.querySelector('.dashboard-sidebar').classList.remove('active');
-                }
-            });
-        });
-
-        // Menu Toggle for Mobile
-        document.querySelector('.menu-toggle').addEventListener('click', function() {
-            document.querySelector('.dashboard-sidebar').classList.add('active');
-        });
-
-        // Close Sidebar for Mobile
-        document.querySelector('.sidebar-close').addEventListener('click', function() {
-            document.querySelector('.dashboard-sidebar').classList.remove('active');
-        });
-
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener('click', function(event) {
-            const sidebar = document.querySelector('.dashboard-sidebar');
-            const menuToggle = document.querySelector('.menu-toggle');
-            
-            if (window.innerWidth <= 992 && 
-                sidebar.classList.contains('active') &&
-                !sidebar.contains(event.target) &&
-                !menuToggle.contains(event.target)) {
-                sidebar.classList.remove('active');
-            }
-        });
-
-        // Section Navigation Helper
-        window.showSection = function(sectionId) {
-            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+<!-- JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Navigation Handling
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', function() {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
+            const sectionId = this.dataset.section;
             document.querySelectorAll('.dashboard-section').forEach(section => section.classList.remove('active'));
-            
-            // Find and activate the nav item for this section
-            const navItem = document.querySelector(`.nav-item[data-section="${sectionId}"]`);
-            if (navItem) navItem.classList.add('active');
-            
-            // Show the section
             document.getElementById(sectionId).classList.add('active');
             
             // Update section title
@@ -2206,274 +2206,460 @@ select.form-control {
                 'profile': 'Profile Settings'
             };
             document.getElementById('section-title').textContent = titles[sectionId];
+            
+            // Close sidebar on mobile after clicking a nav item
+            if (window.innerWidth <= 992) {
+                document.querySelector('.dashboard-sidebar').classList.remove('active');
+            }
+        });
+    });
+
+    // Menu Toggle for Mobile
+    document.querySelector('.menu-toggle').addEventListener('click', function() {
+        document.querySelector('.dashboard-sidebar').classList.add('active');
+    });
+
+    // Close Sidebar for Mobile
+    document.querySelector('.sidebar-close').addEventListener('click', function() {
+        document.querySelector('.dashboard-sidebar').classList.remove('active');
+    });
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', function(event) {
+        const sidebar = document.querySelector('.dashboard-sidebar');
+        const menuToggle = document.querySelector('.menu-toggle');
+        
+        if (window.innerWidth <= 992 && 
+            sidebar.classList.contains('active') &&
+            !sidebar.contains(event.target) &&
+            !menuToggle.contains(event.target)) {
+            sidebar.classList.remove('active');
         }
+    });
 
-        // Deal-Type Toggle (Restored from original code)
-        document.addEventListener('DOMContentLoaded', function() {
-            const swapRadio = document.getElementById('deal-swap');
-            const saleRadio = document.getElementById('deal-sale');
-            const swapSec = document.getElementById('swap-section');
-            const saleSec = document.getElementById('sale-section');
-            const dealCards = document.querySelectorAll('.deal-type-card');
-            const swapCtrls = Array.from(document.querySelectorAll(
-                'select[name="offer_condition[]"], textarea[name="offer_description[]"], input[name^="offer_images"], input[name="desired_swap"], select[name="desired_condition"], input[name="required_cash"], input[name="additional_cash"], textarea[name="swap_notes"]'
-            ));
-            const saleCtrls = Array.from(document.querySelectorAll(
-                'input[name="price"], select[name="condition"], textarea[name="description"]'
-            ));
+    // Section Navigation Helper
+    window.showSection = function(sectionId) {
+        document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.dashboard-section').forEach(section => section.classList.remove('active'));
+        
+        // Find and activate the nav item for this section
+        const navItem = document.querySelector(`.nav-item[data-section="${sectionId}"]`);
+        if (navItem) navItem.classList.add('active');
+        
+        // Show the section
+        document.getElementById(sectionId).classList.add('active');
+        
+        // Update section title
+        const titles = {
+            'listings': 'My Listings',
+            'create-listing': 'Create Listing',
+            'proposals': 'Proposals',
+            'profile': 'Profile Settings'
+        };
+        document.getElementById('section-title').textContent = titles[sectionId];
+    }
 
-            function toggleSections() {
-                const isSwap = swapRadio.checked;
-                console.log(`Toggling sections: isSwap=${isSwap}`);
-                swapSec.style.display = isSwap ? 'block' : 'none';
-                saleSec.style.display = isSwap ? 'none' : 'block';
-                swapCtrls.forEach(c => {
-                    c.disabled = !isSwap;
-                    if (isSwap && c.hasAttribute('data-was-required')) c.required = true;
-                    if (!isSwap && c.required) { c.setAttribute('data-was-required', 'true'); c.required = false; }
-                });
-                saleCtrls.forEach(c => {
-                    c.disabled = isSwap;
-                    if (!isSwap && c.hasAttribute('data-was-required')) c.required = true;
-                    if (isSwap && c.required) { c.setAttribute('data-was-required', 'true'); c.required = false; }
-                });
-                dealCards.forEach(card => {
-                    const inp = card.querySelector('input[type="radio"]');
+    // ────────────────────────────────────────────────
+    // Deal-Type Toggle + Service support
+    // ────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', function() {
+        // Radio buttons
+        const swapRadio    = document.getElementById('deal-swap');
+        const saleRadio    = document.getElementById('deal-sale');
+        const serviceRadio = document.getElementById('deal-service');
+
+        // Sections
+        const swapSec      = document.getElementById('swap-section');
+        const saleSec      = document.getElementById('sale-section');
+        const serviceSec   = document.getElementById('service-section');
+
+        const dealCards    = document.querySelectorAll('.deal-type-card');
+
+        // Controls groups
+        const swapCtrls = Array.from(document.querySelectorAll(
+            'select[name="offer_condition[]"], textarea[name="offer_description[]"], ' +
+            'input[name^="offer_images"], input[name="desired_swap"], ' +
+            'select[name="desired_condition"], input[name="required_cash"], ' +
+            'input[name="additional_cash"], textarea[name="swap_notes"]'
+        ));
+
+        const saleCtrls = Array.from(document.querySelectorAll(
+            'input[name="price"], select[name="condition"], textarea[name="description"]'
+        ));
+
+        const serviceCtrls = Array.from(document.querySelectorAll(
+            '#service-section input[name="price"], ' +
+            '#service-section textarea[name="description"], ' +
+            '#service-section input[name="contact_for_price"]'
+        ));
+
+        const listingImagesSection = document.getElementById('listing-images-section');
+        const mainImagesInput      = document.getElementById('main-images-input');
+
+        function toggleSections() {
+            let activeType = null;
+            if (swapRadio?.checked)    activeType = 'swap';
+            else if (saleRadio?.checked)    activeType = 'sale';
+            else if (serviceRadio?.checked) activeType = 'service';
+            else activeType = 'swap'; // fallback
+
+            // Show/hide content sections
+            if (swapSec)    swapSec.style.display    = (activeType === 'swap')    ? 'block' : 'none';
+            if (saleSec)    saleSec.style.display    = (activeType === 'sale')    ? 'block' : 'none';
+            if (serviceSec) serviceSec.style.display = (activeType === 'service') ? 'block' : 'none';
+
+            // Enable/disable + required logic
+            swapCtrls.forEach(c => {
+                c.disabled = activeType !== 'swap';
+                if (activeType === 'swap' && c.hasAttribute('data-was-required')) c.required = true;
+                if (activeType !== 'swap' && c.required) {
+                    c.setAttribute('data-was-required', 'true');
+                    c.required = false;
+                }
+            });
+
+            saleCtrls.forEach(c => {
+                c.disabled = activeType !== 'sale';
+                if (activeType === 'sale' && c.hasAttribute('data-was-required')) c.required = true;
+                if (activeType !== 'sale' && c.required) {
+                    c.setAttribute('data-was-required', 'true');
+                    c.required = false;
+                }
+            });
+
+            serviceCtrls.forEach(c => {
+                c.disabled = activeType !== 'service';
+                if (c.name === 'description' || c.name === 'contact_for_price') {
+                    c.required = (activeType === 'service');
+                }
+                if (c.name === 'price') {
+                    const contactChecked = document.getElementById('contact-for-price')?.checked ?? false;
+                    c.required = (activeType === 'service' && !contactChecked);
+                }
+            });
+
+            // Main images → shown for sale AND service
+            const needsMainImages = (activeType === 'sale' || activeType === 'service');
+            if (listingImagesSection && mainImagesInput) {
+                listingImagesSection.style.display = needsMainImages ? 'block' : 'none';
+                mainImagesInput.disabled = !needsMainImages;
+                mainImagesInput.required = needsMainImages;
+            }
+
+            // Visual active state on cards
+            dealCards.forEach(card => {
+                const inp = card.querySelector('input[type="radio"]');
+                if (inp) {
                     card.classList.toggle('active', inp.checked);
-                });
-                const form = document.querySelector('#create-listing-form');
+                }
+            });
+
+            // Force layout refresh
+            const form = document.querySelector('#create-listing-form');
+            if (form) {
                 form.style.height = 'auto';
                 form.parentElement.style.height = 'auto';
                 form.parentElement.style.overflow = 'visible';
-                const listingImagesSection = document.getElementById('listing-images-section');
-                const mainImagesInput = document.getElementById('main-images-input');
-                if (isSwap) {
-                    listingImagesSection.style.display = 'none';
-                    mainImagesInput.disabled = true;
-                    mainImagesInput.required = false;
+            }
+        }
+
+        // Attach listeners
+        if (swapRadio)    swapRadio.addEventListener('change', toggleSections);
+        if (saleRadio)    saleRadio.addEventListener('change', toggleSections);
+        if (serviceRadio) serviceRadio.addEventListener('change', toggleSections);
+
+        // Initial call
+        toggleSections();
+
+// ────────────────────────────────────────────────
+// Service: Price ↔ Contact for Price logic
+// ────────────────────────────────────────────────
+const contactCheckbox = document.getElementById('contact-for-price');
+const priceWrapper    = document.getElementById('fixed-price-wrapper');
+const priceInput      = document.getElementById('service-price');
+
+if (contactCheckbox && priceWrapper && priceInput) {
+    function updatePriceState() {
+        const isService = document.getElementById('deal-service')?.checked === true;
+
+        if (!isService) {
+            // Not service → reset everything
+            priceWrapper.style.display = 'none';
+            priceInput.required = false;
+            contactCheckbox.required = false;
+            return;
+        }
+
+        if (contactCheckbox.checked) {
+            priceWrapper.style.display = 'none';
+            priceInput.value = '';           // clear any old value
+            priceInput.required = false;
+            contactCheckbox.required = false; // ← important: checkbox is NOT required
+        } else {
+            priceWrapper.style.display = 'block';
+            priceInput.required = true;      // price becomes required
+            contactCheckbox.required = false;
+        }
+    }
+
+    // Run when checkbox changes
+    contactCheckbox.addEventListener('change', updatePriceState);
+
+    // Run when switching to/from Service radio
+    document.querySelectorAll('input[name="deal_type"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            if (radio.value === 'Service Offer') {
+                updatePriceState();
+            } else {
+                // Reset when switching away
+                priceWrapper.style.display = 'none';
+                priceInput.required = false;
+                contactCheckbox.required = false;
+            }
+        });
+    });
+
+    // Initial state on page load
+    updatePriceState();
+
+    // Optional: Prevent submit if service + neither option chosen
+    document.getElementById('create-listing-form')?.addEventListener('submit', (e) => {
+        if (document.getElementById('deal-service')?.checked) {
+            const contactChecked = contactCheckbox.checked;
+            const priceFilled = priceInput.value.trim() !== '' && !isNaN(parseFloat(priceInput.value));
+
+            if (!contactChecked && !priceFilled) {
+                e.preventDefault();
+                alert("Please either enter a price or check 'Contact for Price'.");
+                if (contactCheckbox.checked) {
+                    contactCheckbox.focus();
                 } else {
-                    listingImagesSection.style.display = 'block';
-                    mainImagesInput.disabled = false;
-                    mainImagesInput.required = true;
+                    priceInput.focus();
                 }
             }
-            
-            if (swapRadio && saleRadio) {
-                swapRadio.addEventListener('change', toggleSections);
-                saleRadio.addEventListener('change', toggleSections);
-                toggleSections();
-            }
+        }
+    });
+}
 
-            // File Upload Helpers
-            function handleDragOver(e) {
-                e.preventDefault();
-                const area = e.currentTarget;
-                area.style.borderColor = 'var(--primary)';
-                area.style.backgroundColor = 'rgba(76, 175, 80, 0.05)';
-            }
-            function handleDragLeave(e) {
-                const area = e.currentTarget;
-                area.style.borderColor = '#dee2e6';
-                area.style.backgroundColor = 'var(--light)';
-            }
-            function handleDrop(e) {
-                e.preventDefault();
-                const input = e.currentTarget.querySelector('input[type="file"]');
-                input.files = e.dataTransfer.files;
-                input.dispatchEvent(new Event('change'));
-                e.currentTarget.style.borderColor = '#dee2e6';
-                e.currentTarget.style.backgroundColor = 'var(--light)';
-            }
-            function handleFileUpload(e) {
-                const files = e.target.files;
-                const preview = e.target.closest('.file-upload-area').querySelector('.file-preview');
-                preview.innerHTML = '';
-                if (!files.length) {
-                    preview.innerHTML = '<p class="upload-subtext">No images selected</p>';
-                    return;
-                }
-                console.log(`Files selected for ${e.target.name}:`, Array.from(files).map(f => f.name));
-                Array.from(files).slice(0, 4).forEach(file => {
-                    if (!file.type.match('image.*')) return;
-                    const reader = new FileReader();
-                    reader.onload = function(evt) {
-                        const wrapper = document.createElement('div');
-                        wrapper.className = 'file-preview-item';
-                        wrapper.innerHTML = `
-                            <img src="${evt.target.result}" alt="Preview">
-                            <button type="button"><i class="fas fa-times"></i></button>
-                        `;
-                        preview.appendChild(wrapper);
-                        wrapper.querySelector('button').addEventListener('click', () => {
-                            wrapper.remove();
-                            const input = preview.closest('.file-upload-area').querySelector('input[type="file"]');
-                            input.files = new DataTransfer().files;
-                        });
-                    };
-                    reader.readAsDataURL(file);
-                });
-            }
+        // ────────────────────────────────────────────────
+        // File Upload Handlers (unchanged)
+        // ────────────────────────────────────────────────
+        function handleDragOver(e) {
+            e.preventDefault();
+            const area = e.currentTarget;
+            area.style.borderColor = 'var(--primary)';
+            area.style.backgroundColor = 'rgba(76, 175, 80, 0.05)';
+        }
 
-            // Offered-Items Logic
-            const container = document.getElementById('offered-items-container');
-            const addBtn = document.getElementById('add-item-btn');
-            if (container && addBtn) {
-                const template = container.querySelector('.offered-item[data-clone="false"]');
-                function updateItemNumbers() {
-                    const items = container.querySelectorAll('.offered-item');
-                    items.forEach((it, i) => {
-                        const num = it.querySelector('.item-number');
-                        if (num) num.textContent = i + 1;
+        function handleDragLeave(e) {
+            const area = e.currentTarget;
+            area.style.borderColor = '#dee2e6';
+            area.style.backgroundColor = 'var(--light)';
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const input = e.currentTarget.querySelector('input[type="file"]');
+            input.files = e.dataTransfer.files;
+            input.dispatchEvent(new Event('change'));
+            e.currentTarget.style.borderColor = '#dee2e6';
+            e.currentTarget.style.backgroundColor = 'var(--light)';
+        }
+
+        function handleFileUpload(e) {
+            const files = e.target.files;
+            const preview = e.target.closest('.file-upload-area').querySelector('.file-preview');
+            preview.innerHTML = '';
+            if (!files.length) {
+                preview.innerHTML = '<p class="upload-subtext">No images selected</p>';
+                return;
+            }
+            Array.from(files).slice(0, 4).forEach(file => {
+                if (!file.type.match('image.*')) return;
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'file-preview-item';
+                    wrapper.innerHTML = `
+                        <img src="${evt.target.result}" alt="Preview">
+                        <button type="button"><i class="fas fa-times"></i></button>
+                    `;
+                    preview.appendChild(wrapper);
+                    wrapper.querySelector('button').addEventListener('click', () => {
+                        wrapper.remove();
+                        const input = preview.closest('.file-upload-area').querySelector('input[type="file"]');
+                        const dt = new DataTransfer();
+                        input.files = dt.files;
                     });
-                    addBtn.disabled = items.length >= 2;
-                }
-                addBtn.addEventListener('click', () => {
-                    const items = container.querySelectorAll('.offered-item');
-                    if (items.length >= 2) return;
-                    const clone = template.cloneNode(true);
-                    clone.dataset.clone = 'true';
-                    const titleField = clone.querySelector('.name-field');
-                    const titleIn = clone.querySelector('input[name="offer_title[]"]:not([type="hidden"])');
-                    if (titleField && titleIn) {
-                        titleField.style.display = 'block';
-                        titleIn.disabled = false;
-                        titleIn.required = true;
-                        const hiddenTitle = clone.querySelector('input[type="hidden"][name="offer_title[]"]');
-                        if (hiddenTitle) hiddenTitle.remove();
-                    }
-                    const fileIn = clone.querySelector('input[type="file"]');
-                    if (fileIn) {
-                        fileIn.disabled = false;
-                        fileIn.required = true;
-                        fileIn.name = `offer_images_2[]`;
-                        const area = fileIn.closest('.file-upload-area');
-                        area.id = `item-images-upload-${items.length + 1}`;
-                        area.addEventListener('click', () => fileIn.click());
-                        fileIn.addEventListener('change', handleFileUpload);
-                        area.addEventListener('dragover', handleDragOver);
-                        area.addEventListener('dragleave', handleDragLeave);
-                        area.addEventListener('drop', handleDrop);
-                    }
-                    const rem = clone.querySelector('.remove-item-btn');
-                    if (rem) {
-                        rem.style.display = 'block';
-                        rem.addEventListener('click', () => { clone.remove(); updateItemNumbers(); });
-                    }
-                    clone.querySelectorAll('input,textarea,select').forEach(el => {
-                        if (el.tagName === 'SELECT') el.selectedIndex = 0;
-                        else if (el.type === 'file') {
-                            el.value = '';
-                            const p = el.closest('.file-upload-area').querySelector('.file-preview');
-                            if (p) p.innerHTML = '';
-                        } else if (el.name !== 'offer_title[]') el.value = '';
-                    });
-                    container.appendChild(clone);
-                    updateItemNumbers();
-                });
-                const firstRem = template.querySelector('.remove-item-btn');
-                if (firstRem) firstRem.style.display = 'none';
-                updateItemNumbers();
-            }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
 
-            // Wire File Uploads
-            document.querySelectorAll('.file-upload-area').forEach(area => {
-                const fi = area.querySelector('input[type="file"]');
-                if (!fi.disabled) {
-                    area.addEventListener('click', () => fi.click());
-                    fi.addEventListener('change', handleFileUpload);
+        // Offered-Items Logic (unchanged)
+        const container = document.getElementById('offered-items-container');
+        const addBtn = document.getElementById('add-item-btn');
+        if (container && addBtn) {
+            const template = container.querySelector('.offered-item[data-clone="false"]');
+            function updateItemNumbers() {
+                const items = container.querySelectorAll('.offered-item');
+                items.forEach((it, i) => {
+                    const num = it.querySelector('.item-number');
+                    if (num) num.textContent = i + 1;
+                });
+                addBtn.disabled = items.length >= 2;
+            }
+            addBtn.addEventListener('click', () => {
+                const items = container.querySelectorAll('.offered-item');
+                if (items.length >= 2) return;
+                const clone = template.cloneNode(true);
+                clone.dataset.clone = 'true';
+                const titleField = clone.querySelector('.name-field');
+                const titleIn = clone.querySelector('input[name="offer_title[]"]:not([type="hidden"])');
+                if (titleField && titleIn) {
+                    titleField.style.display = 'block';
+                    titleIn.disabled = false;
+                    titleIn.required = true;
+                    const hiddenTitle = clone.querySelector('input[type="hidden"][name="offer_title[]"]');
+                    if (hiddenTitle) hiddenTitle.remove();
+                }
+                const fileIn = clone.querySelector('input[type="file"]');
+                if (fileIn) {
+                    fileIn.disabled = false;
+                    fileIn.required = true;
+                    fileIn.name = `offer_images_2[]`;
+                    const area = fileIn.closest('.file-upload-area');
+                    area.id = `item-images-upload-${items.length + 1}`;
+                    area.addEventListener('click', () => fileIn.click());
+                    fileIn.addEventListener('change', handleFileUpload);
                     area.addEventListener('dragover', handleDragOver);
                     area.addEventListener('dragleave', handleDragLeave);
                     area.addEventListener('drop', handleDrop);
                 }
-            });
-
-            // Category Autocomplete
-            const CATEGORY_DEFS = [
-                { name: 'Electronics', synonyms: ['gadget','device','tech', 'HeadPhone'] },
-                { name: 'Computers & Networking', synonyms: ['pc','laptop','desktop','router','server'] },
-                { name: 'Mobile Phones & Accessories', synonyms: ['phone','mobile','charger','case', 'HeadPhone', 'Android', 'iphone', 'MacBook'] },
-                { name: 'Software & Apps', synonyms: ['app','program','software'] },
-                { name: 'Health & Beauty', synonyms: ['skincare','makeup','wellness'] },
-                { name: 'Medical Equipment', synonyms: ['stethoscope','syringe','hospital'] },
-                { name: 'Medical Equipment', synonyms: ['stethoscope','syringe','hospital'] },
-                { name: 'Sports & Outdoors', synonyms: ['sport','hiking','camping'] },
-                { name: 'Fashion & Apparel', synonyms: ['clothes','shirt','dress','jeans'] },
-                { name: 'Jewelry & Watches', synonyms: ['ring','necklace','watch'] },
-                { name: 'Home & Garden', synonyms: ['furniture','decor','plants'] },
-                { name: 'Kitchen & Dining', synonyms: ['cookware','utensils','appliances'] },
-                { name: 'Tools & DIY', synonyms: ['hammer','drill','screwdriver'] },
-                { name: 'Automobile & Vehicles', synonyms: ['car','vehicle','truck','motorcycle'] },
-                { name: 'Industrial & Scientific', synonyms: ['lab','industrial','machine'] },
-                { name: 'Agriculture & Farming', synonyms: ['farm','tractor','crop'] },
-                { name: 'Food & Beverages', synonyms: ['food','drink','beverage'] },
-                { name: 'Office Supplies', synonyms: ['pen','paper','stationery'] },
-                { name: 'Books, Music & Movies', synonyms: ['book','cd','dvd','movie'] },
-                { name: 'Toys & Games', synonyms: ['toy','game','puzzle'] },
-                { name: 'Baby & Kids', synonyms: ['baby','child','kids'] },
-                { name: 'Pets & Accessories', synonyms: ['pet','dog','cat','leash'] },
-                { name: 'Art, Crafts & Sewing', synonyms: ['art','craft','sewing'] },
-                { name: 'Collectibles & Hobbies', synonyms: ['coin','stamp','hobby'] },
-                { name: 'Travel & Experiences', synonyms: ['trip','tour','holiday'] },
-                { name: 'House and Property', synonyms: ['house','apartment','land'] },
-                { name: 'Education & Training', synonyms: ['course','lesson','training'] },
-                { name: 'Services', synonyms: ['service','repair','consulting'] },
-                { name: 'Other', synonyms: [] }
-            ];
-
-            const input = document.getElementById('category-input');
-            const suggestions = document.getElementById('category-suggestions');
-
-            function updateSuggestions(value) {
-                const term = value.trim().toLowerCase();
-                suggestions.innerHTML = '';
-                const matches = CATEGORY_DEFS.filter(cat => {
-                    if (!term) return true;
-                    const inName = cat.name.toLowerCase().includes(term);
-                    const inSyn = cat.synonyms.some(s => s.toLowerCase().includes(term));
-                    return inName || inSyn;
+                const rem = clone.querySelector('.remove-item-btn');
+                if (rem) {
+                    rem.style.display = 'block';
+                    rem.addEventListener('click', () => { clone.remove(); updateItemNumbers(); });
+                }
+                clone.querySelectorAll('input,textarea,select').forEach(el => {
+                    if (el.tagName === 'SELECT') el.selectedIndex = 0;
+                    else if (el.type === 'file') {
+                        el.value = '';
+                        const p = el.closest('.file-upload-area').querySelector('.file-preview');
+                        if (p) p.innerHTML = '';
+                    } else if (el.name !== 'offer_title[]') el.value = '';
                 });
-                matches.forEach(cat => {
-                    const li = document.createElement('li');
-                    li.textContent = cat.name;
-                    li.style.padding = '8px';
-                    li.style.cursor = 'pointer';
-                    li.addEventListener('mousedown', () => {
-                        input.value = cat.name;
-                        suggestions.style.display = 'none';
+                container.appendChild(clone);
+                updateItemNumbers();
+            });
+            const firstRem = template.querySelector('.remove-item-btn');
+            if (firstRem) firstRem.style.display = 'none';
+            updateItemNumbers();
+        }
+
+        // Wire File Uploads
+        document.querySelectorAll('.file-upload-area').forEach(area => {
+            const fi = area.querySelector('input[type="file"]');
+            if (!fi.disabled) {
+                area.addEventListener('click', () => fi.click());
+                fi.addEventListener('change', handleFileUpload);
+                area.addEventListener('dragover', handleDragOver);
+                area.addEventListener('dragleave', handleDragLeave);
+                area.addEventListener('drop', handleDrop);
+            }
+        });
+
+        // ────────────────────────────────────────────────
+        // Category Autocomplete, Delete Listing, Proposals, etc.
+        // (your original code continues here – unchanged)
+        // ────────────────────────────────────────────────
+
+        // Category Autocomplete
+        const CATEGORY_DEFS = [
+            { name: 'Electronics', synonyms: ['gadget','device','tech', 'HeadPhone'] },
+            { name: 'Computers & Networking', synonyms: ['pc','laptop','desktop','router','server'] },
+            { name: 'Mobile Phones & Accessories', synonyms: ['phone','mobile','charger','case', 'HeadPhone', 'Android', 'iphone', 'MacBook'] },
+            { name: 'Software & Apps', synonyms: ['app','program','software'] },
+            { name: 'Health & Beauty', synonyms: ['skincare','makeup','wellness'] },
+            { name: 'Medical Equipment', synonyms: ['stethoscope','syringe','hospital'] },
+            { name: 'Sports & Outdoors', synonyms: ['sport','hiking','camping'] },
+            { name: 'Fashion & Apparel', synonyms: ['clothes','shirt','dress','jeans'] },
+            { name: 'Jewelry & Watches', synonyms: ['ring','necklace','watch'] },
+            { name: 'Home & Garden', synonyms: ['furniture','decor','plants'] },
+            { name: 'Kitchen & Dining', synonyms: ['cookware','utensils','appliances'] },
+            { name: 'Tools & DIY', synonyms: ['hammer','drill','screwdriver'] },
+            { name: 'Automobile & Vehicles', synonyms: ['car','vehicle','truck','motorcycle'] },
+            { name: 'Industrial & Scientific', synonyms: ['lab','industrial','machine'] },
+            { name: 'Agriculture & Farming', synonyms: ['farm','tractor','crop'] },
+            { name: 'Food & Beverages', synonyms: ['food','drink','beverage'] },
+            { name: 'Office Supplies', synonyms: ['pen','paper','stationery'] },
+            { name: 'Books, Music & Movies', synonyms: ['book','cd','dvd','movie'] },
+            { name: 'Toys & Games', synonyms: ['toy','game','puzzle'] },
+            { name: 'Baby & Kids', synonyms: ['baby','child','kids'] },
+            { name: 'Pets & Accessories', synonyms: ['pet','dog','cat','leash'] },
+            { name: 'Art, Crafts & Sewing', synonyms: ['art','craft','sewing'] },
+            { name: 'Collectibles & Hobbies', synonyms: ['coin','stamp','hobby'] },
+            { name: 'Travel & Experiences', synonyms: ['trip','tour','holiday'] },
+            { name: 'House and Property', synonyms: ['house','apartment','land'] },
+            { name: 'Education & Training', synonyms: ['course','lesson','training'] },
+            { name: 'Services', synonyms: ['service','repair','consulting'] },
+            { name: 'Other', synonyms: [] }
+        ];
+
+        const input = document.getElementById('category-input');
+        const suggestions = document.getElementById('category-suggestions');
+
+        function updateSuggestions(value) {
+            const term = value.trim().toLowerCase();
+            suggestions.innerHTML = '';
+            const matches = CATEGORY_DEFS.filter(cat => {
+                if (!term) return true;
+                const inName = cat.name.toLowerCase().includes(term);
+                const inSyn = cat.synonyms.some(s => s.toLowerCase().includes(term));
+                return inName || inSyn;
+            });
+            matches.forEach(cat => {
+                const li = document.createElement('li');
+                li.textContent = cat.name;
+                li.style.padding = '8px';
+                li.style.cursor = 'pointer';
+                li.addEventListener('mousedown', () => {
+                    input.value = cat.name;
+                    suggestions.style.display = 'none';
+                });
+                suggestions.appendChild(li);
+            });
+            suggestions.style.display = matches.length ? 'block' : 'none';
+        }
+
+        if (input) {
+            input.addEventListener('input', e => updateSuggestions(e.target.value));
+            input.addEventListener('blur', () => setTimeout(() => suggestions.style.display = 'none', 100));
+            input.addEventListener('focus', () => updateSuggestions(input.value));
+        }
+
+        // Delete Listing
+        document.querySelectorAll('.delete-listing').forEach(button => {
+            button.addEventListener('click', async () => {
+                if (!confirm('Are you sure you want to delete this listing?')) return;
+                const listingId = button.dataset.id;
+                try {
+                    const resp = await fetch(`/listings/${listingId}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' }
                     });
-                    suggestions.appendChild(li);
-                });
-                suggestions.style.display = matches.length ? 'block' : 'none';
-            }
-
-            if (input) {
-                input.addEventListener('input', e => updateSuggestions(e.target.value));
-                input.addEventListener('blur', () => setTimeout(() => suggestions.style.display = 'none', 100));
-                input.addEventListener('focus', () => updateSuggestions(input.value));
-            }
-
-            // Delete Listing
-            document.querySelectorAll('.delete-listing').forEach(button => {
-                button.addEventListener('click', async () => {
-                    if (!confirm('Are you sure you want to delete this listing?')) return;
-                    const listingId = button.dataset.id;
-                    try {
-                        const resp = await fetch(`/listings/${listingId}`, {
-                            method: 'DELETE',
-                            headers: { 'Content-Type': 'application/json' }
-                        });
-                        const json = await resp.json();
-                        if (resp.ok && json.success) {
-                            button.closest('.listing-card').remove();
-                        } else {
-                            alert(json.error || 'Failed to delete listing.');
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        alert('An error occurred while deleting.');
+                    const json = await resp.json();
+                    if (resp.ok && json.success) {
+                        button.closest('.listing-card').remove();
+                    } else {
+                        alert(json.error || 'Failed to delete listing.');
                     }
-                });
+                } catch (err) {
+                    console.error(err);
+                    alert('An error occurred while deleting.');
+                }
             });
+        });
 
 // ------- Proposals: API + UI (scoped, no CSRF) -------
 async function updateProposalStatus(card, newStatus) {
