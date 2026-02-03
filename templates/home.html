@@ -25,25 +25,26 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
   <style>
-    :root{
-      --primary:#81C784; --primary-dark:#2e7d32; --primary-light:#A5D6A7;
-      --success:#10b981; --warning:#f59e0b; --error:#ef4444;
-      --secondary:#111827; --text:#374151; --text-light:#6b7280;
-      --surface:#fff; --background:#f9fafb; --border:#e5e7eb;
-      --radius:12px; --shadow-xs:0 1px 2px rgba(0,0,0,.06);
-      --shadow-sm:0 4px 12px rgba(0,0,0,.08); --shadow-md:0 10px 24px rgba(0,0,0,.1);
-      --focus:0 0 0 3px rgba(129,199,132,.35);
+:root{
+  --primary:#81C784; --primary-dark:#2e7d32; --primary-light:#A5D6A7;
+  --success:#10b981; --warning:#f59e0b; --error:#ef4444;
+  --secondary:#111827; --text:#374151; --text-light:#6b7280;
+  --surface:#fff; --background:#f9fafb; --border:#e5e7eb;
+  --radius:12px; --shadow-xs:0 1px 2px rgba(0,0,0,.06);
+  --shadow-sm:0 4px 12px rgba(0,0,0,.08); --shadow-md:0 10px 24px rgba(0,0,0,.1);
+  --focus:0 0 0 3px rgba(129,199,132,.35);
 
-      /* --- DICHOTOMY LAYER --- */
-      /* featured (carousel) */
-      --featured-bg: radial-gradient(1200px 480px at 20% -10%, #0b1b12 0%, #0f2217 40%, #102019 65%, #0c1a14 100%);
-      --featured-edge: rgba(255,255,255,.08);
-      --featured-glass: rgba(255,255,255,.10);
-      --featured-text: #ecfdf5;
-      --featured-accent: #a7f3d0;
-      /* listings (grid) */
-      --card-bg: #fff; --card-border: #e9ecef; --card-hover:#f9fafb;
-    }
+  /* --- DICHOTOMY LAYER --- */
+  /* featured (carousel) */
+  --featured-bg: radial-gradient(1200px 480px at 20% -10%, #0b1b12 0%, #0f2217 40%, #102019 65%, #0c1a14 100%);
+  --featured-edge: rgba(255,255,255,.08);
+  --featured-glass: rgba(255,255,255,.10);
+  --featured-text: #ecfdf5;
+  --featured-accent: #a7f3d0;
+  /* listings (grid) */
+  --card-bg: #fff; --card-border: #e9ecef; --card-hover:#f9fafb;
+  --container-gutter: 0.5rem;      /* CHANGED from 1rem to 0.5rem */
+}
     *{box-sizing:border-box}
     html,body{height:100%}
     body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--text);background:var(--background);line-height:1.55}
@@ -353,7 +354,11 @@
 .featured-head-glass .section-title{color:#fff;margin:0}
 
     .listings{max-width:1200px;margin:1.25rem auto;padding:0 1rem}
-    .grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fill, minmax(260px,1fr))}
+    /* Desktop stays the same, mobile gets 2 columns */
+    .grid{display:grid;gap:0.75rem;grid-template-columns:repeat(auto-fill, minmax(260px,1fr))}
+    @media (max-width: 768px){
+      .grid{grid-template-columns:repeat(2, 1fr); gap: 0.5rem}
+    }
     .card{position:relative;background:var(--card-bg);border:1px solid var(--card-border);border-radius:14px;overflow:hidden;box-shadow:none;transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease}
     .card:hover{transform:translateY(-2px);border-color:#dfe3e8;box-shadow:0 6px 16px rgba(16,24,40,.06)}
     .deal-badge{position:absolute;top:.7rem;left:.7rem;background:var(--primary);color:#fff;border-radius:999px;padding:.25rem .6rem;font-size:.75rem;font-weight:800;z-index:2;box-shadow:none;opacity:.95}
@@ -526,10 +531,10 @@
       .nav-links .wishlist-link #wishlist-count {position: absolute;top: 0;right: 0;transform: translate(50%, -40%);min-width: 18px;height: 18px;line-height: 18px;padding: 0 6px;border-radius: 9999px;background: #ef4444;color: #fff;font-size: .7rem;text-align: center;box-shadow: 0 2px 6px rgba(0,0,0,.12);pointer-events: none;z-index: 1}
     }
 
-    /* === Global container alignment === */
+/* === Global container alignment === */
 :root{
   --container-max: 1200px;
-  --container-gutter: 1rem;      /* same side padding used everywhere */
+  --container-gutter: 0.5rem;      /* CHANGED from 1rem to 0.5rem */
 }
 
 /* Use width:min(...) to avoid max-width quirks and keep consistent padding */
@@ -1469,7 +1474,7 @@ document.getElementById('search-form').addEventListener('submit', e => {
 {% if show_suggestions %}
   <div class="listings" aria-live="polite">
     <div class="alert-info">
-      <strong>No exact matches for “{{ search }}” — here are some suggestions:</strong>
+      <strong>No exact matches for "{{ search }}" — here are some suggestions:</strong>
     </div>
   </div>
 {% endif %}
