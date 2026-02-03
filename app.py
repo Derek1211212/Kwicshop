@@ -2599,28 +2599,28 @@ def update_listing(listing_id):
             return str(val).strip()
 
         # 3) Common listing fields (both Outright and Swap)
-        category         = get_listing_field('category')
-        location         = get_listing_field('location')
-        contact          = get_listing_field('contact')
-        desired_swap     = get_listing_field('desired_swap')
-        desired_swap_desc= get_listing_field('desired_swap_description')
-        required_cash    = request.form.get('required_cash')    or existing.get('required_cash')
-        additional_cash  = request.form.get('additional_cash')  or existing.get('additional_cash')
+        category          = get_listing_field('category')
+        location          = get_listing_field('location')
+        contact           = get_listing_field('contact')
+        desired_swap      = get_listing_field('desired_swap')
+        desired_swap_desc = get_listing_field('desired_swap_description')
+        required_cash     = request.form.get('required_cash')   or existing.get('required_cash')
+        additional_cash   = request.form.get('additional_cash') or existing.get('additional_cash')
 
         # optional extra fields – will only change if you add matching inputs
-        plan             = request.form.get('plan')             or existing.get('Plan')
-        plan_duration    = request.form.get('plan_duration')    or existing.get('Plan Duration')
-        status           = request.form.get('status')           or existing.get('status')
-        swap_notes       = request.form.get('swap_notes')       or existing.get('swap_notes')
+        plan          = request.form.get('plan')          or existing.get('Plan')
+        plan_duration = request.form.get('plan_duration') or existing.get('Plan Duration')
+        status        = request.form.get('status')        or existing.get('status')
+        swap_notes    = request.form.get('swap_notes')    or existing.get('swap_notes')
 
-        # 4) For OUTRIGHT SALES: title/description/condition/price come from their own inputs
+        # 4) For OUTRIGHT SALES
         if deal_type == 'Outright Sales':
             title       = get_listing_field('title')
             description = get_listing_field('description')
             condition   = get_listing_field('condition', default_key='condition')
             price       = get_listing_field('price')
 
-            # ---- Handle listing images for Outright using Cloudinary ----
+            # ---- Handle listing images for Outright using upload_to_cloudinary ----
             form_to_db = [
                 ('image',  'image_url'),
                 ('image1', 'image1'),
@@ -2628,25 +2628,23 @@ def update_listing(listing_id):
                 ('image3', 'image3'),
                 ('image4', 'image4'),
             ]
+
             images_to_save = {}
             for form_field, db_col in form_to_db:
                 file = request.files.get(form_field)
-                if file and allowed_file(file.filename):
+
+                if file and file.filename and allowed_file(file.filename):
                     try:
-                        upload_result = cloudinary.uploader.upload(
-                            file,
-                            folder="swaphub/listings",
-                            resource_type="image"
-                        )
-                        image_url = upload_result.get("secure_url")
-                        images_to_save[db_col] = image_url
+                        # Use your helper (same style as create_store)
+                        image_url = upload_to_cloudinary(file, 'listings')
+                        # If helper returns None for any reason, keep old
+                        images_to_save[db_col] = image_url or existing.get(db_col)
                     except Exception as e:
                         app.logger.exception(f"Cloudinary upload failed for listing image {form_field}: {e}")
                         images_to_save[db_col] = existing.get(db_col)
                 else:
                     images_to_save[db_col] = existing.get(db_col)
 
-            # Update listings for Outright Sales
             cursor.execute(
                 """
                 UPDATE listings
@@ -2688,9 +2686,9 @@ def update_listing(listing_id):
                 ]
             )
 
-        # 5) For SWAP DEAL: main listing = Offered Item #1
-        else:  # deal_type == 'Swap Deal'
-            # a) General listing fields (NOT title/description/condition/images here)
+        # 5) For SWAP DEAL
+        else:
+            # a) Update non-title/description/condition/images fields in listings
             cursor.execute(
                 """
                 UPDATE listings
@@ -2734,7 +2732,6 @@ def update_listing(listing_id):
             )
             old_items = cursor.fetchall()
 
-            # Index helper by "slot" (1, 2, ...) according to your form
             old_by_slot = {}
             for idx, row in enumerate(old_items, start=1):
                 old_by_slot[idx] = row
@@ -2760,16 +2757,13 @@ def update_listing(listing_id):
 
                 otitle = request.form.get(f'offered_title_{slot}') or old.get('title')
                 if not otitle:
-                    # Don't insert an empty offered item
                     continue
 
                 odesc = request.form.get(f'offered_description_{slot}') or old.get('description', '')
                 ocond = request.form.get(f'offered_condition_{slot}')   or old.get('condition', '')
-
-                # Optional "value" -> we will map slot 1 to listings.price if provided
                 ovalue = request.form.get(f'offered_value_{slot}')
 
-                # Handle images for this offered item (Cloudinary)
+                # Handle images for this offered item (upload_to_cloudinary)
                 oimgs = []
                 for img_idx in range(1, 5):
                     key_file   = f'offered_image_{slot}_{img_idx}'
@@ -2782,16 +2776,14 @@ def update_listing(listing_id):
 
                     if remove:
                         new_img = None
-                    elif file and allowed_file(file.filename):
+                    elif file and file.filename and allowed_file(file.filename):
                         try:
-                            upload_result = cloudinary.uploader.upload(
-                                file,
-                                folder="swaphub/offers",
-                                resource_type="image"
-                            )
-                            new_img = upload_result.get("secure_url")
+                            new_url = upload_to_cloudinary(file, 'offers')
+                            new_img = new_url or old_img
                         except Exception as e:
-                            app.logger.exception(f"Cloudinary upload failed for offered_image_{slot}_{img_idx}: {e}")
+                            app.logger.exception(
+                                f"Cloudinary upload failed for offered_image_{slot}_{img_idx}: {e}"
+                            )
                             new_img = old_img
                     else:
                         new_img = old_img
@@ -2814,23 +2806,21 @@ def update_listing(listing_id):
                     )
                 )
 
-                # If this is the PRIMARY item (slot 1) → sync it into listings table
+                # Sync PRIMARY item (slot 1) into listings
                 if slot == 1:
                     primary_listing_data['title']       = otitle
                     primary_listing_data['description'] = odesc
                     primary_listing_data['condition']   = ocond
 
-                    # Map value to listings.price if provided
                     if ovalue and str(ovalue).strip() != '':
                         primary_listing_data['price'] = str(ovalue).strip()
 
-                    # Images: image1 also becomes image_url
                     primary_listing_data['image1'] = oimgs[0]
                     primary_listing_data['image2'] = oimgs[1]
                     primary_listing_data['image3'] = oimgs[2]
                     primary_listing_data['image4'] = oimgs[3]
 
-            # d) After processing all offered items, write primary item into listings
+            # d) Write primary item into listings
             cursor.execute(
                 """
                 UPDATE listings
@@ -2851,7 +2841,7 @@ def update_listing(listing_id):
                     primary_listing_data['description'],
                     primary_listing_data['condition'],
                     primary_listing_data['price'],
-                    primary_listing_data['image1'],  # image_url
+                    primary_listing_data['image1'],  # image_url = image1
                     primary_listing_data['image1'],
                     primary_listing_data['image2'],
                     primary_listing_data['image3'],
@@ -2874,6 +2864,7 @@ def update_listing(listing_id):
     finally:
         cursor.close()
         conn.close()
+
 
 
 
