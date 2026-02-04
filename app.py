@@ -12,7 +12,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 from dotenv import load_dotenv
-from flask import Flask, render_template, url_for, abort, request, session, redirect, flash, jsonify, current_app
+from flask import Flask, render_template, url_for, abort, request, session, redirect, flash, jsonify, current_app, Response
 import mysql.connector
 from functools import wraps
 from flask_wtf import FlaskForm
@@ -58,7 +58,7 @@ import atexit
 from slugify import slugify
 from flask_login import current_user
 import math
-
+from html import escape
 
 
 
@@ -8031,6 +8031,229 @@ def store_boost_verify():
 
 
 
+
+
+SITE_URL = os.getenv("SITE_URL", "https://vendupp.com").rstrip("/")
+PLATFORM_BRAND = os.getenv("PLATFORM_BRAND", "VendUpp")
+CURRENCY = os.getenv("CURRENCY", "GHS")
+
+# If your product pages are different, change this:
+LISTING_PATH = os.getenv("LISTING_PATH", "/listing/")  # results: https://site.com/listing/<id>
+
+
+def _abs_url(url: str) -> str:
+    """Turn /path into https://site.com/path; keep absolute URLs as-is."""
+    if not url:
+        return ""
+    url = url.strip()
+    if url.startswith("http://") or url.startswith("https://"):
+        return url
+    if url.startswith("/"):
+        return f"{SITE_URL}{url}"
+    # if stored like "uploads/x.jpg"
+    return f"{SITE_URL}/{url.lstrip('/')}"
+
+
+def _extract_price_number(price_raw):
+    """
+    Your listings.price is varchar(45).
+    This tries to pull a numeric price out of strings like:
+      "1200", "GHS 1,200", "1,200.50", "₵1200", "1200 GHS"
+    Returns float or None.
+    """
+    if price_raw is None:
+        return None
+    s = str(price_raw).strip()
+    if not s:
+        return None
+
+    # Remove common currency symbols/words, keep digits/commas/dots
+    s = s.replace("₵", "").replace("GHS", "").replace("ghs", "").replace("GH₵", "")
+    # Find first number-ish token
+    m = re.search(r"(\d[\d,]*\.?\d*)", s)
+    if not m:
+        return None
+    num = m.group(1).replace(",", "")
+    try:
+        return float(num)
+    except ValueError:
+        return None
+
+
+def _format_price(value_float: float) -> str:
+    # Google accepts "1500 GHS" or "1500.00 GHS"
+    # Keep 2 decimals only if needed
+    if value_float.is_integer():
+        return f"{int(value_float)} {CURRENCY}"
+    return f"{value_float:.2f} {CURRENCY}"
+
+
+def _availability_from_status(status: str) -> str:
+    # Map your listing status to Google availability
+    # Adjust if your statuses differ.
+    s = (status or "").lower()
+    if s in {"active", "available", "published", "live"}:
+        return "in_stock"
+    if s in {"sold", "inactive", "disabled", "expired", "archived"}:
+        return "out_of_stock"
+    # default safe:
+    return "in_stock"
+
+
+@app.get("/google-products.xml")
+def google_products_feed():
+    conn = mysql.connector.connect(**dbconfig)
+    cur = conn.cursor(dictionary=True)
+
+    try:
+        # Pull listings + store info
+        # Filters:
+        # - status active-ish (change as needed)
+        # - not expired (if expires_at is used)
+        # - must have at least one image
+        query = """
+            SELECT
+                l.listing_id,
+                l.title,
+                l.description,
+                l.category,
+                l.condition,
+                l.location,
+                l.status,
+                l.deal_type,
+                l.price,
+                l.required_cash,
+                l.additional_cash,
+                l.image_url,
+                l.image1, l.image2, l.image3, l.image4,
+                l.expires_at,
+                l.is_featured,
+                s.store_id,
+                s.name AS store_name,
+                s.slug AS store_slug,
+                s.verified,
+                s.rating_avg,
+                s.rating_count
+            FROM listings l
+            LEFT JOIN stores s ON s.store_id = l.store_id
+            WHERE (s.is_active = 1 OR s.is_active IS NULL)
+              AND (l.status IS NULL OR LOWER(l.status) NOT IN ('deleted'))
+              AND (l.expires_at IS NULL OR l.expires_at > NOW())
+            ORDER BY l.is_featured DESC, l.created_at DESC
+            LIMIT 10000;
+        """
+        cur.execute(query)
+        rows = cur.fetchall()
+    finally:
+        cur.close()
+        conn.close()
+
+    # Build Google RSS XML feed
+    xml = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">',
+        '<channel>',
+        f'<title>{escape(PLATFORM_BRAND)} Products</title>',
+        f'<link>{escape(SITE_URL)}</link>',
+        '<description>Google Merchant Center feed</description>',
+    ]
+
+    for r in rows:
+        listing_id = str(r.get("listing_id", "")).strip()
+        title = (r.get("title") or "").strip()
+        desc = (r.get("description") or "").strip()
+
+        # Choose best image field available
+        images = []
+        for k in ("image_url", "image1", "image2", "image3", "image4"):
+            u = _abs_url(r.get(k) or "")
+            if u and u not in images:
+                images.append(u)
+
+        if not listing_id or not title or not desc or not images:
+            continue
+
+        # Only include listings that can behave like a "sellable" product
+        # If deal_type is swap-only, Google Shopping usually isn't a fit.
+        deal_type = (r.get("deal_type") or "").lower().strip()
+        price_float = _extract_price_number(r.get("price"))
+
+        # Fallback: if you use required_cash/additional_cash as the price
+        if price_float is None:
+            # try required_cash then additional_cash
+            rc = r.get("required_cash")
+            ac = r.get("additional_cash")
+            if rc is not None:
+                try:
+                    price_float = float(rc)
+                except Exception:
+                    price_float = None
+            if price_float is None and ac is not None:
+                try:
+                    price_float = float(ac)
+                except Exception:
+                    price_float = None
+
+        # Skip if still no price (Shopping requires it)
+        if price_float is None:
+            continue
+
+        # Optional: if you want to ONLY include "sell/cash" listings, uncomment:
+        # if deal_type not in ("sell", "sale", "cash", "buy", ""):
+        #     continue
+
+        store_name = (r.get("store_name") or "").strip()
+        display_title = title if not store_name else f"{title} — From {store_name}"
+
+        # Product page link
+        product_link = f"{SITE_URL}{LISTING_PATH}{listing_id}"
+
+        availability = _availability_from_status(r.get("status"))
+
+        condition = (r.get("condition") or "new").lower().strip()
+        # Google accepts: new, used, refurbished
+        if condition not in ("new", "used", "refurbished"):
+            condition = "new"
+
+        category = (r.get("category") or "").strip()
+
+        xml.append("<item>")
+        xml.append(f"<g:id>{escape(listing_id)}</g:id>")
+        xml.append(f"<g:title>{escape(display_title)}</g:title>")
+        xml.append(f"<g:description>{escape(desc)}</g:description>")
+        xml.append(f"<g:link>{escape(product_link)}</g:link>")
+        xml.append(f"<g:image_link>{escape(images[0])}</g:image_link>")
+
+        # Extra images (optional but good)
+        for extra in images[1:]:
+            xml.append(f"<g:additional_image_link>{escape(extra)}</g:additional_image_link>")
+
+        xml.append(f"<g:availability>{escape(availability)}</g:availability>")
+        xml.append(f"<g:condition>{escape(condition)}</g:condition>")
+        xml.append(f"<g:price>{escape(_format_price(price_float))}</g:price>")
+
+        # Brand: for marketplaces, safest is your platform as seller/brand
+        xml.append(f"<g:brand>{escape(PLATFORM_BRAND)}</g:brand>")
+
+        # Optional helpful fields
+        if category:
+            xml.append(f"<g:product_type>{escape(category)}</g:product_type>")
+
+        # Useful for reporting / filtering in Google Ads
+        # Feature flag as custom label
+        if r.get("is_featured") in (1, True):
+            xml.append("<g:custom_label_0>featured</g:custom_label_0>")
+        else:
+            xml.append("<g:custom_label_0>standard</g:custom_label_0>")
+
+        # Store name as custom label (lets you promote specific shops later)
+        if store_name:
+            xml.append(f"<g:custom_label_1>{escape(store_name)}</g:custom_label_1>")
+
+        xml.append("</item>")
+
+    xml.extend(["</channel>", "</rss>"])
+    return Response("\n".join(xml), mimetype="application/xml")
 
 
 
