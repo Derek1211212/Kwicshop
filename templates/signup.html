@@ -231,6 +231,27 @@
           <div class="error-message" id="passwordError"></div>
         </div>
 
+        <!-- NEW: Security Question -->
+<div class="form-group">
+  <label for="security_question">
+    Security Question (for password recovery)
+    <i class="fas fa-circle-info tooltip-icon"
+       title="Choose a question and provide an answer you'll remember. Used to recover your account if you forget your password."></i>
+  </label>
+  <select id="security_question" name="security_question" required>
+    <option value="">Select a question</option>
+    {% for q in questions %}
+      <option value="{{ q }}">{{ q }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+<div class="form-group">
+  <label for="security_answer">Your Answer</label>
+  <input type="text" id="security_answer" name="security_answer" required placeholder="e.g., Fluffy" autocomplete="off">
+  <span class="help-text">Case-insensitive, but keep it memorable.</span>
+</div>
+
         <button type="submit" class="submit-btn">Sign Up</button>
       </form>
 

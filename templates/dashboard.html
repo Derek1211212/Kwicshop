@@ -1504,6 +1504,25 @@ select.form-control {
     position: relative;
     z-index: 50;
 }
+
+.category-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+}
+
+.category-suggestions li {
+    padding: 10px 16px;
+    cursor: pointer;
+}
+
+.category-suggestions li:hover {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+.category-suggestions li[style*="background: #fff3e0"] {  /* the "Use: ..." item */
+    font-style: italic;
+}
     </style>
 </head>
 <body>
@@ -1512,7 +1531,7 @@ select.form-control {
         <aside class="dashboard-sidebar">
             <div class="sidebar-header">
                 <h2 style="color: var(--primary);">
-                    <i class="fas fa-exchange-alt"></i> SwapHub
+                    <i class="fas fa-exchange-alt"></i> VendUpp
                 </h2>
                 <button class="sidebar-close">
                     <i class="fas fa-times"></i>
@@ -1774,14 +1793,28 @@ select.form-control {
                                     </div>
                                     <p class="help-text">For swaps: Your main item name. For sales: Item name</p>
                                 </div>
-                                <div class="col-md-3" style="position: relative;">
-                                    <label class="form-label required-field">Category</label>
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text input-icon"><i class="fas fa-box"></i></span>
-                                        <input id="category-input" name="category" class="form-control" placeholder="Select or type to search…" autocomplete="off" required style="position: relative; z-index: 2;">
-                                    </div>
-                                    <ul id="category-suggestions" style="position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #ccc; border-top: none; max-height: 200px; overflow-y: auto; z-index: 1; list-style: none; margin: 0; padding: 0; display: none;"></ul>
-                                </div>
+<div class="col-md-3">
+    <label class="form-label required-field">Category</label>
+    <div class="category-input-wrapper" style="position: relative;">
+        <div class="input-group mb-3">
+            <span class="input-group-text input-icon"><i class="fas fa-box"></i></span>
+            <input 
+                type="text" 
+                id="category-input"
+                name="category" 
+                class="form-control category-input" 
+                placeholder="Type to search or select category" 
+                autocomplete="off"
+                required
+            />
+        </div>
+        <ul 
+            id="category-suggestions"
+            class="category-suggestions"
+            style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ccc; border-radius: 6px; margin-top: 4px; max-height: 240px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none; z-index: 10; list-style: none; padding: 0; margin: 0;">
+        </ul>
+    </div>
+</div>
                                 <div class="col-md-3">
                                     <label class="form-label required-field">Promotion Plan</label>
                                     <div class="input-group mb-3">
@@ -2586,69 +2619,192 @@ if (contactCheckbox && priceWrapper && priceInput) {
         // (your original code continues here – unchanged)
         // ────────────────────────────────────────────────
 
-        // Category Autocomplete
-        const CATEGORY_DEFS = [
-            { name: 'Electronics', synonyms: ['gadget','device','tech', 'HeadPhone'] },
-            { name: 'Computers & Networking', synonyms: ['pc','laptop','desktop','router','server'] },
-            { name: 'Mobile Phones & Accessories', synonyms: ['phone','mobile','charger','case', 'HeadPhone', 'Android', 'iphone', 'MacBook'] },
-            { name: 'Software & Apps', synonyms: ['app','program','software'] },
-            { name: 'Health & Beauty', synonyms: ['skincare','makeup','wellness'] },
-            { name: 'Medical Equipment', synonyms: ['stethoscope','syringe','hospital'] },
-            { name: 'Sports & Outdoors', synonyms: ['sport','hiking','camping'] },
-            { name: 'Fashion & Apparel', synonyms: ['clothes','shirt','dress','jeans'] },
-            { name: 'Jewelry & Watches', synonyms: ['ring','necklace','watch'] },
-            { name: 'Home & Garden', synonyms: ['furniture','decor','plants'] },
-            { name: 'Kitchen & Dining', synonyms: ['cookware','utensils','appliances'] },
-            { name: 'Tools & DIY', synonyms: ['hammer','drill','screwdriver'] },
-            { name: 'Automobile & Vehicles', synonyms: ['car','vehicle','truck','motorcycle'] },
-            { name: 'Industrial & Scientific', synonyms: ['lab','industrial','machine'] },
-            { name: 'Agriculture & Farming', synonyms: ['farm','tractor','crop'] },
-            { name: 'Food & Beverages', synonyms: ['food','drink','beverage'] },
-            { name: 'Office Supplies', synonyms: ['pen','paper','stationery'] },
-            { name: 'Books, Music & Movies', synonyms: ['book','cd','dvd','movie'] },
-            { name: 'Toys & Games', synonyms: ['toy','game','puzzle'] },
-            { name: 'Baby & Kids', synonyms: ['baby','child','kids'] },
-            { name: 'Pets & Accessories', synonyms: ['pet','dog','cat','leash'] },
-            { name: 'Art, Crafts & Sewing', synonyms: ['art','craft','sewing'] },
-            { name: 'Collectibles & Hobbies', synonyms: ['coin','stamp','hobby'] },
-            { name: 'Travel & Experiences', synonyms: ['trip','tour','holiday'] },
-            { name: 'House and Property', synonyms: ['house','apartment','land'] },
-            { name: 'Education & Training', synonyms: ['course','lesson','training'] },
-            { name: 'Services', synonyms: ['service','repair','consulting'] },
-            { name: 'Other', synonyms: [] }
-        ];
+// ────────────────────────────────────────────────
+// Category autocomplete – consolidated & fixed
+// ────────────────────────────────────────────────
+(function initCategoryAutocomplete() {
+  // Prevent running multiple times
+  if (window.categoryAutocompleteInitialized) return;
+  window.categoryAutocompleteInitialized = true;
 
-        const input = document.getElementById('category-input');
-        const suggestions = document.getElementById('category-suggestions');
+  const categoryData = [
+    { name: "Electronics", synonyms: ["gadget","tv","television","smart tv","radio","speaker","bluetooth speaker","headphone","earphone","earbuds","airpods","camera","dslr","webcam","drone","smartwatch","fitness tracker","charger","power bank","usb cable","hdmi","remote","projector","home theater","console","playstation","xbox","nintendo","gaming pc"] },
+    { name: "Computers & Networking", synonyms: ["laptop","notebook","chromebook","desktop","pc","computer","monitor","screen","keyboard","mouse","gaming mouse","trackpad","router","modem","wifi","wifi extender","ethernet","server","nas","hard drive","ssd","ram","cpu","graphics card","gpu","motherboard","printer","scanner","webcam","usb hub","external drive"] },
+    { name: "Mobile Phones & Accessories", synonyms: ["phone","smartphone","mobile","cell","iphone","samsung","google pixel","oneplus","xiaomi","charger","fast charger","cable","usb-c","lightning","case","phone case","cover","screen protector","tempered glass","pop socket","wallet case","wireless charger","powerbank","selfie stick"] },
+    { name: "Software & Apps", synonyms: ["app","application","program","software","windows","macos","linux","android","ios","office","word","excel","powerpoint","antivirus","vpn","adobe","photoshop","illustrator","premiere","license","subscription","steam","game key","activation code"] },
+    { name: "Digital Products & Downloads", synonyms: ["ebook","kindle","pdf","music","song","album","spotify","apple music","movie","netflix","digital movie","game","steam game","psn","xbox live","digital art","nft","crypto art","stock photo","font","template","website template","resume template","canva","video clip","stock footage","sound effect"] },
+    { name: "Health & Beauty", synonyms: ["skincare","face cream","moisturizer","serum","sunscreen","makeup","foundation","lipstick","mascara","eyeliner","perfume","cologne","fragrance","hair","shampoo","conditioner","hair dye","soap","body wash","shower gel","lotion","cream","deodorant","vitamin","supplement","protein","collagen","fitness","yoga mat","resistance band","massager"] },
+    { name: "Medical Equipment & Supplies", synonyms: ["thermometer","blood pressure","bp monitor","glucometer","mask","n95","surgical mask","syringe","needle","crutch","walker","wheelchair","bandage","plaster","first aid","nebulizer","pulse oximeter","oximeter","hearing aid","stethoscope","incontinence","hospital bed","oxygen concentrator"] },
+    { name: "Sports & Outdoors", synonyms: ["football","soccer","basketball","tennis","racket","gym","dumbbell","barbell","treadmill","exercise bike","bicycle","mountain bike","road bike","tent","camping","sleeping bag","fishing rod","reel","running shoes","trail shoes","yoga","yoga mat","hiking","backpack","swimming","goggles","snorkel"] },
+    { name: "Fashion & Apparel", synonyms: ["clothes","clothing","shirt","t-shirt","polo","dress","skirt","jeans","trousers","pants","jacket","hoodie","sweater","coat","shoes","sneakers","boots","heels","sandals","slipper","bag","handbag","purse","backpack","wallet","belt","scarf","hat","cap","sunglasses","jewelry"] },
+    { name: "Jewelry & Watches", synonyms: ["ring","engagement ring","wedding ring","necklace","chain","pendant","earring","stud","hoop","bracelet","bangle","anklet","watch","smartwatch","rolex","omega","luxury watch","analog watch","digital watch","chronograph"] },
+    { name: "Home & Garden", synonyms: ["furniture","sofa","couch","bed","mattress","table","dining table","coffee table","chair","office chair","recliner","plant","indoor plant","flower","pot","gardening","lawn mower","hose","decoration","wall art","mirror","lamp","ceiling fan","curtain","rug","carpet"] },
+    { name: "Kitchen & Dining", synonyms: ["cooker","rice cooker","blender","juicer","fridge","refrigerator","microwave","oven","stove","gas stove","induction","pot","pan","frying pan","saucepan","knife","cutlery","plate","bowl","glass","mug","coffee maker","kettle","toaster","air fryer"] },
+    { name: "Tools & DIY", synonyms: ["drill","power drill","hammer","screwdriver","screw","saw","jigsaw","paint","roller","brush","wood","plywood","timber","cemen At","tool box","wrench","pliers","measuring tape","level","soldering","welder","ladder"] },
+    { name: "Automotive Parts &ccessories", synonyms: ["car part","auto part","tire","tyre","wheel","rim","battery","car battery","oil","engine oil","filter","air filter","oil filter","headlight","tail light","fog light","bumper","car mat","seat cover","car cover","roof rack","bike rack"] },
+    { name: "Automobile & Vehicles", synonyms: ["car","sedan","suv","truck","pickup","van","bus","motorcycle","bike","scooter","electric scooter","atv","quad bike","tractor","used car","new car"] },
+    { name: "Industrial & Scientific", synonyms: ["machine","industrial","lab","laboratory","microscope","telescope","sensor","pump","motor","generator","welder","soldering iron","safety gear","hard hat","gloves","goggles"] },
+    { name: "Agriculture & Farming", synonyms: ["tractor","plough","seed","fertilizer","pesticide","farm tool","irrigation","sprinkler","water pump","chicken feed","animal feed","greenhouse","farming equipment"] },
+    { name: "Food & Beverages", synonyms: ["grocery","rice","pasta","oil","cooking oil","sugar","flour","snack","biscuit","chips","chocolate","candy","drink","soft drink","soda","juice","coffee","tea","milk","water","energy drink"] },
+    { name: "Office Supplies", synonyms: ["pen","ballpoint","marker","highlighter","paper","notebook","diary","journal","printer","ink","toner","stapler","paper clip","file folder","envelope","calculator","whiteboard"] },
+    { name: "Books, Music & Movies", synonyms: ["book","novel","textbook","magazine","comic","manga","music","cd","vinyl","record","song","album","movie","dvd","blu-ray","digital movie","audiobook","podcast"] },
+    { name: "Toys & Games", synonyms: ["toy","doll","action figure","lego","building block","puzzle","board game","card game","video game","ps5","xbox","nintendo switch","drone toy","educational toy"] },
+    { name: "Baby & Kids", synonyms: ["baby","infant","toddler","stroller","pram","diaper","nappy","baby food","crib","cot","high chair","baby clothes","kids toy","playpen"] },
+    { name: "Pets & Accessories", synonyms: ["pet","dog","puppy","cat","kitten","pet food","dog food","cat litter","cage","kennel","leash","collar","harness","aquarium","fish tank","bird cage","hamster wheel"] },
+    { name: "Art, Crafts & Sewing", synonyms: ["art","craft","painting","acrylic","watercolor","brush","canvas","easel","yarn","knitting","crochet","sewing machine","fabric","thread","beads","embroidery","origami"] },
+    { name: "Collectibles & Hobbies", synonyms: ["stamp","coin","postage","trading card","pokemon card","sports card","model kit","figurine","comic book","vintage toy","antique","memorabilia","funko pop"] },
+    { name: "Handmade & Custom Items", synonyms: ["handmade","handcrafted","custom made","personalized","engraved","monogram","bespoke","artisanal","craft fair"] },
+    { name: "Travel & Experiences", synonyms: ["luggage","suitcase","travel bag","backpack","passport","travel pillow","flight","ticket","hotel","booking","tour","visa","cruise","adventure"] },
+    { name: "House and Property", synonyms: ["house","home","apartment","flat","condo","land","plot","real estate","rent","for rent","for sale","property","commercial property"] },
+    { name: "Home Improvement & Repair", synonyms: ["handyman","repair","renovation","remodel","carpentry","carpenter","masonry","mason","plumbing","plumber","electrician","electrical","hvac","air conditioning","roofing","painting","drywall","flooring","tiling","fencing","deck","construction","contractor"] },
+    { name: "Cleaning & Maintenance", synonyms: ["cleaning","house cleaning","maid","janitorial","deep clean","window cleaning","carpet cleaning","pressure washing","lawn care","landscaping","gardening","pest control","extermination","junk removal","moving","packing","storage","gutter cleaning","pool cleaning"] },
+    { name: "Automotive Services", synonyms: ["car wash","auto detailing","mechanic","car repair","tyre change","oil change","car servicing","diagnostic","towing","body shop","paintless dent repair"] },
+    { name: "Professional Services", synonyms: ["consulting","legal","lawyer","attorney","accounting","accountant","bookkeeping","marketing","business","virtual assistant","freelance","graphic design","writing","copywriting","programming","web development","app development","seo","translation","data entry","photography","videography","event planning","project management","financial planning"] },
+    { name: "Personal & Wellness Services", synonyms: ["personal training","fitness","yoga","pilates","massage","spa","salon","haircut","barber","nails","manicure","pedicure","makeup artist","tattoo","piercing","life coaching","therapy","counseling","nutritionist","dietitian","pet sitting","dog walking","babysitting","elder care"] },
+    { name: "Education & Training", synonyms: ["course","online course","lesson","tutoring","private tutor","class","workshop","coding","programming","language","english","french","spanish","music lesson","instrument","test prep","exam","ielts","toefl"] },
+    { name: "Events & Experiences Services", synonyms: ["event planning","wedding planner","party planner","birthday","dj","mc","caterer","cake","decorator","photobooth","bounce house","magician","clown","face painting","venue rental"] },
+    { name: "Other Services", synonyms: ["service","gig","odd job","miscellaneous","consult","assist","delivery","transport","errand","personal shopper"] },
+    { name: "Other", synonyms: ["misc","etc","everything else","random","not listed","various","unknown"] }
+  ];
 
-        function updateSuggestions(value) {
-            const term = value.trim().toLowerCase();
-            suggestions.innerHTML = '';
-            const matches = CATEGORY_DEFS.filter(cat => {
-                if (!term) return true;
-                const inName = cat.name.toLowerCase().includes(term);
-                const inSyn = cat.synonyms.some(s => s.toLowerCase().includes(term));
-                return inName || inSyn;
-            });
-            matches.forEach(cat => {
-                const li = document.createElement('li');
-                li.textContent = cat.name;
-                li.style.padding = '8px';
-                li.style.cursor = 'pointer';
-                li.addEventListener('mousedown', () => {
-                    input.value = cat.name;
-                    suggestions.style.display = 'none';
-                });
-                suggestions.appendChild(li);
-            });
-            suggestions.style.display = matches.length ? 'block' : 'none';
+  function attach() {
+    const input = document.getElementById('category-input');
+    const suggestions = document.getElementById('category-suggestions');
+
+    if (!input || !suggestions) return;
+
+    // Clear previous listeners if any (safety)
+    input.removeEventListener('input', handleInput);
+    input.removeEventListener('focus', handleFocus);
+    input.removeEventListener('blur', handleBlur);
+    input.removeEventListener('keydown', handleKeydown);
+
+    function handleInput(e) {
+      updateSuggestions(e.target.value);
+    }
+
+    function handleFocus() {
+      updateSuggestions(input.value);
+    }
+
+    function handleBlur() {
+      setTimeout(() => {
+        if (!suggestions.matches(':hover')) {
+          suggestions.style.display = 'none';
         }
+      }, 150);
+    }
 
-        if (input) {
-            input.addEventListener('input', e => updateSuggestions(e.target.value));
-            input.addEventListener('blur', () => setTimeout(() => suggestions.style.display = 'none', 100));
-            input.addEventListener('focus', () => updateSuggestions(input.value));
+    function handleKeydown(e) {
+      if (e.key === 'Enter' && suggestions.style.display === 'block') {
+        e.preventDefault();
+        const first = suggestions.querySelector('li');
+        if (first) {
+          const text = first.textContent;
+          input.value = text.startsWith('Use: "') ? text.slice(6, -1) : text;
+          suggestions.style.display = 'none';
         }
+      }
+    }
+
+    function updateSuggestions(value) {
+      const term = value.trim().toLowerCase();
+      suggestions.innerHTML = '';
+
+      if (term.length < 1) {
+        suggestions.style.display = 'none';
+        return;
+      }
+
+      const matches = [];
+
+      categoryData.forEach(cat => {
+        if (cat.name.toLowerCase().includes(term)) {
+          matches.push(cat.name);
+        } else if (cat.synonyms.some(s => s.toLowerCase().includes(term))) {
+          matches.push(cat.name);
+        }
+      });
+
+      const unique = [...new Set(matches)];
+
+      unique.forEach(cat => {
+        const li = document.createElement('li');
+        li.textContent = cat;
+        li.style.padding = '10px 16px';
+        li.style.cursor = 'pointer';
+        li.style.borderBottom = '1px solid #eee';
+        li.addEventListener('mouseover', () => li.style.background = '#f0f9f4');
+        li.addEventListener('mouseout', () => li.style.background = '');
+        li.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          input.value = cat;
+          suggestions.style.display = 'none';
+        });
+        suggestions.appendChild(li);
+      });
+
+      // Fallback when no match
+      if (unique.length === 0 && term.length >= 3) {
+        const useTyped = document.createElement('li');
+        useTyped.textContent = `Use: "${value.trim()}"`;
+        useTyped.style.padding = '10px 16px';
+        useTyped.style.cursor = 'pointer';
+        useTyped.style.background = '#fff3e0';
+        useTyped.style.borderBottom = '1px solid #ffe0b2';
+        useTyped.style.fontStyle = 'italic';
+        useTyped.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          input.value = value.trim();
+          suggestions.style.display = 'none';
+        });
+        suggestions.appendChild(useTyped);
+
+        const other = document.createElement('li');
+        other.textContent = 'Other';
+        other.style.padding = '10px 16px';
+        other.style.cursor = 'pointer';
+        other.style.background = '#f5f5f5';
+        other.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          input.value = 'Other';
+          suggestions.style.display = 'none';
+        });
+        suggestions.appendChild(other);
+      }
+
+      suggestions.style.display = suggestions.children.length > 0 ? 'block' : 'none';
+    }
+
+    // Attach listeners
+    input.addEventListener('input', handleInput);
+    input.addEventListener('focus', handleFocus);
+    input.addEventListener('blur', handleBlur);
+    input.addEventListener('keydown', handleKeydown);
+
+    // Global click outside
+    const outsideClick = (e) => {
+      if (!input.contains(e.target) && !suggestions.contains(e.target)) {
+        suggestions.style.display = 'none';
+      }
+    };
+    document.removeEventListener('click', outsideClick); // prevent duplicates
+    document.addEventListener('click', outsideClick);
+  }
+
+  // Run immediately
+  attach();
+
+  // Re-attach when switching to create-listing section
+  document.querySelectorAll('[data-section="create-listing"]').forEach(item => {
+    item.addEventListener('click', () => setTimeout(attach, 100));
+  });
+
+  // Also re-attach on buttons that call showSection('create-listing')
+  document.querySelectorAll('[onclick*="showSection(\'create-listing\')"]').forEach(btn => {
+    btn.addEventListener('click', () => setTimeout(attach, 300));
+  });
+})();
 
         // Delete Listing
         document.querySelectorAll('.delete-listing').forEach(button => {

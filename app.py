@@ -1242,44 +1242,47 @@ def create_user(form):
             conn.close()
 
 
-def _flash_duplicate_reason(email, username, country_code, phone_number) -> bool:
+def _flash_duplicate_reason(email, username, phone_number=None):
     """
-    Returns True if a specific culprit was found & flashed.
-    Checks in priority: email > username > phone.
+    Check for duplicate email/username/contact and flash specific message.
+    country_code removed - no longer used.
+    Returns True if duplicate found/flashed, False otherwise.
     """
-    conn = None
-    cur = None
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
     try:
-        conn = get_db_conn()
-        cur = conn.cursor()
+        # Email check (priority)
+        if email:
+            cursor.execute("SELECT 1 FROM users WHERE email = %s LIMIT 1", (email,))
+            if cursor.fetchone():
+                flash("An account with this email already exists.", "error")
+                return True
 
-        cur.execute("SELECT 1 FROM users WHERE email=%s LIMIT 1", (email,))
-        if cur.fetchone():
-            flash("That email is already registered. Try logging in instead.", "error")
-            return True
+        # Username check
+        if username:
+            cursor.execute("SELECT 1 FROM users WHERE username = %s LIMIT 1", (username,))
+            if cursor.fetchone():
+                flash("Username is already taken.", "error")
+                return True
 
-        cur.execute("SELECT 1 FROM users WHERE username=%s LIMIT 1", (username,))
-        if cur.fetchone():
-            flash("That username is taken. Please choose another.", "error")
-            return True
+        # Contact / phone check
+        if phone_number:
+            cursor.execute("SELECT 1 FROM users WHERE contact = %s LIMIT 1", (phone_number,))
+            if cursor.fetchone():
+                flash("This phone number is already registered.", "error")
+                return True
 
-        phone_norm = normalize_contact(country_code, phone_number)
-        cur.execute("SELECT 1 FROM users WHERE contact=%s LIMIT 1", (phone_norm,))
-        if cur.fetchone():
-            flash(
-                "That phone number is already associated with another account.", "error"
-            )
-            return True
-
+        # No duplicates
         return False
-    except mysql.connector.Error as sub_err:
-        flash(f"MySQL error {getattr(sub_err, 'errno', '?')}: {sub_err}", "error")
-        return False
+
+    except Exception as e:
+        logging.exception("Error in duplicate check")
+        flash("Error checking for existing account. Please try again.", "error")
+        return True  # block insert on error
+
     finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+        cursor.close()
+        conn.close()
 
 
 # ====== Login required decorator ======
@@ -1651,21 +1654,35 @@ def google_callback():
 
 
 
+SECURITY_QUESTIONS = [
+    "What was the name of your first pet?",
+    "In what city were you born?",
+    "What is your mother's maiden name?",
+    "What was your first school name?",
+    "What is the name of your favorite childhood teacher?",
+    "What was your first car model?",
+]
 
 
-# =====================================================
-#                     SIGNUP ROUTE
-# =====================================================
+
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
-        username = _clean(request.form.get("username"))
-        email = _clean(request.form.get("email")).lower()
-        country_code = _clean(request.form.get("country_code"))
-        phone_number = _clean(request.form.get("phone_number"))
-        password = request.form.get("password") or ""
+        username       = _clean(request.form.get("username"))
+        email          = _clean(request.form.get("email")).lower()
+        country_code   = _clean(request.form.get("country_code"))          # for normalization only
+        raw_phone      = _clean(request.form.get("phone_number"))
+        password       = request.form.get("password") or ""
+        sec_question   = request.form.get("security_question", "").strip()
+        sec_answer     = request.form.get("security_answer", "").strip().lower()
 
-        # Basic server-side validation
+        # Normalize phone
+        digits = ''.join(filter(str.isdigit, raw_phone))
+        if digits.startswith('0'):
+            digits = digits[1:]
+        full_contact = f"+{country_code.replace('+', '')}{digits}" if country_code and digits else digits
+
+        # Validation
         errors = []
         if len(username) < 3:
             errors.append("Username must be at least 3 characters.")
@@ -1673,12 +1690,14 @@ def signup():
             errors.append("Please enter a valid email address.")
         if not country_code:
             errors.append("Please select your country code.")
-        if not PHONE_RE.fullmatch(phone_number):
-            errors.append(
-                "Phone number looks invalid. Use digits only (spaces or hyphens allowed)."
-            )
+        if not digits or len(digits) < 7:
+            errors.append("Phone number looks invalid or too short.")
         if len(password) < 8:
             errors.append("Password must be at least 8 characters.")
+        if not sec_question or sec_question not in SECURITY_QUESTIONS:
+            errors.append("Please select a valid security question.")
+        if not sec_answer or len(sec_answer) < 3:
+            errors.append("Security answer must be at least 3 characters.")
 
         if errors:
             for e in errors:
@@ -1689,76 +1708,55 @@ def signup():
                     username=username,
                     email=email,
                     country_code=country_code,
-                    phone_number=phone_number,
+                    phone_number=raw_phone,
                 ),
+                questions=SECURITY_QUESTIONS,
             )
 
-        # Create via your helper
+        hashed_pw  = generate_password_hash(password)
+        hashed_ans = generate_password_hash(sec_answer)
+
+        conn = None
+        cursor = None
         try:
-            user = create_user(request.form)
-            if user:
-                flash("Account created successfully! Please log in.", "success")
-                return redirect(url_for("login"))
+            conn = get_db_connection()
+            cursor = conn.cursor()
 
-            # Helper returned falsy → run targeted existence checks for specific flashes
-            if _flash_duplicate_reason(email, username, country_code, phone_number):
-                return render_template(
-                    "signup.html",
-                    form_prefill=dict(
-                        username=username,
-                        email=email,
-                        country_code=country_code,
-                        phone_number=phone_number,
-                    ),
-                )
+            cursor.execute("""
+                INSERT INTO users (
+                    username, email, contact, password,
+                    security_question, security_answer_hash
+                ) VALUES (%s, %s, %s, %s, %s, %s)
+            """, (username, email, full_contact, hashed_pw,
+                  sec_question, hashed_ans))
 
-            # No culprit found → final fallback
-            flash("We couldn't create your account right now. Please try again.", "error")
-            return render_template(
-                "signup.html",
-                form_prefill=dict(
-                    username=username,
-                    email=email,
-                    country_code=country_code,
-                    phone_number=phone_number,
-                ),
-            )
+            conn.commit()
+
+            flash("Account created successfully! Please log in.", "success")
+            return redirect(url_for("login"))
 
         except mysql.connector.Error as err:
-            if getattr(err, "errno", None) == 1062:  # Duplicate key
-                # Give a specific, field-based message (email first)
-                if not _flash_duplicate_reason(
-                    email, username, country_code, phone_number
-                ):
-                    flash(
-                        "An account with the provided details already exists.", "error"
-                    )
-                return render_template(
-                    "signup.html",
-                    form_prefill=dict(
-                        username=username,
-                        email=email,
-                        country_code=country_code,
-                        phone_number=phone_number,
-                    ),
-                )
-
-            # Other DB errors
-            flash(
-                f"MySQL error {getattr(err,'errno','?')}: {err}",
-                "error",
-            )
+            if conn:
+                conn.rollback()
+            if getattr(err, "errno", None) == 1062:
+                # This call now works after updating the function
+                _flash_duplicate_reason(email, username, phone_number=full_contact)
+            else:
+                flash(f"Database error: {err}", "error")
             return render_template(
                 "signup.html",
                 form_prefill=dict(
                     username=username,
                     email=email,
                     country_code=country_code,
-                    phone_number=phone_number,
+                    phone_number=raw_phone,
                 ),
+                questions=SECURITY_QUESTIONS,
             )
 
         except Exception as ex:
+            if conn:
+                conn.rollback()
             flash(f"Unexpected error: {ex}", "error")
             return render_template(
                 "signup.html",
@@ -1766,13 +1764,18 @@ def signup():
                     username=username,
                     email=email,
                     country_code=country_code,
-                    phone_number=phone_number,
+                    phone_number=raw_phone,
                 ),
+                questions=SECURITY_QUESTIONS,
             )
 
-    # GET
-    return render_template("signup.html")
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
 
+    return render_template("signup.html", questions=SECURITY_QUESTIONS)
 
 
 
@@ -3691,60 +3694,142 @@ def send_password_reset_via_mailersend(recipient_email, reset_url):
 
 
 
-# ========== Routes: forgot-password and reset-password (using SendGrid wrapper) ==========
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
-        conn = None
-        cursor = None
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
         try:
-            conn = get_db_connection()
-            cursor = conn.cursor(dictionary=True)
+            cursor.execute("""
+                SELECT id, security_question
+                FROM users
+                WHERE email = %s
+            """, (email,))
+            user = cursor.fetchone()
 
-            cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
+            if not user or not user['security_question']:
+                flash('No account found with that email or no security question set.', 'danger')
+                return redirect(url_for('forgot_password'))
+
+            # Store in session for next step
+            session['reset_user_id'] = user['id']
+            session['reset_question'] = user['security_question']
+
+            return redirect(url_for('verify_security_answer'))
+
+        except Exception as e:
+            logging.exception("Error in forgot_password")
+            flash('An error occurred. Please try again.', 'danger')
+        finally:
+            cursor.close()
+            conn.close()
+
+    return render_template('forgot_password.html')
+
+
+
+
+@app.route('/verify-security-answer', methods=['GET', 'POST'])
+def verify_security_answer():
+    if 'reset_user_id' not in session or 'reset_question' not in session:
+        flash('Session expired or invalid request. Please start over.', 'danger')
+        return redirect(url_for('forgot_password'))
+
+    question = session['reset_question']
+
+    if request.method == 'POST':
+        answer = request.form.get('security_answer', '').strip().lower()
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        try:
+            cursor.execute("""
+                SELECT security_answer_hash
+                FROM users
+                WHERE id = %s
+            """, (session['reset_user_id'],))
             user = cursor.fetchone()
 
             if not user:
-                flash('No account found with that email address.', 'danger')
+                _cleanup_reset_session()
+                flash('Account not found.', 'danger')
                 return redirect(url_for('forgot_password'))
 
-            # Generate token and store in DB
-            token = secrets.token_urlsafe(32)
-            expires_at = datetime.now(UTC) + timedelta(hours=1)
+            if check_password_hash(user['security_answer_hash'], answer):
+                session['reset_verified'] = True
+                return redirect(url_for('reset_password_form'))
+            else:
+                flash('Incorrect answer. Please try again.', 'danger')
 
-            cursor.execute(
-                "INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (%s, %s, %s)",
-                (user['id'], token, expires_at)
-            )
+        except Exception as e:
+            logging.exception("Error verifying security answer")
+            flash('An error occurred. Please try again.', 'danger')
+        finally:
+            cursor.close()
+            conn.close()
+
+    return render_template('verify_security_answer.html', question=question)
+
+
+
+
+
+def _cleanup_reset_session():
+    """
+    Clear temporary reset-related keys from the session.
+    Safe to call even if keys don't exist.
+    """
+    session.pop('reset_user_id', None)
+    session.pop('reset_question', None)   # if you use this in verify route
+    session.pop('reset_verified', None)
+
+
+
+
+
+@app.route('/reset-password-form', methods=['GET', 'POST'])
+def reset_password_form():
+    if 'reset_verified' not in session or 'reset_user_id' not in session:
+        flash('Unauthorized access. Please start the reset process again.', 'danger')
+        return redirect(url_for('forgot_password'))
+
+    if request.method == 'POST':
+        password = request.form.get('password')
+        confirm = request.form.get('confirm_password')
+
+        if not password or password != confirm:
+            flash('Passwords do not match or are empty.', 'danger')
+            return redirect(url_for('reset_password_form'))
+
+        hashed = generate_password_hash(password)
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("UPDATE users SET password = %s WHERE id = %s",
+                           (hashed, session['reset_user_id']))
             conn.commit()
 
-            # Build reset URL
-            reset_url = url_for('reset_password', token=token, _external=True)
+            _cleanup_reset_session()
 
-            # Queue SendGrid email using the uniquely named helper
-            try:
-                send_password_reset_via_mailersend(email, reset_url)
-                flash('Password reset email queued. Check your inbox.', 'success')
-            except Exception:
-                logging.exception("Failed to queue password reset email for %s", email)
-                flash('Could not send reset email at this time. Try again later.', 'danger')
+            flash('Password reset successful! Please log in.', 'success')
+            return redirect(url_for('login'))
 
-            return redirect(url_for('forgot_password'))
-
-        except Exception:
-            if conn:
-                conn.rollback()
-            logging.exception("Error in forgot_password")
-            flash('An error occurred. Please try again later.', 'danger')
-            return redirect(url_for('forgot_password'))
+        except Exception as e:
+            conn.rollback()
+            logging.exception("Error resetting password")
+            flash('Error resetting password. Try again.', 'danger')
         finally:
-            if cursor:
-                cursor.close()
-            if conn:
-                conn.close()
+            cursor.close()
+            conn.close()
 
-    return render_template('forgot_password.html')
+    return render_template('reset_password_form.html')
+
+
+
+
+
 
 
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])

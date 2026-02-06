@@ -6,6 +6,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
+<!-- Tom Select CDN (latest stable version as of early 2026) -->
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
 <style>
 :root {
     --primary:#16a34a;
@@ -52,6 +56,44 @@ textarea { resize:vertical; min-height:90px; }
     font-size:1.5rem;
     font-weight:bold;
 }
+
+/* Tom Select styling adjustments to blend with your theme */
+.ts-wrapper {
+    font-family: inherit;
+}
+.ts-wrapper.single .ts-control {
+    border:1px solid #ddd;
+    border-radius:8px;
+    padding:9px 10px;
+    background:#fff;
+    height:auto;
+    min-height:38px;
+}
+.ts-wrapper .ts-control input {
+    font-size:.9rem;
+}
+.ts-dropdown {
+    border-radius:8px;
+    box-shadow:0 8px 24px rgba(0,0,0,.1);
+    border:1px solid #ddd;
+}
+.ts-dropdown .option {
+    padding:8px 12px;
+}
+.ts-dropdown .option.active,
+.ts-dropdown .option.selected {
+    background:#ecfdf5;
+    color:var(--primary);
+}
+.ts-wrapper.multi .ts-control > div {
+    background:var(--primary);
+    color:#fff;
+    border-radius:6px;
+}
+.ts-wrapper .no-results {
+    padding:10px;
+    color:var(--muted);
+}
 </style>
 </head>
 
@@ -79,17 +121,74 @@ textarea { resize:vertical; min-height:90px; }
     </div>
 
     <div class="form-grid">
-        <div><label>Title</label><input name="title" value="{{ listing.title }}" required></div>
-        <div><label>Category</label><input name="category" value="{{ listing.category }}"></div>
-        <div><label>Condition</label><input name="condition" value="{{ listing.condition }}"></div>
-        <div><label>Status</label>
+        <div>
+            <label>Title</label>
+            <input name="title" value="{{ listing.title }}" required>
+        </div>
+        
+        <div>
+            <label for="category">Category</label>
+            <select name="category" id="category" required>
+                <option value="">-- Start typing to search categories --</option>
+                <option value="Electronics" {{ 'selected' if listing.category == 'Electronics' }}>Electronics</option>
+                <option value="Computers & Networking" {{ 'selected' if listing.category == 'Computers & Networking' }}>Computers & Networking</option>
+                <option value="Mobile Phones & Accessories" {{ 'selected' if listing.category == 'Mobile Phones & Accessories' }}>Mobile Phones & Accessories</option>
+                <option value="Software & Apps" {{ 'selected' if listing.category == 'Software & Apps' }}>Software & Apps</option>
+                <option value="Digital Products & Downloads" {{ 'selected' if listing.category == 'Digital Products & Downloads' }}>Digital Products & Downloads</option>
+                <option value="Health & Beauty" {{ 'selected' if listing.category == 'Health & Beauty' }}>Health & Beauty</option>
+                <option value="Medical Equipment & Supplies" {{ 'selected' if listing.category == 'Medical Equipment & Supplies' }}>Medical Equipment & Supplies</option>
+                <option value="Sports & Outdoors" {{ 'selected' if listing.category == 'Sports & Outdoors' }}>Sports & Outdoors</option>
+                <option value="Fashion & Apparel" {{ 'selected' if listing.category == 'Fashion & Apparel' }}>Fashion & Apparel</option>
+                <option value="Jewelry & Watches" {{ 'selected' if listing.category == 'Jewelry & Watches' }}>Jewelry & Watches</option>
+                <option value="Home & Garden" {{ 'selected' if listing.category == 'Home & Garden' }}>Home & Garden</option>
+                <option value="Kitchen & Dining" {{ 'selected' if listing.category == 'Kitchen & Dining' }}>Kitchen & Dining</option>
+                <option value="Tools & DIY" {{ 'selected' if listing.category == 'Tools & DIY' }}>Tools & DIY</option>
+                <option value="Automotive Parts & Accessories" {{ 'selected' if listing.category == 'Automotive Parts & Accessories' }}>Automotive Parts & Accessories</option>
+                <option value="Automobile & Vehicles" {{ 'selected' if listing.category == 'Automobile & Vehicles' }}>Automobile & Vehicles</option>
+                <option value="Industrial & Scientific" {{ 'selected' if listing.category == 'Industrial & Scientific' }}>Industrial & Scientific</option>
+                <option value="Agriculture & Farming" {{ 'selected' if listing.category == 'Agriculture & Farming' }}>Agriculture & Farming</option>
+                <option value="Food & Beverages" {{ 'selected' if listing.category == 'Food & Beverages' }}>Food & Beverages</option>
+                <option value="Office Supplies" {{ 'selected' if listing.category == 'Office Supplies' }}>Office Supplies</option>
+                <option value="Books, Music & Movies" {{ 'selected' if listing.category == 'Books, Music & Movies' }}>Books, Music & Movies</option>
+                <option value="Toys & Games" {{ 'selected' if listing.category == 'Toys & Games' }}>Toys & Games</option>
+                <option value="Baby & Kids" {{ 'selected' if listing.category == 'Baby & Kids' }}>Baby & Kids</option>
+                <option value="Pets & Accessories" {{ 'selected' if listing.category == 'Pets & Accessories' }}>Pets & Accessories</option>
+                <option value="Art, Crafts & Sewing" {{ 'selected' if listing.category == 'Art, Crafts & Sewing' }}>Art, Crafts & Sewing</option>
+                <option value="Collectibles & Hobbies" {{ 'selected' if listing.category == 'Collectibles & Hobbies' }}>Collectibles & Hobbies</option>
+                <option value="Handmade & Custom Items" {{ 'selected' if listing.category == 'Handmade & Custom Items' }}>Handmade & Custom Items</option>
+                <option value="Travel & Experiences" {{ 'selected' if listing.category == 'Travel & Experiences' }}>Travel & Experiences</option>
+                <option value="House and Property" {{ 'selected' if listing.category == 'House and Property' }}>House and Property</option>
+                <option value="Home Improvement & Repair" {{ 'selected' if listing.category == 'Home Improvement & Repair' }}>Home Improvement & Repair</option>
+                <option value="Cleaning & Maintenance" {{ 'selected' if listing.category == 'Cleaning & Maintenance' }}>Cleaning & Maintenance</option>
+                <option value="Automotive Services" {{ 'selected' if listing.category == 'Automotive Services' }}>Automotive Services</option>
+                <option value="Professional Services" {{ 'selected' if listing.category == 'Professional Services' }}>Professional Services</option>
+                <option value="Personal & Wellness Services" {{ 'selected' if listing.category == 'Personal & Wellness Services' }}>Personal & Wellness Services</option>
+                <option value="Education & Training" {{ 'selected' if listing.category == 'Education & Training' }}>Education & Training</option>
+                <option value="Events & Experiences Services" {{ 'selected' if listing.category == 'Events & Experiences Services' }}>Events & Experiences Services</option>
+                <option value="Other Services" {{ 'selected' if listing.category == 'Other Services' }}>Other Services</option>
+                <option value="Other" {{ 'selected' if listing.category == 'Other' }}>Other</option>
+            </select>
+        </div>
+        
+        <div>
+            <label>Condition</label>
+            <input name="condition" value="{{ listing.condition }}">
+        </div>
+        <div>
+            <label>Status</label>
             <select name="status">
                 <option value="active" {{ 'selected' if listing.status=='active' }}>Active</option>
                 <option value="inactive" {{ 'selected' if listing.status=='inactive' }}>Inactive</option>
             </select>
         </div>
-        <div><label>Location</label><input name="location" value="{{ listing.location }}"></div>
-        <div><label>Contact</label><input name="contact" value="{{ listing.contact }}"></div>
+        <div>
+            <label>Location</label>
+            <input name="location" value="{{ listing.location }}">
+        </div>
+        <div>
+            <label>Contact</label>
+            <input name="contact" value="{{ listing.contact }}">
+        </div>
     </div>
 
     <div style="margin-top:15px;">
@@ -111,9 +210,18 @@ textarea { resize:vertical; min-height:90px; }
 <div class="card">
     <div class="section-title">Swap Preferences</div>
     <div class="form-grid">
-        <div><label>Desired Swap</label><input name="desired_swap" value="{{ listing.desired_swap }}"></div>
-        <div><label>Required Cash</label><input type="number" name="required_cash" value="{{ listing.required_cash }}"></div>
-        <div><label>Additional Cash</label><input type="number" step="0.01" name="additional_cash" value="{{ listing.additional_cash }}"></div>
+        <div>
+            <label>Desired Swap</label>
+            <input name="desired_swap" value="{{ listing.desired_swap }}">
+        </div>
+        <div>
+            <label>Required Cash</label>
+            <input type="number" name="required_cash" value="{{ listing.required_cash }}">
+        </div>
+        <div>
+            <label>Additional Cash</label>
+            <input type="number" step="0.01" name="additional_cash" value="{{ listing.additional_cash }}">
+        </div>
     </div>
     <div style="margin-top:15px;">
         <label>Swap Notes</label>
@@ -185,8 +293,32 @@ textarea { resize:vertical; min-height:90px; }
 <div class="overlay" id="overlay">Saving...</div>
 
 <script>
+// Show loading overlay on form submit
 document.getElementById('editForm').addEventListener('submit', function(e){
     document.getElementById('overlay').style.display = 'flex';
+});
+
+// Initialize Tom Select for searchable category dropdown
+document.addEventListener('DOMContentLoaded', function() {
+    new TomSelect('#category', {
+        maxOptions: 50,
+        searchField: ['text'],
+        sortField: 'text',
+        placeholder: '-- Start typing to search categories --',
+        plugins: ['clear_button'],
+        loadThrottle: 150,
+        shouldLoad: function(query) {
+            return query.length >= 1;
+        },
+        render: {
+            option: function(data, escape) {
+                return '<div>' + escape(data.text) + '</div>';
+            },
+            item: function(data, escape) {
+                return '<div>' + escape(data.text) + '</div>';
+            }
+        }
+    });
 });
 </script>
 

@@ -4,25 +4,65 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  {% if featured_listing %}
-  <!-- Open Graph / Twitter -->
-  <meta property="og:title" content="{{ featured_listing.title }}">
-  <meta property="og:description" content="{{ featured_listing.description[:150] }}{% if featured_listing.description|length > 150 %}...{% endif %}">
-  <meta property="og:image" content="{{ featured_listing.banner_image }}">
+  <!-- Primary SEO – Google loves clear, keyword-rich title + description -->
+  <title>VendUpp – Buy, Sell & Swap in Ghana | Trusted Marketplace</title>
+  <meta name="description" content="VendUpp is Ghana's modern trading platform. Buy, sell, swap phones, fashion, electronics, services, real estate and more. Safe deals, great prices – join today!">
+
+  <!-- Canonical – prevents duplicate content confusion -->
+  <link rel="canonical" href="{{ url_for('home', _external=True) }}" />
+
+  <!-- Google Search Console verification (keep yours) -->
+  <meta name="google-site-verification" content="CDFPsBn2ylbdyqghZGpCzLCFRwK74P5t5jnJTe-qKHw" />
+
+  <!-- Open Graph – fallback to homepage defaults when no featured listing -->
+  <meta property="og:title" content="{% if featured_listing %}{{ featured_listing.title }}{% else %}VendUpp – Ghana Buy Sell Swap Marketplace{% endif %}">
+  <meta property="og:description" content="{% if featured_listing %}{{ featured_listing.description[:150] }}{% if featured_listing.description|length > 150 %}...{% endif %}{% else %}Buy, sell, and swap anything in Ghana safely. Trusted local marketplace for phones, fashion, electronics, jobs, property and more.{% endif %}">
+  <meta property="og:image" content="{% if featured_listing %}{{ featured_listing.banner_image }}{% else %}{{ url_for('static', filename='images/og-default.jpg', _external=True) }}{% endif %}">
   <meta property="og:type" content="website">
   <meta property="og:url" content="{{ url_for('home', _external=True) }}">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{{ featured_listing.title }}">
-  <meta name="twitter:description" content="{{ featured_listing.description[:150] }}{% if featured_listing.description|length > 150 %}...{% endif %}">
-  <meta name="google-site-verification" content="CDFPsBn2ylbdyqghZGpCzLCFRwK74P5t5jnJTe-qKHw" />
-  <meta name="twitter:image" content="{{ featured_listing.banner_image }}">
-  {% endif %}
+  <meta property="og:site_name" content="VendUpp">
 
-  <title>VendUpp | Modern Trading Platform</title>
-  <link rel="apple-touch-icon" href="/static/icons/ss.png">
+  <!-- Twitter / X Cards – same fallback logic -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{% if featured_listing %}{{ featured_listing.title }}{% else %}VendUpp – Ghana Marketplace{% endif %}">
+  <meta name="twitter:description" content="{% if featured_listing %}{{ featured_listing.description[:150] }}{% if featured_listing.description|length > 150 %}...{% endif %}{% else %}Ghana's go-to platform for buying, selling, and swapping items and services.{% endif %}">
+  <meta name="twitter:image" content="{% if featured_listing %}{{ featured_listing.banner_image }}{% else %}{{ url_for('static', filename='images/twitter-default.jpg', _external=True) }}{% endif %}">
+
+  <!-- Structured Data (JSON-LD) – helps Google show site name + logo in results -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "VendUpp",
+    "url": "{{ url_for('home', _external=True) }}",
+    "description": "Ghana's trusted marketplace for buying, selling, and swapping goods and services.",
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "VendUpp",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "{{ url_for('static', filename='images/logo.png', _external=True) }}",
+        "width": 512,
+        "height": 512
+      }
+    }
+  }
+  </script>
+
+  <!-- Favicon & App Icons – improves mobile look & trust -->
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+
+  <!-- Fonts & Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <!-- Speed optimizations (Google likes fast pages) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
 
   <style>
 :root{
@@ -1109,8 +1149,6 @@
         </a>
       {% endif %}
 
-      <a href="/my-proposals">My Offers</a>
-
       {% if session.get('user_id') %}
         <a href="/logout" class="btn btn-outline" data-no-pjax>Logout</a>
       {% else %}
@@ -1660,7 +1698,6 @@ document.getElementById('search-form').addEventListener('submit', e => {
         <ul class="footer-links">
           <li><a href="/dashboard">Dashboard</a></li>
           <li><a href="/my-listings">My Listings</a></li>
-          <li><a href="/my-proposals">My Offers</a></li>
         </ul>
       </div>
       <div>
