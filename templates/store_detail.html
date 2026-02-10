@@ -9,64 +9,93 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* ===== VARIABLES ===== */
-        :root {
-            /* Theme-based colors using your original variable names */
-            --primary-green: {% if store.color_theme == 'default' or store.color_theme is none %}#4CAF50
-            {% elif store.color_theme == 'warm-food' %}#E74C3C
-            {% elif store.color_theme == 'cool-ocean' %}#3498DB
-            {% elif store.color_theme == 'gold-premium' %}#F1C40F
-            {% elif store.color_theme == 'purple-luxury' %}#9B59B6
-            {% elif store.color_theme == 'forest-green' %}#27AE60
-            {% elif store.color_theme == 'coral-vibrant' %}#FF6B6B
-            {% elif store.color_theme == 'midnight-dark' %}#8E44AD
-            {% else %}#4CAF50{% endif %};
+ /* ===== VARIABLES ===== */
+:root {
+    --primary-green: {% if store.color_theme == 'default' or store.color_theme is none %}#4CAF50
+    {% elif store.color_theme == 'warm-food' %}#E74C3C
+    {% elif store.color_theme == 'cool-ocean' %}#3498DB
+    {% elif store.color_theme == 'gold-premium' %}#F1C40F
+    {% elif store.color_theme == 'purple-luxury' %}#9B59B6
+    {% elif store.color_theme == 'forest-green' %}#27AE60
+    {% elif store.color_theme == 'coral-vibrant' %}#FF6B6B
+    {% elif store.color_theme == 'midnight-dark' %}#8E44AD
+    {% elif store.color_theme == 'emerald-teal' %}#00BFA5
+    {% elif store.color_theme == 'sunset-orange' %}#FF7043
+    {% elif store.color_theme == 'lavender-plum' %}#AB47BC
+    {% elif store.color_theme == 'sky-blue' %}#42A5F5
+    {% elif store.color_theme == 'ruby-red' %}#E53935
+    {% elif store.color_theme == 'mustard-yellow' %}#FBC02D
+    {% elif store.color_theme == 'slate-charcoal' %}#455A64
+    {% elif store.color_theme == 'rose-gold' %}#EC407A
+    {% elif store.color_theme == 'deep-navy' %}#1A237E
+    {% elif store.color_theme == 'burgundy-wine' %}#880E4F
+    {% else %}#4CAF50{% endif %};
 
-            --dark-green: {% if store.color_theme == 'default' or store.color_theme is none %}#2E7D32
-            {% elif store.color_theme == 'warm-food' %}#C0392B
-            {% elif store.color_theme == 'cool-ocean' %}#2980B9
-            {% elif store.color_theme == 'gold-premium' %}#D4AC0D
-            {% elif store.color_theme == 'purple-luxury' %}#8E44AD
-            {% elif store.color_theme == 'forest-green' %}#219653
-            {% elif store.color_theme == 'coral-vibrant' %}#EE5253
-            {% elif store.color_theme == 'midnight-dark' %}#6C3483
-            {% else %}#2E7D32{% endif %};
+    --dark-green: {% if store.color_theme == 'default' or store.color_theme is none %}#2E7D32
+    {% elif store.color_theme == 'warm-food' %}#C0392B
+    {% elif store.color_theme == 'cool-ocean' %}#2980B9
+    {% elif store.color_theme == 'gold-premium' %}#D4AC0D
+    {% elif store.color_theme == 'purple-luxury' %}#8E44AD
+    {% elif store.color_theme == 'forest-green' %}#219653
+    {% elif store.color_theme == 'coral-vibrant' %}#EE5253
+    {% elif store.color_theme == 'midnight-dark' %}#6C3483
+    {% elif store.color_theme == 'emerald-teal' %}#00897B
+    {% elif store.color_theme == 'sunset-orange' %}#E64A19
+    {% elif store.color_theme == 'lavender-plum' %}#8E24AA
+    {% elif store.color_theme == 'sky-blue' %}#1976D2
+    {% elif store.color_theme == 'ruby-red' %}#C62828
+    {% elif store.color_theme == 'mustard-yellow' %}#F57F17
+    {% elif store.color_theme == 'slate-charcoal' %}#263238
+    {% elif store.color_theme == 'rose-gold' %}#C2185B
+    {% elif store.color_theme == 'deep-navy' %}#0D113F
+    {% elif store.color_theme == 'burgundy-wine' %}#4A148C
+    {% else %}#2E7D32{% endif %};
 
-            --light-green: {% if store.color_theme == 'default' or store.color_theme is none %}#E8F5E9
-            {% elif store.color_theme == 'warm-food' %}#FADBD8
-            {% elif store.color_theme == 'cool-ocean' %}#D6EAF8
-            {% elif store.color_theme == 'gold-premium' %}#FEF9E7
-            {% elif store.color_theme == 'purple-luxury' %}#E8DAEF
-            {% elif store.color_theme == 'forest-green' %}#D4EDDA
-            {% elif store.color_theme == 'coral-vibrant' %}#FFEBEE
-            {% elif store.color_theme == 'midnight-dark' %}#D7BDE2
-            {% else %}#E8F5E9{% endif %};
+    --light-green: {% if store.color_theme == 'default' or store.color_theme is none %}#E8F5E9
+    {% elif store.color_theme == 'warm-food' %}#FADBD8
+    {% elif store.color_theme == 'cool-ocean' %}#D6EAF8
+    {% elif store.color_theme == 'gold-premium' %}#FEF9E7
+    {% elif store.color_theme == 'purple-luxury' %}#E8DAEF
+    {% elif store.color_theme == 'forest-green' %}#D4EDDA
+    {% elif store.color_theme == 'coral-vibrant' %}#FFEBEE
+    {% elif store.color_theme == 'midnight-dark' %}#D7BDE2
+    {% elif store.color_theme == 'emerald-teal' %}#E0F2F1
+    {% elif store.color_theme == 'sunset-orange' %}#FFEBE6
+    {% elif store.color_theme == 'lavender-plum' %}#F3E5F5
+    {% elif store.color_theme == 'sky-blue' %}#E3F2FD
+    {% elif store.color_theme == 'ruby-red' %}#FFEBEE
+    {% elif store.color_theme == 'mustard-yellow' %}#FFFDE7
+    {% elif store.color_theme == 'slate-charcoal' %}#ECEFF1
+    {% elif store.color_theme == 'rose-gold' %}#FCE4EC
+    {% elif store.color_theme == 'deep-navy' %}#E8EAF6
+    {% elif store.color_theme == 'burgundy-wine' %}#FCE4EC
+    {% else %}#E8F5E9{% endif %};
 
-            /* Midnight dark overrides */
-            {% if store.color_theme == 'midnight-dark' %}
-              --background: #0F1419;
-              --card-bg: #1A2537;
-              --text-dark: #E0E0E0;
-              --text-muted: #A0AEC0;
-              --text-light: #CBD5E0;
-              --border-light: #2D3748;
-            {% else %}
-              --background: #F7F9FA;
-              --card-bg: #FFFFFF;
-              --text-dark: #0F1419;
-              --text-muted: #5F6C76;
-              --text-light: #8895A1;
-              --border-light: #E8ECF0;
-            {% endif %}
+    /* Midnight dark overrides */
+    {% if store.color_theme == 'midnight-dark' %}
+      --background: #0F1419;
+      --card-bg: #1A2537;
+      --text-dark: #E0E0E0;
+      --text-muted: #A0AEC0;
+      --text-light: #CBD5E0;
+      --border-light: #2D3748;
+    {% else %}
+      --background: #F7F9FA;
+      --card-bg: #FFFFFF;
+      --text-dark: #0F1419;
+      --text-muted: #5F6C76;
+      --text-light: #8895A1;
+      --border-light: #E8ECF0;
+    {% endif %}
 
-            /* Other fixed variables */
-            --accent-gold: #f59e0b;
-            --radius: 12px;
-            --radius-lg: 16px;
-            --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
-            --shadow: 0 4px 16px rgba(0,0,0,0.08);
-            --shadow-lg: 0 8px 24px rgba(0,0,0,0.1);
-        }
+    /* Other fixed variables */
+    --accent-gold: #f59e0b;
+    --radius: 12px;
+    --radius-lg: 16px;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+    --shadow: 0 4px 16px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.1);
+}
 
         /* ===== RESET & BASE ===== */
         * { 

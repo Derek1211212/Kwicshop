@@ -1818,7 +1818,7 @@
     </div>
 
 
-    <!-- Color Theme Selector Card -->
+<!-- Color Theme Selector Card -->
 <div class="card">
   <div class="card-header">
     <h3>Store Color Theme</h3>
@@ -1834,14 +1834,24 @@
     
     <div class="theme-grid">
       {% set themes = [
-        {'id': 'default', 'name': 'Classic Green', 'primary': '#4CAF50', 'dark': '#2E7D32'},
-        {'id': 'warm-food', 'name': 'Warm Food', 'primary': '#E74C3C', 'dark': '#C0392B'},
-        {'id': 'cool-ocean', 'name': 'Cool Ocean', 'primary': '#3498DB', 'dark': '#2980B9'},
-        {'id': 'gold-premium', 'name': 'Gold Premium', 'primary': '#F1C40F', 'dark': '#D4AC0D'},
-        {'id': 'purple-luxury', 'name': 'Purple Luxury', 'primary': '#9B59B6', 'dark': '#8E44AD'},
-        {'id': 'forest-green', 'name': 'Forest Green', 'primary': '#27AE60', 'dark': '#219653'},
-        {'id': 'coral-vibrant', 'name': 'Coral Vibrant', 'primary': '#FF6B6B', 'dark': '#EE5253'},
-        {'id': 'midnight-dark', 'name': 'Midnight Dark', 'primary': '#8E44AD', 'dark': '#2C3E50'}
+        {'id': 'default',         'name': 'Classic Green',     'primary': '#4CAF50', 'dark': '#2E7D32'},
+        {'id': 'warm-food',       'name': 'Warm Terracotta',   'primary': '#E07A5F', 'dark': '#B24C3F'},
+        {'id': 'cool-ocean',      'name': 'Cool Ocean',        'primary': '#3498DB', 'dark': '#2980B9'},
+        {'id': 'gold-premium',    'name': 'Gold Premium',      'primary': '#F1C40F', 'dark': '#D4AC0D'},
+        {'id': 'purple-luxury',   'name': 'Purple Luxury',     'primary': '#9B59B6', 'dark': '#8E44AD'},
+        {'id': 'forest-green',    'name': 'Forest Green',      'primary': '#27AE60', 'dark': '#219653'},
+        {'id': 'coral-vibrant',   'name': 'Coral Vibrant',     'primary': '#FF6B6B', 'dark': '#EE5253'},
+        {'id': 'midnight-dark',   'name': 'Midnight Dark',     'primary': '#263238', 'dark': '#111B24'},
+        {'id': 'emerald-teal',    'name': 'Emerald Teal',      'primary': '#00BFA5', 'dark': '#00897B'},
+        {'id': 'sunset-orange',   'name': 'Sunset Orange',     'primary': '#FF7043', 'dark': '#E64A19'},
+        {'id': 'lavender-plum',   'name': 'Lavender Plum',     'primary': '#AB47BC', 'dark': '#8E24AA'},
+        {'id': 'sky-blue',        'name': 'Sky Blue',          'primary': '#42A5F5', 'dark': '#1976D2'},
+        {'id': 'ruby-red',        'name': 'Ruby Red',          'primary': '#E53935', 'dark': '#C62828'},
+        {'id': 'mustard-yellow',  'name': 'Mustard Yellow',    'primary': '#FBC02D', 'dark': '#F57F17'},
+        {'id': 'slate-charcoal',  'name': 'Slate Charcoal',    'primary': '#455A64', 'dark': '#263238'},
+        {'id': 'rose-gold',       'name': 'Rose Gold',         'primary': '#EC407A', 'dark': '#C2185B'},
+        {'id': 'deep-navy',       'name': 'Deep Navy',         'primary': '#1A237E', 'dark': '#0D113F'},
+        {'id': 'burgundy-wine',   'name': 'Burgundy Wine',     'primary': '#880E4F', 'dark': '#4A148C'}
       ] %}
 
       {% for theme in themes %}
@@ -1859,9 +1869,9 @@
     </div>
   </div>
   
-  <div style="padding: 0 20px 20px; text-align: right;">
-    <button id="saveThemeBtn" class="btn" disabled>Save Theme</button>
-  </div>
+  <button id="saveThemeBtn" class="btn btn-primary w-100 mt-3">
+    Save Theme
+  </button>
 </div>
 
     <!-- Footer -->

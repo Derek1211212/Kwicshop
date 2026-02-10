@@ -8364,22 +8364,28 @@ def update_store_theme(slug):
     data = request.get_json()
     theme = data.get('color_theme')
 
-    valid_themes = ['default', 'warm-food', 'cool-ocean', 'gold-premium', 
-                    'purple-luxury', 'forest-green', 'coral-vibrant', 'midnight-dark']
+    # Expanded list – must match the IDs used in templates
+    valid_themes = [
+        'default', 'warm-food', 'cool-ocean', 'gold-premium',
+        'purple-luxury', 'forest-green', 'coral-vibrant', 'midnight-dark',
+        'emerald-teal', 'sunset-orange', 'lavender-plum', 'sky-blue',
+        'ruby-red', 'mustard-yellow', 'slate-charcoal', 'rose-gold',
+        'deep-navy', 'burgundy-wine'
+    ]
     
     if theme not in valid_themes:
         cur.close()
         conn.close()
         return jsonify({'success': False, 'message': 'Invalid theme'}), 400
 
-    cur.execute("UPDATE stores SET color_theme = %s WHERE store_id = %s", (theme, store['store_id']))
+    cur.execute("UPDATE stores SET color_theme = %s WHERE store_id = %s", 
+                (theme, store['store_id']))
     conn.commit()
     
     cur.close()
     conn.close()
     
     return jsonify({'success': True, 'message': 'Theme updated'})
-
 
 
 
