@@ -1446,6 +1446,50 @@
   background: #ccc;
   border-radius: 3px;
 }
+
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.theme-option {
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.theme-option:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.theme-option.active {
+  border-color: var(--primary-green);
+  box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
+}
+
+.theme-preview {
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+
+.theme-name {
+  background: rgba(0,0,0,0.4);
+  padding: 6px 12px;
+  border-radius: 20px;
+}
   </style>
 </head>
 
@@ -1772,6 +1816,53 @@
         <input type="file" id="videoInput" accept="video/*" style="display:none;" />
       </div>
     </div>
+
+
+    <!-- Color Theme Selector Card -->
+<div class="card">
+  <div class="card-header">
+    <h3>Store Color Theme</h3>
+    <div class="card-icon">
+      <i class="fas fa-palette"></i>
+    </div>
+  </div>
+  
+  <div class="card-content">
+    <p style="margin-bottom: 16px; color: var(--text-light);">
+      Choose a color style for your store page. Changes apply instantly.
+    </p>
+    
+    <div class="theme-grid">
+      {% set themes = [
+        {'id': 'default', 'name': 'Classic Green', 'primary': '#4CAF50', 'dark': '#2E7D32'},
+        {'id': 'warm-food', 'name': 'Warm Food', 'primary': '#E74C3C', 'dark': '#C0392B'},
+        {'id': 'cool-ocean', 'name': 'Cool Ocean', 'primary': '#3498DB', 'dark': '#2980B9'},
+        {'id': 'gold-premium', 'name': 'Gold Premium', 'primary': '#F1C40F', 'dark': '#D4AC0D'},
+        {'id': 'purple-luxury', 'name': 'Purple Luxury', 'primary': '#9B59B6', 'dark': '#8E44AD'},
+        {'id': 'forest-green', 'name': 'Forest Green', 'primary': '#27AE60', 'dark': '#219653'},
+        {'id': 'coral-vibrant', 'name': 'Coral Vibrant', 'primary': '#FF6B6B', 'dark': '#EE5253'},
+        {'id': 'midnight-dark', 'name': 'Midnight Dark', 'primary': '#8E44AD', 'dark': '#2C3E50'}
+      ] %}
+
+      {% for theme in themes %}
+      <label class="theme-option {% if store.color_theme == theme.id %}active{% endif %}" 
+             data-theme="{{ theme.id }}">
+        <input type="radio" name="color_theme" value="{{ theme.id }}" 
+               {% if store.color_theme == theme.id %}checked{% endif %} 
+               style="display:none;" />
+        
+        <div class="theme-preview" style="background: linear-gradient(135deg, {{ theme.primary }}, {{ theme.dark }});">
+          <span class="theme-name">{{ theme.name }}</span>
+        </div>
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+  
+  <div style="padding: 0 20px 20px; text-align: right;">
+    <button id="saveThemeBtn" class="btn" disabled>Save Theme</button>
+  </div>
+</div>
 
     <!-- Footer -->
     <div class="dashboard-footer">
@@ -3405,6 +3496,53 @@ const categoryData = [
     btn.addEventListener('click', function() {
       setTimeout(attachCategoryAutocomplete, 300);
     });
+  });
+});
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const themeRadios = document.querySelectorAll('input[name="color_theme"]');
+  const saveBtn = document.getElementById('saveThemeBtn');
+
+  themeRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      saveBtn.disabled = false;
+      // Optional: live preview (advanced)
+      // document.documentElement.style.setProperty('--primary-green', ...);
+    });
+  });
+
+  saveBtn.addEventListener('click', async () => {
+    const selected = document.querySelector('input[name="color_theme"]:checked');
+    if (!selected) return;
+
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+    try {
+      const res = await fetch('/store/{{ store.slug }}/update-theme', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ color_theme: selected.value })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showToast('Store theme updated!');
+        saveBtn.innerHTML = 'Save Theme';
+        saveBtn.disabled = true;
+      } else {
+        showToast(data.message || 'Failed to save');
+        saveBtn.innerHTML = 'Save Theme';
+        saveBtn.disabled = false;
+      }
+    } catch (err) {
+      showToast('Network error');
+      saveBtn.innerHTML = 'Save Theme';
+      saveBtn.disabled = false;
+    }
   });
 });
 </script>

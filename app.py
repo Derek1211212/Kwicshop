@@ -7092,7 +7092,8 @@ app.jinja_env.filters['date'] = datetimeformat
 def store_detail(store_id):
     """
     Display a single store page with:
-    - Store info
+    - Store info + Meet the Seller card
+    - Floating WhatsApp button
     - Active product listings (including swap deal offers)
     - Rating form (conditional on login & not owner)
     - List of all existing ratings/comments
@@ -7101,9 +7102,7 @@ def store_detail(store_id):
     cursor = conn.cursor(dictionary=True)
 
     try:
-        # ────────────────────────────────────────────────
-        # 1. Fetch store data
-        # ────────────────────────────────────────────────
+        # 1. Fetch store data – NOW INCLUDING color_theme
         cursor.execute("""
             SELECT 
                 store_id,
@@ -7114,12 +7113,14 @@ def store_detail(store_id):
                 tour_video,
                 description,
                 location,
-                contact,
+                contact,              -- store-level contact (fallback)
                 delivery_options,
                 verified,
                 store_type,
                 rating_avg,
-                rating_count
+                rating_count,
+                created_at,
+                color_theme           -- ADDED: this is what the template needs
             FROM stores
             WHERE store_id = %s 
               AND is_active = 1
@@ -7130,29 +7131,43 @@ def store_detail(store_id):
         if not store:
             abort(404)
 
-        # Apply safe defaults & type normalization
+        # Normalize & defaults
         store['store_id']          = int(store['store_id'])
-        store['user_id']           = int(store['user_id']) if store.get('user_id') is not None else None
+        store['user_id']           = int(store['user_id']) if store.get('user_id') else None
         store['name']              = store.get('name', 'Unnamed Store')
         store['description']       = store.get('description', 'No description available.')
         store['location']          = store.get('location', 'Location not specified')
-        store['contact']           = store.get('contact', 'No contact information')
-        store['delivery_options']  = store.get('delivery_options', [])  # assuming list or JSON
+        store['contact']           = store.get('contact', None)
+        store['delivery_options']  = store.get('delivery_options', [])  
         store['tour_video']        = store.get('tour_video', None)
         store['verified']          = bool(store.get('verified', False))
         store['store_type']        = store.get('store_type', 'General')
         store['rating_avg']        = float(store.get('rating_avg') or 0.0)
         store['rating_count']      = int(store.get('rating_count') or 0)
+        store['color_theme']       = store.get('color_theme') or 'default'  # safe fallback
 
-        # ────────────────────────────────────────────────
-        # 2. Determine login & ownership status
-        # ────────────────────────────────────────────────
+        # Format join date
+        store['join_date'] = store['created_at'].strftime("%b %Y") if store.get('created_at') else "Unknown"
+
+        # 2. Fetch seller username + contact (phone for WhatsApp)
+        cursor.execute("""
+            SELECT 
+                username,
+                contact
+            FROM users
+            WHERE id = %s
+            LIMIT 1
+        """, (store['user_id'],))
+        
+        user_row = cursor.fetchone()
+        store['seller_username'] = user_row['username'] if user_row and user_row.get('username') else 'Unknown Seller'
+        store['vendor_contact']  = user_row['contact'] if user_row and user_row.get('contact') else None
+
+        # 3. Login & ownership status
         is_logged_in = 'user_id' in session
         is_owner = is_logged_in and session.get('user_id') == store['user_id']
 
-        # ────────────────────────────────────────────────
-        # 3. Fetch active listings
-        # ────────────────────────────────────────────────
+        # 4. Fetch active listings
         cursor.execute("""
             SELECT 
                 listing_id,
@@ -7180,9 +7195,7 @@ def store_detail(store_id):
         
         listings = cursor.fetchall()
 
-        # Enrich listings with offers & safe numeric values
         for listing in listings:
-            # Swap deal offers
             if listing.get('deal_type') == 'Swap Deal':
                 cursor.execute("""
                     SELECT 
@@ -7203,7 +7216,6 @@ def store_detail(store_id):
             else:
                 listing['offers'] = []
 
-            # Main/preview image
             images = [img for img in [
                 listing.get('image_url'),
                 listing.get('image1'),
@@ -7213,29 +7225,19 @@ def store_detail(store_id):
             ] if img]
             listing['main_image'] = images[0] if images else '/static/images/placeholder.jpg'
 
-            # Safe numeric conversions
-            try:
-                listing['price_float'] = float(listing['price']) if listing['price'] else 0.0
-            except (ValueError, TypeError):
-                listing['price_float'] = 0.0
+            try: listing['price_float'] = float(listing['price']) if listing['price'] else 0.0
+            except: listing['price_float'] = 0.0
 
-            try:
-                listing['required_cash_float'] = float(listing['required_cash']) if listing['required_cash'] is not None else 0.0
-            except (ValueError, TypeError):
-                listing['required_cash_float'] = 0.0
+            try: listing['required_cash_float'] = float(listing['required_cash']) if listing['required_cash'] is not None else 0.0
+            except: listing['required_cash_float'] = 0.0
 
-            try:
-                listing['additional_cash_float'] = float(listing['additional_cash']) if listing['additional_cash'] is not None else 0.0
-            except (ValueError, TypeError):
-                listing['additional_cash_float'] = 0.0
+            try: listing['additional_cash_float'] = float(listing['additional_cash']) if listing['additional_cash'] is not None else 0.0
+            except: listing['additional_cash_float'] = 0.0
 
-        # Unique categories for filters
         categories_set = {l.get('category') for l in listings if l.get('category')}
         sorted_categories = sorted(categories_set)
 
-        # ────────────────────────────────────────────────
-        # 4. Fetch all ratings & comments for display
-        # ────────────────────────────────────────────────
+        # 5. Fetch ratings
         cursor.execute("""
             SELECT 
                 rating,
@@ -7244,13 +7246,11 @@ def store_detail(store_id):
             FROM store_ratings
             WHERE store_id = %s
             ORDER BY created_at DESC
-            LIMIT 100   -- adjust as needed (or add pagination later)
+            LIMIT 100
         """, (store_id,))
         ratings = cursor.fetchall()
 
-        # ────────────────────────────────────────────────
-        # 5. Render template with all data
-        # ────────────────────────────────────────────────
+        # 6. Render – now color_theme is available in store dict
         return render_template(
             'store_detail.html',
             store=store,
@@ -7263,13 +7263,12 @@ def store_detail(store_id):
         )
 
     except Exception as e:
-        current_app.logger.error(f"Error in store_detail route (store_id={store_id}): {str(e)}")
+        current_app.logger.error(f"Error in store_detail (store_id={store_id}): {str(e)}")
         abort(500)
 
     finally:
         cursor.close()
         conn.close()
-
 
 
 @app.route('/store/<slug>/inventory')
@@ -8339,6 +8338,50 @@ def google_products_feed():
 
     xml.extend(["</channel>", "</rss>"])
     return Response("\n".join(xml), mimetype="application/xml")
+
+
+
+
+
+
+
+@app.route('/store/<slug>/update-theme', methods=['POST'])
+def update_store_theme(slug):
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': 'Not logged in'}), 401
+
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    
+    cur.execute("SELECT store_id, user_id FROM stores WHERE slug = %s", (slug,))
+    store = cur.fetchone()
+    
+    if not store or store['user_id'] != session['user_id']:
+        cur.close()
+        conn.close()
+        return jsonify({'success': False, 'message': 'Not authorized'}), 403
+
+    data = request.get_json()
+    theme = data.get('color_theme')
+
+    valid_themes = ['default', 'warm-food', 'cool-ocean', 'gold-premium', 
+                    'purple-luxury', 'forest-green', 'coral-vibrant', 'midnight-dark']
+    
+    if theme not in valid_themes:
+        cur.close()
+        conn.close()
+        return jsonify({'success': False, 'message': 'Invalid theme'}), 400
+
+    cur.execute("UPDATE stores SET color_theme = %s WHERE store_id = %s", (theme, store['store_id']))
+    conn.commit()
+    
+    cur.close()
+    conn.close()
+    
+    return jsonify({'success': True, 'message': 'Theme updated'})
+
+
+
 
 
 
