@@ -1440,12 +1440,12 @@
     background: white;
 }
 
-/* Close button */
+/* Close button – good already, maybe slightly larger on mobile */
 .btn-close {
     position: absolute;
     top: 16px;
     right: 16px;
-    width: 44px;          /* bigger touch target */
+    width: 44px;          /* ↑ bigger touch target */
     height: 44px;
     border-radius: 50%;
     background: white;
@@ -1468,33 +1468,37 @@
     transform: scale(1.08);
 }
 
-/* ── Media – FIXED to show full image without cropping or weird scaling ── */
+/* ── Media – IMPROVED ── */
 .modal-media {
     width: 100%;
     background: #000;
-    min-height: 200px;               /* safety minimum so area never disappears */
-    max-height: 55vh;                /* reasonable max ~half viewport height */
-    height: auto;                    /* let image content determine actual height */
+    height: 500vh;                    /* ← key: use viewport height units → grows/shrinks with screen */
+    min-height: 220px;               /* prevent too tiny on small phones */
+    max-height: 380px;               /* cap on larger phones/tablets */
     overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 0;                 /* small breathing room top/bottom */
+    position: relative;              /* helps with positioning if needed */
 }
 
 .modal-media img,
 .modal-media video {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    object-fit: contain;             /* shows entire image – all sides visible */
-    object-position: center;
+    width: 60%;
+    height: 60%;                    /* ← fill the container height */
+    object-fit: scale-down;               /* ← CHANGE: cover → fills nicely, crops if needed (recommended for promos) */
+    object-position: center;         /* center crop – can change to top if important part is upper */
     display: block;
+    background: #000;
 }
 
-/* If you ever want to fill more aggressively (with possible edge crop): */
-/* object-fit: cover; */
+/* If you prefer NO cropping (full image visible, may have bars) – use this instead: */
+/* 
+.modal-media img,
+.modal-media video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+}
+*/
 
 /* Content */
 .promo-content {
@@ -1539,7 +1543,7 @@
 /* ── MOBILE adjustments ── */
 @media (max-width: 576px) {
     .modal-dialog {
-        max-width: 96%;
+        max-width: 96%;              /* almost full width → better on phones */
         margin: 0.5rem auto;
         min-height: calc(100% - 1rem);
     }
@@ -1557,9 +1561,9 @@
     }
 
     .modal-media {
+        height: 505vh;                /* slightly smaller % on small screens */
         min-height: 180px;
-        max-height: 65vh;            /* more vertical space on phones */
-        padding: 8px 0;
+        max-height: 320px;
     }
 
     .promo-content {
@@ -1577,7 +1581,7 @@
     }
 }
 
-/* Bonus: Make it fullscreen-like on very small screens */
+/* Bonus: Make it fullscreen on very small screens for native feel (optional) */
 @media (max-width: 400px) {
     .modal-dialog {
         margin: 0;
@@ -1588,8 +1592,7 @@
         min-height: 100vh;
     }
     .modal-media {
-        max-height: 70vh;
-        min-height: 220px;
+        height: 500vh;               /* give more room to image if fullscreen-ish */
     }
 }
 </style>
