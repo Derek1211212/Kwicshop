@@ -6281,164 +6281,188 @@ def store_home(slug):
     conn = get_db_connection()
     cur = conn.cursor(dictionary=True)
     
-    cur.execute("SELECT * FROM stores WHERE slug = %s", (slug,))
-    store = cur.fetchone()
-    
-    if not store:
-        flash("Store not found.", "error")
-        return redirect(url_for('home'))
-    
-    # Optional ownership check
-    if 'user_id' in session and store['user_id'] != session['user_id']:
-        flash("You don't have permission to view this store.", "error")
-        return redirect(url_for('home'))
-    
-    store_id = store['store_id']
-    
-    # Category counts
-    cur.execute("""
-        SELECT category, COUNT(*) AS total 
-        FROM listings 
-        WHERE store_id = %s 
-        GROUP BY category
-    """, (store_id,))
-    category_counts = cur.fetchall()
-    
-    # Listing metrics totals
-    cur.execute("""
-        SELECT 
-            COALESCE(SUM(lm.impressions), 0) AS views,
-            COALESCE(SUM(lm.clicks), 0) AS clicks
-        FROM listings l
-        LEFT JOIN listing_metrics lm ON l.listing_id = lm.listing_id
-        WHERE l.store_id = %s
-    """, (store_id,))
-    totals = cur.fetchone()
-    
-    # Store metrics (30-day period)
-    cur.execute("""
-        SELECT 
-            COALESCE(SUM(views), 0) AS total_views,
-            COALESCE(SUM(clicks), 0) AS total_clicks,
-            COALESCE(SUM(chats), 0) AS total_chats,
-            COALESCE(SUM(swaps), 0) AS total_swaps,
-            COALESCE(SUM(sales), 0) AS total_sales
-        FROM store_metrics 
-        WHERE store_id = %s 
-        AND dt >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-    """, (store_id,))
-    store_metrics = cur.fetchone()
-    
-    # Previous period for comparison (30-60 days ago)
-    cur.execute("""
-        SELECT 
-            COALESCE(SUM(views), 0) AS prev_views,
-            COALESCE(SUM(clicks), 0) AS prev_clicks,
-            COALESCE(SUM(chats), 0) AS prev_chats,
-            COALESCE(SUM(swaps), 0) AS prev_swaps,
-            COALESCE(SUM(sales), 0) AS prev_sales
-        FROM store_metrics 
-        WHERE store_id = %s 
-        AND dt >= DATE_SUB(CURDATE(), INTERVAL 60 DAY)
-        AND dt < DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-    """, (store_id,))
-    prev_metrics = cur.fetchone()
-    
-    # Calculate percentage changes
-    def calculate_change(current, previous):
-        if previous == 0:
-            return 100 if current > 0 else 0
-        return round(((current - previous) / previous) * 100, 2)
-    
-    if store_metrics and prev_metrics:
-        metrics_with_change = {
-            'views': {
-                'current': store_metrics['total_views'],
-                'change': calculate_change(store_metrics['total_views'], prev_metrics['prev_views'])
-            },
-            'clicks': {
-                'current': store_metrics['total_clicks'],
-                'change': calculate_change(store_metrics['total_clicks'], prev_metrics['prev_clicks'])
-            },
-            'chats': {
-                'current': store_metrics['total_chats'],
-                'change': calculate_change(store_metrics['total_chats'], prev_metrics['prev_chats'])
-            },
-            'swaps': {
-                'current': store_metrics['total_swaps'],
-                'change': calculate_change(store_metrics['total_swaps'], prev_metrics['prev_swaps'])
-            },
-            'sales': {
-                'current': store_metrics['total_sales'],
-                'change': calculate_change(store_metrics['total_sales'], prev_metrics['prev_sales'])
+    try:
+        cur.execute("SELECT * FROM stores WHERE slug = %s", (slug,))
+        store = cur.fetchone()
+        
+        if not store:
+            flash("Store not found.", "error")
+            return redirect(url_for('home'))
+        
+        # Optional ownership check
+        if 'user_id' in session and store['user_id'] != session['user_id']:
+            flash("You don't have permission to view this store.", "error")
+            return redirect(url_for('home'))
+        
+        store_id = store['store_id']
+        
+        # Fetch current promo (only one per store)
+        cur.execute("""
+            SELECT 
+                promo_id, media_type, media_url, description, 
+                button_text, button_link, frequency, active,
+                start_date, end_date
+            FROM store_promos
+            WHERE store_id = %s
+            LIMIT 1
+        """, (store_id,))
+        promo = cur.fetchone() or {}  # empty dict if no promo exists
+        
+        # Category counts
+        cur.execute("""
+            SELECT category, COUNT(*) AS total 
+            FROM listings 
+            WHERE store_id = %s 
+            GROUP BY category
+        """, (store_id,))
+        category_counts = cur.fetchall()
+        
+        # Listing metrics totals
+        cur.execute("""
+            SELECT 
+                COALESCE(SUM(lm.impressions), 0) AS views,
+                COALESCE(SUM(lm.clicks), 0) AS clicks
+            FROM listings l
+            LEFT JOIN listing_metrics lm ON l.listing_id = lm.listing_id
+            WHERE l.store_id = %s
+        """, (store_id,))
+        totals = cur.fetchone()
+        
+        # Store metrics (30-day period)
+        cur.execute("""
+            SELECT 
+                COALESCE(SUM(views), 0) AS total_views,
+                COALESCE(SUM(clicks), 0) AS total_clicks,
+                COALESCE(SUM(chats), 0) AS total_chats,
+                COALESCE(SUM(swaps), 0) AS total_swaps,
+                COALESCE(SUM(sales), 0) AS total_sales
+            FROM store_metrics 
+            WHERE store_id = %s 
+            AND dt >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        """, (store_id,))
+        store_metrics = cur.fetchone()
+        
+        # Previous period for comparison (30-60 days ago)
+        cur.execute("""
+            SELECT 
+                COALESCE(SUM(views), 0) AS prev_views,
+                COALESCE(SUM(clicks), 0) AS prev_clicks,
+                COALESCE(SUM(chats), 0) AS prev_chats,
+                COALESCE(SUM(swaps), 0) AS prev_swaps,
+                COALESCE(SUM(sales), 0) AS prev_sales
+            FROM store_metrics 
+            WHERE store_id = %s 
+            AND dt >= DATE_SUB(CURDATE(), INTERVAL 60 DAY)
+            AND dt < DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        """, (store_id,))
+        prev_metrics = cur.fetchone()
+        
+        # Calculate percentage changes
+        def calculate_change(current, previous):
+            if previous == 0:
+                return 100 if current > 0 else 0
+            return round(((current - previous) / previous) * 100, 2)
+        
+        if store_metrics and prev_metrics:
+            metrics_with_change = {
+                'views': {
+                    'current': store_metrics['total_views'],
+                    'change': calculate_change(store_metrics['total_views'], prev_metrics['prev_views'])
+                },
+                'clicks': {
+                    'current': store_metrics['total_clicks'],
+                    'change': calculate_change(store_metrics['total_clicks'], prev_metrics['prev_clicks'])
+                },
+                'chats': {
+                    'current': store_metrics['total_chats'],
+                    'change': calculate_change(store_metrics['total_chats'], prev_metrics['prev_chats'])
+                },
+                'swaps': {
+                    'current': store_metrics['total_swaps'],
+                    'change': calculate_change(store_metrics['total_swaps'], prev_metrics['prev_swaps'])
+                },
+                'sales': {
+                    'current': store_metrics['total_sales'],
+                    'change': calculate_change(store_metrics['total_sales'], prev_metrics['prev_sales'])
+                }
             }
-        }
-    else:
-        metrics_with_change = {
-            'views': {'current': 0, 'change': 0},
-            'clicks': {'current': 0, 'change': 0},
-            'chats': {'current': 0, 'change': 0},
-            'swaps': {'current': 0, 'change': 0},
-            'sales': {'current': 0, 'change': 0}
-        }
+        else:
+            metrics_with_change = {
+                'views': {'current': 0, 'change': 0},
+                'clicks': {'current': 0, 'change': 0},
+                'chats': {'current': 0, 'change': 0},
+                'swaps': {'current': 0, 'change': 0},
+                'sales': {'current': 0, 'change': 0}
+            }
+        
+        # Top products by impressions
+        cur.execute("""
+            SELECT 
+                l.listing_id,
+                l.title,
+                l.image1,
+                COALESCE(lm.impressions, 0) AS impressions,
+                COALESCE(lm.clicks, 0) AS clicks,
+                ROUND(
+                    CASE 
+                        WHEN COALESCE(lm.impressions, 0) = 0 THEN 0
+                        ELSE (COALESCE(lm.clicks, 0) * 100.0) / COALESCE(lm.impressions, 1)
+                    END, 1
+                ) AS ctr
+            FROM listings l
+            LEFT JOIN listing_metrics lm ON l.listing_id = lm.listing_id
+            WHERE l.store_id = %s
+            ORDER BY lm.impressions DESC
+            LIMIT 5
+        """, (store_id,))
+        top_by_impressions = cur.fetchall()
+        
+        # Top products by clicks
+        cur.execute("""
+            SELECT 
+                l.listing_id,
+                l.title,
+                l.image1,
+                COALESCE(lm.impressions, 0) AS impressions,
+                COALESCE(lm.clicks, 0) AS clicks,
+                ROUND(
+                    CASE 
+                        WHEN COALESCE(lm.impressions, 0) = 0 THEN 0
+                        ELSE (COALESCE(lm.clicks, 0) * 100.0) / COALESCE(lm.impressions, 1)
+                    END, 1
+                ) AS ctr
+            FROM listings l
+            LEFT JOIN listing_metrics lm ON l.listing_id = lm.listing_id
+            WHERE l.store_id = %s
+            ORDER BY lm.clicks DESC
+            LIMIT 5
+        """, (store_id,))
+        top_by_clicks = cur.fetchall()
+        
+        return render_template(
+            'store_home.html',
+            store=store,
+            promo=promo,                     # ← NEW: pass promo to dashboard template
+            category_counts=category_counts,
+            totals=totals or {'views': 0, 'clicks': 0},
+            metrics=metrics_with_change,
+            top_by_impressions=top_by_impressions,
+            top_by_clicks=top_by_clicks,
+            now=datetime.utcnow()
+        )
     
-    # Top products by impressions
-    cur.execute("""
-        SELECT 
-            l.listing_id,
-            l.title,
-            l.image1,
-            COALESCE(lm.impressions, 0) AS impressions,
-            COALESCE(lm.clicks, 0) AS clicks,
-            ROUND(
-                CASE 
-                    WHEN COALESCE(lm.impressions, 0) = 0 THEN 0
-                    ELSE (COALESCE(lm.clicks, 0) * 100.0) / COALESCE(lm.impressions, 1)
-                END, 1
-            ) AS ctr
-        FROM listings l
-        LEFT JOIN listing_metrics lm ON l.listing_id = lm.listing_id
-        WHERE l.store_id = %s
-        ORDER BY lm.impressions DESC
-        LIMIT 5
-    """, (store_id,))
-    top_by_impressions = cur.fetchall()
+    except Exception as e:
+        current_app.logger.error(f"Error in store_home (slug={slug}): {str(e)}")
+        flash("An error occurred loading the dashboard.", "error")
+        return redirect(url_for('home'))
     
-    # Top products by clicks
-    cur.execute("""
-        SELECT 
-            l.listing_id,
-            l.title,
-            l.image1,
-            COALESCE(lm.impressions, 0) AS impressions,
-            COALESCE(lm.clicks, 0) AS clicks,
-            ROUND(
-                CASE 
-                    WHEN COALESCE(lm.impressions, 0) = 0 THEN 0
-                    ELSE (COALESCE(lm.clicks, 0) * 100.0) / COALESCE(lm.impressions, 1)
-                END, 1
-            ) AS ctr
-        FROM listings l
-        LEFT JOIN listing_metrics lm ON l.listing_id = lm.listing_id
-        WHERE l.store_id = %s
-        ORDER BY lm.clicks DESC
-        LIMIT 5
-    """, (store_id,))
-    top_by_clicks = cur.fetchall()
-    
-    cur.close()
-    conn.close()
-    
-    return render_template(
-        'store_home.html',
-        store=store,
-        category_counts=category_counts,
-        totals=totals or {'views': 0, 'clicks': 0},
-        metrics=metrics_with_change,
-        top_by_impressions=top_by_impressions,
-        now=datetime.utcnow(),
-        top_by_clicks=top_by_clicks
-    )
+    finally:
+        cur.close()
+        conn.close()
+
+
+
+
 
 
 
@@ -7097,12 +7121,13 @@ def store_detail(store_id):
     - Active product listings (including swap deal offers)
     - Rating form (conditional on login & not owner)
     - List of all existing ratings/comments
+    - Promotion popup (if configured and active)
     """
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
     try:
-        # 1. Fetch store data – NOW INCLUDING color_theme
+        # 1. Fetch store data – including color_theme
         cursor.execute("""
             SELECT 
                 store_id,
@@ -7120,7 +7145,7 @@ def store_detail(store_id):
                 rating_avg,
                 rating_count,
                 created_at,
-                color_theme           -- ADDED: this is what the template needs
+                color_theme           -- for theme selection
             FROM stores
             WHERE store_id = %s 
               AND is_active = 1
@@ -7167,7 +7192,27 @@ def store_detail(store_id):
         is_logged_in = 'user_id' in session
         is_owner = is_logged_in and session.get('user_id') == store['user_id']
 
-        # 4. Fetch active listings
+        # 4. Fetch active promotion popup (only one per store, if active and in date range)
+        cursor.execute("""
+            SELECT 
+                media_type,
+                media_url,
+                description,
+                button_text,
+                button_link,
+                frequency
+            FROM store_promos
+            WHERE store_id = %s 
+              AND active = 1
+              AND (start_date IS NULL OR start_date <= CURDATE())
+              AND (end_date IS NULL OR end_date >= CURDATE())
+            LIMIT 1
+        """, (store_id,))
+        promo = cursor.fetchone() or {}
+        # Simple active flag for template
+        promo['active'] = bool(promo.get('media_url'))
+
+        # 5. Fetch active listings
         cursor.execute("""
             SELECT 
                 listing_id,
@@ -7237,7 +7282,7 @@ def store_detail(store_id):
         categories_set = {l.get('category') for l in listings if l.get('category')}
         sorted_categories = sorted(categories_set)
 
-        # 5. Fetch ratings
+        # 6. Fetch ratings
         cursor.execute("""
             SELECT 
                 rating,
@@ -7250,7 +7295,7 @@ def store_detail(store_id):
         """, (store_id,))
         ratings = cursor.fetchall()
 
-        # 6. Render – now color_theme is available in store dict
+        # 7. Render
         return render_template(
             'store_detail.html',
             store=store,
@@ -7259,6 +7304,7 @@ def store_detail(store_id):
             ratings=ratings,
             is_logged_in=is_logged_in,
             is_owner=is_owner,
+            promo=promo,                     # ← NEW: promo data for popup
             current_year=datetime.now().year
         )
 
@@ -7269,6 +7315,8 @@ def store_detail(store_id):
     finally:
         cursor.close()
         conn.close()
+
+
 
 
 @app.route('/store/<slug>/inventory')
@@ -8390,6 +8438,243 @@ def update_store_theme(slug):
 
 
 
+
+
+# ---------- CLOUDINARY HELPERS ----------
+def upload_to_cloudinary(file, folder="store_promos", resource_type="auto"):
+    try:
+        timestamp = int(time.time())
+        original_filename = secure_filename(file.filename)
+        name_without_ext = os.path.splitext(original_filename)[0]
+        public_id = f"{folder}/{name_without_ext}_{timestamp}"
+
+        upload_result = cloudinary.uploader.upload(
+            file,
+            public_id=public_id,
+            resource_type=resource_type,
+            folder=folder,
+            overwrite=True
+        )
+        return {
+            'success': True,
+            'url': upload_result['secure_url'],
+            'public_id': upload_result['public_id'],
+            'resource_type': upload_result['resource_type']
+        }
+    except Exception as e:
+        current_app.logger.error(f"Cloudinary upload error: {str(e)}")
+        return {'success': False, 'error': str(e)}
+
+def delete_from_cloudinary(public_id, resource_type="image"):
+    try:
+        result = cloudinary.uploader.destroy(public_id, resource_type=resource_type)
+        return result.get('result') == 'ok'
+    except Exception as e:
+        current_app.logger.error(f"Cloudinary delete error: {str(e)}")
+        return False
+
+# ---------- ROUTE: UPLOAD PROMO MEDIA (TEMP) ----------
+@app.route('/store/<slug>/upload-promo-media', methods=['POST'])
+def upload_promo_media(slug):
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': 'Not authenticated'}), 401
+
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+
+    try:
+        cur.execute("SELECT store_id, user_id FROM stores WHERE slug = %s", (slug,))
+        store = cur.fetchone()
+        if not store:
+            return jsonify({'success': False, 'message': 'Store not found'}), 404
+        if store['user_id'] != session['user_id']:
+            return jsonify({'success': False, 'message': 'Permission denied'}), 403
+
+        if 'media' not in request.files:
+            return jsonify({'success': False, 'message': 'No file uploaded'}), 400
+        file = request.files['media']
+        if file.filename == '':
+            return jsonify({'success': False, 'message': 'Empty filename'}), 400
+
+        result = upload_to_cloudinary(file, folder=f"store_promos_temp/{store['store_id']}")
+        if not result['success']:
+            return jsonify({'success': False, 'message': result['error']}), 500
+
+        return jsonify({
+            'success': True,
+            'url': result['url'],
+            'public_id': result['public_id'],
+            'resource_type': result['resource_type'],
+            'file_type': 'video' if result['resource_type'] == 'video' else 'image'
+        })
+    except Exception as e:
+        current_app.logger.error(f"Upload promo media error: {str(e)}")
+        return jsonify({'success': False, 'message': 'Upload failed'}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+# ---------- ROUTE: UPDATE STORE PROMO ----------
+from datetime import datetime
+
+@app.route('/store/<slug>/update-promo', methods=['POST'])
+def update_store_promo(slug):
+    if 'user_id' not in session:
+        flash('Please log in first.', 'error')
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+
+    try:
+        cur.execute("SELECT store_id, user_id FROM stores WHERE slug = %s", (slug,))
+        store = cur.fetchone()
+        if not store:
+            flash('Store not found.', 'error')
+            return redirect(url_for('home'))
+        if store['user_id'] != session['user_id']:
+            flash('Permission denied.', 'error')
+            return redirect(url_for('store_home', slug=slug))
+
+        store_id = store['store_id']
+
+        # Get current promo to delete old media
+        cur.execute("SELECT public_id, media_url FROM store_promos WHERE store_id = %s", (store_id,))
+        existing_promo = cur.fetchone()
+
+        media_url = request.form.get('media_url', '')
+        public_id = request.form.get('public_id', '')
+        temp_public_id = request.form.get('temp_public_id', '')
+
+        # Handle new file upload
+        if 'media_file' in request.files and request.files['media_file'].filename:
+            file = request.files['media_file']
+            result = upload_to_cloudinary(file, folder=f"store_promos/{store_id}")
+            if result['success']:
+                media_url = result['url']
+                public_id = result['public_id']
+                # Delete old permanent media
+                if existing_promo and existing_promo.get('public_id'):
+                    delete_from_cloudinary(
+                        existing_promo['public_id'],
+                        'video' if existing_promo.get('media_url', '').endswith(('.mp4','.mov','.webm')) else 'image'
+                    )
+                # Delete temp file
+                if temp_public_id:
+                    delete_from_cloudinary(temp_public_id, 'video' if file.content_type.startswith('video/') else 'image')
+        # Clone temp file if it exists and no new file
+        elif temp_public_id and not public_id:
+            try:
+                clone_result = cloudinary.uploader.upload(
+                    cloudinary.utils.cloudinary_url(temp_public_id)[0],
+                    public_id=f"store_promos/{store_id}/{temp_public_id.split('/')[-1]}",
+                    resource_type=request.form.get('resource_type', 'image')
+                )
+                media_url = clone_result['secure_url']
+                public_id = clone_result['public_id']
+                delete_from_cloudinary(temp_public_id, request.form.get('resource_type', 'image'))
+            except Exception as e:
+                current_app.logger.error(f"Error cloning temp file: {str(e)}")
+
+        # Get form data
+        media_type = request.form.get('media_type', 'image')
+        description = request.form.get('description', '')
+        button_text = request.form.get('button_text', 'Shop Now')
+        button_link = request.form.get('button_link', '')
+        frequency = request.form.get('frequency', 'once_per_session')
+        active = request.form.get('active', '1') == '1'
+
+        # --- NEW: Parse start_date and end_date ---
+        start_date_str = request.form.get('start_date')
+        end_date_str = request.form.get('end_date')
+        start_date = None
+        end_date = None
+        if start_date_str:
+            try:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                flash('Invalid start date format.', 'error')
+                return redirect(url_for('store_home', slug=slug))
+        if end_date_str:
+            try:
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                flash('Invalid end date format.', 'error')
+                return redirect(url_for('store_home', slug=slug))
+
+        # Check if promo exists
+        cur.execute("SELECT promo_id FROM store_promos WHERE store_id = %s", (store_id,))
+        existing = cur.fetchone()
+
+        if existing:
+            # Update existing promo
+            cur.execute("""
+                UPDATE store_promos 
+                SET media_type = %s, media_url = %s, public_id = %s,
+                    description = %s, button_text = %s, button_link = %s,
+                    frequency = %s, active = %s,
+                    start_date = %s, end_date = %s,
+                    updated_at = NOW()
+                WHERE store_id = %s
+            """, (media_type, media_url, public_id, description, button_text,
+                  button_link, frequency, active,
+                  start_date, end_date, store_id))
+        else:
+            # Insert new promo
+            cur.execute("""
+                INSERT INTO store_promos 
+                (store_id, media_type, media_url, public_id, description, button_text, 
+                 button_link, frequency, active, start_date, end_date, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+            """, (store_id, media_type, media_url, public_id, description, button_text,
+                  button_link, frequency, active, start_date, end_date))
+        conn.commit()
+        flash('Promotion settings saved successfully!', 'success')
+    except Exception as e:
+        current_app.logger.error(f"Error updating promo: {str(e)}")
+        conn.rollback()
+        flash('Error saving promotion settings.', 'error')
+    finally:
+        cur.close()
+        conn.close()
+    return redirect(url_for('store_home', slug=slug))
+
+
+    
+
+# ---------- ROUTE: DELETE STORE PROMO ----------
+@app.route('/store/<slug>/delete-promo', methods=['POST'])
+def delete_store_promo(slug):
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': 'Not authenticated'}), 401
+
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+
+    try:
+        cur.execute("""
+            SELECT s.store_id, s.user_id, p.public_id, p.media_url 
+            FROM stores s
+            LEFT JOIN store_promos p ON s.store_id = p.store_id
+            WHERE s.slug = %s
+        """, (slug,))
+        result = cur.fetchone()
+        if not result:
+            return jsonify({'success': False, 'message': 'Store not found'}), 404
+        if result['user_id'] != session['user_id']:
+            return jsonify({'success': False, 'message': 'Permission denied'}), 403
+        if result.get('public_id'):
+            resource_type = 'video' if result.get('media_url', '').endswith(('.mp4', '.mov', '.webm')) else 'image'
+            delete_from_cloudinary(result['public_id'], resource_type)
+        cur.execute("DELETE FROM store_promos WHERE store_id = %s", (result['store_id'],))
+        conn.commit()
+        return jsonify({'success': True, 'message': 'Promotion deleted successfully'})
+    except Exception as e:
+        current_app.logger.error(f"Error deleting promo: {str(e)}")
+        return jsonify({'success': False, 'message': 'Delete failed'}), 500
+    finally:
+        cur.close()
+        conn.close()
 
 
 

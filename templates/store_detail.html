@@ -1251,6 +1251,64 @@
                 font-size: 1.5rem;
             }
         }
+
+
+        /* Promotion Modal Styling */
+#promoModal .modal-content {
+    border-radius: 16px;
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+#promoModal .modal-body {
+    padding: 0;
+    background: white;
+}
+
+#promoModal img,
+#promoModal video {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+}
+
+#promoModal .promo-content {
+    padding: 24px;
+    text-align: center;
+    background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+}
+
+#promoModal .promo-description {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    color: #333;
+    line-height: 1.6;
+}
+
+#promoModal .btn-cta {
+    padding: 12px 32px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+}
+
+#promoModal .btn-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+/* Close button styling */
+#promoModal .btn-close {
+    background: rgba(255,255,255,0.9);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    opacity: 0.9;
+    z-index: 10;
+}
     </style>
 </head>
 <body>
@@ -1285,6 +1343,387 @@
     </div>
 </header>
 <br>
+
+
+<!-- ========== PROMOTION POPUP MODAL ========== -->
+{% if promo.active %}
+<div class="modal fade" id="promoModal" tabindex="-1" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body" style="padding: 0; background: white;">
+                <!-- Close button – upper right corner -->
+                <button type="button" class="btn-close" onclick="closePromoModal()" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+                
+                <!-- Media -->
+                <div class="modal-media">
+                    {% if promo.media_type == 'video' %}
+                        <video autoplay muted loop playsinline>
+                            <source src="{{ promo.media_url }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    {% else %}
+                        <img src="{{ promo.media_url }}" alt="Promotion">
+                    {% endif %}
+                </div>
+
+                <!-- Content -->
+                <div class="promo-content">
+                    <p class="promo-description">{{ promo.description }}</p>
+                    {% if promo.button_link %}
+                        <a href="{{ promo.button_link }}" target="_blank" rel="noopener" class="promo-btn">
+                            {{ promo.button_text }}
+                        </a>
+                    {% else %}
+                        <button class="promo-btn" onclick="closePromoModal()">
+                            {{ promo.button_text }}
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Modal base – mostly unchanged, but ensure full width on mobile */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1050;
+    display: none;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    outline: 0;
+    background-color: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+}
+
+.modal-dialog {
+    position: relative;
+    width: auto;
+    max-width: 500px;
+    margin: 1.75rem auto;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 3.5rem);
+}
+
+.modal-dialog-centered {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100% - 3.5rem);
+}
+
+.modal-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    pointer-events: auto;
+    background-color: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.modal-body {
+    position: relative;
+    flex: 1 1 auto;
+    padding: 0;
+    background: white;
+}
+
+/* Close button */
+.btn-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 44px;          /* bigger touch target */
+    height: 44px;
+    border-radius: 50%;
+    background: white;
+    border: none;
+    color: #333;
+    font-size: 1.3rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: all 0.2s ease;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+.btn-close:hover {
+    background: var(--primary-green);
+    color: white;
+    transform: scale(1.08);
+}
+
+/* ── Media – FIXED to show full image without cropping or weird scaling ── */
+.modal-media {
+    width: 100%;
+    background: #000;
+    min-height: 200px;               /* safety minimum so area never disappears */
+    max-height: 55vh;                /* reasonable max ~half viewport height */
+    height: auto;                    /* let image content determine actual height */
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 0;                 /* small breathing room top/bottom */
+}
+
+.modal-media img,
+.modal-media video {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;             /* shows entire image – all sides visible */
+    object-position: center;
+    display: block;
+}
+
+/* If you ever want to fill more aggressively (with possible edge crop): */
+/* object-fit: cover; */
+
+/* Content */
+.promo-content {
+    padding: 24px;
+    text-align: center;
+    background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+}
+
+.promo-description {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    color: #333;
+    line-height: 1.6;
+}
+
+.promo-btn {
+    display: inline-block;
+    padding: 12px 32px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 50px;
+    background: var(--primary-green);
+    border: none;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+}
+
+.promo-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4);
+}
+
+/* Fade animation */
+.fade {
+    transition: opacity 0.15s linear;
+}
+
+/* ── MOBILE adjustments ── */
+@media (max-width: 576px) {
+    .modal-dialog {
+        max-width: 96%;
+        margin: 0.5rem auto;
+        min-height: calc(100% - 1rem);
+    }
+
+    .modal-dialog-centered {
+        min-height: calc(100% - 1rem);
+    }
+
+    .btn-close {
+        top: 12px;
+        right: 12px;
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+    }
+
+    .modal-media {
+        min-height: 180px;
+        max-height: 65vh;            /* more vertical space on phones */
+        padding: 8px 0;
+    }
+
+    .promo-content {
+        padding: 20px 16px;
+    }
+
+    .promo-description {
+        font-size: 1rem;
+        margin-bottom: 16px;
+    }
+
+    .promo-btn {
+        padding: 10px 28px;
+        font-size: 1rem;
+    }
+}
+
+/* Bonus: Make it fullscreen-like on very small screens */
+@media (max-width: 400px) {
+    .modal-dialog {
+        margin: 0;
+        max-width: 100%;
+    }
+    .modal-content {
+        border-radius: 0;
+        min-height: 100vh;
+    }
+    .modal-media {
+        max-height: 70vh;
+        min-height: 220px;
+    }
+}
+</style>
+
+<script>
+    // ----- PROMO MODAL FREQUENCY CONTROL – WITH DEBUG LOGS -----
+    (function() {
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Promo modal script running...');
+            
+            const promoData = {
+                mediaUrl: "{{ promo.media_url }}",
+                description: "{{ promo.description }}",
+                buttonText: "{{ promo.button_text }}",
+                buttonLink: "{{ promo.button_link }}",
+                frequency: "{{ promo.frequency }}"
+            };
+            console.log('Promo data:', promoData);
+
+            function shouldShowPromo() {
+                const freq = promoData.frequency || 'once_per_session';
+                const now = Date.now();
+                const oneDay = 24 * 60 * 60 * 1000;
+                const oneWeek = 7 * oneDay;
+
+                if (freq === 'always') {
+                    console.log('Frequency = always → showing');
+                    return true;
+                }
+
+                try {
+                    const lastShown = localStorage.getItem('promoLastShown');
+                    switch (freq) {
+                        case 'once_per_session':
+                            const sessionShown = sessionStorage.getItem('promoShown');
+                            console.log('once_per_session: sessionShown =', sessionShown);
+                            return !sessionShown;
+                        case 'once_per_day':
+                            if (!lastShown) {
+                                console.log('once_per_day: no last shown → show');
+                                return true;
+                            }
+                            const dayDiff = now - parseInt(lastShown);
+                            console.log('once_per_day: lastShown =', lastShown, 'diff =', dayDiff, '> oneDay?', dayDiff > oneDay);
+                            return dayDiff > oneDay;
+                        case 'once_per_week':
+                            if (!lastShown) {
+                                console.log('once_per_week: no last shown → show');
+                                return true;
+                            }
+                            const weekDiff = now - parseInt(lastShown);
+                            console.log('once_per_week: diff =', weekDiff, '> oneWeek?', weekDiff > oneWeek);
+                            return weekDiff > oneWeek;
+                        case 'once_per_visit':
+                            const everShown = localStorage.getItem('promoShownEver');
+                            console.log('once_per_visit: everShown =', everShown);
+                            return !everShown;
+                        default:
+                            console.log('default frequency → show');
+                            return true;
+                    }
+                } catch (e) {
+                    console.warn('Storage error, showing promo anyway', e);
+                    return true;
+                }
+            }
+
+            function markPromoShown() {
+                const freq = promoData.frequency || 'once_per_session';
+                const now = Date.now();
+                try {
+                    switch (freq) {
+                        case 'once_per_session':
+                            sessionStorage.setItem('promoShown', 'true');
+                            console.log('Marked session storage');
+                            break;
+                        case 'once_per_day':
+                        case 'once_per_week':
+                            localStorage.setItem('promoLastShown', now.toString());
+                            console.log('Marked localStorage with timestamp', now);
+                            break;
+                        case 'once_per_visit':
+                            localStorage.setItem('promoShownEver', 'true');
+                            console.log('Marked localStorage ever');
+                            break;
+                    }
+                } catch (e) {}
+            }
+
+            window.closePromoModal = function() {
+                const modal = document.getElementById('promoModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                    console.log('Modal closed');
+                    if (promoData.frequency !== 'always') {
+                        markPromoShown();
+                    }
+                }
+            };
+
+            const modal = document.getElementById('promoModal');
+            if (modal && shouldShowPromo()) {
+                modal.style.display = 'block';
+                console.log('✅ Modal displayed');
+                if (promoData.frequency === 'always') {
+                    // Override close to not mark as shown
+                    window.closePromoModal = function() {
+                        modal.style.display = 'none';
+                        console.log('Modal closed (always mode, not marked)');
+                    };
+                }
+            } else {
+                console.log('❌ Modal not shown – either no modal element or shouldShowPromo returned false');
+            }
+
+            // Close when clicking outside
+            document.addEventListener('click', function(e) {
+                const modal = document.getElementById('promoModal');
+                if (modal && modal.style.display === 'block' && e.target === modal) {
+                    closePromoModal();
+                }
+            });
+        });
+    })();
+</script>
+{% endif %}
+
+
+
+
+
+
+
 <!-- Seller info moved BELOW header – white card style -->
 <div class="container" style="margin-top: -36px; position: relative; z-index: 10;">
     <div class="seller-info-card">
