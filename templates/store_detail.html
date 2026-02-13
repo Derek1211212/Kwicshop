@@ -1387,57 +1387,79 @@
 </div>
 
 <style>
-/* Modal overlay */
+/* Modal base – mostly unchanged, but ensure full width on mobile */
 .modal {
     position: fixed;
     top: 0;
     left: 0;
     z-index: 1050;
+    display: none;
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: rgba(0,0,0,0.55);
-    backdrop-filter: blur(5px);
+    outline: 0;
+    background-color: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
 }
 
-/* Centering – Bootstrap handles this well when min-height is not over-constrained */
 .modal-dialog {
+    position: relative;
+    width: auto;
     max-width: 500px;
     margin: 1.75rem auto;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 3.5rem);
 }
 
 .modal-dialog-centered {
     display: flex;
     align-items: center;
-    min-height: calc(100% - 1rem);  /* minimal – lets Bootstrap center vertically */
+    justify-content: center;
+    min-height: calc(100% - 3.5rem);
 }
 
-/* Modal card */
 .modal-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    pointer-events: auto;
+    background-color: #fff;
     border-radius: 16px;
     overflow: hidden;
     border: none;
     box-shadow: 0 20px 60px rgba(0,0,0,0.35);
 }
 
-/* Close button */
+.modal-body {
+    position: relative;
+    flex: 1 1 auto;
+    padding: 0;
+    background: white;
+}
+
+/* Close button – good already, maybe slightly larger on mobile */
 .btn-close {
     position: absolute;
     top: 16px;
     right: 16px;
-    width: 44px;
+    width: 44px;          /* ↑ bigger touch target */
     height: 44px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.95);
+    background: white;
     border: none;
-    color: #222;
-    font-size: 1.4rem;
-    z-index: 10;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    transition: all 0.2s;
+    color: #333;
+    font-size: 1.3rem;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: all 0.2s ease;
+    border: 1px solid rgba(0,0,0,0.1);
 }
 
 .btn-close:hover {
@@ -1446,32 +1468,39 @@
     transform: scale(1.08);
 }
 
-/* Media – full visibility, adaptive size */
+/* ── Media – IMPROVED ── */
 .modal-media {
     width: 100%;
     background: #000;
-    min-height: 200px;
-    max-height: 55vh;
-    height: auto;
+    height: 500vh;                    /* ← key: use viewport height units → grows/shrinks with screen */
+    min-height: 220px;               /* prevent too tiny on small phones */
+    max-height: 380px;               /* cap on larger phones/tablets */
     overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 0;
+    position: relative;              /* helps with positioning if needed */
 }
 
 .modal-media img,
 .modal-media video {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    object-position: center;
+    width: 60%;
+    height: 60%;                    /* ← fill the container height */
+    object-fit: scale-down;               /* ← CHANGE: cover → fills nicely, crops if needed (recommended for promos) */
+    object-position: center;         /* center crop – can change to top if important part is upper */
     display: block;
+    background: #000;
 }
 
-/* Content area */
+/* If you prefer NO cropping (full image visible, may have bars) – use this instead: */
+/* 
+.modal-media img,
+.modal-media video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+}
+*/
+
+/* Content */
 .promo-content {
     padding: 24px;
     text-align: center;
@@ -1485,33 +1514,25 @@
     line-height: 1.6;
 }
 
-/* Button – enhanced decoration for better visual impact */
 .promo-btn {
     display: inline-block;
-    padding: 14px 40px;              /* slightly larger padding */
-    font-size: 1.125rem;
-    font-weight: 700;
+    padding: 12px 32px;
+    font-size: 1.1rem;
+    font-weight: 600;
     border-radius: 50px;
-    background: linear-gradient(135deg, var(--primary-green), #2ecc71cc); /* subtle gradient */
-    color: white;
+    background: var(--primary-green);
     border: none;
-    cursor: pointer;
-    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4); /* stronger shadow */
     transition: all 0.3s ease;
     text-decoration: none;
-    position: relative;
-    overflow: hidden;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
 }
 
 .promo-btn:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(46, 204, 113, 0.55); /* deeper hover shadow */
-    background: linear-gradient(135deg, #2ecc71, var(--primary-green));
-}
-
-.promo-btn:active {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.35);
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4);
 }
 
 /* Fade animation */
@@ -1522,8 +1543,13 @@
 /* ── MOBILE adjustments ── */
 @media (max-width: 576px) {
     .modal-dialog {
-        max-width: 94%;
+        max-width: 96%;              /* almost full width → better on phones */
         margin: 0.5rem auto;
+        min-height: calc(100% - 1rem);
+    }
+
+    .modal-dialog-centered {
+        min-height: calc(100% - 1rem);
     }
 
     .btn-close {
@@ -1531,13 +1557,13 @@
         right: 12px;
         width: 40px;
         height: 40px;
-        font-size: 1.2rem;
+        font-size: 1.1rem;
     }
 
     .modal-media {
+        height: 505vh;                /* slightly smaller % on small screens */
         min-height: 180px;
-        max-height: 65vh;
-        padding: 8px 0;
+        max-height: 320px;
     }
 
     .promo-content {
@@ -1550,13 +1576,12 @@
     }
 
     .promo-btn {
-        padding: 12px 36px;
-        font-size: 1.05rem;
-        box-shadow: 0 5px 16px rgba(46, 204, 113, 0.35);
+        padding: 10px 28px;
+        font-size: 1rem;
     }
 }
 
-/* Very small screens – fullscreen style */
+/* Bonus: Make it fullscreen on very small screens for native feel (optional) */
 @media (max-width: 400px) {
     .modal-dialog {
         margin: 0;
@@ -1567,7 +1592,7 @@
         min-height: 100vh;
     }
     .modal-media {
-        max-height: 70vh;
+        height: 500vh;               /* give more room to image if fullscreen-ish */
     }
 }
 </style>
