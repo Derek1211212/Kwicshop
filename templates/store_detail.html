@@ -1540,59 +1540,60 @@
     transition: opacity 0.15s linear;
 }
 
-/* ── MOBILE adjustments ── */
+/* ── MOBILE adjustments – REDUCED OVERALL SIZE ── */
 @media (max-width: 576px) {
     .modal-dialog {
-        max-width: 96%;              /* almost full width → better on phones */
-        margin: 0.5rem auto;
-        min-height: calc(100% - 1rem);
+        max-width: 82%;              /* ← reduced from 96% → smaller modal on phones */
+        margin: 1rem auto;           /* more breathing room around modal */
+        min-height: auto;            /* remove forced min-height so modal can be smaller */
     }
 
     .modal-dialog-centered {
-        min-height: calc(100% - 1rem);
+        min-height: auto;            /* ← important: remove calc so modal isn't stretched */
+        align-items: center;
     }
 
     .btn-close {
         top: 12px;
         right: 12px;
-        width: 40px;
-        height: 40px;
-        font-size: 1.1rem;
+        width: 36px;                 /* slightly smaller close button */
+        height: 36px;
+        font-size: 1rem;
     }
 
     .modal-media {
-        height: 505vh;                /* slightly smaller % on small screens */
-        min-height: 180px;
-        max-height: 320px;
+        height: auto;                /* ← override extreme vh value */
+        min-height: 140px;           /* smaller minimum media area */
+        max-height: 45vh;            /* significantly reduced media height */
+        padding: 8px 0;
     }
 
     .promo-content {
-        padding: 20px 16px;
+        padding: 16px 14px;          /* reduced padding inside content */
     }
 
     .promo-description {
-        font-size: 1rem;
-        margin-bottom: 16px;
+        font-size: 0.95rem;          /* slightly smaller text */
+        margin-bottom: 14px;
     }
 
     .promo-btn {
-        padding: 10px 28px;
-        font-size: 1rem;
+        padding: 10px 24px;          /* smaller button */
+        font-size: 0.95rem;
     }
 }
 
 /* Bonus: Make it fullscreen on very small screens for native feel (optional) */
 @media (max-width: 400px) {
     .modal-dialog {
-        margin: 0;
-        max-width: 100%;
+        max-width: 88%;              /* still not full width – keeps smaller feel */
+        margin: 0.75rem auto;
     }
     .modal-content {
-        border-radius: 0;
-        min-height: 100vh;
+        border-radius: 12px;         /* slightly softer corners */
     }
     .modal-media {
-        height: 500vh;               /* give more room to image if fullscreen-ish */
+        max-height: 50vh;
     }
 }
 </style>
