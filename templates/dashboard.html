@@ -2620,7 +2620,7 @@ if (contactCheckbox && priceWrapper && priceInput) {
         // ────────────────────────────────────────────────
 
 // ────────────────────────────────────────────────
-// Category autocomplete – consolidated & fixed
+// Category autocomplete – shows all categories on focus, filters as you type
 // ────────────────────────────────────────────────
 (function initCategoryAutocomplete() {
   // Prevent running multiple times
@@ -2640,8 +2640,8 @@ if (contactCheckbox && priceWrapper && priceInput) {
     { name: "Jewelry & Watches", synonyms: ["ring","engagement ring","wedding ring","necklace","chain","pendant","earring","stud","hoop","bracelet","bangle","anklet","watch","smartwatch","rolex","omega","luxury watch","analog watch","digital watch","chronograph"] },
     { name: "Home & Garden", synonyms: ["furniture","sofa","couch","bed","mattress","table","dining table","coffee table","chair","office chair","recliner","plant","indoor plant","flower","pot","gardening","lawn mower","hose","decoration","wall art","mirror","lamp","ceiling fan","curtain","rug","carpet"] },
     { name: "Kitchen & Dining", synonyms: ["cooker","rice cooker","blender","juicer","fridge","refrigerator","microwave","oven","stove","gas stove","induction","pot","pan","frying pan","saucepan","knife","cutlery","plate","bowl","glass","mug","coffee maker","kettle","toaster","air fryer"] },
-    { name: "Tools & DIY", synonyms: ["drill","power drill","hammer","screwdriver","screw","saw","jigsaw","paint","roller","brush","wood","plywood","timber","cemen At","tool box","wrench","pliers","measuring tape","level","soldering","welder","ladder"] },
-    { name: "Automotive Parts &ccessories", synonyms: ["car part","auto part","tire","tyre","wheel","rim","battery","car battery","oil","engine oil","filter","air filter","oil filter","headlight","tail light","fog light","bumper","car mat","seat cover","car cover","roof rack","bike rack"] },
+    { name: "Tools & DIY", synonyms: ["drill","power drill","hammer","screwdriver","screw","saw","jigsaw","paint","roller","brush","wood","plywood","timber","cement","tool box","wrench","pliers","measuring tape","level","soldering","welder","ladder"] },
+    { name: "Automotive Parts & Accessories", synonyms: ["car part","auto part","tire","tyre","wheel","rim","battery","car battery","oil","engine oil","filter","air filter","oil filter","headlight","tail light","fog light","bumper","car mat","seat cover","car cover","roof rack","bike rack"] },
     { name: "Automobile & Vehicles", synonyms: ["car","sedan","suv","truck","pickup","van","bus","motorcycle","bike","scooter","electric scooter","atv","quad bike","tractor","used car","new car"] },
     { name: "Industrial & Scientific", synonyms: ["machine","industrial","lab","laboratory","microscope","telescope","sensor","pump","motor","generator","welder","soldering iron","safety gear","hard hat","gloves","goggles"] },
     { name: "Agriculture & Farming", synonyms: ["tractor","plough","seed","fertilizer","pesticide","farm tool","irrigation","sprinkler","water pump","chicken feed","animal feed","greenhouse","farming equipment"] },
@@ -2684,7 +2684,8 @@ if (contactCheckbox && priceWrapper && priceInput) {
     }
 
     function handleFocus() {
-      updateSuggestions(input.value);
+      // On focus, show all categories (filtered if input already has text)
+      updateSuggestions(input.value, true); // true = force show all when empty
     }
 
     function handleBlur() {
@@ -2707,21 +2708,53 @@ if (contactCheckbox && priceWrapper && priceInput) {
       }
     }
 
-    function updateSuggestions(value) {
+    function updateSuggestions(value, forceShowAll = false) {
       const term = value.trim().toLowerCase();
       suggestions.innerHTML = '';
 
-      if (term.length < 1) {
+      // If term is empty AND not forcing show all, hide suggestions
+      if (term.length === 0 && !forceShowAll) {
         suggestions.style.display = 'none';
         return;
       }
 
+      // If term is empty but forcing show all (on focus), show all categories
+      if (term.length === 0 && forceShowAll) {
+        // Show all category names
+        const allCategories = categoryData.map(cat => cat.name);
+        // Sort alphabetically
+        allCategories.sort();
+        
+        allCategories.forEach(cat => {
+          const li = document.createElement('li');
+          li.textContent = cat;
+          li.style.padding = '10px 16px';
+          li.style.cursor = 'pointer';
+          li.style.borderBottom = '1px solid #eee';
+          li.addEventListener('mouseover', () => li.style.background = '#f0f9f4');
+          li.addEventListener('mouseout', () => li.style.background = '');
+          li.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            input.value = cat;
+            suggestions.style.display = 'none';
+          });
+          suggestions.appendChild(li);
+        });
+        
+        suggestions.style.display = 'block';
+        return;
+      }
+
+      // Normal search/filter mode
       const matches = [];
 
       categoryData.forEach(cat => {
+        // Check if category name matches
         if (cat.name.toLowerCase().includes(term)) {
           matches.push(cat.name);
-        } else if (cat.synonyms.some(s => s.toLowerCase().includes(term))) {
+        } 
+        // Check if any synonym matches
+        else if (cat.synonyms.some(s => s.toLowerCase().includes(term))) {
           matches.push(cat.name);
         }
       });
@@ -2745,7 +2778,7 @@ if (contactCheckbox && priceWrapper && priceInput) {
       });
 
       // Fallback when no match
-      if (unique.length === 0 && term.length >= 3) {
+      if (unique.length === 0 && term.length >= 2) {
         const useTyped = document.createElement('li');
         useTyped.textContent = `Use: "${value.trim()}"`;
         useTyped.style.padding = '10px 16px';

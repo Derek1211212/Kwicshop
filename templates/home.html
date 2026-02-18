@@ -403,10 +403,38 @@
     .card:hover{transform:translateY(-2px);border-color:#dfe3e8;box-shadow:0 6px 16px rgba(16,24,40,.06)}
     .deal-badge{position:absolute;top:.7rem;left:.7rem;background:var(--primary);color:#fff;border-radius:999px;padding:.25rem .6rem;font-size:.75rem;font-weight:800;z-index:2;box-shadow:none;opacity:.95}
     .deal-badge.sale{background:var(--error)} .deal-badge.swap{background:var(--success)}
-    .wishlist-btn{position:absolute;top:.5rem;right:.5rem;border:1px solid #e9ecef;background:#fff;border-radius:999px;padding:.4rem;cursor:pointer;z-index:2;box-shadow:var(--shadow-xs)}
-    .wishlist-btn i{font-size:1.1rem;color:#c0c0c0;transition:.2s}
-    .wishlist-btn i.wishlisted{color:#e74c3c}
-/* IMAGE AREA – subtle ecommerce style */
+.wishlist-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: all 0.2s;
+}
+
+.wishlist-btn:hover {
+  background: white;
+  transform: scale(1.1);
+}
+
+.wishlist-btn i {
+  font-size: 1.2rem;
+  color: #6b7280;               /* Default gray */
+}
+
+.wishlist-btn i.wishlisted,
+.wishlist-btn[aria-pressed="true"] i {
+  color: #ef4444;               /* Red when wishlisted */
+}
 .media {
   position: relative;
   overflow: hidden;
@@ -1189,33 +1217,21 @@
       <span class="nav-label">Stores</span>
     </a>
 
-          <!-- My Store -->
-      <a href="{{ url_for('my_store_redirect') }}"
-         class="mb-item {% if request.path.startswith('/store') %}active{% endif %}">
-        <i class="fas fa-store-alt mb-icon" aria-hidden="true"></i>
-        <span class="nav-label">My Store</span>
-      </a>
+    <!-- My Store -->
+    <a href="{{ url_for('my_store_redirect') }}"
+       class="mb-item {% if request.path.startswith('/store') %}active{% endif %}">
+      <i class="fas fa-store-alt mb-icon" aria-hidden="true"></i>
+      <span class="nav-label">My Store</span>
+    </a>
 
     <!-- Logged-in only items -->
     {% if session.get('user_id') %}
-
       <!-- Dashboard -->
       <a href="{{ url_for('dashboard') }}"
          class="mb-item {% if request.path == '/dashboard' %}active{% endif %}">
         <i class="fas fa-user mb-icon" aria-hidden="true"></i>
         <span class="nav-label">Dashboard</span>
       </a>
-
-      <!-- Wishlist -->
-      <a href="{{ url_for('view_wishlist') }}"
-         class="mb-item {% if request.path.startswith('/wishlist') %}active{% endif %}">
-        <i class="fas fa-heart mb-icon" aria-hidden="true"></i>
-        <span class="nav-label">Wishlist</span>
-        <span id="wishlist-count-mobile" class="mb-badge" aria-live="polite">
-          {{ session.get('wishlist_count', 0) }}
-        </span>
-      </a>
-
     {% else %}
       <!-- Login / Sign Up for non-logged-in users -->
       <a href="{{ url_for('login') }}" class="mb-item">
@@ -1373,7 +1389,159 @@ document.getElementById('search-form').addEventListener('submit', e => {
 });
 </script>
 
+<!-- FLOATING WISHLIST BUTTON – Shopping cart icon with wishlist count -->
+<a href="{{ url_for('view_wishlist') }}" class="open-wishlist-btn" id="openWishlistBtn" aria-label="Wishlist / Saved Items">
+  <i class="fas fa-shopping-cart"></i>
+  <span class="wishlist-badge" id="wishlist-count-floating" aria-live="polite">{{ session.get('wishlist_count', 0) }}</span>
+</a>
 
+<style>
+.open-wishlist-btn {
+  position: fixed;
+  bottom: 177px;            /* 60px above the search button (which is at 117px) */
+  right: 24px;
+  background: #059669;
+  color: white;
+  border: none;
+  padding: 0.9rem 1.2rem;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  z-index: 2000;
+  box-shadow: 0 4px 18px rgba(0,0,0,.18);
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.open-wishlist-btn:hover {
+  background: #047857;
+  cursor: pointer;
+}
+
+.wishlist-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  min-width: 20px;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  border-radius: 10px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 0 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+</style>
+
+<script>
+// ───────────────────────────────────────────────
+// WISHLIST SYSTEM – COMPLETE WORKING VERSION
+// ───────────────────────────────────────────────
+
+// Function to update ALL wishlist count badges
+function setWishCount(n) {
+  // Desktop header
+  const desktopBadge = document.getElementById('wishlist-count');
+  if (desktopBadge) desktopBadge.textContent = n;
+  
+  // Mobile nav badge
+  const mobileBadge = document.getElementById('wishlist-count-mobile');
+  if (mobileBadge) mobileBadge.textContent = n;
+  
+  // Floating button badge
+  const floatingBadge = document.getElementById('wishlist-count-floating');
+  if (floatingBadge) floatingBadge.textContent = n;
+}
+
+// Make sure the function is globally available
+window.setWishCount = setWishCount;
+
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+  
+  // Get all wishlist buttons
+  const wishlistButtons = document.querySelectorAll('.wishlist-btn');
+  
+  wishlistButtons.forEach(btn => {
+    btn.addEventListener('click', async function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const listingId = this.dataset.listingId;
+      if (!listingId) return;
+
+      // Optimistic UI update
+      const icon = this.querySelector('i');
+      const wasWishlisted = icon.classList.contains('wishlisted');
+      
+      // Toggle the wishlisted class and aria-pressed state
+      icon.classList.toggle('wishlisted');
+      this.setAttribute('aria-pressed', wasWishlisted ? 'false' : 'true');
+
+      try {
+        const response = await fetch('/api/wishlist/toggle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ listing_id: listingId }),
+          credentials: 'include'
+        });
+
+        if (!response.ok) throw new Error('Network response was not ok');
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Update all badges with the new count
+          setWishCount(data.total);
+        } else {
+          // Revert optimistic update on failure
+          icon.classList.toggle('wishlisted', wasWishlisted);
+          this.setAttribute('aria-pressed', wasWishlisted ? 'true' : 'false');
+          
+          // Show error message (if you have a toast function)
+          if (typeof showToast === 'function') {
+            showToast(data.message || 'Failed to update wishlist');
+          } else {
+            alert('Failed to update wishlist');
+          }
+        }
+      } catch (err) {
+        console.error('Wishlist toggle error:', err);
+        
+        // Revert optimistic update
+        icon.classList.toggle('wishlisted', wasWishlisted);
+        this.setAttribute('aria-pressed', wasWishlisted ? 'true' : 'false');
+        
+        // Show error message
+        if (typeof showToast === 'function') {
+          showToast('Network error – please try again');
+        } else {
+          alert('Network error – please try again');
+        }
+      }
+    });
+  });
+  
+  // Optional: Verify count on page load (if you want to ensure accuracy)
+  fetch('/api/wishlist/count', { 
+    method: 'GET',
+    credentials: 'include' 
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      setWishCount(data.count);
+    }
+  })
+  .catch(() => {}); // Silent fail – session value is already displayed
+});
+</script>
 
 
 
@@ -1541,21 +1709,10 @@ document.getElementById('search-form').addEventListener('submit', e => {
       {% for listing in display_list %}
         {% set ns.idx = loop.index0 %}
 
-        <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
-           class="card listing-card-link"
-           data-listing-id="{{ listing.listing_id }}"
-           data-source="grid"
-           aria-label="{{ listing.title }}">
+        {# Wrapper div – contains both button and link #}
+        <div class="card listing-card-wrapper">
 
-          {# Deal type badge #}
-          <span class="deal-badge 
-                {{ 'swap'    if listing.deal_type == 'Swap Deal' 
-            else 'service' if listing.deal_type == 'Service Offer' 
-            else 'sale' }}">
-            {% if listing.deal_type == 'Service Offer' %}Service{% else %}{{ listing.deal_type }}{% endif %}
-          </span>
-
-          {# Wishlist button #}
+          {# Wishlist button – OUTSIDE the link so clicks don't navigate #}
           {% if user_logged_in %}
             <button class="wishlist-btn"
                     type="button"
@@ -1566,85 +1723,103 @@ document.getElementById('search-form').addEventListener('submit', e => {
             </button>
           {% endif %}
 
-          {# Image display logic #}
-          {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 1 %}
-            <div class="swap-row" aria-hidden="true">
-              {% for o in listing.offers[:3] %}
-                <div class="swap-photo">
-                  <img src="{{ url_for('static', filename='images/placeholder.jpg') }}"
-                       data-src="{{ o.image1 }}"
-                       alt="{{ o.title }}"
-                       class="lazy-img"
-                       {% if ns.idx < 3 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}
-                       decoding="async">
-                </div>
-              {% endfor %}
-            </div>
+          {# The clickable link now only wraps the rest of the card content #}
+          <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
+             class="listing-card-link"
+             data-listing-id="{{ listing.listing_id }}"
+             data-source="grid"
+             aria-label="{{ listing.title }}">
 
-          {% else %}
-            <div class="media{% if listing.show_full_image %} media--safe{% endif %}"
-                 {% if listing.show_full_image %}style="--blur-url:url('{{ listing.image_url }}')"{% endif %}>
-              <img src="{{ url_for('static', filename='images/placeholder.jpg') }}"
-                   data-src="{{ listing.image_url }}"
-                   alt="{{ listing.title }}"
-                   class="lazy-img"
-                   {% if ns.idx < 3 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}
-                   decoding="async">
-            </div>
-          {% endif %}
+            {# Deal type badge #}
+            <span class="deal-badge 
+                  {{ 'swap'    if listing.deal_type == 'Swap Deal' 
+              else 'service' if listing.deal_type == 'Service Offer' 
+              else 'sale' }}">
+              {% if listing.deal_type == 'Service Offer' %}Service{% else %}{{ listing.deal_type }}{% endif %}
+            </span>
 
-          {# Content / title / price #}
-          <div class="content">
-            {% if listing.deal_type == 'Swap Deal' %}
-              {% set titles = listing.offers | map(attribute='title') | list %}
-              <div class="meta-line">
-                <span class="meta-label">Offer:</span>
-                <span>{{ titles | join(' + ') }}
-                  {% if listing.additional_cash|float > 0 %}
-                    + ₵{{ "{:,.2f}".format(listing.additional_cash|float) }}
-                  {% endif %}
-                </span>
-              </div>
-              <div class="meta-line">
-                <span class="meta-label">Wants:</span>
-                <span>{{ listing.desired_swap }}</span>
-              </div>
-              {% if listing.required_cash|float > 0 %}
-                <div class="meta-line">
-                  <span class="meta-label">Plus Cash:</span>
-                  <span>+ ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span>
-                </div>
-              {% endif %}
-
-            {% elif listing.deal_type == 'Service Offer' %}
-              <h3 class="title">{{ listing.title }}</h3>
-              <div class="price" style="margin-top:.25rem; font-weight: 600;">
-                {% if listing.price is none or listing.price|float == 0 %}
-                  <span style="color: #6c757d; font-style: italic;">Contact for Price</span>
-                {% else %}
-                  ₵{{ "{:,.2f}".format(listing.price|float) }} <small>per session</small>
-                {% endif %}
+            {# Image display logic #}
+            {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 1 %}
+              <div class="swap-row" aria-hidden="true">
+                {% for o in listing.offers[:3] %}
+                  <div class="swap-photo">
+                    <img src="{{ url_for('static', filename='images/placeholder.jpg') }}"
+                         data-src="{{ o.image1 }}"
+                         alt="{{ o.title }}"
+                         class="lazy-img"
+                         {% if ns.idx < 3 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}
+                         decoding="async">
+                  </div>
+                {% endfor %}
               </div>
 
             {% else %}
-              {# Outright Sales #}
-              <h3 class="title">
-                {{ listing.title }}
-                {% if listing.required_cash|float > 0 %}
-                  <span class="meta-line" style="display:inline-flex">
-                    <span class="meta-label">+ Cash:</span>
-                    ₵{{ "{:,.2f}".format(listing.required_cash|float) }}
-                  </span>
-                {% endif %}
-              </h3>
-              <div class="price" style="margin-top:.25rem">
-                ₵{{ "{:,.2f}".format(listing.price|float) }}
+              <div class="media{% if listing.show_full_image %} media--safe{% endif %}"
+                   {% if listing.show_full_image %}style="--blur-url:url('{{ listing.image_url }}')"{% endif %}>
+                <img src="{{ url_for('static', filename='images/placeholder.jpg') }}"
+                     data-src="{{ listing.image_url }}"
+                     alt="{{ listing.title }}"
+                     class="lazy-img"
+                     {% if ns.idx < 3 %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}
+                     decoding="async">
               </div>
             {% endif %}
-          </div>
-        </a>
+
+            {# Content / title / price #}
+            <div class="content">
+              {% if listing.deal_type == 'Swap Deal' %}
+                {% set titles = listing.offers | map(attribute='title') | list %}
+                <div class="meta-line">
+                  <span class="meta-label">Offer:</span>
+                  <span>{{ titles | join(' + ') }}
+                    {% if listing.additional_cash|float > 0 %}
+                      + ₵{{ "{:,.2f}".format(listing.additional_cash|float) }}
+                    {% endif %}
+                  </span>
+                </div>
+                <div class="meta-line">
+                  <span class="meta-label">Wants:</span>
+                  <span>{{ listing.desired_swap }}</span>
+                </div>
+                {% if listing.required_cash|float > 0 %}
+                  <div class="meta-line">
+                    <span class="meta-label">Plus Cash:</span>
+                    <span>+ ₵{{ "{:,.2f}".format(listing.required_cash|float) }}</span>
+                  </div>
+                {% endif %}
+
+              {% elif listing.deal_type == 'Service Offer' %}
+                <h3 class="title">{{ listing.title }}</h3>
+                <div class="price" style="margin-top:.25rem; font-weight: 600;">
+                  {% if listing.price is none or listing.price|float == 0 %}
+                    <span style="color: #6c757d; font-style: italic;">Contact for Price</span>
+                  {% else %}
+                    ₵{{ "{:,.2f}".format(listing.price|float) }} <small>per session</small>
+                  {% endif %}
+                </div>
+
+              {% else %}
+                {# Outright Sales #}
+                <h3 class="title">
+                  {{ listing.title }}
+                  {% if listing.required_cash|float > 0 %}
+                    <span class="meta-line" style="display:inline-flex">
+                      <span class="meta-label">+ Cash:</span>
+                      ₵{{ "{:,.2f}".format(listing.required_cash|float) }}
+                    </span>
+                  {% endif %}
+                </h3>
+                <div class="price" style="margin-top:.25rem">
+                  ₵{{ "{:,.2f}".format(listing.price|float) }}
+                </div>
+              {% endif %}
+            </div>
+          </a>
+        </div>
       {% endfor %}
     </div>
+  
+
 
     {# ================= PAGINATION ================= #}
     {% if listings and total_pages > 1 %}
@@ -1777,18 +1952,6 @@ document.getElementById('search-form').addEventListener('submit', e => {
         calc(); on();
       }
 
-      // Wishlist optimistic toggle
-      function setWishCount(n){ const a=$('#wishlist-count'); const b=$('#wishlist-count-mobile'); if(a)a.textContent=n; if(b)b.textContent=n; }
-      $$('.wishlist-btn').forEach(btn=>{
-        btn.addEventListener('click', (e)=>{
-          e.preventDefault(); e.stopPropagation();
-          const id = btn.dataset.listingId; const icon = btn.querySelector('i'); const was = icon.classList.contains('wishlisted');
-          icon.classList.toggle('wishlisted'); btn.setAttribute('aria-pressed', was?'false':'true');
-          fetch('/api/wishlist/toggle',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({listing_id:id})})
-          .then(r=>r.json()).then(j=>{ if(!j.success) throw 0; setWishCount(j.total); })
-          .catch(()=>{ icon.classList.toggle('wishlisted', was); btn.setAttribute('aria-pressed', was?'true':'false'); });
-        }, {passive:false});
-      });
 
       // Impressions & click tracking
       const io = new IntersectionObserver((entries)=>{
