@@ -143,6 +143,7 @@
             flex-wrap: wrap;
             gap: 12px;
             align-items: center;
+            position: relative; /* for suggestion dropdown */
         }
 
         .filter-input {
@@ -159,6 +160,43 @@
         .filter-input:focus {
             outline: none;
             border-color: var(--green-medium);
+        }
+
+        /* suggestion dropdown */
+        .suggestions-container {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            max-height: 250px;
+            overflow-y: auto;
+            display: none;
+        }
+        .suggestions-container.active {
+            display: block;
+        }
+        .suggestion-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border-light);
+            transition: background 0.15s;
+        }
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        .suggestion-item:hover,
+        .suggestion-item.selected {
+            background: var(--green-light);
+            color: var(--green-dark);
+        }
+        .suggestion-item strong {
+            color: var(--primary-green);
         }
 
         .filter-select {
@@ -610,6 +648,12 @@
                 align-items: flex-start;
                 gap: 8px;
             }
+            /* suggestion dropdown on mobile */
+            .suggestions-container {
+                left: 0;
+                right: 0;
+                max-height: 200px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -696,13 +740,18 @@
             </button>
             
             <form method="GET" class="filter-row">
-                <input 
-                    type="text"
-                    name="search"
-                    placeholder="Search shops..."
-                    value="{{ request.args.get('search','') }}"
-                    class="filter-input"
-                >
+                <div style="flex:1; position: relative; min-width: 200px;">
+                    <input 
+                        type="text"
+                        name="search"
+                        placeholder="Search shops..."
+                        value="{{ request.args.get('search','') }}"
+                        class="filter-input"
+                        id="search-input"
+                        autocomplete="off"
+                    >
+                    <div id="suggestions" class="suggestions-container"></div>
+                </div>
                 
                 <select name="store_type" class="filter-select">
                     <option value="">All Categories</option>
@@ -852,6 +901,184 @@
     </footer>
 
     <script>
+        // ===== Store metrics tracking (clicks + views) =====
+        // Uses sendBeacon when possible (reliable during navigation), else fetch
+
+        function postMetric(url, payload) {
+            try {
+                const data = JSON.stringify(payload);
+
+                if (navigator.sendBeacon) {
+                    const blob = new Blob([data], { type: "application/json" });
+                    navigator.sendBeacon(url, blob);
+                    return;
+                }
+
+                // fallback
+                fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: data,
+                    keepalive: true, // helps when navigating away
+                    credentials: "same-origin",
+                }).catch(() => {});
+            } catch (_) {}
+        }
+
+        function trackStoreClick(storeId) {
+            postMetric("/metrics/store/click", { store_id: Number(storeId) });
+        }
+
+        function trackStoreView(storeId) {
+            postMetric("/metrics/store/view", { store_id: Number(storeId) });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const cards = document.querySelectorAll(".shop-card[data-store-id]");
+            if (!cards.length) return;
+
+            // --- Click tracking ---
+            cards.forEach((card) => {
+                card.addEventListener("click", () => {
+                    const storeId = card.getAttribute("data-store-id");
+                    if (storeId) trackStoreClick(storeId);
+                }, { passive: true });
+            });
+
+            // --- View (impression) tracking ---
+            // Count a "view" once per page load per store when card becomes visible.
+            const seen = new Set();
+
+            if ("IntersectionObserver" in window) {
+                const io = new IntersectionObserver(
+                    (entries) => {
+                        entries.forEach((entry) => {
+                            if (!entry.isIntersecting) return;
+                            if (entry.intersectionRatio < 0.35) return; // threshold to reduce false views
+
+                            const card = entry.target;
+                            const storeId = card.getAttribute("data-store-id");
+                            if (!storeId) return;
+
+                            if (!seen.has(storeId)) {
+                                seen.add(storeId);
+                                trackStoreView(storeId);
+                            }
+
+                            // once counted, stop observing that card
+                            io.unobserve(card);
+                        });
+                    },
+                    { threshold: [0.35] }
+                );
+
+                cards.forEach((card) => io.observe(card));
+            } else {
+                // fallback: count as viewed on load (less accurate)
+                cards.forEach((card) => {
+                    const storeId = card.getAttribute("data-store-id");
+                    if (storeId && !seen.has(storeId)) {
+                        seen.add(storeId);
+                        trackStoreView(storeId);
+                    }
+                });
+            }
+        });
+    </script>
+    <!-- ========== SHOP NAME SUGGESTION ========== -->
+    <script>
+        (function() {
+            // Build list of shop names from the stores variable (passed by Jinja)
+            const stores = {{ stores|tojson }};
+            const shopNames = stores.map(store => store.name).filter(Boolean);
+
+            const searchInput = document.getElementById('search-input');
+            const suggestionsContainer = document.getElementById('suggestions');
+            const form = searchInput?.closest('form');
+
+            if (!searchInput || !suggestionsContainer) return;
+
+            let currentFocus = -1; // for keyboard navigation
+            let debounceTimer;
+
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+                    suggestionsContainer.classList.remove('active');
+                }
+            });
+
+            searchInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                const query = this.value.trim().toLowerCase();
+                if (query.length < 1) {
+                    suggestionsContainer.classList.remove('active');
+                    return;
+                }
+
+                debounceTimer = setTimeout(() => {
+                    // filter shop names
+                    const matches = shopNames.filter(name => name.toLowerCase().includes(query)).slice(0, 6); // max 6
+
+                    if (matches.length === 0) {
+                        suggestionsContainer.classList.remove('active');
+                        return;
+                    }
+
+                    // build suggestion HTML
+                    suggestionsContainer.innerHTML = matches.map((name, index) => {
+                        const highlighted = name.replace(new RegExp(`(${query})`, 'gi'), '<strong>$1</strong>');
+                        return `<div class="suggestion-item" data-index="${index}">${highlighted}</div>`;
+                    }).join('');
+
+                    suggestionsContainer.classList.add('active');
+                    currentFocus = -1; // reset keyboard selection
+
+                    // attach click events to suggestions
+                    suggestionsContainer.querySelectorAll('.suggestion-item').forEach(item => {
+                        item.addEventListener('click', function() {
+                            searchInput.value = this.textContent.replace(/<\/?strong>/g, ''); // remove bold tags
+                            suggestionsContainer.classList.remove('active');
+                            // submit the form to apply filter
+                            form.submit();
+                        });
+                    });
+                }, 150);
+            });
+
+            // Keyboard navigation (up/down/enter)
+            searchInput.addEventListener('keydown', function(e) {
+                const items = suggestionsContainer.querySelectorAll('.suggestion-item');
+                if (!items.length) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    currentFocus = (currentFocus + 1) % items.length;
+                    updateActiveSuggestion(items);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    currentFocus = (currentFocus - 1 + items.length) % items.length;
+                    updateActiveSuggestion(items);
+                } else if (e.key === 'Enter' && currentFocus > -1) {
+                    e.preventDefault();
+                    items[currentFocus].click();
+                }
+            });
+
+            function updateActiveSuggestion(items) {
+                items.forEach((item, idx) => {
+                    if (idx === currentFocus) {
+                        item.classList.add('selected');
+                        // optionally scroll into view
+                        item.scrollIntoView({ block: 'nearest' });
+                    } else {
+                        item.classList.remove('selected');
+                    }
+                });
+            }
+        })();
+    </script>
+    <script>
         // Mobile filters toggle
         function toggleFilters() {
             const filterRow = document.querySelector('.filter-row');
@@ -920,93 +1147,6 @@
             }
         });
     </script>
-
-
-    <script>
-  // ===== Store metrics tracking (clicks + views) =====
-  // Uses sendBeacon when possible (reliable during navigation), else fetch
-
-  function postMetric(url, payload) {
-    try {
-      const data = JSON.stringify(payload);
-
-      if (navigator.sendBeacon) {
-        const blob = new Blob([data], { type: "application/json" });
-        navigator.sendBeacon(url, blob);
-        return;
-      }
-
-      // fallback
-      fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: data,
-        keepalive: true, // helps when navigating away
-        credentials: "same-origin",
-      }).catch(() => {});
-    } catch (_) {}
-  }
-
-  function trackStoreClick(storeId) {
-    postMetric("/metrics/store/click", { store_id: Number(storeId) });
-  }
-
-  function trackStoreView(storeId) {
-    postMetric("/metrics/store/view", { store_id: Number(storeId) });
-  }
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const cards = document.querySelectorAll(".shop-card[data-store-id]");
-    if (!cards.length) return;
-
-    // --- Click tracking ---
-    cards.forEach((card) => {
-      card.addEventListener("click", () => {
-        const storeId = card.getAttribute("data-store-id");
-        if (storeId) trackStoreClick(storeId);
-      }, { passive: true });
-    });
-
-    // --- View (impression) tracking ---
-    // Count a "view" once per page load per store when card becomes visible.
-    const seen = new Set();
-
-    if ("IntersectionObserver" in window) {
-      const io = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (!entry.isIntersecting) return;
-            if (entry.intersectionRatio < 0.35) return; // threshold to reduce false views
-
-            const card = entry.target;
-            const storeId = card.getAttribute("data-store-id");
-            if (!storeId) return;
-
-            if (!seen.has(storeId)) {
-              seen.add(storeId);
-              trackStoreView(storeId);
-            }
-
-            // once counted, stop observing that card
-            io.unobserve(card);
-          });
-        },
-        { threshold: [0.35] }
-      );
-
-      cards.forEach((card) => io.observe(card));
-    } else {
-      // fallback: count as viewed on load (less accurate)
-      cards.forEach((card) => {
-        const storeId = card.getAttribute("data-store-id");
-        if (storeId && !seen.has(storeId)) {
-          seen.add(storeId);
-          trackStoreView(storeId);
-        }
-      });
-    }
-  });
-</script>
 
 </body>
 </html>
