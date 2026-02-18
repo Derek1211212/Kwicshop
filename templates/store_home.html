@@ -606,7 +606,7 @@
             <h1>{{ store.name }}</h1>
             <p>Vendor Dashboard</p>
             <div class="quick-actions">
-                <button class="btn btn-primary" id="openAddItemModal"><span>➕</span> Add New Item</button>
+                <button class="btn btn-primary" id="openAddItemModalFull"><span>➕</span> Add New Item</button>
                 <a href="/edit-store/{{ store.slug }}" class="btn" style="background: rgba(255,255,255,0.2); color: white;">
                     <span>⚙️</span> Store Settings
                 </a>
@@ -1358,7 +1358,7 @@
                         </div>
                         <div style="display:flex; justify-content:space-between; margin-top:2rem;">
                             <button type="button" class="btn btn-outline prev-step">← Back</button>
-                            <button type="submit" class="btn btn-primary">Submit</button>
+                            <button type="button" class="btn btn-primary" id="submitItemBtn">Submit</button>
                         </div>
                     </div>
                 </form>
@@ -1370,413 +1370,711 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- ========== JAVASCRIPT – AD CAMPAIGN ONLY (WITH CREDENTIALS) ========== -->
-    <script>
-        // ----- SHOW TOAST / SUCCESS -----
-        let toastTimer = null;
-        function showToast(message) {
-            const toast = document.getElementById("toast");
-            if (!toast) return;
-            toast.textContent = message;
-            toast.classList.add("show");
-            clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => {
-                toast.classList.remove("show");
-            }, 3000);
-        }
-        function showSuccessBanner(message) {
-            const box = document.getElementById("successMessage");
-            const text = document.getElementById("successMessageText");
-            if (text) text.textContent = message || "Done!";
-            if (!box) return;
-            box.classList.add("show");
-            setTimeout(() => box.classList.remove("show"), 2500);
-        }
+<script>
+// ========== COMPLETE VENDOR DASHBOARD JAVASCRIPT ==========
+document.addEventListener('DOMContentLoaded', function() {
+    // ----- TOAST / SUCCESS -----
+    let toastTimer = null;
+    window.showToast = function(message) {
+        const toast = document.getElementById("toast");
+        if (!toast) return;
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 3000);
+    };
+    window.showSuccessBanner = function(message) {
+        const box = document.getElementById("successMessage");
+        const text = document.getElementById("successMessageText");
+        if (text) text.textContent = message || "Done!";
+        if (!box) return;
+        box.classList.add("show");
+        setTimeout(() => box.classList.remove("show"), 2500);
+    };
 
-        // ----- MOBILE MENU -----
-        const mobileMenuBtn = document.getElementById("mobileMenuBtn");
-        const closeMenuBtn = document.getElementById("closeMenuBtn");
-        const mobileMenuOverlay = document.getElementById("mobileMenuOverlay");
-        const mobileMenu = document.getElementById("mobileMenu");
+    // ----- MOBILE MENU -----
+    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+    const closeMenuBtn = document.getElementById("closeMenuBtn");
+    const mobileMenuOverlay = document.getElementById("mobileMenuOverlay");
+    const mobileMenu = document.getElementById("mobileMenu");
+    function openMobileMenu() {
+        mobileMenu.classList.add("active");
+        mobileMenuOverlay.classList.add("active");
+        mobileMenu.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+    }
+    function closeMobileMenu() {
+        mobileMenu.classList.remove("active");
+        mobileMenuOverlay.classList.remove("active");
+        mobileMenu.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "auto";
+    }
+    if (mobileMenuBtn) mobileMenuBtn.addEventListener("click", openMobileMenu);
+    if (closeMenuBtn) closeMenuBtn.addEventListener("click", closeMobileMenu);
+    if (mobileMenuOverlay) mobileMenuOverlay.addEventListener("click", closeMobileMenu);
+    document.querySelectorAll(".mobile-menu-item").forEach(item => item.addEventListener("click", closeMobileMenu));
 
-        function openMobileMenu() {
-            mobileMenu.classList.add("active");
-            mobileMenuOverlay.classList.add("active");
-            mobileMenu.setAttribute("aria-hidden", "false");
-            document.body.style.overflow = "hidden";
-        }
-        function closeMobileMenu() {
-            mobileMenu.classList.remove("active");
-            mobileMenuOverlay.classList.remove("active");
-            mobileMenu.setAttribute("aria-hidden", "true");
-            document.body.style.overflow = "auto";
-        }
-        if (mobileMenuBtn) mobileMenuBtn.addEventListener("click", openMobileMenu);
-        if (closeMenuBtn) closeMenuBtn.addEventListener("click", closeMobileMenu);
-        if (mobileMenuOverlay) mobileMenuOverlay.addEventListener("click", closeMobileMenu);
-        document.querySelectorAll(".mobile-menu-item").forEach((item) => {
-            item.addEventListener("click", closeMobileMenu);
+    // ----- COPY STORE LINK -----
+    document.querySelectorAll("[data-copy-link]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const link = btn.getAttribute("data-copy-link") || "";
+            try {
+                await navigator.clipboard.writeText(link);
+                showToast("Store link copied to clipboard!");
+            } catch (err) {
+                showToast("Failed to copy link");
+            }
         });
+    });
 
-        // ----- COPY STORE LINK -----
-        document.querySelectorAll("[data-copy-link]").forEach((btn) => {
-            btn.addEventListener("click", async () => {
-                const link = btn.getAttribute("data-copy-link") || "";
-                try {
-                    await navigator.clipboard.writeText(link);
-                    showToast("Store link copied to clipboard!");
-                } catch (err) {
-                    console.error("Failed to copy:", err);
-                    showToast("Failed to copy link");
+    // ----- PERIOD BUTTONS -----
+    document.querySelectorAll(".period-btn").forEach(btn => {
+        btn.addEventListener("click", function() {
+            document.querySelectorAll(".period-btn").forEach(b => b.classList.remove("active"));
+            this.classList.add("active");
+        });
+    });
+
+    // ----- FLOATING ACTION BUTTON -----
+    const fabBtn = document.getElementById("fabAddItem");
+    if (fabBtn) {
+        fabBtn.addEventListener("click", () => {
+            document.getElementById("openAddItemModalFull")?.click();
+        });
+    }
+
+    // ========== SHOP TOUR VIDEO UPLOAD ==========
+    (function() {
+        const videoInput = document.getElementById("videoInput");
+        const uploadArea = document.getElementById("uploadArea");
+        const replaceButton = document.querySelector(".btn-replace-video");
+        if (!videoInput) return;
+
+        function triggerFilePicker() { videoInput.click(); }
+
+        if (uploadArea) {
+            uploadArea.addEventListener("click", triggerFilePicker);
+            uploadArea.addEventListener("keydown", e => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    triggerFilePicker();
                 }
             });
-        });
-
-        // ----- SHOP TOUR VIDEO UPLOAD (with credentials) -----
-        document.addEventListener("DOMContentLoaded", function () {
-            const videoInput = document.getElementById("videoInput");
-            const uploadArea = document.getElementById("uploadArea");
-            const replaceButton = document.querySelector(".btn-replace-video");
-
-            if (!videoInput) return;
-
-            function triggerFilePicker() {
-                videoInput.click();
-            }
-
-            if (uploadArea) {
-                uploadArea.addEventListener("click", triggerFilePicker);
-                uploadArea.addEventListener("keydown", (e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        triggerFilePicker();
-                    }
-                });
-                ["dragover", "dragenter"].forEach((evt) => {
-                    uploadArea.addEventListener(evt, (e) => {
-                        e.preventDefault();
-                        uploadArea.classList.add("dragover");
-                        uploadArea.style.borderColor = "var(--primary)";
-                        uploadArea.style.background = "rgba(46,204,113,0.05)";
-                    });
-                });
-                ["dragleave", "dragend", "drop"].forEach((evt) => {
-                    uploadArea.addEventListener(evt, (e) => {
-                        e.preventDefault();
-                        uploadArea.classList.remove("dragover");
-                        uploadArea.style.borderColor = "var(--border)";
-                        uploadArea.style.background = "var(--bg)";
-                    });
-                });
-                uploadArea.addEventListener("drop", (e) => {
+            ["dragover", "dragenter"].forEach(evt => {
+                uploadArea.addEventListener(evt, e => {
                     e.preventDefault();
-                    uploadArea.classList.remove("dragover");
+                    uploadArea.style.borderColor = "var(--primary)";
+                    uploadArea.style.background = "rgba(46,204,113,0.05)";
+                });
+            });
+            ["dragleave", "dragend", "drop"].forEach(evt => {
+                uploadArea.addEventListener(evt, e => {
+                    e.preventDefault();
                     uploadArea.style.borderColor = "var(--border)";
                     uploadArea.style.background = "var(--bg)";
-                    if (e.dataTransfer.files && e.dataTransfer.files.length) {
-                        videoInput.files = e.dataTransfer.files;
-                        uploadVideo(e.dataTransfer.files[0]);
-                    }
-                });
-            }
-
-            if (replaceButton) {
-                replaceButton.addEventListener("click", function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    triggerFilePicker();
-                });
-            }
-
-            videoInput.addEventListener("change", function (e) {
-                if (e.target.files && e.target.files.length > 0) {
-                    uploadVideo(e.target.files[0]);
-                }
-            });
-
-            function setUploadingUI(fileName) {
-                document.body.classList.add("loading");
-                const videoContainer = document.querySelector(".shop-video-card .video-container");
-                if (uploadArea) {
-                    uploadArea.innerHTML = `
-                        <div class="upload-icon">⏳</div>
-                        <p style="font-weight: 500; margin-bottom: 0.5rem;"><strong>Uploading to Cloudinary...</strong></p>
-                        <p style="word-break:break-word; font-size:13px; color: var(--text-secondary);">${fileName}</p>
-                    `;
-                    return;
-                }
-                if (videoContainer) {
-                    videoContainer.innerHTML = `
-                        <div style="width:100%; aspect-ratio: 9/16; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; border-radius:8px;">
-                            <div style="font-size:2.5rem; margin-bottom:16px;">⏳</div>
-                            <p style="font-weight:500; margin-bottom:8px;"><strong>Uploading new video...</strong></p>
-                            <p style="opacity:0.9; word-break:break-word; padding:0 20px; text-align:center; font-size:14px;">${fileName}</p>
-                        </div>
-                    `;
-                }
-                const actions = document.querySelector(".shop-video-card .video-actions");
-                if (actions) actions.style.display = "none";
-            }
-
-            function clearUploadingUI() {
-                document.body.classList.remove("loading");
-            }
-
-            function uploadVideo(file) {
-                if (!file || !file.type || !file.type.startsWith("video/")) {
-                    showToast("Please select a valid video file");
-                    return;
-                }
-                if (file.size > 100 * 1024 * 1024) {
-                    showToast("Video must be under 100MB");
-                    return;
-                }
-                setUploadingUI(file.name);
-                const formData = new FormData();
-                formData.append("tour_video", file);
-                fetch(`/store/{{ store.slug }}/upload-tour-video`, {
-                    method: "POST",
-                    body: formData,
-                    credentials: 'include'
-                })
-                .then(res => {
-                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                    return res.json();
-                })
-                .then(data => {
-                    clearUploadingUI();
-                    if (data && data.success) {
-                        showToast("Video uploaded successfully!");
-                        setTimeout(() => location.reload(), 1500);
-                    } else {
-                        showToast(data?.message || "Upload failed");
-                        setTimeout(() => location.reload(), 1500);
-                    }
-                })
-                .catch(err => {
-                    console.error("Upload error:", err);
-                    clearUploadingUI();
-                    showToast("Upload failed. Please try again.");
-                    setTimeout(() => location.reload(), 2000);
-                });
-            }
-        });
-
-        // ----- PERIOD BUTTONS (non-essential) -----
-        document.addEventListener("DOMContentLoaded", function () {
-            const periodButtons = document.querySelectorAll(".period-btn");
-            periodButtons.forEach((button) => {
-                button.addEventListener("click", function () {
-                    periodButtons.forEach((btn) => btn.classList.remove("active"));
-                    this.classList.add("active");
                 });
             });
-        });
-
-        // ----- FLOATING ACTION BUTTON -----
-        const fabBtn = document.getElementById("fabAddItem");
-        if (fabBtn) {
-            fabBtn.addEventListener("click", function () {
-                const modalBtn = document.getElementById("openAddItemModal");
-                if (modalBtn) modalBtn.click();
+            uploadArea.addEventListener("drop", e => {
+                e.preventDefault();
+                if (e.dataTransfer.files && e.dataTransfer.files.length) {
+                    videoInput.files = e.dataTransfer.files;
+                    uploadVideo(e.dataTransfer.files[0]);
+                }
             });
         }
 
-        // ----- MODAL LOGIC (only deal type toggle, navigation, etc.) -----
-        // (Full modal logic is already in your existing code – we keep it)
-        // For brevity, the modal logic is assumed to be present.
-        // If missing, copy it from your original file.
+        if (replaceButton) {
+            replaceButton.addEventListener("click", e => {
+                e.preventDefault();
+                triggerFilePicker();
+            });
+        }
 
-        // ----- PROMO PREVIEW – UPLOAD & LIVE UPDATE (with credentials) -----
-        document.addEventListener('DOMContentLoaded', function() {
-            const textarea = document.getElementById('promoDescription');
-            const charCount = document.getElementById('charCount');
-            function updateCharCount() {
-                if (textarea && charCount) {
-                    const length = textarea.value.length;
-                    charCount.textContent = length;
-                    charCount.style.color = length > 250 ? '#ef4444' : length > 200 ? '#f59e0b' : 'var(--primary-dark)';
-                }
+        videoInput.addEventListener("change", e => {
+            if (e.target.files && e.target.files.length) {
+                uploadVideo(e.target.files[0]);
             }
-            if (textarea && charCount) { textarea.addEventListener('input', updateCharCount); updateCharCount(); }
+        });
 
-            const previewMedia = document.getElementById('promoPreview');
-            const previewContent = document.getElementById('promoPreviewContent');
-            const promoDescriptionInput = document.getElementById('promoDescription');
-            const promoButtonTextInput = document.getElementById('promoButtonText');
-            const mediaTypeRadios = document.querySelectorAll('input[name="media_type"]');
-            const promoFileInput = document.getElementById('promoFileInput');
-            const promoUploadArea = document.getElementById('promoUploadArea');
-            const promoFileName = document.getElementById('promoFileName');
-            const mediaUrlInput = document.getElementById('mediaUrlInput');
-            const tempPublicIdInput = document.getElementById('tempPublicIdInput');
-            const resourceTypeInput = document.getElementById('resourceTypeInput');
-
-            function getMimeTypeFromUrl(url) {
-                const ext = url.split('.').pop().toLowerCase();
-                const mimeMap = { 'mp4': 'video/mp4', 'mov': 'video/quicktime', 'webm': 'video/webm', 'avi': 'video/x-msvideo', 'mkv': 'video/x-matroska' };
-                return mimeMap[ext] || 'video/mp4';
-            }
-
-            function setVideoPreview(url) {
-                const mimeType = getMimeTypeFromUrl(url);
-                previewMedia.innerHTML = `
-                    <video autoplay muted loop playsinline preload="auto" style="width:100%; height:100%; object-fit:contain; background:#000;">
-                        <source src="${url}" type="${mimeType}">
-                        Your browser does not support the video tag.
-                    </video>
+        function setUploadingUI(fileName) {
+            document.body.classList.add("loading");
+            const videoContainer = document.querySelector(".shop-video-card .video-container");
+            if (uploadArea) {
+                uploadArea.innerHTML = `
+                    <div class="upload-icon">⏳</div>
+                    <p style="font-weight:500;"><strong>Uploading to Cloudinary...</strong></p>
+                    <p style="word-break:break-word; font-size:13px;">${fileName}</p>
                 `;
-                const video = previewMedia.querySelector('video');
-                if (video) { video.load(); video.play().catch(e => console.log('Autoplay prevented:', e)); }
+                return;
             }
-
-            function setImagePreview(url) {
-                previewMedia.innerHTML = `<img src="${url}" alt="Promo" style="width:100%; height:100%; object-fit:contain;" onerror="this.onerror=null; this.src='/static/images/placeholder.jpg';">`;
-            }
-
-            function resetUploadArea(filename = 'No file chosen') {
-                promoUploadArea.innerHTML = `
-                    <div class="promo-upload-icon">📁</div>
-                    <p style="font-weight: 500; margin-bottom: 0.25rem;">Click to upload or drag and drop</p>
-                    <p style="font-size: 0.75rem; color: var(--text-secondary);">JPG, PNG, WebP, MP4, MOV, WebM (max 50MB)</p>
-                    <div class="promo-file-name">${filename}</div>
+            if (videoContainer) {
+                videoContainer.innerHTML = `
+                    <div style="width:100%; aspect-ratio:9/16; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white;">
+                        <div style="font-size:2.5rem;">⏳</div>
+                        <p><strong>Uploading new video...</strong></p>
+                        <p>${fileName}</p>
+                    </div>
                 `;
-                document.getElementById('promoUploadArea').addEventListener('click', function(e) {
-                    e.preventDefault();
-                    document.getElementById('promoFileInput').click();
+            }
+            const actions = document.querySelector(".shop-video-card .video-actions");
+            if (actions) actions.style.display = "none";
+        }
+
+        function clearUploadingUI() { document.body.classList.remove("loading"); }
+
+        async function uploadVideo(file) {
+            if (!file || !file.type.startsWith("video/")) {
+                showToast("Please select a valid video file");
+                return;
+            }
+            if (file.size > 100 * 1024 * 1024) {
+                showToast("Video must be under 100MB");
+                return;
+            }
+            setUploadingUI(file.name);
+            const formData = new FormData();
+            formData.append("tour_video", file);
+            try {
+                const res = await fetch(`/store/{{ store.slug }}/upload-tour-video`, {
+                    method: "POST",
+                    body: formData,
+                    credentials: "include"
                 });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                clearUploadingUI();
+                if (data && data.success) {
+                    showToast("Video uploaded successfully!");
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast(data?.message || "Upload failed");
+                    setTimeout(() => location.reload(), 1500);
+                }
+            } catch (err) {
+                console.error("Upload error:", err);
+                clearUploadingUI();
+                showToast("Upload failed. Please try again.");
+                setTimeout(() => location.reload(), 2000);
             }
+        }
+    })();
 
-            // Load existing promo
-            const hasSavedPromo = {{ promo.media_url | default(None) | tojson | safe }};
-            if (hasSavedPromo && mediaUrlInput.value) {
-                const mediaUrl = mediaUrlInput.value;
-                const mediaType = document.querySelector('input[name="media_type"]:checked')?.value || 'image';
-                const isVideo = mediaType === 'video' || mediaUrl.match(/\.(mp4|mov|webm|avi|m3u8|ts|mkv)$/i);
-                if (isVideo) setVideoPreview(mediaUrl); else setImagePreview(mediaUrl);
+    // ========== PROMO PREVIEW & UPLOAD ==========
+    (function() {
+        const textarea = document.getElementById('promoDescription');
+        const charCount = document.getElementById('charCount');
+        if (textarea && charCount) {
+            function updateCharCount() {
+                const len = textarea.value.length;
+                charCount.textContent = len;
+                charCount.style.color = len > 250 ? '#ef4444' : len > 200 ? '#f59e0b' : 'var(--primary-dark)';
             }
+            textarea.addEventListener('input', updateCharCount);
+            updateCharCount();
+        }
 
-            function uploadPromoMedia(file) {
-                const formData = new FormData();
-                formData.append('media', file);
-                promoUploadArea.innerHTML = `
-                    <div class="promo-upload-icon">⏳</div>
-                    <p style="font-weight: 500; margin-bottom: 0.25rem;">Uploading to Cloudinary...</p>
-                    <div class="promo-file-name">${file.name}</div>
-                `;
-                fetch(`/store/{{ store.slug }}/upload-promo-media`, {
+        const previewMedia = document.getElementById('promoPreview');
+        const previewContent = document.getElementById('promoPreviewContent');
+        const promoDescription = document.getElementById('promoDescription');
+        const promoButtonText = document.getElementById('promoButtonText');
+        const mediaTypeRadios = document.querySelectorAll('input[name="media_type"]');
+        const promoFileInput = document.getElementById('promoFileInput');
+        const promoUploadArea = document.getElementById('promoUploadArea');
+        const mediaUrlInput = document.getElementById('mediaUrlInput');
+        const tempPublicId = document.getElementById('tempPublicIdInput');
+        const resourceType = document.getElementById('resourceTypeInput');
+
+        function getMimeType(url) {
+            const ext = url.split('.').pop().toLowerCase();
+            const map = { mp4:'video/mp4', mov:'video/quicktime', webm:'video/webm', avi:'video/x-msvideo', mkv:'video/x-matroska' };
+            return map[ext] || 'video/mp4';
+        }
+
+        function setVideoPreview(url) {
+            previewMedia.innerHTML = `
+                <video autoplay muted loop playsinline style="width:100%; height:100%; object-fit:contain; background:#000;">
+                    <source src="${url}" type="${getMimeType(url)}">
+                    Your browser does not support the video tag.
+                </video>
+            `;
+            previewMedia.querySelector('video')?.play().catch(() => {});
+        }
+
+        function setImagePreview(url) {
+            previewMedia.innerHTML = `<img src="${url}" alt="Promo" style="width:100%; height:100%; object-fit:contain;" onerror="this.onerror=null; this.src='/static/images/placeholder.jpg';">`;
+        }
+
+        function resetUploadArea(filename = 'No file chosen') {
+            promoUploadArea.innerHTML = `
+                <div class="promo-upload-icon">📁</div>
+                <p style="font-weight:500;">Click to upload or drag and drop</p>
+                <p style="font-size:0.75rem;">JPG, PNG, WebP, MP4, MOV, WebM (max 50MB)</p>
+                <div class="promo-file-name">${filename}</div>
+            `;
+            promoUploadArea.addEventListener('click', e => { e.preventDefault(); promoFileInput.click(); });
+        }
+
+        // Load existing promo
+        if (mediaUrlInput?.value) {
+            const mediaUrl = mediaUrlInput.value;
+            const mediaType = document.querySelector('input[name="media_type"]:checked')?.value || 'image';
+            const isVideo = mediaType === 'video' || /\.(mp4|mov|webm|avi|mkv)$/i.test(mediaUrl);
+            if (isVideo) setVideoPreview(mediaUrl); else setImagePreview(mediaUrl);
+        }
+
+        async function uploadPromoMedia(file) {
+            const formData = new FormData();
+            formData.append('media', file);
+            promoUploadArea.innerHTML = `
+                <div class="promo-upload-icon">⏳</div>
+                <p style="font-weight:500;">Uploading to Cloudinary...</p>
+                <div class="promo-file-name">${file.name}</div>
+            `;
+            try {
+                const res = await fetch(`/store/{{ store.slug }}/upload-promo-media`, {
                     method: 'POST',
                     body: formData,
                     credentials: 'include'
-                })
-                .then(res => { if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`); return res.json(); })
-                .then(data => {
-                    if (data.success) {
-                        resetUploadArea(file.name);
-                        mediaUrlInput.value = data.url;
-                        tempPublicIdInput.value = data.public_id;
-                        resourceTypeInput.value = data.resource_type;
-                        if (data.file_type === 'video' || file.type.startsWith('video/')) setVideoPreview(data.url);
-                        else setImagePreview(data.url);
-                        showToast('Media uploaded to Cloudinary successfully!');
-                    } else throw new Error(data.message || 'Upload failed');
-                })
-                .catch(err => { console.error('Upload error:', err); showToast(err.message || 'Upload failed. Please try again.'); resetUploadArea(); });
-            }
-
-            if (promoFileInput) {
-                promoFileInput.addEventListener('change', function(e) {
-                    const file = e.target.files[0];
-                    if (file) uploadPromoMedia(file);
-                    else { setVideoPreview('/static/videos/pr.mp4'); resetUploadArea(); }
                 });
-            }
-
-            if (promoUploadArea) {
-                promoUploadArea.addEventListener('click', function(e) { e.preventDefault(); promoFileInput.click(); });
-                ['dragover', 'dragenter'].forEach(evt => {
-                    promoUploadArea.addEventListener(evt, (e) => { e.preventDefault(); promoUploadArea.style.borderColor = 'var(--primary)'; promoUploadArea.style.background = 'rgba(46,204,113,0.05)'; });
-                });
-                ['dragleave', 'dragend', 'drop'].forEach(evt => {
-                    promoUploadArea.addEventListener(evt, (e) => { e.preventDefault(); promoUploadArea.style.borderColor = 'var(--border)'; promoUploadArea.style.background = 'var(--bg)'; });
-                });
-                promoUploadArea.addEventListener('drop', (e) => {
-                    e.preventDefault(); promoUploadArea.style.borderColor = 'var(--border)'; promoUploadArea.style.background = 'var(--bg)';
-                    if (e.dataTransfer.files && e.dataTransfer.files.length) {
-                        promoFileInput.files = e.dataTransfer.files;
-                        const file = e.dataTransfer.files[0];
-                        uploadPromoMedia(file);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                if (data.success) {
+                    resetUploadArea(file.name);
+                    mediaUrlInput.value = data.url;
+                    tempPublicId.value = data.public_id;
+                    resourceType.value = data.resource_type;
+                    if (data.file_type === 'video' || file.type.startsWith('video/')) {
+                        setVideoPreview(data.url);
+                    } else {
+                        setImagePreview(data.url);
                     }
-                });
-            }
-
-            function updatePreviewText() {
-                if (previewContent) {
-                    const descEl = previewContent.querySelector('.popup-description');
-                    const btnEl = previewContent.querySelector('.popup-cta');
-                    if (descEl) descEl.textContent = promoDescriptionInput.value.trim() || 'Your promotion text appears here — short, urgent & benefit-focused';
-                    if (btnEl) btnEl.textContent = promoButtonTextInput.value.trim() || 'Shop Now';
+                    showToast('Media uploaded successfully!');
+                } else {
+                    throw new Error(data.message || 'Upload failed');
                 }
+            } catch (err) {
+                console.error(err);
+                showToast(err.message || 'Upload failed. Please try again.');
+                resetUploadArea();
             }
-            if (promoDescriptionInput) promoDescriptionInput.addEventListener('input', updatePreviewText);
-            if (promoButtonTextInput) promoButtonTextInput.addEventListener('input', updatePreviewText);
-            updatePreviewText();
+        }
 
-            mediaTypeRadios.forEach(radio => {
-                radio.addEventListener('change', function() {
-                    const url = mediaUrlInput.value;
-                    if (url) { if (this.value === 'video') setVideoPreview(url); else setImagePreview(url); }
-                    else setVideoPreview('/static/videos/pr.mp4');
+        if (promoFileInput) {
+            promoFileInput.addEventListener('change', e => {
+                const file = e.target.files[0];
+                if (file) uploadPromoMedia(file);
+                else { setVideoPreview('/static/videos/pr.mp4'); resetUploadArea(); }
+            });
+        }
+        if (promoUploadArea) {
+            promoUploadArea.addEventListener('click', e => { e.preventDefault(); promoFileInput.click(); });
+            ['dragover','dragenter'].forEach(evt => {
+                promoUploadArea.addEventListener(evt, e => {
+                    e.preventDefault();
+                    promoUploadArea.style.borderColor = 'var(--primary)';
+                    promoUploadArea.style.background = 'rgba(46,204,113,0.05)';
                 });
             });
-        });
+            ['dragleave','dragend','drop'].forEach(evt => {
+                promoUploadArea.addEventListener(evt, e => {
+                    e.preventDefault();
+                    promoUploadArea.style.borderColor = 'var(--border)';
+                    promoUploadArea.style.background = 'var(--bg)';
+                });
+            });
+            promoUploadArea.addEventListener('drop', e => {
+                e.preventDefault();
+                if (e.dataTransfer.files && e.dataTransfer.files.length) {
+                    promoFileInput.files = e.dataTransfer.files;
+                    uploadPromoMedia(e.dataTransfer.files[0]);
+                }
+            });
+        }
 
-        // ----- STORE THEME SAVE (with credentials) -----
-        document.addEventListener('DOMContentLoaded', () => {
-            const themeRadios = document.querySelectorAll('input[name="color_theme"]');
-            const saveBtn = document.getElementById('saveThemeBtn');
-            themeRadios.forEach(radio => { radio.addEventListener('change', () => { saveBtn.disabled = false; }); });
-            saveBtn.addEventListener('click', async () => {
-                const selected = document.querySelector('input[name="color_theme"]:checked');
-                if (!selected) return;
-                saveBtn.disabled = true;
-                saveBtn.innerHTML = '<span>⏳</span> Saving...';
-                try {
-                    const res = await fetch('/store/{{ store.slug }}/update-theme', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ color_theme: selected.value }),
-                        credentials: 'include'
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        showToast('Store theme updated!');
-                        saveBtn.innerHTML = 'Save Theme';
-                        saveBtn.disabled = true;
-                    } else {
-                        showToast(data.message || 'Failed to save');
-                        saveBtn.innerHTML = 'Save Theme';
-                        saveBtn.disabled = false;
-                    }
-                } catch (err) {
-                    showToast('Network error');
+        function updatePreviewText() {
+            if (previewContent) {
+                const desc = previewContent.querySelector('.popup-description');
+                const btn = previewContent.querySelector('.popup-cta');
+                if (desc) desc.textContent = promoDescription.value.trim() || 'Your promotion text appears here — short, urgent & benefit-focused';
+                if (btn) btn.textContent = promoButtonText.value.trim() || 'Shop Now';
+            }
+        }
+        if (promoDescription) promoDescription.addEventListener('input', updatePreviewText);
+        if (promoButtonText) promoButtonText.addEventListener('input', updatePreviewText);
+        updatePreviewText();
+
+        mediaTypeRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                const url = mediaUrlInput.value;
+                if (url) {
+                    if (this.value === 'video') setVideoPreview(url);
+                    else setImagePreview(url);
+                } else {
+                    setVideoPreview('/static/videos/pr.mp4');
+                }
+            });
+        });
+    })();
+
+    // ========== STORE THEME SAVE ==========
+    (function() {
+        const themeRadios = document.querySelectorAll('input[name="color_theme"]');
+        const saveBtn = document.getElementById('saveThemeBtn');
+        themeRadios.forEach(radio => {
+            radio.addEventListener('change', () => { saveBtn.disabled = false; });
+        });
+        saveBtn.addEventListener('click', async () => {
+            const selected = document.querySelector('input[name="color_theme"]:checked');
+            if (!selected) return;
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span>⏳</span> Saving...';
+            try {
+                const res = await fetch('/store/{{ store.slug }}/update-theme', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ color_theme: selected.value }),
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Store theme updated!');
+                    saveBtn.innerHTML = 'Save Theme';
+                    saveBtn.disabled = true;
+                } else {
+                    showToast(data.message || 'Failed to save');
                     saveBtn.innerHTML = 'Save Theme';
                     saveBtn.disabled = false;
                 }
+            } catch (err) {
+                showToast('Network error');
+                saveBtn.innerHTML = 'Save Theme';
+                saveBtn.disabled = false;
+            }
+        });
+    })();
+
+    // ========== MODAL INTERACTIONS (ADD ITEM) ==========
+    (function() {
+        const modal = document.getElementById('addItemModal');
+        if (!modal) return;
+
+        // Open/close
+        const openButtons = [
+            document.getElementById('openAddItemModal'),
+            document.getElementById('openAddItemModalFull'),
+            document.getElementById('fabAddItem')
+        ];
+        const closeBtn = document.getElementById('closeModal');
+        function openModal(e) {
+            if (e) e.preventDefault();
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            resetModal();
+        }
+        function closeModal(e) {
+            if (e) e.preventDefault();
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+        openButtons.forEach(btn => btn?.addEventListener('click', openModal));
+        closeBtn?.addEventListener('click', closeModal);
+        modal.addEventListener('click', e => { if (e.target === modal) closeModal(e); });
+
+        // Step navigation
+        const stepContents = document.querySelectorAll('.modal-step-content');
+        const stepCircles = document.querySelectorAll('.step');
+        function goToStep(stepNum) {
+            stepContents.forEach((s, i) => s.style.display = (i + 1 === stepNum) ? 'block' : 'none');
+            stepCircles.forEach((c, i) => {
+                const num = i + 1;
+                c.classList.toggle('active', num === stepNum);
+                c.classList.toggle('completed', num < stepNum);
+            });
+        }
+        document.querySelectorAll('.next-step').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const current = btn.closest('.modal-step-content');
+                const next = parseInt(current?.dataset.step || 0, 10) + 1;
+                if (next <= stepContents.length) goToStep(next);
+            });
+        });
+        document.querySelectorAll('.prev-step').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const current = btn.closest('.modal-step-content');
+                const prev = parseInt(current?.dataset.step || 0, 10) - 1;
+                if (prev >= 1) goToStep(prev);
             });
         });
 
-        // ----- STORE VIEW BEACON -----
-        document.addEventListener("DOMContentLoaded", () => {
-            const storeId = {{ store.store_id }};
-            if (storeId) {
-                const payload = JSON.stringify({ store_id: Number(storeId) });
-                if (navigator.sendBeacon) {
-                    navigator.sendBeacon("/metrics/store/view", new Blob([payload], {type:"application/json"}));
-                } else {
-                    fetch("/metrics/store/view", { method:"POST", headers:{ "Content-Type":"application/json" }, body: payload, keepalive:true, credentials: 'include' });
-                }
-            }
+        // Deal type toggling
+        const dealOptions = document.querySelectorAll('.deal-type-option');
+        const swapSection = document.getElementById('modal-swap-section');
+        const saleSection = document.getElementById('modal-sale-section');
+        const serviceSection = document.getElementById('modal-service-section');
+        function updateRequiredFields() {
+            const isSwap = swapSection?.style.display !== 'none';
+            const isSale = saleSection?.style.display !== 'none';
+            const isService = serviceSection?.style.display !== 'none';
+            document.querySelectorAll('#modal-swap-section [required]').forEach(el => el.required = isSwap);
+            document.querySelectorAll('#modal-sale-section [required]').forEach(el => el.required = isSale);
+            document.querySelectorAll('#modal-service-section [required]').forEach(el => el.required = isService);
+        }
+        dealOptions.forEach(opt => {
+            opt.addEventListener('click', () => {
+                dealOptions.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                const radio = opt.querySelector('input[type="radio"]');
+                if (radio) radio.checked = true;
+                const type = opt.dataset.type;
+                if (swapSection) swapSection.style.display = type === 'swap' ? 'block' : 'none';
+                if (saleSection) saleSection.style.display = type === 'sale' ? 'block' : 'none';
+                if (serviceSection) serviceSection.style.display = type === 'service' ? 'block' : 'none';
+                updateRequiredFields();
+            });
         });
-    </script>
+
+        // Add another offered item (swap)
+        const addOfferBtn = document.getElementById('modal-add-offer-item-btn');
+        const offeredContainer = document.getElementById('modal-offered-items-container');
+        if (addOfferBtn && offeredContainer) {
+            addOfferBtn.addEventListener('click', () => {
+                const template = offeredContainer.querySelector('.modal-offered-item');
+                if (!template) return;
+                const newIndex = offeredContainer.children.length + 1;
+                const clone = template.cloneNode(true);
+                clone.dataset.index = newIndex;
+                clone.querySelector('.item-number-circle').textContent = newIndex;
+                clone.querySelector('h5').textContent = `Offered Item #${newIndex}`;
+                clone.querySelectorAll('label[for]').forEach(label => {
+                    const forAttr = label.getAttribute('for');
+                    if (forAttr) label.setAttribute('for', forAttr.replace(/\d+$/, newIndex));
+                });
+                clone.querySelectorAll('input[id], select[id]').forEach(el => {
+                    const id = el.getAttribute('id');
+                    if (id) el.setAttribute('id', id.replace(/\d+$/, newIndex));
+                });
+                const removeBtn = clone.querySelector('.remove-item-btn');
+                if (removeBtn) removeBtn.style.display = 'inline-block';
+                offeredContainer.appendChild(clone);
+                attachImagePreview(clone);
+                attachCategoryAutocomplete(clone);
+                initPlanOptions();
+            });
+        }
+
+        // Remove offered item
+        offeredContainer?.addEventListener('click', e => {
+            if (!e.target.classList.contains('remove-item-btn')) return;
+            const item = e.target.closest('.modal-offered-item');
+            if (!item) return;
+            if (offeredContainer.children.length <= 1) {
+                showToast('At least one offered item is required.');
+                return;
+            }
+            item.remove();
+            Array.from(offeredContainer.children).forEach((itm, idx) => {
+                const num = idx + 1;
+                itm.querySelector('.item-number-circle').textContent = num;
+                itm.querySelector('h5').textContent = `Offered Item #${num}`;
+                itm.dataset.index = num;
+            });
+        });
+
+        // Plan option selection (delegated)
+        document.body.addEventListener('click', e => {
+            const planOpt = e.target.closest('.plan-option');
+            if (!planOpt) return;
+            const grid = planOpt.closest('.plan-grid');
+            if (!grid) return;
+            grid.querySelectorAll('.plan-option').forEach(opt => opt.classList.remove('active'));
+            planOpt.classList.add('active');
+            const radio = planOpt.querySelector('input[type="radio"]');
+            if (radio) radio.checked = true;
+            grid.querySelectorAll('.plan-option').forEach(opt => {
+                const div = opt.querySelector('label > div');
+                if (div) {
+                    div.style.border = opt.classList.contains('active') ? '2px solid var(--primary)' : '2px solid var(--border)';
+                    div.style.background = opt.classList.contains('active') ? 'rgba(46,204,113,0.1)' : 'white';
+                }
+            });
+        });
+
+        function initPlanOptions() {
+            document.querySelectorAll('.plan-grid').forEach(grid => {
+                const checked = grid.querySelector('input[type="radio"]:checked');
+                if (checked) {
+                    const opt = checked.closest('.plan-option');
+                    if (opt) {
+                        grid.querySelectorAll('.plan-option').forEach(o => o.classList.remove('active'));
+                        opt.classList.add('active');
+                        grid.querySelectorAll('.plan-option').forEach(o => {
+                            const div = o.querySelector('label > div');
+                            if (div) {
+                                div.style.border = o.classList.contains('active') ? '2px solid var(--primary)' : '2px solid var(--border)';
+                                div.style.background = o.classList.contains('active') ? 'rgba(46,204,113,0.1)' : 'white';
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
+        // ========== FIXED: Image preview (no duplicates) ==========
+        function attachImagePreview(scope = document) {
+            scope.querySelectorAll('input[type="file"][multiple]').forEach(input => {
+                // Remove any existing listener to avoid duplicates
+                input.removeEventListener('change', handleImagePreview);
+                input.addEventListener('change', handleImagePreview);
+            });
+        }
+
+        function handleImagePreview(e) {
+            const input = e.target;
+            const files = Array.from(input.files || []);
+            const preview = input.parentElement?.querySelector('.image-preview');
+            if (!preview) return;
+
+            // Clear previous previews
+            preview.innerHTML = '';
+            if (files.length === 0) {
+                preview.style.display = 'none';
+                return;
+            }
+
+            preview.style.display = 'flex';
+            files.slice(0, 4).forEach((file, idx) => {
+                if (!file.type.startsWith('image/')) return;
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    const div = document.createElement('div');
+                    div.className = 'preview-image';
+                    div.innerHTML = `<img src="${ev.target.result}" alt="Preview"><button type="button" class="remove-image" data-idx="${idx}">×</button>`;
+                    preview.appendChild(div);
+                    div.querySelector('.remove-image').addEventListener('click', () => {
+                        div.remove();
+                        if (preview.children.length === 0) preview.style.display = 'none';
+                        // Note: removing from preview doesn't remove from file input
+                    });
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Initial attachment
+        attachImagePreview();
+
+        // ========== CATEGORY AUTOCOMPLETE ==========
+        const categories = ["Electronics","Clothing","Books","Furniture","Toys","Sports","Beauty","Automotive","Music","Movies","Games","Pets","Food"];
+        function attachCategoryAutocomplete(scope = document) {
+            scope.querySelectorAll('.category-input').forEach(input => {
+                input.removeEventListener('input', categoryInputHandler);
+                input.addEventListener('input', categoryInputHandler);
+                input.removeEventListener('blur', categoryBlurHandler);
+                input.addEventListener('blur', categoryBlurHandler);
+            });
+        }
+        function categoryInputHandler(e) {
+            const val = e.target.value.toLowerCase().trim();
+            const wrapper = e.target.closest('.category-input-wrapper');
+            const suggestions = wrapper?.querySelector('.category-suggestions');
+            if (!suggestions) return;
+            if (val.length < 1) {
+                suggestions.style.display = 'none';
+                return;
+            }
+            const matches = categories.filter(c => c.toLowerCase().includes(val));
+            suggestions.innerHTML = matches.map(m => `<div>${m}</div>`).join('');
+            suggestions.style.display = matches.length ? 'block' : 'none';
+            suggestions.querySelectorAll('div').forEach(div => {
+                div.addEventListener('click', () => {
+                    e.target.value = div.textContent;
+                    suggestions.style.display = 'none';
+                });
+            });
+        }
+        function categoryBlurHandler(e) {
+            setTimeout(() => {
+                const suggestions = e.target.closest('.category-input-wrapper')?.querySelector('.category-suggestions');
+                if (suggestions) suggestions.style.display = 'none';
+            }, 200);
+        }
+        attachCategoryAutocomplete();
+
+        // ========== SERVICE PRICE TOGGLE ==========
+        const contactChk = document.getElementById('modal-contact-for-price');
+        const priceWrap = document.getElementById('modal-fixed-price-wrapper');
+        if (contactChk && priceWrap) {
+            contactChk.addEventListener('change', () => {
+                priceWrap.style.display = contactChk.checked ? 'none' : 'block';
+                if (contactChk.checked) document.getElementById('modal-service-price').value = '';
+            });
+        }
+
+        // Reset modal state
+        function resetModal() {
+            goToStep(1);
+            const defaultDeal = document.querySelector('.deal-type-option.active');
+            if (defaultDeal) defaultDeal.click();
+            initPlanOptions();
+            attachImagePreview(modal);      // re‑attach safely (removes old listeners)
+            attachCategoryAutocomplete(modal);
+            updateRequiredFields();
+        }
+
+        // ========== FIXED: Form submission with loading state ==========
+        const addItemForm = document.getElementById('addItemFormModal');
+        const submitBtn = document.getElementById('submitItemBtn');
+        if (addItemForm && submitBtn) {
+            submitBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+
+                // Prevent double submission
+                if (submitBtn.disabled) return;
+
+                if (!addItemForm.checkValidity()) {
+                    addItemForm.reportValidity();
+                    return;
+                }
+
+                // Disable button and show loading spinner
+                const originalText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+                const formData = new FormData(addItemForm);
+                try {
+                    const res = await fetch(addItemForm.action, {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'include'
+                    });
+                    const data = await res.json();
+                    if (data.success && data.redirect) {
+                        showToast('Redirecting to payment...');
+                        window.location.href = data.redirect;
+                    } else if (data.success) {
+                        showToast('Item added successfully!');
+                        closeModal();
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showToast(data.message || 'Something went wrong');
+                        // Re‑enable button on error
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }
+                } catch (err) {
+                    console.error('Submit error:', err);
+                    showToast('Network error – please try again');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            });
+        }
+    })();
+
+    // (Optional) Remove store view beacon – already omitted
+});
+</script>
+
 </body>
 </html>

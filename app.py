@@ -6218,58 +6218,116 @@ def upload_to_cloudinary(file, folder):
 @app.route('/create-store', methods=['GET', 'POST'])
 @login_required
 def create_store():
-    user_id = session['user_id']
+    user_id = session.get('user_id')
+    if not user_id:
+        # Safety net (should not reach here with @login_required)
+        return jsonify({"success": False, "message": "Please log in"}), 401
 
-    if request.method == 'POST':
-        name = request.form['name'].strip()
-        description = request.form.get('description', '').strip()
-        location = request.form.get('location', '').strip()
-        contact = request.form.get('contact', '').strip()
-        store_type = request.form.get('store_type', '').strip()
+    if request.method == 'GET':
+        return render_template('create_store.html')
 
-        # files
-        logo = request.files.get('logo')
-        banner = request.files.get('banner')
+    # ── POST handling ────────────────────────────────────────────────────────
+    name        = request.form.get('name', '').strip()
+    description = request.form.get('description', '').strip()
+    location    = request.form.get('location', '').strip()
+    contact     = request.form.get('contact', '').strip()
+    store_type  = request.form.get('store_type', '').strip()
 
-        # ✅ Upload to Cloudinary
-        logo_path = upload_to_cloudinary(logo, 'stores/logos') if logo else None
-        banner_path = upload_to_cloudinary(banner, 'stores/banners') if banner else None
+    # Basic server-side required fields check
+    missing = []
+    if not name:        missing.append("Store name")
+    if not store_type:  missing.append("Store type")
+    if not location:    missing.append("Location")
+    if not contact:     missing.append("Contact")
 
-        slug = slugify(name)
-        store_link = f"{request.host_url}store/{slug}"
+    if missing:
+        return jsonify({
+            "success": False,
+            "message": f"Missing required fields: {', '.join(missing)}"
+        }), 400
 
-        conn = get_db_connection()
-        cur = conn.cursor()
+    logo_file   = request.files.get('logo')
+    banner_file = request.files.get('banner')
 
-        try:
-            cur.execute("""
-                INSERT INTO stores 
-                (user_id, name, slug, logo, banner, description, location, contact, store_type, store_link)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                user_id, name, slug, logo_path, banner_path,
-                description, location, contact, store_type, store_link
-            ))
-            conn.commit()
+    # ── Upload handling – extract URL from dict, keep function unchanged ──
+    logo_url = None
+    if logo_file and logo_file.filename:
+        result = upload_to_cloudinary(logo_file, folder='stores/logos')
+        if isinstance(result, dict) and result.get('success'):
+            logo_url = result.get('url')  # or result['url'] — same thing
+        else:
+            print("Logo upload failed:", result)
 
-            return jsonify({
-                "success": True,
-                "redirect": f"/store/{slug}"
-            })
+    banner_url = None
+    if banner_file and banner_file.filename:
+        result = upload_to_cloudinary(banner_file, folder='stores/banners')
+        if isinstance(result, dict) and result.get('success'):
+            banner_url = result.get('url')
+        else:
+            print("Banner upload failed:", result)
 
-        except Exception as e:
-            conn.rollback()
-            print("Create store error:", e)
+    # Slug & link
+    slug = slugify(name)
+    store_link = f"{request.host_url.rstrip('/')}/store/{slug}"
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            INSERT INTO stores 
+            (user_id, name, slug, logo, banner, description, location, contact, store_type, store_link)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            user_id,
+            name,
+            slug,
+            logo_url,       # ← string or None
+            banner_url,     # ← string or None
+            description,
+            location,
+            contact,
+            store_type,
+            store_link
+        ))
+
+        conn.commit()
+
+        # Return JSON response that the frontend fetch expects
+        return jsonify({
+            "success": True,
+            "message": "Store created successfully!",
+            "redirect": f"/store/{slug}"
+        }), 200
+
+    except Exception as e:
+        conn.rollback()
+
+        error_str = str(e).lower()
+
+        if "duplicate" in error_str or "unique" in error_str or "1062" in error_str:  # 1062 = MySQL duplicate entry code
             return jsonify({
                 "success": False,
-                "message": "Failed to create store."
+                "message": "A store with this name already exists. Please choose a different name.",
+                "field": "name"   # optional – helps frontend highlight the field if you want
+            }), 409   # or 400
+
+        else:
+            print("Create store error:", error_str)
+            return jsonify({
+                "success": False,
+                "message": "Failed to create store. Please try again."
             }), 500
 
-        finally:
-            cur.close()
-            conn.close()
+    finally:
+        cur.close()
+        conn.close()
 
-    return render_template('create_store.html')
+
+# Helper function (add this somewhere in your app if you don't already have it)
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 
 

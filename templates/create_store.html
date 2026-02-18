@@ -608,6 +608,7 @@
                             <option value="Sports & Fitness">Sports & Fitness</option>
                             <option value="Books & Stationery">Books & Stationery</option>
                             <option value="Food & Drinks">Food & Drinks</option>
+                            <option value="Agriculture & Agribusiness">Agriculture & Agribusiness</option>
                             <option value="Other">Other</option>
                         </select>
                     </div>
@@ -703,152 +704,240 @@
         </div>
     </div>
 
-    <script>
-        // Elements
-        const steps = document.querySelectorAll('.form-step');
-        const progressDots = document.querySelectorAll('.progress-dot');
-        const gifDots = document.querySelectorAll('.gif-dot');
-        const desktopGif = document.getElementById('desktopGif');
-        const mobileGif = document.getElementById('mobileGif');
-        let currentStep = 1;
+<script>
+// ──────────────────────────────────────────────────────────────────────────────
+//  ELEMENTS & STATE
+// ──────────────────────────────────────────────────────────────────────────────
+const steps         = document.querySelectorAll('.form-step');
+const progressDots  = document.querySelectorAll('.progress-dot');
+const gifDots       = document.querySelectorAll('.gif-dot');
+const desktopGif    = document.getElementById('desktopGif');
+const mobileGif     = document.getElementById('mobileGif');
+let currentStep     = 1;
 
-        // GIF Controls
-        gifDots.forEach((dot, index) => {
-            dot.addEventListener('click', () => {
-                const gifNum = index + 1;
-                desktopGif.src = `/static/images/gif${gifNum}.gif`;
-                mobileGif.src = `/static/images/gif${gifNum}.gif`;
-                
-                gifDots.forEach(d => d.classList.remove('active'));
-                dot.classList.add('active');
-            });
-        });
+// ──────────────────────────────────────────────────────────────────────────────
+//  GIF CONTROLS & AUTO-ROTATION
+// ──────────────────────────────────────────────────────────────────────────────
+gifDots.forEach((dot, index) => {
+    dot.addEventListener('click', () => {
+        const gifNum = index + 1;
+        if (desktopGif) desktopGif.src = `/static/images/gif${gifNum}.gif`;
+        if (mobileGif)  mobileGif.src = `/static/images/gif${gifNum}.gif`;
 
-        // Auto-rotate GIFs
-        let gifIndex = 0;
-        setInterval(() => {
-            gifIndex = (gifIndex + 1) % 3;
-            const gifNum = gifIndex + 1;
-            desktopGif.src = `/static/images/gif${gifNum}.gif`;
-            mobileGif.src = `/static/images/gif${gifNum}.gif`;
-            gifDots.forEach((d, i) => d.classList.toggle('active', i === gifIndex));
-        }, 5000);
+        gifDots.forEach(d => d.classList.remove('active'));
+        dot.classList.add('active');
+    });
+});
 
-        // Navigation
-        document.querySelectorAll('.next-step').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const next = parseInt(btn.dataset.next);
-                navigateToStep(next);
-            });
-        });
+let gifIndex = 0;
+const gifInterval = setInterval(() => {
+    gifIndex = (gifIndex + 1) % 3;
+    const gifNum = gifIndex + 1;
+    if (desktopGif) desktopGif.src = `/static/images/gif${gifNum}.gif`;
+    if (mobileGif)  mobileGif.src = `/static/images/gif${gifNum}.gif`;
 
-        document.querySelectorAll('.prev-step').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const prev = parseInt(btn.dataset.prev);
-                navigateToStep(prev);
-            });
-        });
+    gifDots.forEach((d, i) => d.classList.toggle('active', i === gifIndex));
+}, 5000);
 
-        function navigateToStep(step) {
-            steps.forEach((s, i) => s.classList.toggle('active', i + 1 === step));
-            progressDots.forEach((d, i) => d.classList.toggle('active', i + 1 <= step));
-            currentStep = step;
+// ──────────────────────────────────────────────────────────────────────────────
+//  STEP NAVIGATION
+// ──────────────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.next-step').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const next = parseInt(btn.dataset.next, 10);
+        if (!isNaN(next)) navigateToStep(next);
+    });
+});
 
-            if (window.innerWidth <= 768) {
-                document.querySelector('.form-panel').scrollIntoView({ behavior: 'smooth' });
-            }
+document.querySelectorAll('.prev-step').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const prev = parseInt(btn.dataset.prev, 10);
+        if (!isNaN(prev)) navigateToStep(prev);
+    });
+});
+
+function navigateToStep(step) {
+    if (step < 1 || step > 3) return;
+
+    steps.forEach((s, i) => s.classList.toggle('active', i + 1 === step));
+    progressDots.forEach((d, i) => d.classList.toggle('active', i + 1 <= step));
+
+    currentStep = step;
+
+    if (window.innerWidth <= 768) {
+        document.querySelector('.form-panel')?.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+//  IMAGE UPLOAD (logo + banner) – drag & drop + preview
+// ──────────────────────────────────────────────────────────────────────────────
+['logo', 'banner'].forEach(type => {
+    const area    = document.getElementById(`${type}UploadArea`);
+    const input   = document.getElementById(`${type}Input`);
+    const preview = document.getElementById(`${type}Preview`);
+
+    if (!area || !input || !preview) return;
+
+    // Click to open file dialog
+    area.addEventListener('click', () => input.click());
+
+    // File selected → preview
+    input.addEventListener('change', e => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = ev => {
+            preview.src = ev.target.result;
+            preview.style.display = 'block';
+            area.querySelectorAll('i, p').forEach(el => el.style.opacity = '0.3');
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // Drag & drop styling + handling
+    area.addEventListener('dragover', e => {
+        e.preventDefault();
+        area.style.borderColor = 'var(--primary-green)';
+        area.style.background  = 'rgba(16, 185, 129, 0.05)';
+    });
+
+    area.addEventListener('dragleave', () => {
+        area.style.borderColor = '';
+        area.style.background  = '';
+    });
+
+    area.addEventListener('drop', e => {
+        e.preventDefault();
+        area.style.borderColor = '';
+        area.style.background  = '';
+        if (e.dataTransfer?.files?.length) {
+            input.files = e.dataTransfer.files;
+            input.dispatchEvent(new Event('change'));
         }
+    });
+});
 
-        // Image Uploads
-        ['logo', 'banner'].forEach(type => {
-            const area = document.getElementById(`${type}UploadArea`);
-            const input = document.getElementById(`${type}Input`);
-            const preview = document.getElementById(`${type}Preview`);
+// ──────────────────────────────────────────────────────────────────────────────
+//  FORM SUBMISSION – improved error handling & feedback
+// ──────────────────────────────────────────────────────────────────────────────
+const form = document.getElementById('storeForm');
+if (form) {
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
 
-            area.addEventListener('click', () => input.click());
+        const submitBtn = this.querySelector('button[type="submit"]');
+        if (!submitBtn) return;
 
-            input.addEventListener('change', e => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = ev => {
-                        preview.src = ev.target.result;
-                        preview.style.display = 'block';
-                        area.querySelectorAll('i, p').forEach(el => el.style.opacity = '0.3');
-                    };
-                    reader.readAsDataURL(file);
-                }
+        const originalHTML = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+        submitBtn.disabled = true;
+
+        try {
+            const formData = new FormData(this);
+
+            const response = await fetch('/create-store', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
             });
 
-            // Drag & Drop
-            area.addEventListener('dragover', e => {
-                e.preventDefault();
-                area.style.borderColor = 'var(--primary-green)';
-                area.style.background = 'rgba(16, 185, 129, 0.05)';
-            });
-
-            area.addEventListener('dragleave', () => {
-                area.style.borderColor = '';
-                area.style.background = '';
-            });
-
-            area.addEventListener('drop', e => {
-                e.preventDefault();
-                area.style.borderColor = '';
-                area.style.background = '';
-                if (e.dataTransfer.files.length) {
-                    input.files = e.dataTransfer.files;
-                    input.dispatchEvent(new Event('change'));
-                }
-            });
-        });
-
-        // REAL Form Submission to Backend
-        document.getElementById('storeForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Store...';
-            submitBtn.disabled = true;
+            let data;
+            let rawBody = '';
 
             try {
-                const formData = new FormData(this);
-                const response = await fetch('/create-store', {
-                    method: 'POST',
-                    body: formData
+                rawBody = await response.text();
+                data = JSON.parse(rawBody);
+            } catch (parseErr) {
+                console.warn('Server response is not valid JSON', {
+                    status: response.status,
+                    bodySnippet: rawBody.substring(0, 400)
                 });
-
-                const data = await response.json();
-
-                if (data.success && data.redirect) {
-                    this.style.display = 'none';
-                    document.getElementById('successScreen').classList.add('active');
-                    
-                    setTimeout(() => {
-                        window.location.href = data.redirect;
-                    }, 3000);
-                } else {
-                    alert(data.message || 'Failed to create store. Please try again.');
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-                }
-            } catch (error) {
-                console.error('Submission error:', error);
-                alert('Network error. Please check your connection and try again.');
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
+                throw new Error(`Server returned status ${response.status} but content is not JSON`);
             }
-        });
 
-        // Mobile input focus scroll
-        document.querySelectorAll('.form-input, .form-select, textarea').forEach(el => {
-            el.addEventListener('focus', function() {
-                if (window.innerWidth <= 768) {
-                    setTimeout(() => this.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+            if (response.ok && data?.success === true) {
+                // ── SUCCESS ───────────────────────────────────────────────
+                this.style.display = 'none';
+                const successScreen = document.getElementById('successScreen');
+                if (successScreen) successScreen.classList.add('active');
+
+                const redirectUrl = data.redirect || '/dashboard';
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 3200);
+            } else {
+                // ── Show flash-like message ──────────────────────────────────────
+                let errorMsg = data.message || "An error occurred. Please try again.";
+
+                // Create a temporary flash-style alert at the top of the form
+                const flashDiv = document.createElement('div');
+                flashDiv.className = 'alert alert-danger';
+                flashDiv.style.padding = '12px 20px';
+                flashDiv.style.marginBottom = '20px';
+                flashDiv.style.borderRadius = '12px';
+                flashDiv.style.background = '#fee2e2';
+                flashDiv.style.color = '#991b1b';
+                flashDiv.style.border = '1px solid #fecaca';
+                flashDiv.innerHTML = `<strong>Error:</strong> ${errorMsg}`;
+
+                // Insert at the top of the form-panel or after form-header
+                const formHeader = document.querySelector('.form-header');
+                if (formHeader) {
+                    formHeader.parentNode.insertBefore(flashDiv, formHeader.nextSibling);
+                } else {
+                    document.querySelector('.form-panel').prepend(flashDiv);
                 }
-            });
-        });
-    </script>
+
+                // Auto-remove after 6 seconds
+                setTimeout(() => {
+                    flashDiv.remove();
+                }, 6000);
+
+                // Optional: scroll to top of form
+                document.querySelector('.form-panel').scrollIntoView({ behavior: 'smooth' });
+            }
+
+        } catch (err) {
+            console.error('Form submission failed:', err);
+
+            let userMsg = 'Failed to create store.';
+
+            if (err.name === 'TypeError' && err.message.includes('fetch')) {
+                userMsg = 'Cannot reach the server.\n\nPossible reasons:\n• You opened the page as a local file (file://)\n• Server is not running\n• Wrong port / URL\n• Network / firewall issue';
+            } else if (err.message.includes('not JSON')) {
+                userMsg = 'Server sent an unexpected response format.\nCheck browser console (F12) → Network tab → Response for details.';
+            }
+
+            alert(userMsg + '\n\nMore info in console (F12).');
+        } finally {
+            submitBtn.innerHTML = originalHTML;
+            submitBtn.disabled = false;
+        }
+    });
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+//  MOBILE – scroll input into view on focus
+// ──────────────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.form-input, .form-select, textarea').forEach(el => {
+    el.addEventListener('focus', function() {
+        if (window.innerWidth <= 768) {
+            setTimeout(() => {
+                this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+        }
+    });
+});
+
+// Optional: pause GIF rotation when tab is hidden
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        clearInterval(gifInterval);
+    }
+    // You can restart it if needed when visible again
+});
+</script>
 </body>
 </html>
