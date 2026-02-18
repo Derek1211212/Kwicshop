@@ -1373,7 +1373,7 @@
 <script>
 // ========== COMPLETE VENDOR DASHBOARD JAVASCRIPT ==========
 document.addEventListener('DOMContentLoaded', function() {
-    // ----- TOAST / SUCCESS -----
+    // ----- TOAST / SUCCESS ----- (unchanged)
     let toastTimer = null;
     window.showToast = function(message) {
         const toast = document.getElementById("toast");
@@ -1392,7 +1392,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => box.classList.remove("show"), 2500);
     };
 
-    // ----- MOBILE MENU -----
+    // ----- MOBILE MENU ----- (unchanged)
     const mobileMenuBtn = document.getElementById("mobileMenuBtn");
     const closeMenuBtn = document.getElementById("closeMenuBtn");
     const mobileMenuOverlay = document.getElementById("mobileMenuOverlay");
@@ -1414,7 +1414,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (mobileMenuOverlay) mobileMenuOverlay.addEventListener("click", closeMobileMenu);
     document.querySelectorAll(".mobile-menu-item").forEach(item => item.addEventListener("click", closeMobileMenu));
 
-    // ----- COPY STORE LINK -----
+    // ----- COPY STORE LINK ----- (unchanged)
     document.querySelectorAll("[data-copy-link]").forEach(btn => {
         btn.addEventListener("click", async () => {
             const link = btn.getAttribute("data-copy-link") || "";
@@ -1427,7 +1427,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ----- PERIOD BUTTONS -----
+    // ----- PERIOD BUTTONS ----- (unchanged)
     document.querySelectorAll(".period-btn").forEach(btn => {
         btn.addEventListener("click", function() {
             document.querySelectorAll(".period-btn").forEach(b => b.classList.remove("active"));
@@ -1435,7 +1435,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ----- FLOATING ACTION BUTTON -----
+    // ----- FLOATING ACTION BUTTON ----- (unchanged)
     const fabBtn = document.getElementById("fabAddItem");
     if (fabBtn) {
         fabBtn.addEventListener("click", () => {
@@ -1443,7 +1443,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ========== SHOP TOUR VIDEO UPLOAD ==========
+    // ========== SHOP TOUR VIDEO UPLOAD ========== (unchanged)
     (function() {
         const videoInput = document.getElementById("videoInput");
         const uploadArea = document.getElementById("uploadArea");
@@ -1559,7 +1559,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     })();
 
-    // ========== PROMO PREVIEW & UPLOAD ==========
+    // ========== PROMO PREVIEW & UPLOAD ========== (unchanged)
     (function() {
         const textarea = document.getElementById('promoDescription');
         const charCount = document.getElementById('charCount');
@@ -1716,7 +1716,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     })();
 
-    // ========== STORE THEME SAVE ==========
+    // ========== STORE THEME SAVE ========== (unchanged)
     (function() {
         const themeRadios = document.querySelectorAll('input[name="color_theme"]');
         const saveBtn = document.getElementById('saveThemeBtn');
@@ -1758,7 +1758,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const modal = document.getElementById('addItemModal');
         if (!modal) return;
 
-        // Open/close
+        // Open/close (unchanged)
         const openButtons = [
             document.getElementById('openAddItemModal'),
             document.getElementById('openAddItemModalFull'),
@@ -1780,7 +1780,7 @@ document.addEventListener('DOMContentLoaded', function() {
         closeBtn?.addEventListener('click', closeModal);
         modal.addEventListener('click', e => { if (e.target === modal) closeModal(e); });
 
-        // Step navigation
+        // Step navigation (unchanged)
         const stepContents = document.querySelectorAll('.modal-step-content');
         const stepCircles = document.querySelectorAll('.step');
         function goToStep(stepNum) {
@@ -1806,7 +1806,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        // Deal type toggling
+        // Deal type toggling (unchanged)
         const dealOptions = document.querySelectorAll('.deal-type-option');
         const swapSection = document.getElementById('modal-swap-section');
         const saleSection = document.getElementById('modal-sale-section');
@@ -1833,7 +1833,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        // Add another offered item (swap)
+        // Add another offered item (swap) (unchanged except we ensure condition update on clone)
         const addOfferBtn = document.getElementById('modal-add-offer-item-btn');
         const offeredContainer = document.getElementById('modal-offered-items-container');
         if (addOfferBtn && offeredContainer) {
@@ -1857,12 +1857,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (removeBtn) removeBtn.style.display = 'inline-block';
                 offeredContainer.appendChild(clone);
                 attachImagePreview(clone);
-                attachCategoryAutocomplete(clone);
+                attachCategoryAutocomplete(clone);   // this now also sets up condition update
                 initPlanOptions();
             });
         }
 
-        // Remove offered item
+        // Remove offered item (unchanged)
         offeredContainer?.addEventListener('click', e => {
             if (!e.target.classList.contains('remove-item-btn')) return;
             const item = e.target.closest('.modal-offered-item');
@@ -1880,7 +1880,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        // Plan option selection (delegated)
+        // Plan option selection (unchanged)
         document.body.addEventListener('click', e => {
             const planOpt = e.target.closest('.plan-option');
             if (!planOpt) return;
@@ -1919,10 +1919,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        // ========== FIXED: Image preview (no duplicates) ==========
+        // ========== FIXED: Image preview (no duplicates) ========== (unchanged)
         function attachImagePreview(scope = document) {
             scope.querySelectorAll('input[type="file"][multiple]').forEach(input => {
-                // Remove any existing listener to avoid duplicates
                 input.removeEventListener('change', handleImagePreview);
                 input.addEventListener('change', handleImagePreview);
             });
@@ -1934,7 +1933,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const preview = input.parentElement?.querySelector('.image-preview');
             if (!preview) return;
 
-            // Clear previous previews
             preview.innerHTML = '';
             if (files.length === 0) {
                 preview.style.display = 'none';
@@ -1953,54 +1951,126 @@ document.addEventListener('DOMContentLoaded', function() {
                     div.querySelector('.remove-image').addEventListener('click', () => {
                         div.remove();
                         if (preview.children.length === 0) preview.style.display = 'none';
-                        // Note: removing from preview doesn't remove from file input
                     });
                 };
                 reader.readAsDataURL(file);
             });
         }
-
-        // Initial attachment
         attachImagePreview();
 
-        // ========== CATEGORY AUTOCOMPLETE ==========
-        const categories = ["Electronics","Clothing","Books","Furniture","Toys","Sports","Beauty","Automotive","Music","Movies","Games","Pets","Food"];
+        // ========== UPDATED: CATEGORY AUTOCOMPLETE WITH FOCUS BEHAVIOR ==========
+        const categories = ["Electronics","Clothing","Books","Furniture","Houses & Apartments","Toys","Lands & Plots","Real Estate Services","Sports","Beauty","Automobile & Vehicles","Music","Movies","Games","Pets", "Mobile Phones & Accessories","Industrial & Scientific","Computer & Accessories","Food & Drinks","Agriculture & Agribusiness"];
+        // Food-specific categories that trigger special condition options
+        const foodCategories = ["Food & Drinks", "Agriculture & Agribusiness"];
+
+        function updateConditionForCategory(categoryInput) {
+            const container = categoryInput.closest('.modal-offered-item') || categoryInput.closest('#modal-sale-section, #modal-service-section');
+            if (!container) return;
+
+            const conditionSelect = container.querySelector('select[name="condition"], select[name="offer_condition[]"], select[name="desired_condition"]');
+            if (!conditionSelect) return;
+
+            const category = categoryInput.value.trim();
+            let options = [];
+
+            if (foodCategories.includes(category)) {
+                options = ["Fresh", "Good", "Near Expiry", "Processed", "Dried", "Organic"];
+            } else {
+                options = ["New", "Slightly Used", "Used but in Good Condition", "Used - Needs Repair"];
+            }
+
+            const currentValue = conditionSelect.value;
+            conditionSelect.innerHTML = '<option value="" disabled selected>Select condition</option>' +
+                options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+
+            if (currentValue && options.includes(currentValue)) {
+                conditionSelect.value = currentValue;
+            }
+        }
+
         function attachCategoryAutocomplete(scope = document) {
             scope.querySelectorAll('.category-input').forEach(input => {
+                // Remove old listeners to avoid duplicates
                 input.removeEventListener('input', categoryInputHandler);
-                input.addEventListener('input', categoryInputHandler);
+                input.removeEventListener('focus', categoryFocusHandler);
                 input.removeEventListener('blur', categoryBlurHandler);
+                input.addEventListener('input', categoryInputHandler);
+                input.addEventListener('focus', categoryFocusHandler);
                 input.addEventListener('blur', categoryBlurHandler);
             });
         }
-        function categoryInputHandler(e) {
-            const val = e.target.value.toLowerCase().trim();
-            const wrapper = e.target.closest('.category-input-wrapper');
+
+        function categoryFocusHandler(e) {
+            const input = e.target;
+            const wrapper = input.closest('.category-input-wrapper');
             const suggestions = wrapper?.querySelector('.category-suggestions');
             if (!suggestions) return;
-            if (val.length < 1) {
-                suggestions.style.display = 'none';
-                return;
+
+            // Populate with all categories (or filter if input has value)
+            const val = input.value.trim().toLowerCase();
+            let matches = categories;
+            if (val.length > 0) {
+                matches = categories.filter(c => c.toLowerCase().includes(val));
             }
-            const matches = categories.filter(c => c.toLowerCase().includes(val));
             suggestions.innerHTML = matches.map(m => `<div>${m}</div>`).join('');
             suggestions.style.display = matches.length ? 'block' : 'none';
+
+            // Attach click handlers (they will be re‑attached each time, but that's fine)
             suggestions.querySelectorAll('div').forEach(div => {
                 div.addEventListener('click', () => {
-                    e.target.value = div.textContent;
+                    const selectedCategory = div.textContent;
+                    input.value = selectedCategory;
                     suggestions.style.display = 'none';
+                    updateConditionForCategory(input);
                 });
             });
         }
+
+        function categoryInputHandler(e) {
+            const input = e.target;
+            const val = input.value.toLowerCase().trim();
+            const wrapper = input.closest('.category-input-wrapper');
+            const suggestions = wrapper?.querySelector('.category-suggestions');
+            if (!suggestions) return;
+
+            if (val.length < 1) {
+                // If empty, show all categories (like on focus)
+                suggestions.innerHTML = categories.map(m => `<div>${m}</div>`).join('');
+                suggestions.style.display = 'block';
+            } else {
+                const matches = categories.filter(c => c.toLowerCase().includes(val));
+                suggestions.innerHTML = matches.map(m => `<div>${m}</div>`).join('');
+                suggestions.style.display = matches.length ? 'block' : 'none';
+            }
+
+            // Re‑attach click handlers
+            suggestions.querySelectorAll('div').forEach(div => {
+                div.addEventListener('click', () => {
+                    const selectedCategory = div.textContent;
+                    input.value = selectedCategory;
+                    suggestions.style.display = 'none';
+                    updateConditionForCategory(input);
+                });
+            });
+        }
+
         function categoryBlurHandler(e) {
+            const input = e.target;
             setTimeout(() => {
-                const suggestions = e.target.closest('.category-input-wrapper')?.querySelector('.category-suggestions');
+                const suggestions = input.closest('.category-input-wrapper')?.querySelector('.category-suggestions');
                 if (suggestions) suggestions.style.display = 'none';
+
+                const category = input.value.trim();
+                if (categories.includes(category) || foodCategories.includes(category)) {
+                    updateConditionForCategory(input);
+                }
             }, 200);
         }
+
+        // Initial attachment
         attachCategoryAutocomplete();
 
-        // ========== SERVICE PRICE TOGGLE ==========
+        // ========== SERVICE PRICE TOGGLE ========== (unchanged)
         const contactChk = document.getElementById('modal-contact-for-price');
         const priceWrap = document.getElementById('modal-fixed-price-wrapper');
         if (contactChk && priceWrap) {
@@ -2016,19 +2086,23 @@ document.addEventListener('DOMContentLoaded', function() {
             const defaultDeal = document.querySelector('.deal-type-option.active');
             if (defaultDeal) defaultDeal.click();
             initPlanOptions();
-            attachImagePreview(modal);      // re‑attach safely (removes old listeners)
+            attachImagePreview(modal);
             attachCategoryAutocomplete(modal);
             updateRequiredFields();
+
+            // Set default condition for any pre‑filled categories
+            document.querySelectorAll('.category-input').forEach(input => {
+                if (input.value.trim()) updateConditionForCategory(input);
+            });
         }
 
-        // ========== FIXED: Form submission with loading state ==========
+        // ========== FIXED: Form submission with loading state ========== (unchanged)
         const addItemForm = document.getElementById('addItemFormModal');
         const submitBtn = document.getElementById('submitItemBtn');
         if (addItemForm && submitBtn) {
             submitBtn.addEventListener('click', async (e) => {
                 e.preventDefault();
 
-                // Prevent double submission
                 if (submitBtn.disabled) return;
 
                 if (!addItemForm.checkValidity()) {
@@ -2036,7 +2110,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
 
-                // Disable button and show loading spinner
                 const originalText = submitBtn.innerHTML;
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
@@ -2058,7 +2131,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         setTimeout(() => location.reload(), 1500);
                     } else {
                         showToast(data.message || 'Something went wrong');
-                        // Re‑enable button on error
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = originalText;
                     }
@@ -2071,8 +2143,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     })();
-
-    // (Optional) Remove store view beacon – already omitted
 });
 </script>
 
