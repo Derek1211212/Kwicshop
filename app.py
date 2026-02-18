@@ -8736,6 +8736,20 @@ def delete_store_promo(slug):
 
 
 
+ # Custom filter: adds commas + keeps 2 decimal places
+@app.template_filter('currency')
+def currency_filter(value):
+    try:
+        # Convert to float
+        value = float(value)
+        # Format with commas and exactly 2 decimal places
+        return "{:,.2f}".format(value)
+    except (ValueError, TypeError):
+        # Fallback if value can't be converted
+        return str(value)       
+
+
+
 
 
 
