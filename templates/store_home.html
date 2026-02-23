@@ -608,6 +608,10 @@
         <div class="page-header">
             <h1>{{ store.name }}</h1>
             <p>Vendor Dashboard</p>
+
+        <a style="color: white;" href="{{ store.store_link }}" class="mobile-menu-item active" target="_blank" class="store-link" rel="noopener">
+        <i class="fas fa-external-link-alt"></i> View Store
+        </a>
             <div class="quick-actions">
                 <button class="btn btn-primary" id="openAddItemModalFull"><span>➕</span> Add New Item</button>
                 <a href="/edit-store/{{ store.slug }}" class="btn" style="background: rgba(255,255,255,0.2); color: white;">

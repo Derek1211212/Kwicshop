@@ -3435,7 +3435,7 @@ def paystack_verify():
 
     session.pop('pending_listing', None)
 
-    return redirect(url_for('store_home', slug=store_slug) if store_slug else url_for('dashboard'))
+    return redirect(url_for('store_home', store_id=store_id))
 
 
 
@@ -6943,7 +6943,7 @@ def store_add_item():
         return jsonify({
             "success": True,
             "message": "Item added successfully!",
-            "redirect": url_for('store_home', slug=store_slug)
+            "redirect": url_for('store_home', store_id=store_id)
         })
 
     except Exception as e:
