@@ -6293,11 +6293,15 @@ def create_store():
 
         conn.commit()
 
+        new_store_id = cur.lastrowid 
+
         # Return JSON response that the frontend fetch expects
         return jsonify({
             "success": True,
             "message": "Store created successfully!",
-            "redirect": f"/store/{slug}"
+            "redirect": url_for('store_home', store_id=new_store_id, _external=False)
+            # or use absolute path if your frontend needs it:
+            # "redirect": f"/store/{new_store_id}"
         }), 200
 
     except Exception as e:

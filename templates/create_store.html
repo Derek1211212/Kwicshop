@@ -824,98 +824,77 @@ function navigateToStep(step) {
 // ──────────────────────────────────────────────────────────────────────────────
 const form = document.getElementById('storeForm');
 if (form) {
-    form.addEventListener('submit', async function(e) {
-        e.preventDefault();
+form.addEventListener('submit', async function(e) {
+    e.preventDefault();
 
-        const submitBtn = this.querySelector('button[type="submit"]');
-        if (!submitBtn) return;
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalHTML = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+    submitBtn.disabled = true;
 
-        const originalHTML = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
-        submitBtn.disabled = true;
+    try {
+        const formData = new FormData(this);
+        const response = await fetch('/create-store', {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+        });
 
+        let data;
+        const rawBody = await response.text();
         try {
-            const formData = new FormData(this);
-
-            const response = await fetch('/create-store', {
-                method: 'POST',
-                body: formData,
-                credentials: 'include'
-            });
-
-            let data;
-            let rawBody = '';
-
-            try {
-                rawBody = await response.text();
-                data = JSON.parse(rawBody);
-            } catch (parseErr) {
-                console.warn('Server response is not valid JSON', {
-                    status: response.status,
-                    bodySnippet: rawBody.substring(0, 400)
-                });
-                throw new Error(`Server returned status ${response.status} but content is not JSON`);
-            }
-
-            if (response.ok && data?.success === true) {
-                // ── SUCCESS ───────────────────────────────────────────────
-                this.style.display = 'none';
-                const successScreen = document.getElementById('successScreen');
-                if (successScreen) successScreen.classList.add('active');
-
-                const redirectUrl = data.redirect || '/dashboard';
-                setTimeout(() => {
-                    window.location.href = redirectUrl;
-                }, 3200);
-            } else {
-                // ── Show flash-like message ──────────────────────────────────────
-                let errorMsg = data.message || "An error occurred. Please try again.";
-
-                // Create a temporary flash-style alert at the top of the form
-                const flashDiv = document.createElement('div');
-                flashDiv.className = 'alert alert-danger';
-                flashDiv.style.padding = '12px 20px';
-                flashDiv.style.marginBottom = '20px';
-                flashDiv.style.borderRadius = '12px';
-                flashDiv.style.background = '#fee2e2';
-                flashDiv.style.color = '#991b1b';
-                flashDiv.style.border = '1px solid #fecaca';
-                flashDiv.innerHTML = `<strong>Error:</strong> ${errorMsg}`;
-
-                // Insert at the top of the form-panel or after form-header
-                const formHeader = document.querySelector('.form-header');
-                if (formHeader) {
-                    formHeader.parentNode.insertBefore(flashDiv, formHeader.nextSibling);
-                } else {
-                    document.querySelector('.form-panel').prepend(flashDiv);
-                }
-
-                // Auto-remove after 6 seconds
-                setTimeout(() => {
-                    flashDiv.remove();
-                }, 6000);
-
-                // Optional: scroll to top of form
-                document.querySelector('.form-panel').scrollIntoView({ behavior: 'smooth' });
-            }
-
-        } catch (err) {
-            console.error('Form submission failed:', err);
-
-            let userMsg = 'Failed to create store.';
-
-            if (err.name === 'TypeError' && err.message.includes('fetch')) {
-                userMsg = 'Cannot reach the server.\n\nPossible reasons:\n• You opened the page as a local file (file://)\n• Server is not running\n• Wrong port / URL\n• Network / firewall issue';
-            } else if (err.message.includes('not JSON')) {
-                userMsg = 'Server sent an unexpected response format.\nCheck browser console (F12) → Network tab → Response for details.';
-            }
-
-            alert(userMsg + '\n\nMore info in console (F12).');
-        } finally {
-            submitBtn.innerHTML = originalHTML;
-            submitBtn.disabled = false;
+            data = JSON.parse(rawBody);
+        } catch {
+            throw new Error(`Server returned status ${response.status} but response is not JSON`);
         }
-    });
+
+        if (response.ok && data?.success === true) {
+            // Hide form, show success screen
+            this.style.display = 'none';
+            const successScreen = document.getElementById('successScreen');
+            if (successScreen) successScreen.classList.add('active');
+
+            const redirectUrl = data.redirect;
+
+            // Update button and attach click handler
+            const viewBtn = document.getElementById('viewStoreBtn');
+            if (viewBtn) {
+                viewBtn.textContent = "Go to Dashboard";
+                viewBtn.addEventListener('click', () => {
+                    window.location.href = redirectUrl;
+                }, { once: true });
+            }
+
+            // Auto‑redirect after 3.2 seconds
+            setTimeout(() => {
+                window.location.href = redirectUrl;
+            }, 3200);
+        } else {
+            // Error case: show flash message
+            const errorMsg = data?.message || "An error occurred. Please try again.";
+            const flashDiv = document.createElement('div');
+            flashDiv.className = 'alert alert-danger';
+            flashDiv.style.cssText = 'padding: 12px 20px; margin-bottom: 20px; border-radius: 12px; background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;';
+            flashDiv.innerHTML = `<strong>Error:</strong> ${errorMsg}`;
+
+            const formHeader = document.querySelector('.form-header');
+            if (formHeader) {
+                formHeader.parentNode.insertBefore(flashDiv, formHeader.nextSibling);
+            } else {
+                document.querySelector('.form-panel').prepend(flashDiv);
+            }
+
+            setTimeout(() => flashDiv.remove(), 6000);
+            document.querySelector('.form-panel').scrollIntoView({ behavior: 'smooth' });
+        }
+    } catch (err) {
+        console.error('Submission error:', err);
+        alert('Failed to create store. Check console (F12) for details.');
+    } finally {
+        submitBtn.innerHTML = originalHTML;
+        submitBtn.disabled = false;
+    }
+});
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
