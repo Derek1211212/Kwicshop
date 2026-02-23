@@ -591,6 +591,9 @@
         </div>
         <div class="mobile-menu-items">
             <a href="/store/{{ store.slug }}" class="mobile-menu-item active"><i class="fas fa-home"></i> Home</a>
+                <a href="{{ store.store_link }}" class="mobile-menu-item active" target="_blank" class="store-link" rel="noopener">
+        <i class="fas fa-external-link-alt"></i> View Store
+    </a>
             <a href="/store/{{ store.slug }}/edit" class="mobile-menu-item"><i class="fas fa-edit"></i> Edit Store</a>
             <a href="/store/{{ store.slug }}/inventory" class="mobile-menu-item"><i class="fas fa-boxes"></i> View Inventory</a>
             {% if not store.verified %}

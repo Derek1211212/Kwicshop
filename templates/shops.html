@@ -793,7 +793,9 @@
         <!-- Shops Grid with COMPACT cards -->
         <div class="shops-grid">
             {% for store in stores %}
-                <a href="/store/{{ store.store_id }}" class="shop-card" data-store-id="{{ store.store_id }}">
+                <a href="{{ url_for('store_detail', slug=store.slug) if store.slug else '#' }}" 
+   class="shop-card {% if not store.slug %}disabled{% endif %}" 
+   data-store-id="{{ store.store_id }}">
                     <div class="shop-image">
                         <img
                             src="{{ store.logo or 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' }}"

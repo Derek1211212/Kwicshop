@@ -6334,27 +6334,26 @@ def allowed_file(filename):
 
 
 
-@app.route('/store/<slug>')
-def store_home(slug):
+@app.route('/store/<int:store_id>')
+def store_home(store_id):
     conn = get_db_connection()
     cur = conn.cursor(dictionary=True)
     
     try:
-        cur.execute("SELECT * FROM stores WHERE slug = %s", (slug,))
+        # Fetch the store by its numeric ID
+        cur.execute("SELECT * FROM stores WHERE store_id = %s", (store_id,))
         store = cur.fetchone()
         
         if not store:
             flash("Store not found.", "error")
             return redirect(url_for('home'))
         
-        # Optional ownership check
+        # Optional ownership check – only the owner can view this dashboard
         if 'user_id' in session and store['user_id'] != session['user_id']:
             flash("You don't have permission to view this store.", "error")
             return redirect(url_for('home'))
         
-        store_id = store['store_id']
-        
-        # Fetch current promo (only one per store)
+        # Fetch current promo (assuming max one active promo per store)
         cur.execute("""
             SELECT 
                 promo_id, media_type, media_url, description, 
@@ -6366,7 +6365,7 @@ def store_home(slug):
         """, (store_id,))
         promo = cur.fetchone() or {}  # empty dict if no promo exists
         
-        # Category counts
+        # Category counts for the store's listings
         cur.execute("""
             SELECT category, COUNT(*) AS total 
             FROM listings 
@@ -6375,7 +6374,7 @@ def store_home(slug):
         """, (store_id,))
         category_counts = cur.fetchall()
         
-        # Listing metrics totals
+        # Total listing metrics (views/clicks across all time)
         cur.execute("""
             SELECT 
                 COALESCE(SUM(lm.impressions), 0) AS views,
@@ -6386,7 +6385,7 @@ def store_home(slug):
         """, (store_id,))
         totals = cur.fetchone()
         
-        # Store metrics (30-day period)
+        # Store metrics – last 30 days
         cur.execute("""
             SELECT 
                 COALESCE(SUM(views), 0) AS total_views,
@@ -6400,7 +6399,7 @@ def store_home(slug):
         """, (store_id,))
         store_metrics = cur.fetchone()
         
-        # Previous period for comparison (30-60 days ago)
+        # Previous 30-day period (days 30–60 ago) for comparison
         cur.execute("""
             SELECT 
                 COALESCE(SUM(views), 0) AS prev_views,
@@ -6415,12 +6414,13 @@ def store_home(slug):
         """, (store_id,))
         prev_metrics = cur.fetchone()
         
-        # Calculate percentage changes
+        # Helper to calculate percentage change
         def calculate_change(current, previous):
             if previous == 0:
                 return 100 if current > 0 else 0
             return round(((current - previous) / previous) * 100, 2)
         
+        # Build metrics dictionary with change percentages
         if store_metrics and prev_metrics:
             metrics_with_change = {
                 'views': {
@@ -6453,7 +6453,7 @@ def store_home(slug):
                 'sales': {'current': 0, 'change': 0}
             }
         
-        # Top products by impressions
+        # Top 5 products by impressions
         cur.execute("""
             SELECT 
                 l.listing_id,
@@ -6475,7 +6475,7 @@ def store_home(slug):
         """, (store_id,))
         top_by_impressions = cur.fetchall()
         
-        # Top products by clicks
+        # Top 5 products by clicks
         cur.execute("""
             SELECT 
                 l.listing_id,
@@ -6497,10 +6497,11 @@ def store_home(slug):
         """, (store_id,))
         top_by_clicks = cur.fetchall()
         
+        # Render the dashboard template with all collected data
         return render_template(
             'store_home.html',
             store=store,
-            promo=promo,                     # ← NEW: pass promo to dashboard template
+            promo=promo,
             category_counts=category_counts,
             totals=totals or {'views': 0, 'clicks': 0},
             metrics=metrics_with_change,
@@ -6510,7 +6511,7 @@ def store_home(slug):
         )
     
     except Exception as e:
-        current_app.logger.error(f"Error in store_home (slug={slug}): {str(e)}")
+        current_app.logger.error(f"Error in store_home (store_id={store_id}): {str(e)}")
         flash("An error occurred loading the dashboard.", "error")
         return redirect(url_for('home'))
     
@@ -7170,8 +7171,8 @@ app.jinja_env.filters['date'] = datetimeformat
 
 
 
-@app.route('/store/<int:store_id>')
-def store_detail(store_id):
+@app.route('/store/<slug>')
+def store_detail(slug):
     """
     Display a single store page with:
     - Store info + Meet the Seller card
@@ -7185,12 +7186,13 @@ def store_detail(store_id):
     cursor = conn.cursor(dictionary=True)
 
     try:
-        # 1. Fetch store data – including color_theme
+        # 1. Fetch store data by slug – including color_theme
         cursor.execute("""
             SELECT 
                 store_id,
                 user_id,
                 name,
+                slug,                 -- included for reference/safety
                 logo,
                 banner,
                 tour_video,
@@ -7205,10 +7207,10 @@ def store_detail(store_id):
                 created_at,
                 color_theme           -- for theme selection
             FROM stores
-            WHERE store_id = %s 
+            WHERE slug = %s 
               AND is_active = 1
             LIMIT 1
-        """, (store_id,))
+        """, (slug,))
         
         store = cursor.fetchone()
         if not store:
@@ -7265,7 +7267,7 @@ def store_detail(store_id):
               AND (start_date IS NULL OR start_date <= CURDATE())
               AND (end_date IS NULL OR end_date >= CURDATE())
             LIMIT 1
-        """, (store_id,))
+        """, (store['store_id'],))
         promo = cursor.fetchone() or {}
         # Simple active flag for template
         promo['active'] = bool(promo.get('media_url'))
@@ -7294,7 +7296,7 @@ def store_detail(store_id):
             WHERE store_id = %s 
               AND status = 'Active'
             ORDER BY created_at DESC
-        """, (store_id,))
+        """, (store['store_id'],))
         
         listings = cursor.fetchall()
 
@@ -7350,7 +7352,7 @@ def store_detail(store_id):
             WHERE store_id = %s
             ORDER BY created_at DESC
             LIMIT 100
-        """, (store_id,))
+        """, (store['store_id'],))
         ratings = cursor.fetchall()
 
         # 7. Render
@@ -7362,18 +7364,17 @@ def store_detail(store_id):
             ratings=ratings,
             is_logged_in=is_logged_in,
             is_owner=is_owner,
-            promo=promo,                     # ← NEW: promo data for popup
+            promo=promo,
             current_year=datetime.now().year
         )
 
     except Exception as e:
-        current_app.logger.error(f"Error in store_detail (store_id={store_id}): {str(e)}")
+        current_app.logger.error(f"Error in store_detail (slug={slug}): {str(e)}")
         abort(500)
 
     finally:
         cursor.close()
         conn.close()
-
 
 
 
@@ -7637,19 +7638,37 @@ def my_store_redirect():
     conn = get_db_connection()
     cur = conn.cursor(dictionary=True)
 
-    cur.execute(
-        "SELECT slug FROM stores WHERE user_id = %s LIMIT 1",
-        (session['user_id'],)
-    )
-    store = cur.fetchone()
+    try:
+        cur.execute(
+            """
+            SELECT store_id, slug 
+            FROM stores 
+            WHERE user_id = %s 
+              AND is_active = 1
+            LIMIT 1
+            """,
+            (session['user_id'],)
+        )
+        store = cur.fetchone()
 
-    cur.close()
-    conn.close()
+        if store:
+            # Redirect to PRIVATE DASHBOARD using store_id
+            return redirect(url_for('store_home', store_id=store['store_id']))
+            # If you kept the name 'store_home' for the dashboard:
+            # return redirect(url_for('store_home', store_id=store['store_id']))
 
-    if store:
-        return redirect(url_for('store_home', slug=store['slug']))
-    else:
-        return redirect(url_for('create_store'))
+        else:
+            flash("You don't have an active store yet.", "info")
+            return redirect(url_for('create_store'))
+
+    except Exception as e:
+        current_app.logger.error(f"my_store_redirect error: {str(e)}")
+        flash("Could not load your store. Please try again.", "error")
+        return redirect(url_for('home'))
+
+    finally:
+        cur.close()
+        conn.close()
 
 
 
