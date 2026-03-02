@@ -15,6 +15,7 @@
     --muted: #6b7280;
     --bg: #f9fafb;
     --card: #ffffff;
+    --danger: #dc2626;
 }
 
 body {
@@ -127,21 +128,34 @@ body {
     align-items: center;
 }
 
-.edit-btn {
-    background: var(--primary);
-    color: #fff;
+.btn {
     border: none;
     padding: 8px 14px;
     border-radius: 8px;
-    text-decoration: none;
     font-size: .85rem;
     font-weight: 600;
+    text-decoration: none;
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    cursor: pointer;
 }
 
-.edit-btn:hover {
+.btn-edit {
+    background: var(--primary);
+    color: #fff;
+}
+
+.btn-edit:hover {
+    opacity: .9;
+}
+
+.btn-delete {
+    background: var(--danger);
+    color: #fff;
+}
+
+.btn-delete:hover {
     opacity: .9;
 }
 
@@ -209,13 +223,17 @@ body {
 
             <div class="card-actions">
                 <span class="status">{{ item.status|capitalize }}</span>
-
-                <!-- ✅ FIXED EDIT LINK -->
-<a href="{{ url_for('edit_inventory', slug=store.slug, listing_id=item.listing_id) }}" class="btn btn-edit">
-    <i class="fas fa-edit"></i> Edit
-</a>
-
-
+                <div style="display: flex; gap: 8px;">
+                    <a href="{{ url_for('edit_inventory', slug=store.slug, listing_id=item.listing_id) }}" class="btn btn-edit">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+<form method="POST" action="{{ url_for('delete_store_listing', slug=store.slug, listing_id=item.listing_id) }}" 
+      onsubmit="return confirm('Delete this listing permanently?');" style="display: inline;">
+    <button type="submit" class="btn btn-delete">
+        <i class="fas fa-trash-alt"></i> Delete
+    </button>
+</form>
+                </div>
             </div>
 
         </div>

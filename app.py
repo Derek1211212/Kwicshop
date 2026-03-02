@@ -588,7 +588,8 @@ def _smart_match_listings(cursor, have, want, per_page, offset):
 
         page_q = """
             SELECT l.listing_id, l.title, l.description, l.category, l.deal_type, l.`Plan`,
-                   l.image1, l.price, l.required_cash, l.additional_cash, l.desired_swap,
+                   l.image_url, l.image1,   # ← added image_url
+                   l.price, l.required_cash, l.additional_cash, l.desired_swap,
                    l.location, l.contact, u.username, IFNULL(m.impressions,0) AS impressions,
                    l.created_at
             FROM listings l
@@ -652,7 +653,8 @@ def _smart_match_listings(cursor, have, want, per_page, offset):
     # ----------------- FUZZY MODE (UNCHANGED LOGIC) -----------------
     base_q = """
         SELECT l.listing_id, l.title, l.description, l.category, l.deal_type, l.Plan,
-               l.image1, l.price, l.required_cash, l.additional_cash, l.desired_swap,
+               l.image_url, l.image1,   # ← added image_url
+               l.price, l.required_cash, l.additional_cash, l.desired_swap,
                l.location, l.contact, u.username, l.created_at,
                IFNULL(m.impressions,0) AS impressions
         FROM listings l
@@ -747,7 +749,8 @@ def _get_main_listings(cursor, search, category, deal_type, location, per_page, 
 
     base_q = """
         SELECT l.listing_id, l.title, l.description, l.category, l.deal_type, l.`Plan`,
-               l.image1, l.image2, l.image3, l.image4, l.price, l.required_cash, l.additional_cash,
+               l.image_url, l.image1, l.image2, l.image3, l.image4,   # ← added image_url
+               l.price, l.required_cash, l.additional_cash,
                l.desired_swap, l.desired_swap_description, l.location, l.contact, u.username,
                IFNULL(m.impressions,0) AS impressions
         FROM listings l
@@ -843,7 +846,7 @@ def _get_suggestions(cursor, search, deal_type=None):
         where_clause = " OR ".join(conds)
         q = f"""
             SELECT l.listing_id, l.title, l.description, l.category, l.deal_type, l.`Plan`,
-                   l.image1, l.image2, l.image3, l.image4,
+                   l.image_url, l.image1, l.image2, l.image3, l.image4,   # ← added image_url
                    l.price, l.required_cash, l.additional_cash, l.desired_swap,
                    l.location, l.contact, u.username, IFNULL(m.impressions,0) AS impressions
             FROM listings l
@@ -931,7 +934,7 @@ def _attach_offered_items(cursor, listings):
     # Attach images
     for l in listings:
         # Determine main image
-        l['image_url'] = l.get('image1') or l.get('image2') or l.get('image3') or l.get('image4') \
+        l['image_url'] = l.get('image_url') or l.get('image1') or l.get('image2') or l.get('image3') or l.get('image4') \
                          or url_for('static', filename='images/placeholder.jpg')
         # Attach offered items
         l['offers'] = offers_map.get(l['listing_id'], [])
@@ -1552,59 +1555,46 @@ google = oauth.register(
 
 def get_or_create_user(google_id, email, username, avatar=None):
     conn = get_db_connection()
-    cur = conn.cursor(dictionary=True)
+    try:
+        cur = conn.cursor(dictionary=True)
 
-    # 1️⃣ Try finding user by google_id (already linked)
-    cur.execute("SELECT * FROM users WHERE google_id = %s", (google_id,))
-    user = cur.fetchone()
-    if user:
-        cur.close()
-        conn.close()
-        return user
+        # 1️⃣ Try finding user by google_id
+        cur.execute("SELECT * FROM users WHERE google_id = %s", (google_id,))
+        user = cur.fetchone()
+        if user:
+            return user
 
-    # 2️⃣ Try finding user by email (password account exists)
-    cur.execute("SELECT * FROM users WHERE email = %s", (email,))
-    user = cur.fetchone()
+        # 2️⃣ Try finding user by email
+        cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+        user = cur.fetchone()
 
-    if user:
-        # 🔗 Link Google account to existing user
+        if user:
+            # Link Google account
+            cur.execute(
+                "UPDATE users SET google_id = %s, avatar = COALESCE(avatar, %s) WHERE id = %s",
+                (google_id, avatar, user["id"]),
+            )
+            conn.commit()
+            cur.execute("SELECT * FROM users WHERE id = %s", (user["id"],))
+            return cur.fetchone()
+
+        # 3️⃣ New user – create
         cur.execute(
             """
-            UPDATE users
-            SET google_id = %s,
-                avatar = COALESCE(avatar, %s)
-            WHERE id = %s
+            INSERT INTO users
+              (google_id, email, username, avatar, role, password, created_at, account_status)
+            VALUES (%s, %s, %s, %s, 'Customer', NULL, NOW(), 'Active')
             """,
-            (google_id, avatar, user["id"]),
+            (google_id, email, username, avatar),
         )
         conn.commit()
+        new_id = cur.lastrowid
+        cur.execute("SELECT * FROM users WHERE id = %s", (new_id,))
+        return cur.fetchone()
 
-        cur.execute("SELECT * FROM users WHERE id = %s", (user["id"],))
-        linked_user = cur.fetchone()
-
+    finally:
         cur.close()
         conn.close()
-        return linked_user
-
-    # 3️⃣ New user → create Google-only account
-    cur.execute(
-        """
-        INSERT INTO users
-          (google_id, email, username, avatar, role, password, created_at, account_status)
-        VALUES
-          (%s, %s, %s, %s, 'Customer', NULL, NOW(), 'Active')
-        """,
-        (google_id, email, username, avatar),
-    )
-    conn.commit()
-
-    new_id = cur.lastrowid
-    cur.execute("SELECT * FROM users WHERE id = %s", (new_id,))
-    new_user = cur.fetchone()
-
-    cur.close()
-    conn.close()
-    return new_user
 
 
 
@@ -1621,31 +1611,34 @@ def google_login():
 
 @app.route("/login/google/callback")
 def google_callback():
-    token = google.authorize_access_token()
+    try:
+        token = google.authorize_access_token()
+        resp = google.get("userinfo")
+        userinfo = resp.json()
 
-    resp = google.get("userinfo")
-    userinfo = resp.json()
+        if not userinfo or "id" not in userinfo:
+            abort(400, "Google authentication failed")
 
-    if not userinfo or "id" not in userinfo:
-        abort(400, "Google authentication failed")
+        google_id = userinfo["id"]
+        email = userinfo.get("email")
+        name = userinfo.get("name")
+        avatar = userinfo.get("picture")
 
-    google_id = userinfo["id"]
-    email = userinfo.get("email")
-    name = userinfo.get("name")
-    avatar = userinfo.get("picture")
+        user = get_or_create_user(
+            google_id=google_id,
+            email=email,
+            username=name,
+            avatar=avatar
+        )
 
-    user = get_or_create_user(
-        google_id=google_id,
-        email=email,
-        username=name,
-        avatar=avatar
-    )
+        session["user_id"] = user["id"]
+        session.permanent = True
 
-    session["user_id"] = user["id"]
-    session.permanent = True
-
-    return redirect(url_for("home"))
-
+        return redirect(url_for("home"))
+    except Exception as e:
+        current_app.logger.error(f"Google login error: {str(e)}")
+        flash("An error occurred during login. Please try again.", "error")
+        return redirect(url_for("login"))
 
 
 
@@ -1884,8 +1877,8 @@ def create_proposal(listing_id):
             flash('Server error: Proposals table missing.', 'danger')
             return redirect(url_for('listing_details', listing_id=listing_id))
 
-        # Validate listing exists
-        cursor.execute("SELECT user_id, title FROM listings WHERE listing_id = %s", (listing_id,))
+        # Validate listing exists and fetch its contact field
+        cursor.execute("SELECT user_id, title, contact FROM listings WHERE listing_id = %s", (listing_id,))
         listing = cursor.fetchone()
         if not listing:
             app.logger.error("Listing ID %s does not exist", listing_id)
@@ -1894,6 +1887,7 @@ def create_proposal(listing_id):
 
         owner_id = listing['user_id']
         listing_title = listing['title']
+        listing_contact = listing.get('contact')  # ← store listing's own contact
 
         # Gather form data
         proposer_id = session.get('user_id')
@@ -1985,8 +1979,9 @@ def create_proposal(listing_id):
         # === WhatsApp deep-link construction ===
         # Determine vendor WhatsApp number:
         #  1) from hidden form field (preferred),
-        #  2) fallback to owner.contact from DB
-        vendor_number_raw = vendor_whatsapp_form or (owner.get('contact') if owner else '')
+        #  2) fallback to listing.contact,
+        #  3) fallback to owner.contact from DB
+        vendor_number_raw = vendor_whatsapp_form or listing_contact or (owner.get('contact') if owner else '')
 
         def normalize_msisdn(raw: str) -> str:
             """Keep only digits for wa.me link (e.g. '+233544...' -> '233544...')."""
@@ -2035,6 +2030,7 @@ def create_proposal(listing_id):
         wa_message += "This proposal has also been saved on SwapHub."
 
         # URL-encode message
+        from urllib.parse import quote_plus
         wa_text = quote_plus(wa_message)
         wa_url = f"https://wa.me/{wa_phone}?text={wa_text}"
 
@@ -2074,7 +2070,6 @@ def create_proposal(listing_id):
             cursor.close()
         if conn:
             conn.close()
-
 
 
 
@@ -3022,6 +3017,7 @@ def create_listing():
     contact = request.form['contact'].strip()
     plan = request.form.get('plan', 'Free')
     logger.debug(f"Common data: deal_type={deal_type}, title={title}, category={category}, plan={plan}")
+    description = ""
 
     # 2) Gather main images — used by Outright Sales AND Service Offer
     main_images = []
@@ -3435,7 +3431,10 @@ def paystack_verify():
 
     session.pop('pending_listing', None)
 
-    return redirect(url_for('store_home', store_id=store_id))
+    if store_id:
+        return redirect(url_for('store_home', store_id=store_id))
+    else:
+        return redirect(url_for('dashboard'))
 
 
 
@@ -7072,7 +7071,7 @@ def edit_store(slug):
 
             conn.commit()
             flash("Store updated successfully!", "success")
-            return redirect(url_for('store_home', slug=store['slug']))
+            return redirect(url_for('store_home', store_id=store['store_id']))
 
         except Exception as e:
             conn.rollback()
@@ -8616,7 +8615,7 @@ def update_store_promo(slug):
             return redirect(url_for('home'))
         if store['user_id'] != session['user_id']:
             flash('Permission denied.', 'error')
-            return redirect(url_for('store_home', slug=slug))
+            return redirect(url_for('store_home', store_id=store_id))   # ← use store_id
 
         store_id = store['store_id']
 
@@ -8676,13 +8675,13 @@ def update_store_promo(slug):
                 start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
             except ValueError:
                 flash('Invalid start date format.', 'error')
-                return redirect(url_for('store_home', slug=slug))
+                return redirect(url_for('store_home', store_id=store_id))   # ← use store_id
         if end_date_str:
             try:
                 end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
             except ValueError:
-                flash('Invalid end date format.', 'error')
-                return redirect(url_for('store_home', slug=slug))
+                flash('Invalid start date format.', 'error')
+                return redirect(url_for('store_home', store_id=store_id))   # ← use store_id
 
         # Check if promo exists
         cur.execute("SELECT promo_id FROM store_promos WHERE store_id = %s", (store_id,))
@@ -8719,7 +8718,7 @@ def update_store_promo(slug):
     finally:
         cur.close()
         conn.close()
-    return redirect(url_for('store_home', slug=slug))
+    return redirect(url_for('store_home', store_id=store_id))
 
 
     
@@ -8774,6 +8773,79 @@ def currency_filter(value):
 
 
 
+
+@app.route('/store/<slug>/listing/<int:listing_id>/delete', methods=['POST'])
+@login_required
+def delete_store_listing(slug, listing_id):
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+
+    try:
+        # Verify store ownership (same as before)
+        cur.execute("SELECT store_id, user_id FROM stores WHERE slug = %s", (slug,))
+        store = cur.fetchone()
+        if not store:
+            flash("Store not found.", "error")
+            return redirect(url_for('home'))
+        if store['user_id'] != session['user_id']:
+            flash("Permission denied.", "error")
+            return redirect(url_for('store_home', store_id=store['store_id']))
+
+        # Verify listing belongs to store
+        cur.execute("SELECT * FROM listings WHERE listing_id = %s AND store_id = %s", (listing_id, store['store_id']))
+        listing = cur.fetchone()
+        if not listing:
+            flash("Listing not found.", "error")
+            return redirect(url_for('store_inventory', slug=slug))
+
+        # --- Delete dependent records ---
+        # 1. Offers (if swap deal)
+        if listing['deal_type'] == 'Swap Deal':
+            # Delete offer images from Cloudinary (optional)
+            cur.execute("SELECT * FROM offer_items WHERE listing_id = %s", (listing_id,))
+            offers = cur.fetchall()
+            for offer in offers:
+                for field in ['image_url', 'image1', 'image2', 'image3', 'image4']:
+                    if offer.get(field):
+                        try:
+                            delete_from_cloudinary(offer[field])
+                        except Exception:
+                            pass
+            cur.execute("DELETE FROM offer_items WHERE listing_id = %s", (listing_id,))
+
+        # 2. Listing metrics
+        cur.execute("DELETE FROM listing_metrics WHERE listing_id = %s", (listing_id,))
+
+        # 3. Notification logs (this is the missing piece)
+        cur.execute("DELETE FROM notification_log WHERE listing_id = %s", (listing_id,))
+
+        # 4. Other tables (add as needed, e.g., favorites, messages)
+        # cur.execute("DELETE FROM favorites WHERE listing_id = %s", (listing_id,))
+        # cur.execute("DELETE FROM messages WHERE listing_id = %s", (listing_id,))
+
+        # --- Delete listing images from Cloudinary ---
+        for field in ['image_url', 'image1', 'image2', 'image3', 'image4']:
+            if listing.get(field):
+                try:
+                    delete_from_cloudinary(listing[field])
+                except Exception as e:
+                    print(f"Cloudinary deletion error: {e}")
+
+        # --- Finally delete the listing ---
+        cur.execute("DELETE FROM listings WHERE listing_id = %s", (listing_id,))
+
+        conn.commit()
+        flash("Listing deleted successfully.", "success")
+
+    except Exception as e:
+        conn.rollback()
+        current_app.logger.error(f"Error deleting listing {listing_id}: {str(e)}")
+        flash("An error occurred while deleting the listing.", "error")
+    finally:
+        cur.close()
+        conn.close()
+
+    return redirect(url_for('store_inventory', slug=slug))
 
 
 

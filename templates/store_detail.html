@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ store.name }} | SwapHub</title>
+    <title>{{ store.name }} | kwicshop</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1372,9 +1372,9 @@
                 <div class="promo-content">
                     <p class="promo-description">{{ promo.description }}</p>
                     {% if promo.button_link %}
-                        <a href="{{ promo.button_link }}" target="_blank" rel="noopener" class="promo-btn">
-                            {{ promo.button_text }}
-                        </a>
+        <a href="{{ promo.button_link }}" target="_blank" rel="noopener" class="promo-btn" onclick="closePromoModal()">
+            {{ promo.button_text }}
+        </a>
                     {% else %}
                         <button class="promo-btn" onclick="closePromoModal()">
                             {{ promo.button_text }}
@@ -1599,9 +1599,7 @@
 </style>
 
 <script>
-    // ----- PROMO MODAL FREQUENCY CONTROL – WITH DEBUG LOGS -----
     (function() {
-        // Wait for DOM to be fully loaded
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Promo modal script running...');
             
@@ -1614,8 +1612,12 @@
             };
             console.log('Promo data:', promoData);
 
+            // ✅ Use a consistent default – matches your database enum
+            const DEFAULT_FREQ = 'once_per_session';
+            const freq = promoData.frequency || DEFAULT_FREQ;
+
+            // ---------- shouldShowPromo() ----------
             function shouldShowPromo() {
-                const freq = promoData.frequency || 'once_per_session';
                 const now = Date.now();
                 const oneDay = 24 * 60 * 60 * 1000;
                 const oneWeek = 7 * oneDay;
@@ -1632,6 +1634,7 @@
                             const sessionShown = sessionStorage.getItem('promoShown');
                             console.log('once_per_session: sessionShown =', sessionShown);
                             return !sessionShown;
+
                         case 'once_per_day':
                             if (!lastShown) {
                                 console.log('once_per_day: no last shown → show');
@@ -1640,6 +1643,7 @@
                             const dayDiff = now - parseInt(lastShown);
                             console.log('once_per_day: lastShown =', lastShown, 'diff =', dayDiff, '> oneDay?', dayDiff > oneDay);
                             return dayDiff > oneDay;
+
                         case 'once_per_week':
                             if (!lastShown) {
                                 console.log('once_per_week: no last shown → show');
@@ -1648,12 +1652,14 @@
                             const weekDiff = now - parseInt(lastShown);
                             console.log('once_per_week: diff =', weekDiff, '> oneWeek?', weekDiff > oneWeek);
                             return weekDiff > oneWeek;
+
                         case 'once_per_visit':
                             const everShown = localStorage.getItem('promoShownEver');
                             console.log('once_per_visit: everShown =', everShown);
                             return !everShown;
+
                         default:
-                            console.log('default frequency → show');
+                            console.log('Unknown frequency, showing by default');
                             return true;
                     }
                 } catch (e) {
@@ -1662,14 +1668,14 @@
                 }
             }
 
+            // ---------- markPromoShown() ----------
             function markPromoShown() {
-                const freq = promoData.frequency || 'once_per_session';
                 const now = Date.now();
                 try {
                     switch (freq) {
                         case 'once_per_session':
                             sessionStorage.setItem('promoShown', 'true');
-                            console.log('Marked session storage');
+                            console.log('Marked sessionStorage');
                             break;
                         case 'once_per_day':
                         case 'once_per_week':
@@ -1678,28 +1684,31 @@
                             break;
                         case 'once_per_visit':
                             localStorage.setItem('promoShownEver', 'true');
-                            console.log('Marked localStorage ever');
+                            console.log('Marked localStorage (ever)');
                             break;
+                        // 'always' does not mark – handled separately
                     }
                 } catch (e) {}
             }
 
+            // ---------- close function ----------
             window.closePromoModal = function() {
                 const modal = document.getElementById('promoModal');
                 if (modal) {
                     modal.style.display = 'none';
                     console.log('Modal closed');
-                    if (promoData.frequency !== 'always') {
+                    if (freq !== 'always') {
                         markPromoShown();
                     }
                 }
             };
 
+            // ---------- decide whether to show ----------
             const modal = document.getElementById('promoModal');
             if (modal && shouldShowPromo()) {
                 modal.style.display = 'block';
                 console.log('✅ Modal displayed');
-                if (promoData.frequency === 'always') {
+                if (freq === 'always') {
                     // Override close to not mark as shown
                     window.closePromoModal = function() {
                         modal.style.display = 'none';
@@ -1707,7 +1716,7 @@
                     };
                 }
             } else {
-                console.log('❌ Modal not shown – either no modal element or shouldShowPromo returned false');
+                console.log('❌ Modal not shown');
             }
 
             // Close when clicking outside
@@ -2064,7 +2073,7 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <div class="footer-logo">SwapHub</div>
+                    <div class="footer-logo">kwicshop</div>
                     <p>Your trusted marketplace for buying, selling, and swapping items locally in Ghana.</p>
                     <div class="social-links">
                         <a href="#"><i class="fab fa-facebook-f"></i></a>
@@ -2106,7 +2115,7 @@
             </div>
             
             <div class="copyright">
-                © 2024 SwapHub. All rights reserved. • Accra, Ghana
+                © 2026 kwicshop. All rights reserved. • Accra, Ghana
             </div>
         </div>
     </footer>

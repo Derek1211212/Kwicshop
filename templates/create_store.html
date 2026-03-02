@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VendUpp | Create Your Store</title>
+    <title>Kwicshop | Create Your Store</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
@@ -524,10 +524,10 @@
             <div class="header-content">
                 <div class="brand-logo">
                     <i class="fas fa-exchange-alt"></i>
-                    <span>VendUpp</span>
+                    <span>kwicshop</span>
                 </div>
                 <p class="visual-description">
-                    Join thousands of successful sellers on VendUpp
+                    Join thousands of successful sellers on kwicshop
                 </p>
             </div>
         </div>
@@ -547,14 +547,14 @@
             <div class="visual-content">
                 <div class="brand-logo">
                     <i class="fas fa-exchange-alt"></i>
-                    <span>VendUpp</span>
+                    <span>kwicshop</span>
                 </div>
                 <h1 class="visual-title">
                     Create Your<br>
                     <span>Dream Store</span>
                 </h1>
                 <p class="visual-description">
-                    Join thousands of successful sellers who trust VendUpp to grow their business. 
+                    Join thousands of successful sellers who trust kwicshop to grow their business. 
                     Start your selling journey in just 3 simple steps.
                 </p>
                 <div class="features">
@@ -595,23 +595,163 @@
                         <input type="text" class="form-input" name="name" placeholder="e.g., Tech Haven" required>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Store Type</label>
-                        <select class="form-select" name="store_type" required>
-                            <option value="" disabled selected>Select category</option>
-                            <option value="Electronics & Gadgets">Electronics & Gadgets</option>
-                            <option value="Mobile Phones & Accessories">Mobile Phones & Accessories</option>
-                            <option value="Fashion & Clothing">Fashion & Clothing</option>
-                            <option value="Beauty & Cosmetics">Beauty & Cosmetics</option>
-                            <option value="Home & Furniture">Home & Furniture</option>
-                            <option value="Baby & Kids">Baby & Kids</option>
-                            <option value="Sports & Fitness">Sports & Fitness</option>
-                            <option value="Books & Stationery">Books & Stationery</option>
-                            <option value="Food & Drinks">Food & Drinks</option>
-                            <option value="Agriculture & Agribusiness">Agriculture & Agribusiness</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
+<!-- ========== STORE TYPE FIELD ========== -->
+<div class="form-group full-width">
+  <label for="store_type">Store Type *</label>
+  <select id="store_type" name="store_type" placeholder="Search or type your own..." required>
+    <option value="">Select a store type</option>
+
+    {% set types = [
+      "Grocery", "Fashion", "Electronics", "Phones & Accessories", "Beauty & Cosmetics",
+      "Restaurant / Food", "Pharmacy", "Hardware", "Home & Living", "Books & Stationery",
+      "Auto Parts", "Services", "Agric/Agribusiness",
+      "Baby & Kids", "Pet Supplies", "Sports & Fitness", "Toys & Games", "Jewelry & Watches",
+      "Art & Crafts", "Office Supplies", "Furniture", "Appliances", "Tools & DIY",
+      "Health & Wellness", "Medical Supplies", "Veterinary", "Bakery", "Butchery",
+      "Fishmonger", "Fresh Produce", "Organic Foods", "Beverages", "Wine & Spirits",
+      "Coffee & Tea", "Confectionery", "Ice Cream Parlor", "Food Truck", "Catering",
+      "Computers & IT", "Gaming", "Camera & Photography", "Music Instruments", "Home Theater",
+      "Printing & Stationery", "Gift Shop", "Flower Shop", "Party Supplies", "Wedding Services",
+      "Photography Services", "Videography", "Event Planning", "Catering Services",
+      "Cleaning Services", "Laundry Services", "Tailoring & Alterations", "Shoe Repair",
+      "Watch Repair", "Phone Repair", "Computer Repair", "Electronics Repair", "Appliance Repair",
+      "Auto Repair", "Car Wash", "Tire Services", "Auto Detailing", "Motorcycle Parts & Repair",
+      "Bicycle Shop", "Marine & Boating", "RV & Camping", "Travel Agency", "Tour Operator",
+      "Real Estate", "Property Management", "Construction", "Renovation Services", "Plumbing",
+      "Electrical Services", "HVAC", "Roofing", "Painting", "Landscaping", "Pest Control",
+      "Moving Services", "Storage Units", "Packaging & Shipping", "Courier Services",
+      "Logistics & Freight", "Warehousing", "Import/Export", "Wholesale Distributor",
+      "Manufacturing", "Industrial Supplies", "Safety Equipment", "Janitorial Supplies",
+      "Hotel / Accommodation", "Bed & Breakfast", "Guest House", "Hostel", "Short-term Rentals",
+      "Salon", "Barbershop", "Nail Salon", "Spa & Massage", "Fitness Center", "Yoga Studio",
+      "Martial Arts", "Dance Studio", "Personal Training", "Nutrition & Supplements",
+      "Daycare / Preschool", "Tutoring", "Music Lessons", "Art Classes", "Language School",
+      "Vocational Training", "Driving School", "Legal Services", "Accounting & Tax", "Financial Services",
+      "Insurance Agency", "Real Estate Agency", "Marketing Agency", "Advertising Services",
+      "Graphic Design", "Web Design", "Software Development", "Digital Marketing", "SEO Services",
+      "Social Media Management", "Content Creation", "Photography Studio", "Recording Studio",
+      "Print Shop", "Sign Shop", "Embroidery & Printing", "Promotional Products",
+      "Non-Profit Organization", "Charity Shop", "Thrift Store", "Consignment Shop",
+      "Vintage & Antiques", "Collectibles", "Second-hand Store", "Pawn Shop",
+      "Convenience Store", "Mini-Mart", "Supermarket", "Hypermarket", "Wholesale Club",
+      "Specialty Food Store", "Health Food Store", "Vitamin & Supplement Store", "Ethnic Grocery",
+      "Halal Market", "Kosher Market", "Seafood Market", "Meat Market", "Cheese Shop",
+      "Wine Shop", "Brewery", "Distillery", "Microbrewery", "Cider House",
+      "Cannabis Dispensary", "CBD Store", "Vape Shop", "Tobacco Shop",
+      "Sporting Goods Store", "Outdoor Gear", "Camping Store", "Fishing Tackle", "Hunting Supplies",
+      "Equestrian Supplies", "Farm & Ranch", "Feed Store", "Tractor & Equipment", "Garden Center",
+      "Nursery & Greenhouse", "Hydroponics", "Landscaping Supply", "Pool & Spa", "Fireplace & Stove",
+      "Mattress Store", "Flooring Store", "Window & Door", "Cabinet & Countertop", "Tile & Stone",
+      "Lighting Store", "Electrical Supply", "Plumbing Supply", "Lumber & Building Materials",
+      "Paint & Wallpaper", "Glass & Mirrors", "Security Systems", "Locksmith", "Safe & Vault",
+      "Religious & Spiritual", "Bookstore (Religious)", "Gifts (Religious)", "Meditation Supplies",
+      "Yoga & Wellness", "Alternative Medicine", "Herbal Shop", "Holistic Health", "Acupuncture",
+      "Chiropractic", "Dental Clinic", "Optical Shop", "Hearing Aids", "Mobility Equipment",
+      "Home Healthcare", "Assisted Living", "Senior Services", "Disability Services",
+      "Veterinary Clinic", "Pet Grooming", "Pet Boarding", "Pet Training", "Animal Shelter",
+      "Zoo & Aquarium", "Wildlife Conservation", "Environmental Services", "Recycling Center",
+      "Waste Management", "Sanitation Services", "Utility Services", "Telecommunications",
+      "Internet Service Provider", "Mobile Network Operator", "Cable & Satellite", "Security Services",
+      "Private Investigation", "Background Checks", "Bail Bonds", "Process Serving",
+      "Employment Agency", "Staffing Agency", "HR Consulting", "Payroll Services", "Benefits Administration",
+      "Business Consulting", "Management Consulting", "Strategy Consulting", "Market Research",
+      "Public Relations", "Corporate Events", "Team Building", "Executive Coaching",
+      "Life Coaching", "Career Counseling", "Mental Health Services", "Therapy & Counseling",
+      "Support Groups", "Crisis Intervention", "Addiction Treatment", "Rehabilitation Services",
+      "Physical Therapy", "Occupational Therapy", "Speech Therapy", "Massage Therapy",
+      "Alternative Healing", "Reiki", "Energy Healing", "Hypnotherapy", "Pastoral Counseling"
+    ] %}
+
+    {% for t in types|sort %}
+      <option value="{{ t }}" {% if store and store.store_type == t %}selected{% endif %}>{{ t }}</option>
+    {% endfor %}
+  </select>
+  <div class="form-hint">Search or type your own – suggestions appear as you type.</div>
+</div>
+
+<!-- Tom Select CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css">
+
+<!-- Custom styling -->
+<style>
+  .form-group.full-width {
+    width: 100%;
+  }
+
+  .form-hint {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-top: 0.35rem;
+  }
+
+  /* Make it feel more like a search bar */
+  .ts-wrapper.single .ts-control {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    background: white;
+    min-height: 44px;
+    font-size: 1rem;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  .ts-wrapper .ts-control input {
+    caret-color: #10b981;          /* change to match your theme if desired */
+  }
+
+  .ts-wrapper .ts-dropdown {
+    border-radius: 6px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.14);
+    margin-top: 4px;
+    font-size: 0.95rem;
+  }
+
+  .ts-wrapper .option {
+    padding: 10px 12px;
+  }
+
+  .ts-wrapper .option.create {
+    color: #059669;
+    font-weight: 500;
+  }
+
+  .ts-wrapper.single .ts-control input::placeholder {
+    color: #9ca3af;
+    opacity: 1;
+  }
+</style>
+
+<!-- Tom Select JS -->
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    new TomSelect('#store_type', {
+      maxOptions: 300,                 // increased to safely cover all ~200+ items
+      searchField: ['text'],
+      sortField: 'text',
+      placeholder: 'Search or type your own...',
+      plugins: ['clear_button'],
+      create: true,
+      createOnBlur: true,
+      createFilter: null,
+      openOnFocus: true,
+      hidePlaceholderOnSearch: false,
+
+      render: {
+        option_create: function(data, escape) {
+          return '<div class="create">+ Add <strong>' + escape(data.input) + '</strong></div>';
+        },
+        option: function(data, escape) {
+          return '<div>' + escape(data.text) + '</div>';
+        },
+        item: function(data, escape) {
+          return '<div>' + escape(data.text) + '</div>';
+        }
+      }
+    });
+  });
+</script>
 
                     <div class="form-group">
                         <label class="form-label">Description (Optional)</label>
@@ -695,7 +835,7 @@
                 </div>
                 <h2>Store Created Successfully!</h2>
                 <p style="color: var(--text-light); margin: 20px 0 30px;">
-                    Your VendUpp store is now live. Redirecting to your dashboard...
+                    Your kwicshop store is now live. Redirecting to your dashboard...
                 </p>
                 <button class="btn btn-primary" id="viewStoreBtn">
                     <i class="fas fa-external-link-alt"></i> View Your Store

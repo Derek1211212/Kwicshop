@@ -1531,7 +1531,7 @@ select.form-control {
         <aside class="dashboard-sidebar">
             <div class="sidebar-header">
                 <h2 style="color: var(--primary);">
-                    <i class="fas fa-exchange-alt"></i> VendUpp
+                    <i class="fas fa-exchange-alt"></i> kwicshop
                 </h2>
                 <button class="sidebar-close">
                     <i class="fas fa-times"></i>
@@ -2052,11 +2052,87 @@ select.form-control {
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label required-field">Contact Number</label>
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text input-icon"><i class="fas fa-phone"></i></span>
-                                        <input type="text" name="contact" class="form-control" placeholder="e.g., +233 123 456 789" required>
+
+                                    <!-- Country code dropdown – required, with a disabled default option -->
+                                    <div class="mb-2">
+                                        <label for="country-code" class="form-label small">Country Code</label>
+                                        <select id="country-code" class="form-select" required>
+                                            <option value="" selected disabled>-- Select country code --</option>
+                                            <option value="+233">🇬🇭 +233 (Ghana)</option>
+                                            <option value="+1">🇺🇸 +1 (USA/Canada)</option>
+                                            <option value="+44">🇬🇧 +44 (UK)</option>
+                                            <option value="+234">🇳🇬 +234 (Nigeria)</option>
+                                            <option value="+254">🇰🇪 +254 (Kenya)</option>
+                                            <!-- add more as needed -->
+                                        </select>
                                     </div>
+
+                                    <!-- Local number input – required -->
+                                    <div>
+                                        <label for="local-number" class="form-label small">Local Number</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text input-icon"><i class="fas fa-phone"></i></span>
+                                            <input type="text" id="local-number" class="form-control"
+                                                   placeholder="e.g., 544156292" required>
+                                        </div>
+                                        <small class="text-muted">Enter only the local number after the country code.</small>
+                                    </div>
+
+                                    <!-- Hidden field that will carry the full international number -->
+                                    <input type="hidden" name="contact" id="contact-hidden">
                                 </div>
+
+
+                                    <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const form = document.getElementById('create-listing-form'); // ✅ correct ID
+                                        if (!form) return;
+
+                                        form.addEventListener('submit', function(e) {
+                                            const countrySelect = document.getElementById('country-code');
+                                            const localInput = document.getElementById('local-number');
+                                            const hiddenContact = document.getElementById('contact-hidden');
+
+                                            // Ensure a country code is selected
+                                            if (!countrySelect.value) {
+                                                alert('Please select a country code.');
+                                                e.preventDefault();
+                                                return false;
+                                            }
+
+                                            const rawLocal = localInput.value.trim();
+                                            if (!rawLocal) return; // browser's required will handle empty
+
+                                            // Extract only digits from the local input
+                                            let digits = rawLocal.replace(/\D/g, '');
+
+                                            // Get the digits of the selected country code (e.g., "233" from "+233")
+                                            const countryCodeDigits = countrySelect.value.replace(/\D/g, '');
+
+                                            // If digits start with the country code digits, remove them
+                                            if (digits.startsWith(countryCodeDigits)) {
+                                                digits = digits.slice(countryCodeDigits.length);
+                                            }
+
+                                            // Strip any leading zeros
+                                            digits = digits.replace(/^0+/, '');
+
+                                            // Validate we have a local number left
+                                            if (digits.length === 0) {
+                                                alert('Please enter a valid local phone number (after the country code).');
+                                                e.preventDefault();
+                                                return false;
+                                            }
+
+                                            // Combine and set hidden field
+                                            hiddenContact.value = countrySelect.value + digits;
+                                            // Optional: log for debugging
+                                            console.log('Contact number set to:', hiddenContact.value);
+                                        });
+                                    });
+                                    </script>
+
+
                             </div>
                         </div>
                         <button type="submit" class="submit-btn">
@@ -2332,11 +2408,12 @@ select.form-control {
             'input[name="price"], select[name="condition"], textarea[name="description"]'
         ));
 
-        const serviceCtrls = Array.from(document.querySelectorAll(
-            '#service-section input[name="price"], ' +
-            '#service-section textarea[name="description"], ' +
-            '#service-section input[name="contact_for_price"]'
-        ));
+const serviceCtrls = Array.from(document.querySelectorAll(
+    '#service-section input[name="title"], ' +      // ← add this line
+    '#service-section input[name="price"], ' +
+    '#service-section textarea[name="description"], ' +
+    '#service-section input[name="contact_for_price"]'
+));
 
         const listingImagesSection = document.getElementById('listing-images-section');
         const mainImagesInput      = document.getElementById('main-images-input');
@@ -2372,16 +2449,27 @@ select.form-control {
                 }
             });
 
-            serviceCtrls.forEach(c => {
-                c.disabled = activeType !== 'service';
-                if (c.name === 'description' || c.name === 'contact_for_price') {
-                    c.required = (activeType === 'service');
-                }
-                if (c.name === 'price') {
-                    const contactChecked = document.getElementById('contact-for-price')?.checked ?? false;
-                    c.required = (activeType === 'service' && !contactChecked);
-                }
-            });
+// Inside toggleSections, after showing/hiding sections
+serviceCtrls.forEach(c => {
+    c.disabled = activeType !== 'service';
+    if (activeType === 'service') {
+        // Title and description are required
+        if (c.name === 'title' || c.name === 'description') {
+            c.required = true;
+        }
+        // Price required only if "Contact for Price" is NOT checked
+        else if (c.name === 'price') {
+            const contactChecked = document.getElementById('contact-for-price')?.checked ?? false;
+            c.required = !contactChecked;
+        }
+        // Contact checkbox itself is never required
+        else if (c.name === 'contact_for_price') {
+            c.required = false;
+        }
+    } else {
+        c.required = false;   // disable requirement when service not active
+    }
+});
 
             // Main images → shown for sale AND service
             const needsMainImages = (activeType === 'sale' || activeType === 'service');
