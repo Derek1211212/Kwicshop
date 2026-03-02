@@ -1350,13 +1350,35 @@
                                     <input type="text" name="location" class="form-input" required style="padding-left:40px;" placeholder="e.g., Accra, Kumasi">
                                 </div>
                             </div>
+
+                            <!-- Contact Number with country code dropdown above -->
                             <div class="form-group">
                                 <label class="form-label">Contact Number *</label>
+
+                                <!-- Country code dropdown (required) -->
+                                <div style="margin-bottom: 8px;">
+                                    <select id="country-code" class="form-input" required style="width:100%;">
+                                        <option value="" selected disabled>-- Select country code --</option>
+                                        <option value="+233">🇬🇭 +233 (Ghana)</option>
+                                        <option value="+1">🇺🇸 +1 (USA/Canada)</option>
+                                        <option value="+44">🇬🇧 +44 (UK)</option>
+                                        <option value="+234">🇳🇬 +234 (Nigeria)</option>
+                                        <option value="+254">🇰🇪 +254 (Kenya)</option>
+                                    </select>
+                                </div>
+
+                                <!-- Local number input (required) -->
                                 <div style="position:relative;">
                                     <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-secondary);">📞</span>
-                                    <input type="text" name="contact" class="form-input" required style="padding-left:40px;" placeholder="e.g., +233 123 456 789">
+                                    <input type="text" id="local-number" class="form-input" required
+                                           style="padding-left:40px;" placeholder="e.g., 544156292">
                                 </div>
+                                <small style="display:block; margin-top:4px; color:#666;">Enter only the local number after the country code.</small>
+
+                                <!-- Original contact field – now hidden, will be populated by JS -->
+                                <input type="hidden" name="contact" id="contact-hidden" value="">
                             </div>
+
                             <div style="background: rgba(46,204,113,0.1); padding: 1rem; border-radius: 8px;">
                                 <div style="display:flex; gap:12px; align-items:flex-start;">
                                     <span style="color: var(--primary);">ℹ️</span>
@@ -1364,6 +1386,7 @@
                                 </div>
                             </div>
                         </div>
+
                         <div style="display:flex; justify-content:space-between; margin-top:2rem;">
                             <button type="button" class="btn btn-outline prev-step">← Back</button>
                             <button type="button" class="btn btn-primary" id="submitItemBtn">Submit</button>
@@ -1373,6 +1396,66 @@
             </div>
         </div>
     </div>
+
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const submitBtn = document.getElementById('submitItemBtn');
+    if (!submitBtn) return;
+
+    // Capture phase – runs before any bubbling click handlers
+    submitBtn.addEventListener('click', function(e) {
+        const countrySelect = document.getElementById('country-code');
+        const localInput = document.getElementById('local-number');
+        const hiddenContact = document.getElementById('contact-hidden');
+
+        if (!countrySelect || !localInput || !hiddenContact) {
+            console.error('Contact elements missing');
+            return;
+        }
+
+        // Validate country code
+        if (!countrySelect.value) {
+            alert('Please select a country code.');
+            e.preventDefault();
+            e.stopPropagation(); // Prevent other handlers from running
+            return false;
+        }
+
+        const rawLocal = localInput.value.trim();
+        if (!rawLocal) {
+            alert('Please enter a local number.');
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+
+        // Clean the local number
+        let digits = rawLocal.replace(/\D/g, '');
+        const countryCodeDigits = countrySelect.value.replace(/\D/g, '');
+
+        // Remove accidental country code prefix
+        if (digits.startsWith(countryCodeDigits)) {
+            digits = digits.slice(countryCodeDigits.length);
+        }
+
+        // Strip leading zeros
+        digits = digits.replace(/^0+/, '');
+
+        if (digits.length === 0) {
+            alert('Please enter a valid local phone number.');
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+
+        // Combine and set the hidden field
+        hiddenContact.value = countrySelect.value + digits;
+        console.log('Contact number set to:', hiddenContact.value);
+
+        // Allow the original click handler to proceed (it will submit the form)
+    }, { capture: true }); // capture phase ensures this runs first
+});
+</script>
 
     <!-- ========== FONTAWESOME ========== -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">

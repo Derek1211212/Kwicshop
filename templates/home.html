@@ -332,16 +332,6 @@
   }
 }
 
-
-
-
-
-
-
-
-
-
-
     /* --- FEATURED / CAROUSEL --- */
     .featured-shell{background:white; border-bottom:1px solid var(--featured-edge);padding:1.25rem 0 1.5rem;position:relative}
     .featured-shell .section-title{color:var(--featured-text)}
@@ -1193,6 +1183,364 @@
 </nav>
 
 
+<section class="search-hub">
+  <div class="search-bar">
+    <!-- Mode toggle integrated into the bar -->
+    <div class="mode-selector">
+      <button type="button" class="mode-btn active" data-mode="buy">
+        <i class="fas fa-shopping-cart"></i> Buy
+      </button>
+      <button type="button" class="mode-btn" data-mode="swap">
+        <i class="fas fa-exchange-alt"></i> Swap
+      </button>
+    </div>
+
+    <!-- Form area – the rest of the bar becomes the input area -->
+    <form id="search-form" method="GET" action="{{ url_for('home') }}" class="search-form">
+      <input type="hidden" name="mode" id="search-mode" value="buy">
+      <input type="hidden" name="have" id="have-value">
+
+      <div class="input-group">
+        <!-- Buy mode input (visible by default) -->
+        <div class="input-field" id="buy-field">
+          <i class="fas fa-search"></i>
+          <input type="text" name="search" id="buy-input" placeholder="What are you looking for?" autocomplete="off">
+        </div>
+
+        <!-- Swap mode inputs (hidden initially) -->
+        <div class="input-field hidden" id="have-field">
+          <i class="fas fa-box"></i>
+          <input type="text" id="have-input" placeholder="What do you have?" autocomplete="off">
+        </div>
+        <div class="input-field hidden" id="want-field">
+          <i class="fas fa-gift"></i>
+          <input type="text" name="want" id="want-input" placeholder="What do you want?" autocomplete="off">
+        </div>
+      </div>
+
+      <button class="search-btn" type="submit" id="search-btn">Search</button>
+    </form>
+  </div>
+</section>
+
+<style>
+@media (min-width: 992px) {
+  .search-hub-wrapper {
+    padding: 0.75rem 1rem;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .search-hub {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .search-bar {
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 60px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    padding: 0.25rem;
+    transition: box-shadow 0.2s, border-color 0.2s;
+  }
+
+  .search-bar:focus-within {
+    border-color: #059669;
+    box-shadow: 0 4px 16px rgba(5,150,105,0.2);
+  }
+
+  /* Mode selector as a pill inside the bar */
+  .mode-selector {
+    display: flex;
+    background: #f1f4f9;
+    border-radius: 60px;
+    padding: 0.2rem;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .mode-btn {
+    border: none;
+    background: transparent;
+    border-radius: 60px;
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #4b5565;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    transition: 0.15s;
+    white-space: nowrap;
+  }
+
+  .mode-btn i {
+    font-size: 0.8rem;
+  }
+
+  .mode-btn.active {
+    background: #ffffff;
+    color: #059669;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+
+  /* Form takes remaining space */
+  .search-form {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .input-group {
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+
+  .input-field {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    background: #f8fafd;
+    border-radius: 60px;
+    padding: 0.35rem 1rem;
+    transition: background 0.15s;
+  }
+
+  .input-field.hidden {
+    display: none;
+  }
+
+  .input-field i {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin-right: 0.5rem;
+  }
+
+  .input-field input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 0.95rem;
+    padding: 0.25rem 0;
+    color: #1e293b;
+    width: 100%;
+  }
+
+  .input-field input:focus {
+    outline: none;
+  }
+
+  .input-field input::placeholder {
+    color: #a0afbe;
+  }
+
+  /* Search button */
+  .search-btn {
+    background: #059669;
+    color: white;
+    border: none;
+    border-radius: 60px;
+    padding: 0.5rem 1.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-left: 0.25rem;
+  }
+
+  .search-btn:hover {
+    background: #047857;
+    transform: translateY(-1px);
+  }
+
+  .search-btn:active {
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 991px) {
+  .search-hub-wrapper {
+    padding: 0.5rem;
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .search-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  /* Mode selector as a row of two equal buttons */
+  .mode-selector {
+    display: flex;
+    gap: 0.5rem;
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    width: 100%;
+  }
+
+  .mode-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 0.75rem 0.5rem;
+    background: #f3f4f6;
+    border-radius: 40px;
+    font-size: 0.95rem;
+    border: 1px solid #e5e7eb;
+    color: #4b5563;
+  }
+
+  .mode-btn.active {
+    background: #059669;
+    color: #fff;
+    border-color: #059669;
+    box-shadow: none;
+  }
+
+  /* Form takes full width */
+  .search-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .input-group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .input-field {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 40px;
+    padding: 0.75rem 1rem;
+  }
+
+  .input-field i {
+    color: #9ca3af;
+    margin-right: 0.5rem;
+    font-size: 1rem;
+  }
+
+  .input-field input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 1rem;
+    padding: 0;
+    width: 100%;
+  }
+
+  .input-field input::placeholder {
+    color: #9ca3af;
+  }
+
+  /* Remove focus outline */
+  .input-field input:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .input-field.hidden {
+    display: none;
+  }
+
+  /* Search button - full width on mobile */
+  .search-btn {
+    width: 100%;
+    background: #059669;
+    color: #fff;
+    border: none;
+    border-radius: 40px;
+    padding: 0.9rem;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 0.25rem;
+    cursor: pointer;
+  }
+
+  .search-btn:hover {
+    background: #047857;
+  }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const modeBtns = document.querySelectorAll('.mode-btn');
+  const modeInput = document.getElementById('search-mode');
+  const buyField = document.getElementById('buy-field');
+  const haveField = document.getElementById('have-field');
+  const wantField = document.getElementById('want-field');
+  const haveInput = document.getElementById('have-input');
+  const wantInput = document.getElementById('want-input');
+  const haveHidden = document.getElementById('have-value');
+  const searchForm = document.getElementById('search-form');
+
+  // Hide all swap fields initially
+  haveField.classList.add('hidden');
+  wantField.classList.add('hidden');
+
+  modeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      modeBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const mode = btn.dataset.mode;
+      modeInput.value = mode;
+
+      if (mode === 'buy') {
+        buyField.classList.remove('hidden');
+        haveField.classList.add('hidden');
+        wantField.classList.add('hidden');
+        document.getElementById('buy-input').focus();
+      } else {
+        buyField.classList.add('hidden');
+        haveField.classList.remove('hidden');
+        wantField.classList.remove('hidden');
+        haveInput.focus();
+      }
+    });
+  });
+
+  // When "have" input changes, update the hidden field
+  haveInput.addEventListener('input', function() {
+    haveHidden.value = this.value.trim();
+  });
+
+  // Form validation: if swap mode, ensure want input is not empty
+  searchForm.addEventListener('submit', function(e) {
+    if (modeInput.value === 'swap') {
+      if (!wantInput.value.trim()) {
+        e.preventDefault();
+        alert('Please enter what you want in exchange.');
+      }
+    }
+  });
+});
+</script>
+
+
 
 <!-- MOBILE BOTTOM NAV -->
 <nav class="mb-nav" aria-label="Mobile Bottom Navigation">
@@ -1892,7 +2240,7 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
     <div class="footer-bottom">
-      <p>&copy; 2025 kwicshop. All rights reserved. | <a href="{{ url_for('privacy_policy') }}">Privacy Policy</a> | <a href="{{ url_for('privacy_policy') }}">Terms &amp; Conditions</a></p>
+      <p>&copy; 2026 kwicshop. All rights reserved. | <a href="{{ url_for('privacy_policy') }}">Privacy Policy</a> | <a href="{{ url_for('privacy_policy') }}">Terms &amp; Conditions</a></p>
     </div>
   </footer>
 
