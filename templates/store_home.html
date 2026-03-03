@@ -665,14 +665,14 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
         <div style="display:flex;align-items:center;gap:0">
             <a href="/" class="logo"><i class="fas fa-recycle"></i> kwicshop</a>
             {% if store.store_link %}
-            <div class="store-link-container">
-                <a href="{{ store.store_link }}" target="_blank" class="store-link" rel="noopener">
-                    <i class="fas fa-external-link-alt"></i> View Store
-                </a>
-                <button class="copy-link" title="Copy store link" type="button" data-copy-link="{{ store.store_link }}">
-                    <i class="far fa-copy"></i>
-                </button>
-            </div>
+                <div class="store-link-container">
+                    <a href="{{ store.store_link }}" target="_blank" class="store-link" rel="noopener">
+                        <i class="fas fa-external-link-alt"></i> View Store
+                    </a>
+                    <button class="copy-link" title="Copy store link" type="button" data-copy-link="{{ store.store_link }}">
+                        <i class="far fa-copy"></i>
+                    </button>
+                </div>
             {% endif %}
         </div>
         <nav class="header-nav">
