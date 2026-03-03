@@ -1551,12 +1551,12 @@ document.addEventListener('DOMContentLoaded', function() {
     {% if session.get('user_id') %}
       <a href="{{ create_target }}" class="mb-item {% if request.path == create_target %}active{% endif %}">
         <i class="fas fa-plus-circle mb-icon" aria-hidden="true"></i>
-        <span class="nav-label">Ads</span>
+        <span class="nav-label">Upload item</span>
       </a>
     {% else %}
       <a href="{{ url_for('login', next=create_target) }}" class="mb-item">
         <i class="fas fa-plus-circle mb-icon" aria-hidden="true"></i>
-        <span class="nav-label">New Listing</span>
+        <span class="nav-label">Upload item</span>
       </a>
     {% endif %}
 
