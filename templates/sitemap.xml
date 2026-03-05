@@ -1,198 +1,497 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Homepage – highest priority, crawl daily -->
-  <url>
-    <loc>https://kwicshop.com/</loc>
-    <lastmod>2026-02-06</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
+<urlset
+      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
 
-  <!-- Core marketplace pages -->
-  <url>
-    <loc>https://kwicshop.com/shops</loc>
-    <lastmod>2026-02-06</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
 
-  <!-- Privacy & legal -->
-  <url>
-    <loc>https://kwicshop.com/privacy-policy</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
+<url>
+  <loc>https://www.kwicshop.com/</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>1.00</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=https%3A%2F%2Fwww.kwicshop.com%2Fdashboard</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Fdashboard%3Fsection%3Dcreate-listing</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/shops</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/signup</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=https%3A%2F%2Fwww.kwicshop.com%2Fmy-store</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/130</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/129</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/127</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/126</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/123</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/?category=All&amp;search=&amp;location=&amp;deal_type=All</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/?category=Electronics&amp;search=&amp;location=&amp;deal_type=All</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/?category=Mobile+Phones+%26+Accessories&amp;search=&amp;location=&amp;deal_type=All</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/?category=Computers+%26+Networking&amp;search=&amp;location=&amp;deal_type=All</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/?category=Sports+%26+Outdoors&amp;search=&amp;location=&amp;deal_type=All</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/?category=Toys+%26+Games&amp;search=&amp;location=&amp;deal_type=All</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/?category=Automobile+%26+Vehicles&amp;search=&amp;location=&amp;deal_type=All</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/?category=Fashion+%26+Accessories&amp;search=&amp;location=&amp;deal_type=All</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/?category=Home+%26+Garden&amp;search=&amp;location=&amp;deal_type=All</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/?category=Books+%26+Stationery&amp;search=&amp;location=&amp;deal_type=All</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/?category=Health+%26+Beauty&amp;search=&amp;location=&amp;deal_type=All</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/?category=Real+Estate&amp;search=&amp;location=&amp;deal_type=All</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/99</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/98</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/146</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/145</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/143</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/141</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/140</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/139</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/138</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/131</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/122</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/120</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/92</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/91</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/90</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/88</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/86</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/85</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/76</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/46</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/34</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/9</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/87</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/6</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/5</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/3</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/1</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/93</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/121</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/listing/119</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/privacy-policy</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/forgot-password</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/store/raven-s-eatery</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/store/haven-s-clothing-shop</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/store/nissan-show-room</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/store/kilomi-s-apple-shop</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/store/furniture-city</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/store/grainco</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F130</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F129</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F127</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F126</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F123</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F99</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F98</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F146</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F145</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F143</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F141</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F140</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F139</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F138</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F131</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F122</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F120</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F92</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F91</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F90</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F88</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F86</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F85</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F76</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F46</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F34</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F9</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F87</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F6</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F5</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F3</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F1</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F93</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F121</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://www.kwicshop.com/login?next=%2Flisting%2F119</loc>
+  <lastmod>2026-03-05T09:54:37+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
 
-  <!-- Auth & static pages (lower priority – Google doesn't need to crawl them often) -->
-  <url>
-    <loc>https://kwicshop.com/signup</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
 
-  <url>
-    <loc>https://kwicshop.com/login</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
-
-  <url>
-    <loc>https://kwicshop.com/forgot-password</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
-
-  <!-- All your provided listing IDs – treated as public content -->
-  <url>
-    <loc>https://kwicshop.com/listing/1</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://kwicshop.com/listing/3</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://kwicshop.com/listing/5</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://kwicshop.com/listing/6</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://kwicshop.com/listing/9</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://kwicshop.com/listing/34</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://kwicshop.com/listing/46</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://kwicshop.com/listing/76</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://kwicshop.com/listing/85</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://kwicshop.com/listing/86</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://kwicshop.com/listing/87</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://kwicshop.com/listing/88</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://kwicshop.com/listing/90</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://kwicshop.com/listing/91</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Sample store pages (add more if you have many) -->
-  <url>
-    <loc>https://kwicshop.com/store/1</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
-  <url>
-    <loc>https://kwicshop.com/store/3</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
-  <url>
-    <loc>https://kwicshop.com/store/4</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
-  <url>
-    <loc>https://kwicshop.com/store/5</loc>
-    <lastmod>2026-02-05</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
-  <!-- Representative category pages (not all filters – avoid explosion) -->
-  <url>
-    <loc>https://kwicshop.com/?category=All</loc>
-    <lastmod>2026-02-06</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://kwicshop.com/?category=Electronics</loc>
-    <lastmod>2026-02-06</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://kwicshop.com/?category=Mobile+Phones+%26+Accessories</loc>
-    <lastmod>2026-02-06</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
 </urlset>
