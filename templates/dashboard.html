@@ -616,10 +616,10 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
                             </h5>
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label required-field">Item Name</label>
+                                    <label for="title" id="main-title-label" class="form-label required-field">Item Name</label>
                                     <div class="input-group mb-3">
                                         <span class="input-group-text input-icon"><i class="fas fa-heading"></i></span>
-                                        <input type="text" name="title" class="form-control" placeholder="e.g., iPhone 12 Pro Max" required>
+                                       <input type="text" name="title" id="title" class="form-control" placeholder="e.g., iPhone 12 Pro Max" required>
                                     </div>
                                     <p class="help-text">For swaps: Your main item name. For sales: Item name</p>
                                 </div>
@@ -831,13 +831,6 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
         <i class="fas fa-tools"></i> Service Details
     </h5>
     <div class="row g-3">
-        <div class="col-md-6">
-            <label class="form-label required-field">Service Name</label>
-            <div class="input-group mb-3">
-                <span class="input-group-text input-icon"><i class="fas fa-heading"></i></span>
-                <input type="text" name="title" class="form-control" placeholder="e.g., Home Cleaning, Logo Design, Guitar Lessons" required>
-            </div>
-        </div>
 
         <div class="col-md-6">
             <label class="form-label">Price</label>
@@ -1216,7 +1209,6 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
         ));
 
         const serviceCtrls = Array.from(document.querySelectorAll(
-            '#service-section input[name="title"], ' +
             '#service-section input[name="price"], ' +
             '#service-section textarea[name="description"], ' +
             '#service-section input[name="contact_for_price"]'
@@ -1287,6 +1279,21 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
                     card.classList.toggle('active', inp.checked);
                 }
             });
+
+            // --- NEW: Update main title label and placeholder based on deal type ---
+            const mainTitleField = document.getElementById('title');
+            const mainTitleLabel = document.getElementById('main-title-label');
+
+            if (mainTitleField && mainTitleLabel) {
+                if (activeType === 'service') {
+                    mainTitleField.placeholder = "e.g., Home Cleaning, Logo Design, Guitar Lessons";
+                    mainTitleLabel.innerHTML = 'Service Name <span class="text-danger">*</span>';
+                } else {
+                    mainTitleField.placeholder = "e.g., iPhone 12 Pro Max";
+                    mainTitleLabel.innerHTML = 'Item Name <span class="text-danger">*</span>';
+                }
+            }
+            // --- END NEW ---
 
             // Force layout refresh
             const form = document.querySelector('#create-listing-form');
