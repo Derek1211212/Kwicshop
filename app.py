@@ -709,7 +709,7 @@ def _smart_match_listings(cursor, have, want, per_page, offset):
 
 def _get_carousel(cursor):
     cursor.execute("""
-        SELECT listing_id, image1, title, `Plan`
+        SELECT listing_id, image_url, title, `Plan`
         FROM listings
         ORDER BY created_at DESC
         LIMIT 20
@@ -733,7 +733,7 @@ def _get_carousel(cursor):
             break
 
     for c in ordered:
-        raw_image = c.get('image1')
+        raw_image = c.get('image_url')
         if raw_image and raw_image.startswith('http'):
             c['banner_image'] = raw_image
         else:
