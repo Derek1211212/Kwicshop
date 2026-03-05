@@ -17,192 +17,126 @@
     {% endif %}
     <title>Swap Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-/* === Global Variables === */
+/* === Design Tokens === */
 :root {
-    --primary: #2e7d32;
-    --primary-light: #e8f5e9;
-    --primary-dark: #1b5e20;
-    --secondary: #43a047;
-    --success: #4caf50;
-    --success-light: #e8f5e9;
-    --success-dark: #388e3c;
-    --danger: #f44336;
-    --danger-light: #ffebee;
-    --danger-dark: #d32f2f;
-    --warning: #ff9800;
-    --warning-light: #fff3e0;
-    --info: #2196f3;
-    --info-light: #e3f2fd;
-    --light: #f8f9fa;
-    --light-gray: #f5f5f5;
-    --medium-gray: #e0e0e0;
-    --dark-gray: #616161;
-    --dark: #212121;
+    --primary: #1a6b35;
+    --primary-light: #eaf5ee;
+    --primary-dark: #134f27;
+    --secondary: #2d9954;
+    --success: #2d9954;
+    --success-light: #eaf5ee;
+    --success-dark: #1a6b35;
+    --danger: #c94040;
+    --danger-light: #fdf0f0;
+    --danger-dark: #a83030;
+    --warning: #d97b20;
+    --warning-light: #fef5e7;
+    --info: #2563a8;
+    --info-light: #eef4fc;
+    --light: #f5f7f5;
+    --light-gray: #e8ede9;
+    --medium-gray: #d0d9d2;
+    --dark-gray: #52655a;
+    --dark: #141f17;
     --white: #ffffff;
-    --card-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 6px rgba(0,0,0,0.08);
-    --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+    --card-shadow: 0 2px 10px rgba(20,31,23,.06);
+    --shadow-sm: 0 1px 4px rgba(20,31,23,.05);
+    --shadow-md: 0 4px 16px rgba(20,31,23,.09);
+    --shadow-lg: 0 10px 32px rgba(20,31,23,.13);
     --radius-sm: 6px;
-    --radius-md: 8px;
-    --radius-lg: 12px;
-    --radius-xl: 16px;
-    --transition: all 0.2s ease-in-out;
-    --primary-color: #4caf50;
-    --primary-hover: #43a047;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+    --transition: all 0.2s cubic-bezier(.4,0,.2,1);
+    --primary-color: #2d9954;
+    --primary-hover: #1a6b35;
     --secondary-bg: #ffffff;
-    --muted-text: #757575;
-    --box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    --gradient-primary: linear-gradient(135deg, var(--primary), var(--secondary));
+    --muted-text: #52655a;
+    --box-shadow: 0 2px 8px rgba(20,31,23,.06);
+    --gradient-primary: linear-gradient(135deg, #1a6b35, #2d9954);
     --sidebar-width: 260px;
     --header-height: 70px;
+    --font-display: 'Inter', system-ui;
+    --font-body: 'Inter,system-ui';
 }
-
-/* === Global Reset === */
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
+* { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: var(--font-body);
     line-height: 1.6;
     color: var(--dark);
-    background-color: #f9fafb;
+    background-color: #f2f5f2;
     -webkit-font-smoothing: antialiased;
     height: 100%;
     overflow-y: auto !important;
 }
-
-a {
-    text-decoration: none;
-    color: inherit;
-}
-
-img {
-    max-width: 100%;
-    display: block;
-    border-radius: var(--radius-sm);
-}
-
-/* === Layout === */
-.dashboard-container {
-    display: flex;
-    min-height: 100vh;
-}
-
+a { text-decoration: none; color: inherit; }
+img { max-width: 100%; display: block; border-radius: var(--radius-sm); }
+.dashboard-container { display: flex; min-height: 100vh; }
 .dashboard-sidebar {
     width: var(--sidebar-width);
-    background: var(--white);
-    box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    background: #111917;
+    box-shadow: 2px 0 16px rgba(0,0,0,.15);
     position: fixed;
     height: 100vh;
     overflow-y: auto;
     z-index: 100;
     transition: var(--transition);
 }
-
-.dashboard-main {
-    flex: 1;
-    margin-left: var(--sidebar-width);
-    padding: 1.5rem;
-    transition: var(--transition);
-}
-
+.dashboard-main { flex: 1; margin-left: var(--sidebar-width); padding: 1.5rem; transition: var(--transition); }
 .dashboard-header {
     background: var(--white);
     border-radius: var(--radius-lg);
-    padding: 1.5rem;
+    padding: 1.25rem 1.5rem;
     margin-bottom: 1.5rem;
     box-shadow: var(--card-shadow);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border: 1px solid var(--light-gray);
 }
-
-.user-profile {
-    display: block;
-    align-items: right;
-    gap: 0rem;
-}
-
+.user-profile { display: block; align-items: right; gap: 0rem; }
 .user-avatar {
-    width: 45px;
-    height: 45px;
+    width: 40px; height: 40px;
     border-radius: 50%;
     background: var(--gradient-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 700; font-size: .9rem;
+    font-family: var(--font-display);
 }
-
 .sidebar-header {
     padding: 1.5rem;
-    border-bottom: 1px solid var(--light-gray);
-    margin-bottom: 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    margin-bottom: .75rem;
+    display: flex; justify-content: space-between; align-items: center;
 }
-
-.sidebar-close {
-    display: none;
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: var(--dark);
-    cursor: pointer;
+.sidebar-header h2 {
+    font-family: var(--font-display) !important;
+    font-size: 1.15rem !important; font-weight: 800 !important;
+    letter-spacing: -.02em !important;
+    color: #ffffff !important;
+    padding: 0 !important; margin: 0 !important;
 }
-
-.sidebar-nav {
-    padding: 0 1rem;
-}
-
+.sidebar-header h2::after { display: none !important; }
+.sidebar-header h2 i { color: #5ddc8a; margin-right: 8px; }
+.sidebar-close { display: none; background: none; border: none; font-size: 1.25rem; color: rgba(255,255,255,.4); cursor: pointer; transition: color .2s; }
+.sidebar-close:hover { color: #fff; }
+.sidebar-nav { padding: 0 .75rem; }
 .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.85rem 1rem;
+    display: flex; align-items: center; gap: .75rem;
+    padding: .8rem 1rem;
     border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: var(--transition);
-    margin-bottom: 0.5rem;
-    color: var(--dark-gray);
-    font-weight: 500;
+    cursor: pointer; transition: var(--transition);
+    margin-bottom: .25rem;
+    color: rgba(255,255,255,.45);
+    font-weight: 500; font-size: .88rem;
 }
-
-.nav-item i {
-    width: 20px;
-    text-align: center;
-    font-size: 1.1rem;
-}
-
-.nav-item:hover {
-    background: var(--primary-light);
-    color: var(--primary);
-}
-
-.nav-item.active {
-    background: var(--gradient-primary);
-    color: var(--white);
-    box-shadow: var(--shadow-sm);
-}
-
-.proposal-count {
-    background: var(--danger);
-    color: white;
-    border-radius: 10px;
-    padding: 2px 8px;
-    font-size: 0.75rem;
-    margin-left: auto;
-}
-
-/* === Sections === */
+.nav-item i { width: 18px; text-align: center; font-size: .9rem; flex-shrink: 0; }
+.nav-item:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.85); }
+.nav-item.active { background: rgba(93,220,138,.12); color: #5ddc8a; }
+.nav-item.active i { color: #5ddc8a; }
+.proposal-count { background: var(--danger); color: white; border-radius: 10px; padding: 2px 8px; font-size: .72rem; font-weight: 700; margin-left: auto; }
 .dashboard-section {
     display: none;
     background: var(--white);
@@ -215,1314 +149,210 @@ img {
     min-height: 100vh;
     border: 1px solid var(--light-gray);
 }
-
-.dashboard-section.active {
-    display: block;
-    animation: fadeIn 0.4s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(15px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* === Typography === */
-h1, h2, h3, h4 {
-    font-weight: 700;
-    line-height: 1.2;
-    margin-bottom: 1.25rem;
-    color: var(--dark);
-}
-
-h2 {
-    font-size: 1.75rem;
-    position: relative;
-    padding-bottom: 0.75rem;
-}
-
-h2::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 60px;
-    height: 4px;
-    background: var(--gradient-primary);
-    border-radius: 10px;
-}
-
-h3 {
-    font-size: 1.35rem;
-}
-
-p {
-    margin-bottom: 1rem;
-    color: var(--dark-gray);
-    line-height: 1.6;
-}
-
-/* === Cards === */
-.card {
-    background: var(--white);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--card-shadow);
-    border: 1px solid var(--light-gray);
-    transition: var(--transition);
-    overflow: hidden;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-lg);
-}
-
-.card-header {
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--light-gray);
-    background: var(--light);
-}
-
-.card-body {
-    padding: 1.5rem;
-}
-
-.card-footer {
-    padding: 1rem 1.5rem;
-    border-top: 1px solid var(--light-gray);
-    background: var(--light);
-}
-
-/* === STATS GRID - Two Column Design === */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.25rem;
-    margin-bottom: 2rem;
-}
-
+.dashboard-section.active { display: block; animation: fadeIn 0.35s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; line-height: 1.2; margin-bottom: 1.25rem; color: var(--dark); }
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.25rem; font-weight: 800; position: relative; padding-bottom: .65rem; letter-spacing: -.02em; }
+h2::after { content: ''; position: absolute; bottom: 0; left: 0; width: 36px; height: 3px; background: var(--gradient-primary); border-radius: 10px; }
+h3 { font-size: 1.05rem; }
+p { margin-bottom: 1rem; color: var(--dark-gray); line-height: 1.6; }
+.card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--card-shadow); border: 1px solid var(--light-gray); transition: var(--transition); overflow: hidden; }
+.card:hover { transform: none; box-shadow: var(--card-shadow); }
+.card-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--light-gray); background: var(--white); }
+.card-body { padding: 1.5rem; }
+.card-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--light-gray); background: var(--light); }
+.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
 .stat-card {
-    background: var(--white);
-    border-radius: var(--radius-lg);
-    padding: 1.5rem;
-    box-shadow: var(--card-shadow);
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    transition: var(--transition);
-    border: 1px solid var(--light-gray);
-}
-
-.stat-card:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-md);
-}
-
-.stat-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: var(--primary);
-    background: var(--primary-light);
-    flex-shrink: 0;
-}
-
-.stat-info h3 {
-    font-size: 1.75rem;
-    margin-bottom: 0.25rem;
-    color: var(--dark);
-}
-
-.stat-info p {
-    color: var(--muted-text);
-    margin-bottom: 0;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-/* === Responsive Stats Grid === */
-@media (min-width: 992px) {
-    .stats-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-    }
-    
-    .stat-card {
-        padding: 1.25rem;
-    }
-    
-    .stat-icon {
-        width: 50px;
-        height: 50px;
-        font-size: 1.25rem;
-    }
-    
-    .stat-info h3 {
-        font-size: 1.5rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.75rem;
-    }
-    
-    .stat-card {
-        padding: 1rem;
-        flex-direction: column;
-        text-align: center;
-        gap: 0.75rem;
-    }
-    
-    .stat-icon {
-        width: 45px;
-        height: 45px;
-        font-size: 1.1rem;
-    }
-    
-    .stat-info h3 {
-        font-size: 1.35rem;
-    }
-}
-
-@media (max-width: 360px) {
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* === Listings Grid === */
-.listings-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 0rem;
-}
-
-.listing-card {
-    background: var(--white);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    box-shadow: var(--card-shadow);
-    transition: var(--transition);
-    border: 1px solid var(--light-gray);
-    position: relative;
-}
-
-.listing-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 24px rgba(0,0,0,0.1);
-}
-
-.listing-image {
-    height: 200px;
-    overflow: hidden;
-    position: relative;
-}
-
-.listing-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    transition: var(--transition);
-}
-
-.listing-card:hover .listing-image img {
-    transform: scale(1.05);
-}
-
-.listing-badges {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.badge {
-    display: inline-block;
-    padding: 0.35rem 0.85rem;
-    font-size: 0.8rem;
-    font-weight: 700;
-    border-radius: 30px;
-    text-transform: uppercase;
-    transition: var(--transition);
-    box-shadow: var(--shadow-sm);
-}
-
-.badge-swap {
-    background-color: var(--primary-light);
-    color: var(--primary-dark);
-}
-
-.badge-sale {
-    background-color: var(--info-light);
-    color: var(--info);
-}
-
-.badge-premium, .badge-standard, .badge-basic {
-    background-color: var(--primary-light);
-    color: var(--primary-dark);
-}
-
-.listing-content {
-    padding: 1.25rem;
-}
-
-.listing-content h3 {
-    margin-bottom: 0.75rem;
-    font-size: 1.25rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.listing-content p {
-    font-size: 0.95rem;
-    color: var(--dark-gray);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    margin-bottom: 1rem;
-    min-height: 48px;
-}
-
-.listing-stats {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-    margin-top: 1rem;
-}
-
-.stat {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    color: var(--dark-gray);
-}
-
-.stat i {
-    color: var(--primary);
-}
-
-.listing-actions {
-    display: flex;
-    gap: 0.75rem;
-    padding: 0 1.25rem 1.25rem;
-}
-
-.listing-actions .btn {
-    flex: 1;
-}
-
-/* === Buttons === */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.65rem;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.95rem;
-    transition: var(--transition);
-    white-space: nowrap;
-}
-
-.btn-primary {
-    background: var(--gradient-primary);
-    color: var(--white);
-}
-
-.btn-primary:hover {
-    background: linear-gradient(135deg, var(--primary-dark), var(--secondary));
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(76, 175, 80, 0.25);
-}
-
-.btn-outline {
-    background: transparent;
-    color: var(--primary);
-    border: 1px solid var(--primary);
-}
-
-.btn-outline:hover {
-    background: var(--primary-light);
-}
-
-.btn-danger {
-    background: var(--danger);
-    color: var(--white);
-}
-
-.btn-danger:hover {
-    background: var(--danger-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(239, 68, 68, 0.25);
-}
-
-.btn-outline-danger {
-    background: transparent;
-    color: var(--danger);
-    border: 1px solid var(--danger);
-}
-
-.btn-outline-danger:hover {
-    background: var(--danger-light);
-}
-
-/* === Form Styling === */
-#create-listing-form {
-    width: 100%;
-    max-width: none;
-    margin: 1rem auto;
-    padding: 1rem;
-    background: var(--secondary-bg);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--box-shadow);
-    overflow: visible !important;
-    height: auto !important;
-}
-
-.form-card {
-    background: var(--white);
-    border-radius: var(--radius-lg);
-    padding: 2rem;
-    margin-bottom: 2rem;
-    transition: var(--transition);
-    position: relative;
-    overflow: visible !important;
-    border: 1px solid var(--light-gray);
-    box-shadow: var(--card-shadow);
-}
-
-.form-card:hover {
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-    transform: translateY(-3px);
-}
-
-.section-title {
-    font-weight: 700;
-    color: var(--dark);
-    margin-bottom: 1.75rem;
-    font-size: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.section-title i {
-    color: var(--primary);
-    background: var(--primary-light);
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-}
-
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-row {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    width: 100%;
-}
-
-.form-row .form-group {
-    flex: 1;
-    min-width: 250px;
-}
-
-.form-label {
-    display: block;
-    margin-bottom: 0.65rem;
-    font-weight: 600;
-    color: var(--dark);
-    font-size: 1rem;
-}
-
-.required-field::after {
-    content: "*";
-    color: var(--danger);
-    margin-left: 4px;
-}
-
-.form-control, .form-select {
-    width: 100%;
-    padding: 0.85rem 1rem;
-    border: 1px solid var(--medium-gray);
-    border-radius: var(--radius-sm);
-    font-size: 0.95rem;
-    transition: var(--transition);
-    background: var(--light);
-}
-
-.form-control:focus, .form-select:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-    background: var(--white);
-}
-
-textarea.form-control {
-    min-height: 140px;
-    resize: vertical;
-}
-
-select.form-control {
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    background-size: 16px 12px;
-    padding-right: 2.5rem;
-}
-
-.input-group-text {
-    background-color: var(--light);
-    border-right: none;
-    color: var(--primary);
-}
-
-/* Deal Type Cards */
-.deal-type-container {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.deal-type-card {
-    flex: 1 1 calc(50% - 0.5rem);
-    min-width: 200px;
-    background: var(--light);
-    border-radius: var(--radius-md);
-    padding: 1.75rem 1.5rem;
-    text-align: center;
-    cursor: pointer;
-    transition: var(--transition);
-    border: 2px solid transparent;
-    position: relative;
-    overflow: hidden;
-}
-
-.deal-type-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-}
-
-.deal-type-card.active {
-    border-color: var(--primary);
-    background: var(--primary-light);
-    box-shadow: 0 8px 16px rgba(76, 175, 80, 0.15);
-}
-
-.deal-type-card i {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-    color: var(--primary);
-    transition: var(--transition);
-}
-
-.deal-type-card.active i {
-    color: var(--primary-dark);
-}
-
-.deal-type-card h5 {
-    font-size: 1.25rem;
-    margin-bottom: 0.5rem;
-    color: var(--dark);
-}
-
-.deal-type-card p {
-    color: var(--dark-gray);
-    font-size: 0.95rem;
-}
-
-/* === File Upload === */
-.file-upload-area {
-    width: 100%;
-    border: 2px dashed var(--medium-gray);
-    border-radius: var(--radius-md);
-    padding: 2.5rem;
-    text-align: center;
-    cursor: pointer;
-    transition: var(--transition);
-    background-color: var(--light);
-    margin-bottom: 1rem;
-}
-
-.file-upload-area:hover {
-    border-color: var(--primary);
-    background-color: rgba(76, 175, 80, 0.05);
-}
-
-.file-upload-area i {
-    font-size: 2.5rem;
-    color: var(--primary);
-    margin-bottom: 1rem;
-}
-
-.file-preview {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-top: 1.5rem;
-}
-
-.file-preview-item {
-    position: relative;
-    width: 100px;
-    height: 100px;
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    background-color: var(--light-gray);
-    transition: var(--transition);
-}
-
-.file-preview-item:hover {
-    transform: scale(1.05);
-}
-
-.file-preview-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.file-preview-item button {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    background: rgba(0,0,0,0.6);
-    border: none;
-    color: var(--white);
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.file-preview-item button:hover {
-    background: var(--danger);
-}
-
-/* === Offered Items === */
-.offered-item {
-    position: relative;
-    padding: 1.75rem;
-    background: var(--light);
-    border-radius: var(--radius-lg);
-    margin-bottom: 1.75rem;
-    border: 1px solid var(--medium-gray);
-    transition: var(--transition);
-}
-
-.offered-item:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
-}
-
-.item-number {
-    position: absolute;
-    top: -12px;
-    left: -12px;
-    background: var(--primary);
-    color: var(--white);
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 1rem;
-    box-shadow: var(--shadow-sm);
-}
-
-.remove-item-btn {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background: none;
-    border: none;
-    color: var(--danger);
-    font-size: 1.25rem;
-    cursor: pointer;
-    opacity: 0.7;
-    transition: var(--transition);
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-}
-
-.remove-item-btn:hover {
-    opacity: 1;
-    background: var(--danger-light);
-}
-
-.add-item-btn {
-    background: var(--gradient-primary);
-    color: var(--white);
-    padding: 0.9rem 1.75rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 1.5rem;
-    border-radius: var(--radius-md);
-}
-
-.add-item-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 16px rgba(76, 175, 80, 0.3);
-}
-
-.add-item-btn:disabled {
-    background: var(--dark-gray);
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-.submit-btn {
-    background: var(--gradient-primary);
-    color: var(--white);
-    padding: 1.15rem 2.5rem;
-    font-size: 1.15rem;
-    font-weight: 700;
-    border-radius: var(--radius-lg);
-    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.35);
-    width: 100%;
-    margin-top: 1.5rem;
-    border: none;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.submit-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(76, 175, 80, 0.45);
-}
-
-.submit-btn i {
-    margin-right: 10px;
-}
-
-/* === Cash Adjustments === */
-.cash-adjustment-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.25rem;
-    margin-top: 1.5rem;
-}
-
-.cash-box {
-    width: 80%;
-    padding: 1.75rem;
-    border-radius: var(--radius-lg);
-    background: var(--white);
-    box-shadow: var(--shadow-sm);
-    transition: var(--transition);
-    border: 1px solid var(--light-gray);
-}
-
-.cash-box:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.08);
-}
-
-.cash-box.required-cash {
-    border-top: 4px solid var(--danger);
-}
-
-.cash-box.offered-cash {
-    border-top: 4px solid var(--success);
-}
-
-.cash-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-.currency-icon {
-    font-size: 1.5rem;
-    margin-right: 0.75rem;
-}
-
-.cash-required .currency-icon {
-    color: var(--danger);
-}
-
-.cash-offered .currency-icon {
-    color: var(--success);
-}
-
-.input-with-symbol {
-    position: relative;
-}
-
-.currency-symbol {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    font-weight: 600;
-    color: var(--dark-gray);
-    font-size: 1.1rem;
-}
-
-.form-control[type="number"] {
-    padding-left: 2.5rem;
-    font-size: 1.1rem;
-    font-weight: 500;
-}
-
-/* === Proposals === */
-.proposal-filter {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-}
-
-.proposals-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.proposal-card {
-    background: var(--white);
-    border-radius: var(--radius-lg);
-    padding: 1.75rem;
-    box-shadow: var(--card-shadow);
-    border: 1px solid var(--light-gray);
-    transition: var(--transition);
-}
-
-.proposal-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-}
-
-.proposal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-}
-
-.status-badge {
-    padding: 0.4rem 1rem;
-    border-radius: 30px;
-    font-size: 0.85rem;
-    font-weight: 700;
-}
-
-.status-pending {
-    background-color: var(--warning-light);
-    color: var(--warning);
-}
-
-.status-accepted {
-    background-color: var(--success-light);
-    color: var(--success-dark);
-}
-
-.status-declined {
-    background-color: var(--danger-light);
-    color: var(--danger-dark);
-}
-
-.status-negotiated {
-    background-color: var(--info-light);
-    color: var(--info);
-}
-
-.sender-info {
-    background: var(--light);
-    padding: 1rem;
-    border-radius: var(--radius-md);
-    margin: 1rem 0;
-    font-size: 0.95rem;
-}
-
-.proposal-images {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 0.75rem;
-    margin: 1.25rem 0;
-}
-
-.proposal-image {
-    width: 100%;
-    height: 90px;
-    object-fit: cover;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--medium-gray);
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.proposal-image:hover {
-    transform: scale(1.05);
-    box-shadow: var(--shadow-sm);
-}
-
-.proposal-actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1.25rem;
-    flex-wrap: wrap;
-}
-
-/* === Empty States === */
-.empty-state {
-    text-align: center;
-    padding: 3rem;
-    background: var(--light);
-    border-radius: var(--radius-lg);
-    border: 1px dashed var(--medium-gray);
-}
-
-.empty-state i {
-    font-size: 3rem;
-    color: var(--muted-text);
-    margin-bottom: 1rem;
-}
-
-.empty-state h3 {
-    color: var(--dark-gray);
-    margin-bottom: 0.5rem;
-}
-
-.empty-state p {
-    margin-bottom: 1.5rem;
-}
-
-/* === Mobile Responsiveness === */
+    background: var(--white); border-radius: var(--radius-lg); padding: 1.35rem 1.5rem;
+    box-shadow: var(--card-shadow); display: flex; align-items: center; gap: 1rem;
+    transition: var(--transition); border: 1px solid var(--light-gray);
+    position: relative; overflow: hidden;
+}
+.stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--gradient-primary); opacity: 0; transition: opacity .2s; }
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.stat-card:hover::before { opacity: 1; }
+.stat-icon { width: 52px; height: 52px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--primary); background: var(--primary-light); flex-shrink: 0; }
+.stat-info h3 { font-family: var(--font-display); font-size: 1.7rem; font-weight: 800; margin-bottom: .2rem; color: var(--dark); letter-spacing: -.03em; }
+.stat-info p { color: var(--muted-text); margin-bottom: 0; font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+@media (min-width: 992px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); gap: .75rem; } .stat-card { padding: 1.1rem; } .stat-icon { width: 44px; height: 44px; font-size: 1.1rem; } .stat-info h3 { font-size: 1.4rem; } }
+@media (max-width: 480px) { .stats-grid { grid-template-columns: repeat(2, 1fr); gap: .6rem; } .stat-card { padding: .9rem; flex-direction: column; text-align: center; gap: .6rem; } .stat-icon { width: 40px; height: 40px; font-size: 1rem; } .stat-info h3 { font-size: 1.25rem; } }
+@media (max-width: 360px) { .stats-grid { grid-template-columns: 1fr; } }
+.listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0rem; }
+.listing-card { background: var(--white); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--card-shadow); transition: var(--transition); border: 1px solid var(--light-gray); position: relative; }
+.listing-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--medium-gray); }
+.listing-image { height: 200px; overflow: hidden; position: relative; background: var(--light); }
+.listing-image img { width: 100%; height: 100%; object-fit: contain; transition: var(--transition); }
+.listing-card:hover .listing-image img { transform: scale(1.04); }
+.listing-badges { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 5px; }
+.badge { display: inline-block; padding: .3rem .8rem; font-size: .7rem; font-weight: 700; border-radius: 30px; text-transform: uppercase; letter-spacing: .06em; box-shadow: var(--shadow-sm); }
+.badge-swap { background-color: var(--primary-light); color: var(--primary-dark); }
+.badge-sale { background-color: var(--info-light); color: var(--info); }
+.badge-premium, .badge-standard, .badge-basic { background: rgba(0,0,0,.55); color: #fff; backdrop-filter: blur(4px); }
+.listing-content { padding: 1.1rem 1.25rem; }
+.listing-content h3 { font-family: var(--font-display); margin-bottom: .6rem; font-size: 1rem; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.listing-content p { font-size: .85rem; color: var(--dark-gray); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: .75rem; min-height: 42px; }
+.listing-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: .5rem; margin-top: .75rem; }
+.stat { display: flex; align-items: center; gap: .4rem; font-size: .78rem; color: var(--dark-gray); }
+.stat i { color: var(--primary); font-size: .72rem; }
+.listing-actions { display: flex; gap: .6rem; padding: .9rem 1.25rem; border-top: 1px solid var(--light-gray); background: var(--light); }
+.listing-actions .btn { flex: 1; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .55rem; padding: .7rem 1.35rem; border: none; border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font-body); font-weight: 600; font-size: .875rem; transition: var(--transition); white-space: nowrap; line-height: 1; }
+.btn-primary { background: var(--gradient-primary); color: var(--white); }
+.btn-primary:hover { background: linear-gradient(135deg, var(--primary-dark), var(--secondary)); transform: translateY(-1px); box-shadow: 0 5px 14px rgba(26,107,53,.28); }
+.btn-outline { background: transparent; color: var(--dark-gray); border: 1px solid var(--medium-gray); }
+.btn-outline:hover { background: var(--light); border-color: var(--dark-gray); color: var(--dark); }
+.btn-danger { background: var(--danger); color: var(--white); }
+.btn-danger:hover { background: var(--danger-dark); transform: translateY(-1px); box-shadow: 0 5px 14px rgba(201,64,64,.28); }
+.btn-outline-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+.btn-outline-danger:hover { background: var(--danger-light); }
+.btn-success { background: var(--gradient-primary); color: var(--white); }
+.btn-success:hover { background: linear-gradient(135deg, var(--primary-dark), var(--secondary)); transform: translateY(-1px); }
+.btn-outline-warning { background: transparent; color: var(--warning); border: 1px solid var(--warning); }
+.btn-outline-warning:hover { background: var(--warning-light); }
+#create-listing-form { width: 100%; max-width: none; margin: 1rem auto; padding: 1rem; background: var(--secondary-bg); border-radius: var(--radius-lg); box-shadow: var(--box-shadow); overflow: visible !important; height: auto !important; }
+.form-card { background: var(--white); border-radius: var(--radius-lg); padding: 2rem; margin-bottom: 1.25rem; transition: var(--transition); position: relative; overflow: visible !important; border: 1px solid var(--light-gray); box-shadow: var(--card-shadow); }
+.form-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.section-title { font-family: var(--font-display); font-weight: 700; color: var(--dark); margin-bottom: 1.5rem; font-size: 1rem; display: flex; align-items: center; gap: 10px; letter-spacing: -.01em; }
+.section-title i { color: var(--primary); background: var(--primary-light); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); font-size: .8rem; }
+.form-group { margin-bottom: 1.35rem; }
+.form-row { display: flex; gap: 1rem; flex-wrap: wrap; width: 100%; }
+.form-row .form-group { flex: 1; min-width: 250px; }
+.form-label { display: block; margin-bottom: .5rem; font-weight: 600; color: var(--dark); font-size: .82rem; letter-spacing: .01em; }
+.required-field::after { content: "*"; color: var(--danger); margin-left: 3px; }
+.form-control, .form-select { width: 100%; padding: .8rem 1rem; border: 1px solid var(--medium-gray); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: .9rem; transition: var(--transition); background: var(--light); color: var(--dark); }
+.form-control:focus, .form-select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,107,53,.1); background: var(--white); }
+.form-control::placeholder { color: #9aada0; }
+textarea.form-control { min-height: 120px; resize: vertical; }
+select.form-control { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 14px 12px; padding-right: 2.5rem; }
+.input-group-text { background-color: var(--light); border-right: none; color: var(--primary); font-size: .85rem; }
+.deal-type-container { display: flex; gap: 1rem; flex-wrap: wrap; }
+.deal-type-card { flex: 1 1 calc(50% - 0.5rem); min-width: 200px; background: var(--light); border-radius: var(--radius-md); padding: 1.5rem 1.25rem; text-align: center; cursor: pointer; transition: var(--transition); border: 2px solid transparent; position: relative; overflow: hidden; }
+.deal-type-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--medium-gray); }
+.deal-type-card.active { border-color: var(--primary); background: var(--primary-light); box-shadow: 0 6px 18px rgba(26,107,53,.15); }
+.deal-type-card i { font-size: 2rem; margin-bottom: .85rem; color: var(--dark-gray); transition: var(--transition); display: block; }
+.deal-type-card.active i { color: var(--primary); }
+.deal-type-card h5 { font-family: var(--font-display); font-size: 1rem; font-weight: 700; margin-bottom: .4rem; color: var(--dark); letter-spacing: -.01em; }
+.deal-type-card p { color: var(--dark-gray); font-size: .82rem; margin: 0; }
+.file-upload-area { width: 100%; border: 2px dashed var(--medium-gray); border-radius: var(--radius-md); padding: 2.25rem 1.5rem; text-align: center; cursor: pointer; transition: var(--transition); background-color: var(--light); margin-bottom: 1rem; }
+.file-upload-area:hover { border-color: var(--primary); background-color: var(--primary-light); }
+.file-upload-area i { font-size: 2rem; color: var(--primary); margin-bottom: .75rem; display: block; }
+.file-preview { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1.25rem; }
+.file-preview-item { position: relative; width: 90px; height: 90px; border-radius: var(--radius-sm); overflow: hidden; background-color: var(--light-gray); transition: var(--transition); }
+.file-preview-item:hover { transform: scale(1.04); }
+.file-preview-item img { width: 100%; height: 100%; object-fit: cover; }
+.file-preview-item button { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,.55); border: none; color: var(--white); width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .68rem; cursor: pointer; transition: var(--transition); }
+.file-preview-item button:hover { background: var(--danger); }
+.offered-item { position: relative; padding: 1.5rem; background: var(--light); border-radius: var(--radius-lg); margin-bottom: 1.5rem; border: 1px solid var(--medium-gray); transition: var(--transition); }
+.offered-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.item-number { position: absolute; top: -11px; left: -11px; background: var(--primary); color: var(--white); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .82rem; box-shadow: var(--shadow-sm); }
+.remove-item-btn { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--danger); font-size: 1.1rem; cursor: pointer; opacity: .65; transition: var(--transition); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); }
+.remove-item-btn:hover { opacity: 1; background: var(--danger-light); }
+.add-item-btn { background: var(--primary-light); color: var(--primary); padding: .8rem 1.5rem; font-weight: 700; font-family: var(--font-body); display: flex; align-items: center; gap: 8px; margin-bottom: 1.25rem; border-radius: var(--radius-md); border: 1.5px dashed var(--primary); cursor: pointer; transition: var(--transition); font-size: .875rem; }
+.add-item-btn:hover { background: #d7edde; transform: translateY(-2px); border-style: solid; }
+.add-item-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+.submit-btn { background: var(--gradient-primary); color: var(--white); padding: 1.1rem 2.5rem; font-family: var(--font-display); font-size: 1rem; font-weight: 700; border-radius: var(--radius-lg); box-shadow: 0 6px 20px rgba(26,107,53,.3); width: 100%; margin-top: 1.5rem; border: none; cursor: pointer; transition: var(--transition); letter-spacing: -.01em; }
+.submit-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(26,107,53,.38); }
+.submit-btn i { margin-right: 8px; }
+.cash-adjustment-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-top: 1.25rem; }
+.cash-box { width: 80%; padding: 1.5rem; border-radius: var(--radius-lg); background: var(--white); box-shadow: var(--shadow-sm); transition: var(--transition); border: 1px solid var(--light-gray); }
+.cash-box:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.cash-box.required-cash { border-top: 3px solid var(--danger); }
+.cash-box.offered-cash { border-top: 3px solid var(--success); }
+.cash-header { display: flex; align-items: center; margin-bottom: .85rem; }
+.currency-icon { font-size: 1.35rem; margin-right: .65rem; }
+.cash-required .currency-icon { color: var(--danger); }
+.cash-offered .currency-icon { color: var(--success); }
+.input-with-symbol { position: relative; }
+.currency-symbol { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--dark-gray); font-size: 1rem; pointer-events: none; }
+.form-control[type="number"] { padding-left: 2.25rem; font-size: 1rem; font-weight: 500; }
+.proposal-filter { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.proposals-list { display: flex; flex-direction: column; gap: 1.25rem; }
+.proposal-card { background: var(--white); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--card-shadow); border: 1px solid var(--light-gray); transition: var(--transition); }
+.proposal-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--medium-gray); }
+.proposal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .85rem; flex-wrap: wrap; gap: .65rem; }
+.proposal-header h3 { font-family: var(--font-display); font-size: .95rem; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+.status-badge { padding: .3rem .9rem; border-radius: 30px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.status-pending { background-color: var(--warning-light); color: var(--warning); }
+.status-accepted { background-color: var(--success-light); color: var(--success-dark); }
+.status-declined { background-color: var(--danger-light); color: var(--danger-dark); }
+.status-negotiated { background-color: var(--info-light); color: var(--info); }
+.sender-info { background: var(--light); padding: .9rem 1rem; border-radius: var(--radius-md); margin: .85rem 0; font-size: .85rem; border: 1px solid var(--light-gray); }
+.sender-info p { color: var(--dark-gray); margin-bottom: .25rem; font-size: .85rem; }
+.sender-info p:last-child { margin-bottom: 0; }
+.proposal-images { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: .65rem; margin: 1rem 0; }
+.proposal-image { width: 100%; height: 85px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--medium-gray); cursor: pointer; transition: var(--transition); }
+.proposal-image:hover { transform: scale(1.04); box-shadow: var(--shadow-sm); }
+.proposal-actions { display: flex; gap: .75rem; margin-top: 1rem; flex-wrap: wrap; }
+.empty-state { text-align: center; padding: 3.5rem 2rem; background: var(--light); border-radius: var(--radius-lg); border: 1.5px dashed var(--medium-gray); }
+.empty-state i { font-size: 2.5rem; color: var(--muted-text); margin-bottom: .85rem; display: block; }
+.empty-state h3 { font-family: var(--font-display); color: var(--dark-gray); margin-bottom: .4rem; font-size: 1.1rem; }
+.empty-state p { margin-bottom: 1.25rem; font-size: .875rem; }
 @media (max-width: 992px) {
-    .dashboard-sidebar {
-        transform: translateX(-100%);
-        z-index: 1000;
-    }
-    
-    .dashboard-sidebar.active {
-        transform: translateX(0);
-    }
-    
-    .dashboard-main {
-        margin-left: 0;
-        padding: 1px;
-        width: 100%;
-    }
-    
-    .menu-toggle {
-        display: block;
-    }
-    
-    .sidebar-close {
-        display: block;
-    }
-    
-    .dashboard-container {
-        width: 100%;
-        padding: 1.25rem;
-    }
-    
-    .dashboard-section {
-        padding: 1.5rem;
-    }
-    
-    .form-card {
-        padding: 1.5rem;
-    }
-    
-    .deal-type-container {
-        flex-direction: column;
-    }
+    .dashboard-sidebar { transform: translateX(-100%); z-index: 1000; }
+    .dashboard-sidebar.active { transform: translateX(0); }
+    .dashboard-main { margin-left: 0; padding: 1px; width: 100%; }
+    .menu-toggle { display: block; }
+    .sidebar-close { display: block; }
+    .dashboard-container { width: 100%; padding: 1.25rem; }
+    .dashboard-section { padding: 1.5rem; }
+    .form-card { padding: 1.5rem; }
+    .deal-type-container { flex-direction: column; }
 }
-
 @media (max-width: 768px) {
-    .listings-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .deal-type-container {
-        flex-direction: column;
-    }
-    
-    .form-row {
-        flex-direction: column;
-    }
-    
-    .proposal-actions {
-        flex-direction: column;
-    }
-    
-    .proposal-actions .btn {
-        width: 100%;
-    }
-    
-    .dashboard-container {
-        width: 100%;
-        padding: 0.75rem;
-    }
-
-    .listing-container {
-        width: 100%;
-        padding: 0 0.5rem;
-    }
-
-    #create-listing-form {
-        width: 100%;
-        padding: 0.75rem;
-    }
-
-    .proposal-images {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
-    .proposal-image {
-        height: 80px;
-    }
-
-    .form-card {
-        padding: 1.25rem;
-    }
-
-    .section-title {
-        font-size: 1.35rem;
-    }
+    .listings-grid { grid-template-columns: 1fr; }
+    .deal-type-container { flex-direction: column; }
+    .form-row { flex-direction: column; }
+    .proposal-actions { flex-direction: column; }
+    .proposal-actions .btn { width: 100%; }
+    .dashboard-container { width: 100%; padding: .75rem; }
+    .listing-container { width: 100%; padding: 0 .5rem; }
+    #create-listing-form { width: 100%; padding: .75rem; }
+    .proposal-images { grid-template-columns: repeat(3, 1fr); }
+    .proposal-image { height: 76px; }
+    .form-card { padding: 1.25rem; }
+    .section-title { font-size: .9rem; }
 }
-
 @media (max-width: 480px) {
-    .dashboard-section {
-        padding: 1.25rem;
-    }
-
-    .proposal-images {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .listing-actions {
-        flex-direction: column;
-    }
-    
-    .listing-actions .btn {
-        width: 100%;
-    }
+    .dashboard-section { padding: 1.1rem; }
+    .proposal-images { grid-template-columns: repeat(2, 1fr); }
+    .listing-actions { flex-direction: column; }
+    .listing-actions .btn { width: 100%; }
 }
+.menu-toggle { display: none; background: none; border: none; font-size: 1.4rem; color: var(--dark); cursor: pointer; padding: .3rem; border-radius: var(--radius-sm); transition: background .15s; }
+.menu-toggle:hover { background: var(--light); }
+@media (max-width: 992px) { .menu-toggle { display: block; } }
+.flash-messages { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; text-align: center; width: 90%; max-width: 460px; }
+.flash-message { padding: 1.1rem 1.5rem; margin-bottom: 1rem; border-radius: var(--radius-md); color: var(--white); font-size: .95rem; font-weight: 500; box-shadow: var(--shadow-lg); opacity: 1; transition: opacity 1s ease-out; }
+.flash-success { background-color: var(--success); }
+.flash-danger { background-color: var(--danger); }
+.flash-warning { background-color: var(--warning); }
+.flash-info { background-color: var(--info); }
+.image-modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,.94); overflow: hidden; touch-action: none; }
+.modal-content { display: block; margin: auto; max-width: 90%; max-height: 80%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); object-fit: contain; border-radius: var(--radius-md); }
+.close-modal { position: absolute; top: 2rem; right: 2.5rem; color: rgba(255,255,255,.75); font-size: 2.5rem; font-weight: 300; cursor: pointer; opacity: .8; transition: var(--transition); line-height: 1; }
+.close-modal:hover { opacity: 1; color: #fff; }
+#undo-toast { display: none; position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: var(--dark); color: var(--white); padding: .85rem 1.5rem; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); font-size: .9rem; z-index: 1001; }
+#undo-toast button { background: transparent; border: none; color: #5ddc8a; margin-left: 1rem; cursor: pointer; font-weight: 700; font-size: .95rem; font-family: var(--font-body); }
+.dashboard-section, .card { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; }
+#create-listing-form { width: 100%; max-width: min(1900px, calc(100% - 0px)); margin: 12px auto !important; padding: 0; background: transparent; border-radius: 0; box-shadow: none; }
+#create-listing-form .form-card { background: var(--white) !important; border: 1px solid var(--light-gray) !important; box-shadow: var(--card-shadow) !important; padding: 1.5rem 1.25rem; border-radius: var(--radius-lg); margin: 0 0 1rem 0; width: 100%; box-sizing: border-box; }
+#create-listing-form .deal-type-container { gap: 1rem; display: flex; flex-wrap: nowrap; justify-content: stretch; }
+.deal-type-card { flex: 1 1 0; min-width: 0; margin: 0; }
+@media (max-width: 1200px) { #create-listing-form { max-width: calc(100% - 24px); margin: 10px auto !important; } #create-listing-form .form-card { padding: 1.25rem .85rem; border-radius: var(--radius-md); } }
+@media (max-width: 768px) { #create-listing-form { padding: .5rem; margin: 8px auto !important; max-width: calc(100% - 16px); } #create-listing-form .form-card { padding: 1rem .6rem; border-radius: var(--radius-lg); } .deal-type-container { flex-direction: column; gap: .75rem; } .deal-type-card { flex: 1 1 100%; } .cash-box { width: 100%; } }
+#create-listing-form .card, #create-listing-form .card-body, #create-listing-form .card-header, #create-listing-form .card-footer { background: transparent; border: none; box-shadow: none; padding: 0; margin: 0; }
+#create-listing-form .small-card, #create-listing-form .inner-panel, #create-listing-form .panel { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; width: 100% !important; }
+#create-listing-form img { max-width: 100%; height: auto; display: block; }
+#create-listing-form .form-card { position: relative; z-index: 50; }
+.category-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,107,53,.15); }
+.category-suggestions li { padding: 9px 14px; cursor: pointer; font-size: .85rem; }
+.category-suggestions li:hover { background: var(--primary-light); color: var(--primary-dark); }
+.category-suggestions li[style*="background: #fff3e0"] { font-style: italic; }
+.dashboard-header h1 { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; letter-spacing: -.02em; }
+.profile-form label { font-size: .82rem; font-weight: 600; color: var(--dark-gray); display: block; margin-bottom: .4rem; }
 
-/* Menu Toggle Button */
-.menu-toggle {
-    display: none;
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: var(--dark);
-    cursor: pointer;
-}
-
-@media (max-width: 992px) {
-    .menu-toggle {
-        display: block;
-    }
-}
-
-/* === Additional Styles from Original Code === */
-/* (Keeping all the original styles for functionality) */
-
-/* Flash Messages */
-.flash-messages {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 2000;
-    text-align: center;
-    width: 90%;
-    max-width: 500px;
-}
-
-.flash-message {
-    padding: 1.25rem;
-    margin-bottom: 1.25rem;
-    border-radius: var(--radius-md);
-    color: var(--white);
-    font-size: 1.1rem;
-    box-shadow: var(--shadow-lg);
-    opacity: 1;
-    transition: opacity 1s ease-out;
-}
-
-.flash-success {
-    background-color: var(--success);
-}
-
-.flash-danger {
-    background-color: var(--danger);
-}
-
-.flash-warning {
-    background-color: var(--warning);
-}
-
-.flash-info {
-    background-color: var(--info);
-}
-
-/* Image Modal */
-.image-modal {
-    display: none;
-    position: fixed;
-    z-index: 2000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.95);
-    overflow: hidden;
-    touch-action: none;
-}
-
-.modal-content {
-    display: block;
-    margin: auto;
-    max-width: 90%;
-    max-height: 80%;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    object-fit: contain;
-    border-radius: var(--radius-md);
-}
-
-.close-modal {
-    position: absolute;
-    top: 2rem;
-    right: 2.5rem;
-    color: var(--white);
-    font-size: 3rem;
-    font-weight: bold;
-    cursor: pointer;
-    opacity: 0.8;
-    transition: var(--transition);
-}
-
-.close-modal:hover {
-    opacity: 1;
-}
-
-/* Undo Toast */
-#undo-toast {
-    display: none;
-    position: fixed;
-    bottom: 1.5rem;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--dark);
-    color: var(--white);
-    padding: 0.9rem 1.75rem;
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    font-size: 0.95rem;
-    z-index: 1001;
-}
-
-#undo-toast button {
-    background: transparent;
-    border: none;
-    color: #4FC3F7;
-    margin-left: 1.25rem;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 1rem;
-}
-
-/* ===========================
-   OVERRIDES: Very thin side margins (near full-bleed)
-   This block removes visual nesting and makes one clean form card
-   with very small left/right margins on all screens.
-   =========================== */
-
-/* Hide outer decorations while preserving structure for JS */
-.dashboard-section,
-.card {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-}
-
-/* Make the page form area nearly full width and keep a tiny margin on the sides.
-   min margin total = 32px (16px both sides). Adjust the calc value if you want even thinner margins. */
-#create-listing-form {
-    width: 100%;
-    max-width: min(1900px, calc(100% - 0px)); /* leaves ~16px margin both sides on wide screens */
-    margin: 12px auto !important;
-    padding: 0;                /* inner padding applied on .form-card */
-    background: transparent;
-    border-radius: 0;
-    box-shadow: none;
-}
-
-/* The single visible card inside the form — it will span almost edge-to-edge */
-#create-listing-form .form-card {
-    background: var(--white) !important;
-    border: 1px solid var(--light-gray) !important;
-    box-shadow: var(--card-shadow) !important;
-    padding: 1.5rem 1rem; /* slightly reduced side padding to maximize usable width */
-    border-radius: 12px;
-    margin: 0; /* remove outer margins so it's the only card */
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* Deal cards stretch to fill available space */
-#create-listing-form .deal-type-container {
-    gap: 1rem;
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: stretch;
-}
-
-/* Make deal cards expand uniformly and fill width */
-.deal-type-card {
-    flex: 1 1 0;
-    min-width: 0;
-    margin: 0;
-}
-
-/* For medium screens, reduce side margins to 12px */
-@media (max-width: 1200px) {
-    #create-listing-form {
-        max-width: calc(100% - 24px); /* 12px per side */
-        margin: 10px auto !important;
-    }
-
-    #create-listing-form .form-card {
-        padding: 1.25rem 0.75rem;
-        border-radius: 10px;
-    }
-}
-
-/* For tablets and phones: practically edge-to-edge with tiny padding */
-@media (max-width: 768px) {
-    #create-listing-form {
-        padding: 0.5rem;
-        margin: 8px auto !important;
-        max-width: calc(100% - 16px); /* 8px per side */
-    }
-
-    #create-listing-form .form-card {
-        padding: 1rem 0.5rem;
-        border-radius: var(--radius-lg);
-    }
-
-    .deal-type-container {
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .deal-type-card {
-        flex: 1 1 100%;
-    }
-
-    .cash-box {
-        width: 100%;
-    }
-}
-
-/* Small tweak: if any other nested inner element still has a small width,
-   stretch it to full width inside the form card */
-#create-listing-form .card,
-#create-listing-form .card-body,
-#create-listing-form .card-header,
-#create-listing-form .card-footer {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    padding: 0;
-    margin: 0;
-}
-
-/* If there are any deeply nested 'small' card classes, force them to fill the form-card */
-#create-listing-form .small-card,
-#create-listing-form .inner-panel,
-#create-listing-form .panel {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
-}
-
-/* Utility: ensure images inside the form card don't overflow */
-#create-listing-form img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-}
-
-/* final safety: raise z-index for single visible form card in case of overlapping sidebars */
-#create-listing-form .form-card {
-    position: relative;
-    z-index: 50;
-}
-
-.category-input:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
-}
-
-.category-suggestions li {
-    padding: 10px 16px;
-    cursor: pointer;
-}
-
-.category-suggestions li:hover {
-    background: var(--primary-light);
-    color: var(--primary-dark);
-}
-
-.category-suggestions li[style*="background: #fff3e0"] {  /* the "Use: ..." item */
-    font-style: italic;
-}
     </style>
 </head>
 <body>
@@ -1820,10 +650,10 @@ select.form-control {
                                     <div class="input-group mb-3">
                                         <span class="input-group-text input-icon"><i class="fas fa-crown"></i></span>
                                         <select name="plan" class="form-select" required>
-                                            <option value="Free">Free (₵0, No Promo)</option>
-                                            <option value="Silver">Silver (₵40, 2 Weeks Promo)</option>
-                                            <option value="Gold">Gold (₵70, 3 Weeks Promo)</option>
-                                            <option value="Diamond">Diamond (₵100, 1 Months Promo)</option>
+                                            <option value="Free">Free (&#8373;0, No Promo)</option>
+                                            <option value="Silver">Silver (&#8373;40, 2 Weeks Promo)</option>
+                                            <option value="Gold">Gold (&#8373;70, 3 Weeks Promo)</option>
+                                            <option value="Diamond">Diamond (&#8373;100, 1 Months Promo)</option>
                                         </select>
                                     </div>
                                     <p class="help-text">Better plans get more visibility</p>
@@ -1854,7 +684,7 @@ select.form-control {
                             </h5>
                             <div class="mb-4">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h6 class="form-label">Your Offer Items <span class="text-muted">(1–2 items)</span></h6>
+                                    <h6 class="form-label">Your Offer Items <span class="text-muted">(1&#8211;2 items)</span></h6>
                                 </div>
                                 <div id="offered-items-container">
                                     <div class="offered-item" data-clone="false">
@@ -1939,7 +769,7 @@ select.form-control {
                                             <label class="form-label">Cash You Need</label>
                                         </div>
                                         <div class="input-with-symbol">
-                                            <span class="currency-symbol">₵</span>
+                                            <span class="currency-symbol">&#8373;</span>
                                             <input type="number" step="0.01" name="required_cash" class="form-control" placeholder="0.00">
                                         </div>
                                         <p class="help-text">Amount you'd like to receive in addition</p>
@@ -1950,7 +780,7 @@ select.form-control {
                                             <label class="form-label">Cash You'll Add</label>
                                         </div>
                                         <div class="input-with-symbol">
-                                            <span class="currency-symbol">₵</span>
+                                            <span class="currency-symbol">&#8373;</span>
                                             <input type="number" step="0.01" name="additional_cash" class="form-control" placeholder="0.00">
                                         </div>
                                         <p class="help-text">Amount you're willing to pay extra</p>
@@ -1971,7 +801,7 @@ select.form-control {
                                 <div class="col-md-6">
                                     <label class="form-label required-field">Price</label>
                                     <div class="input-group mb-3">
-                                        <span class="input-group-text">₵</span>
+                                        <span class="input-group-text">&#8373;</span>
                                         <input type="number" step="0.01" name="price" class="form-control" placeholder="0.00" required>
                                     </div>
                                 </div>
@@ -1994,8 +824,6 @@ select.form-control {
                                 </div>
                             </div>
                         </div>
-
-
 
 <!-- Service Section -->
 <div id="service-section" style="display:none;" class="form-card">
@@ -2020,7 +848,7 @@ select.form-control {
                 </div>
             </div>
             <div id="fixed-price-wrapper" class="input-group mb-3">
-                <span class="input-group-text">₵</span>
+                <span class="input-group-text">&#8373;</span>
                 <input type="number" step="0.01" name="price" id="service-price" class="form-control" placeholder="0.00">
             </div>
             <small class="help-text">Leave blank or check "Contact for Price" if price is negotiable</small>
@@ -2032,10 +860,6 @@ select.form-control {
         </div>
     </div>
 </div>
-
-
-
-
 
                         <!-- Location & Contact -->
                         <div class="form-card">
@@ -2053,21 +877,20 @@ select.form-control {
                                 <div class="col-md-6">
                                     <label class="form-label required-field">Contact Number</label>
 
-                                    <!-- Country code dropdown – required, with a disabled default option -->
+                                    <!-- Country code dropdown -->
                                     <div class="mb-2">
                                         <label for="country-code" class="form-label small">Country Code</label>
                                         <select id="country-code" class="form-select" required>
                                             <option value="" selected disabled>-- Select country code --</option>
-                                            <option value="+233">🇬🇭 +233 (Ghana)</option>
-                                            <option value="+1">🇺🇸 +1 (USA/Canada)</option>
-                                            <option value="+44">🇬🇧 +44 (UK)</option>
-                                            <option value="+234">🇳🇬 +234 (Nigeria)</option>
-                                            <option value="+254">🇰🇪 +254 (Kenya)</option>
-                                            <!-- add more as needed -->
+                                            <option value="+233">&#127468;&#127 &#127&#127&#127&#127 +233 (Ghana)</option>
+                                            <option value="+1">&#127482;&#127&#127 +1 (USA/Canada)</option>
+                                            <option value="+44">&#127&#127&#127&#127 +44 (UK)</option>
+                                            <option value="+234">&#127&#127&#127&#127 +234 (Nigeria)</option>
+                                            <option value="+254">&#127&#127&#127&#127 +254 (Kenya)</option>
                                         </select>
                                     </div>
 
-                                    <!-- Local number input – required -->
+                                    <!-- Local number input -->
                                     <div>
                                         <label for="local-number" class="form-label small">Local Number</label>
                                         <div class="input-group">
@@ -2078,14 +901,13 @@ select.form-control {
                                         <small class="text-muted">Enter only the local number after the country code.</small>
                                     </div>
 
-                                    <!-- Hidden field that will carry the full international number -->
+                                    <!-- Hidden field -->
                                     <input type="hidden" name="contact" id="contact-hidden">
                                 </div>
 
-
                                     <script>
                                     document.addEventListener('DOMContentLoaded', function() {
-                                        const form = document.getElementById('create-listing-form'); // ✅ correct ID
+                                        const form = document.getElementById('create-listing-form');
                                         if (!form) return;
 
                                         form.addEventListener('submit', function(e) {
@@ -2093,7 +915,6 @@ select.form-control {
                                             const localInput = document.getElementById('local-number');
                                             const hiddenContact = document.getElementById('contact-hidden');
 
-                                            // Ensure a country code is selected
                                             if (!countrySelect.value) {
                                                 alert('Please select a country code.');
                                                 e.preventDefault();
@@ -2101,37 +922,28 @@ select.form-control {
                                             }
 
                                             const rawLocal = localInput.value.trim();
-                                            if (!rawLocal) return; // browser's required will handle empty
+                                            if (!rawLocal) return;
 
-                                            // Extract only digits from the local input
                                             let digits = rawLocal.replace(/\D/g, '');
-
-                                            // Get the digits of the selected country code (e.g., "233" from "+233")
                                             const countryCodeDigits = countrySelect.value.replace(/\D/g, '');
 
-                                            // If digits start with the country code digits, remove them
                                             if (digits.startsWith(countryCodeDigits)) {
                                                 digits = digits.slice(countryCodeDigits.length);
                                             }
 
-                                            // Strip any leading zeros
                                             digits = digits.replace(/^0+/, '');
 
-                                            // Validate we have a local number left
                                             if (digits.length === 0) {
                                                 alert('Please enter a valid local phone number (after the country code).');
                                                 e.preventDefault();
                                                 return false;
                                             }
 
-                                            // Combine and set hidden field
                                             hiddenContact.value = countrySelect.value + digits;
-                                            // Optional: log for debugging
                                             console.log('Contact number set to:', hiddenContact.value);
                                         });
                                     });
                                     </script>
-
 
                             </div>
                         </div>
@@ -2175,7 +987,6 @@ select.form-control {
                                         {{ proposal.status }}
                                     </span>
                                 </div>
-<!-- sender-info (Contact shown as a tappable link) -->
 <div class="sender-info">
   <p><strong>From:</strong> {{ proposal.sender_username }}</p>
   <p>
@@ -2202,11 +1013,10 @@ select.form-control {
                                 <p><strong>Proposed Item:</strong> {{ proposal.proposed_item }}</p>
                                 <p>{{ proposal.message }}</p>
                                 {% if proposal.additional_cash and proposal.additional_cash > 0 %}
-                                <p><strong>Additional Cash:</strong> ₵{{ "%.2f"|format(proposal.additional_cash) }}</p>
+                                <p><strong>Additional Cash:</strong> &#8373;{{ "%.2f"|format(proposal.additional_cash) }}</p>
                                 {% else %}
                                 <p><strong>Additional Cash:</strong> None</p>
                                 {% endif %}
-<!-- proposal-actions (Decline button disappears after declining) -->
 <div class="proposal-actions">
   {% if proposal.status == 'pending' %}
     <button class="btn btn-success accept-proposal">Accept</button>
@@ -2218,7 +1028,6 @@ select.form-control {
     <button class="btn btn-outline-danger decline-proposal">Decline</button>
 
   {% elif proposal.status == 'declined' %}
-    <!-- No Decline button here -->
     <button class="btn btn-success accept-proposal">Accept</button>
     <button class="btn btn-outline-warning negotiate-proposal">Negotiate</button>
 
@@ -2284,10 +1093,10 @@ select.form-control {
 
     <!-- Image Modal -->
     <div id="imageModal" class="image-modal">
-        <span class="close-modal" id="closeModal" onclick="closeModal()">×</span>
-        <div class="modal-nav left" id="modalPrev" onclick="changeModalImage(-1)">←</div>
+        <span class="close-modal" id="closeModal" onclick="closeModal()">&#215;</span>
+        <div class="modal-nav left" id="modalPrev" onclick="changeModalImage(-1)">&#8592;</div>
         <img class="modal-content" id="modalImage">
-        <div class="modal-nav right" id="modalNext" onclick="changeModalImage(1)">→</div>
+        <div class="modal-nav right" id="modalNext" onclick="changeModalImage(1)">&#8594;</div>
     </div>
 
     <!-- Undo Toast -->
@@ -2380,9 +1189,7 @@ select.form-control {
         document.getElementById('section-title').textContent = titles[sectionId];
     }
 
-    // ────────────────────────────────────────────────
     // Deal-Type Toggle + Service support
-    // ────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', function() {
         // Radio buttons
         const swapRadio    = document.getElementById('deal-swap');
@@ -2408,12 +1215,12 @@ select.form-control {
             'input[name="price"], select[name="condition"], textarea[name="description"]'
         ));
 
-const serviceCtrls = Array.from(document.querySelectorAll(
-    '#service-section input[name="title"], ' +      // ← add this line
-    '#service-section input[name="price"], ' +
-    '#service-section textarea[name="description"], ' +
-    '#service-section input[name="contact_for_price"]'
-));
+        const serviceCtrls = Array.from(document.querySelectorAll(
+            '#service-section input[name="title"], ' +
+            '#service-section input[name="price"], ' +
+            '#service-section textarea[name="description"], ' +
+            '#service-section input[name="contact_for_price"]'
+        ));
 
         const listingImagesSection = document.getElementById('listing-images-section');
         const mainImagesInput      = document.getElementById('main-images-input');
@@ -2449,27 +1256,21 @@ const serviceCtrls = Array.from(document.querySelectorAll(
                 }
             });
 
-// Inside toggleSections, after showing/hiding sections
-serviceCtrls.forEach(c => {
-    c.disabled = activeType !== 'service';
-    if (activeType === 'service') {
-        // Title and description are required
-        if (c.name === 'title' || c.name === 'description') {
-            c.required = true;
-        }
-        // Price required only if "Contact for Price" is NOT checked
-        else if (c.name === 'price') {
-            const contactChecked = document.getElementById('contact-for-price')?.checked ?? false;
-            c.required = !contactChecked;
-        }
-        // Contact checkbox itself is never required
-        else if (c.name === 'contact_for_price') {
-            c.required = false;
-        }
-    } else {
-        c.required = false;   // disable requirement when service not active
-    }
-});
+            serviceCtrls.forEach(c => {
+                c.disabled = activeType !== 'service';
+                if (activeType === 'service') {
+                    if (c.name === 'title' || c.name === 'description') {
+                        c.required = true;
+                    } else if (c.name === 'price') {
+                        const contactChecked = document.getElementById('contact-for-price')?.checked ?? false;
+                        c.required = !contactChecked;
+                    } else if (c.name === 'contact_for_price') {
+                        c.required = false;
+                    }
+                } else {
+                    c.required = false;
+                }
+            });
 
             // Main images → shown for sale AND service
             const needsMainImages = (activeType === 'sale' || activeType === 'service');
@@ -2504,79 +1305,69 @@ serviceCtrls.forEach(c => {
         // Initial call
         toggleSections();
 
-// ────────────────────────────────────────────────
-// Service: Price ↔ Contact for Price logic
-// ────────────────────────────────────────────────
-const contactCheckbox = document.getElementById('contact-for-price');
-const priceWrapper    = document.getElementById('fixed-price-wrapper');
-const priceInput      = document.getElementById('service-price');
+        // Service: Price vs Contact for Price logic
+        const contactCheckbox = document.getElementById('contact-for-price');
+        const priceWrapper    = document.getElementById('fixed-price-wrapper');
+        const priceInput      = document.getElementById('service-price');
 
-if (contactCheckbox && priceWrapper && priceInput) {
-    function updatePriceState() {
-        const isService = document.getElementById('deal-service')?.checked === true;
+        if (contactCheckbox && priceWrapper && priceInput) {
+            function updatePriceState() {
+                const isService = document.getElementById('deal-service')?.checked === true;
 
-        if (!isService) {
-            // Not service → reset everything
-            priceWrapper.style.display = 'none';
-            priceInput.required = false;
-            contactCheckbox.required = false;
-            return;
-        }
+                if (!isService) {
+                    priceWrapper.style.display = 'none';
+                    priceInput.required = false;
+                    contactCheckbox.required = false;
+                    return;
+                }
 
-        if (contactCheckbox.checked) {
-            priceWrapper.style.display = 'none';
-            priceInput.value = '';           // clear any old value
-            priceInput.required = false;
-            contactCheckbox.required = false; // ← important: checkbox is NOT required
-        } else {
-            priceWrapper.style.display = 'block';
-            priceInput.required = true;      // price becomes required
-            contactCheckbox.required = false;
-        }
-    }
-
-    // Run when checkbox changes
-    contactCheckbox.addEventListener('change', updatePriceState);
-
-    // Run when switching to/from Service radio
-    document.querySelectorAll('input[name="deal_type"]').forEach(radio => {
-        radio.addEventListener('change', () => {
-            if (radio.value === 'Service Offer') {
-                updatePriceState();
-            } else {
-                // Reset when switching away
-                priceWrapper.style.display = 'none';
-                priceInput.required = false;
-                contactCheckbox.required = false;
-            }
-        });
-    });
-
-    // Initial state on page load
-    updatePriceState();
-
-    // Optional: Prevent submit if service + neither option chosen
-    document.getElementById('create-listing-form')?.addEventListener('submit', (e) => {
-        if (document.getElementById('deal-service')?.checked) {
-            const contactChecked = contactCheckbox.checked;
-            const priceFilled = priceInput.value.trim() !== '' && !isNaN(parseFloat(priceInput.value));
-
-            if (!contactChecked && !priceFilled) {
-                e.preventDefault();
-                alert("Please either enter a price or check 'Contact for Price'.");
                 if (contactCheckbox.checked) {
-                    contactCheckbox.focus();
+                    priceWrapper.style.display = 'none';
+                    priceInput.value = '';
+                    priceInput.required = false;
+                    contactCheckbox.required = false;
                 } else {
-                    priceInput.focus();
+                    priceWrapper.style.display = 'block';
+                    priceInput.required = true;
+                    contactCheckbox.required = false;
                 }
             }
-        }
-    });
-}
 
-        // ────────────────────────────────────────────────
-        // File Upload Handlers (unchanged)
-        // ────────────────────────────────────────────────
+            contactCheckbox.addEventListener('change', updatePriceState);
+
+            document.querySelectorAll('input[name="deal_type"]').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    if (radio.value === 'Service Offer') {
+                        updatePriceState();
+                    } else {
+                        priceWrapper.style.display = 'none';
+                        priceInput.required = false;
+                        contactCheckbox.required = false;
+                    }
+                });
+            });
+
+            updatePriceState();
+
+            document.getElementById('create-listing-form')?.addEventListener('submit', (e) => {
+                if (document.getElementById('deal-service')?.checked) {
+                    const contactChecked = contactCheckbox.checked;
+                    const priceFilled = priceInput.value.trim() !== '' && !isNaN(parseFloat(priceInput.value));
+
+                    if (!contactChecked && !priceFilled) {
+                        e.preventDefault();
+                        alert("Please either enter a price or check 'Contact for Price'.");
+                        if (contactCheckbox.checked) {
+                            contactCheckbox.focus();
+                        } else {
+                            priceInput.focus();
+                        }
+                    }
+                }
+            });
+        }
+
+        // File Upload Handlers
         function handleDragOver(e) {
             e.preventDefault();
             const area = e.currentTarget;
@@ -2629,7 +1420,7 @@ if (contactCheckbox && priceWrapper && priceInput) {
             });
         }
 
-        // Offered-Items Logic (unchanged)
+        // Offered-Items Logic
         const container = document.getElementById('offered-items-container');
         const addBtn = document.getElementById('add-item-btn');
         if (container && addBtn) {
@@ -2702,230 +1493,109 @@ if (contactCheckbox && priceWrapper && priceInput) {
             }
         });
 
-        // ────────────────────────────────────────────────
-        // Category Autocomplete, Delete Listing, Proposals, etc.
-        // (your original code continues here – unchanged)
-        // ────────────────────────────────────────────────
+        // Category autocomplete
+        (function initCategoryAutocomplete() {
+            if (window.categoryAutocompleteInitialized) return;
+            window.categoryAutocompleteInitialized = true;
 
-// ────────────────────────────────────────────────
-// Category autocomplete – shows all categories on focus, filters as you type
-// ────────────────────────────────────────────────
-(function initCategoryAutocomplete() {
-  // Prevent running multiple times
-  if (window.categoryAutocompleteInitialized) return;
-  window.categoryAutocompleteInitialized = true;
+            const categoryData = [
+                { name: "Electronics", synonyms: ["gadget","tv","television","smart tv","radio","speaker","bluetooth speaker","headphone","earphone","earbuds","airpods","camera","dslr","webcam","drone","smartwatch","fitness tracker","charger","power bank","usb cable","hdmi","remote","projector","home theater","console","playstation","xbox","nintendo","gaming pc"] },
+                { name: "Computers & Networking", synonyms: ["laptop","notebook","chromebook","desktop","pc","computer","monitor","screen","keyboard","mouse","gaming mouse","trackpad","router","modem","wifi","wifi extender","ethernet","server","nas","hard drive","ssd","ram","cpu","graphics card","gpu","motherboard","printer","scanner","webcam","usb hub","external drive"] },
+                { name: "Mobile Phones & Accessories", synonyms: ["phone","smartphone","mobile","cell","iphone","samsung","google pixel","oneplus","xiaomi","charger","fast charger","cable","usb-c","lightning","case","phone case","cover","screen protector","tempered glass","pop socket","wallet case","wireless charger","powerbank","selfie stick"] },
+                { name: "Health & Beauty", synonyms: ["skincare","face cream","moisturizer","serum","sunscreen","makeup","foundation","lipstick","mascara","eyeliner","perfume","cologne","fragrance","hair","shampoo","conditioner","hair dye","soap","body wash","shower gel","lotion","cream","deodorant","vitamin","supplement","protein","collagen","fitness","yoga mat","resistance band","massager"] },
+                { name: "Sports & Outdoors", synonyms: ["football","soccer","basketball","tennis","racket","gym","dumbbell","barbell","treadmill","exercise bike","bicycle","mountain bike","road bike","tent","camping","sleeping bag","fishing rod","reel","running shoes","trail shoes","yoga","yoga mat","hiking","backpack","swimming","goggles","snorkel"] },
+                { name: "Fashion & Apparel", synonyms: ["clothes","clothing","shirt","t-shirt","polo","dress","skirt","jeans","trousers","pants","jacket","hoodie","sweater","coat","shoes","sneakers","boots","heels","sandals","slipper","bag","handbag","purse","backpack","wallet","belt","scarf","hat","cap","sunglasses","jewelry"] },
+                { name: "Home & Garden", synonyms: ["furniture","sofa","couch","bed","mattress","table","dining table","coffee table","chair","office chair","recliner","plant","indoor plant","flower","pot","gardening","lawn mower","hose","decoration","wall art","mirror","lamp","ceiling fan","curtain","rug","carpet"] },
+                { name: "Automobile & Vehicles", synonyms: ["car","sedan","suv","truck","pickup","van","bus","motorcycle","bike","scooter","electric scooter","atv","quad bike","tractor","used car","new car"] },
+                { name: "Food & Beverages", synonyms: ["grocery","rice","pasta","oil","cooking oil","sugar","flour","snack","biscuit","chips","chocolate","candy","drink","soft drink","soda","juice","coffee","tea","milk","water","energy drink"] },
+                { name: "Books, Music & Movies", synonyms: ["book","novel","textbook","magazine","comic","manga","music","cd","vinyl","record","song","album","movie","dvd","blu-ray","digital movie","audiobook","podcast"] },
+                { name: "Toys & Games", synonyms: ["toy","doll","action figure","lego","building block","puzzle","board game","card game","video game","ps5","xbox","nintendo switch","drone toy","educational toy"] },
+                { name: "Pets & Accessories", synonyms: ["pet","dog","puppy","cat","kitten","pet food","dog food","cat litter","cage","kennel","leash","collar","harness","aquarium","fish tank","bird cage","hamster wheel"] },
+                { name: "Professional Services", synonyms: ["consulting","legal","lawyer","attorney","accounting","accountant","bookkeeping","marketing","business","virtual assistant","freelance","graphic design","writing","copywriting","programming","web development","app development","seo","translation","data entry","photography","videography","event planning","project management","financial planning"] },
+                { name: "Education & Training", synonyms: ["course","online course","lesson","tutoring","private tutor","class","workshop","coding","programming","language","english","french","spanish","music lesson","instrument","test prep","exam","ielts","toefl"] },
+                { name: "House and Property", synonyms: ["house","home","apartment","flat","condo","land","plot","real estate","rent","for rent","for sale","property","commercial property"] },
+                { name: "Other", synonyms: ["misc","etc","everything else","random","not listed","various","unknown"] }
+            ];
 
-  const categoryData = [
-    { name: "Electronics", synonyms: ["gadget","tv","television","smart tv","radio","speaker","bluetooth speaker","headphone","earphone","earbuds","airpods","camera","dslr","webcam","drone","smartwatch","fitness tracker","charger","power bank","usb cable","hdmi","remote","projector","home theater","console","playstation","xbox","nintendo","gaming pc"] },
-    { name: "Computers & Networking", synonyms: ["laptop","notebook","chromebook","desktop","pc","computer","monitor","screen","keyboard","mouse","gaming mouse","trackpad","router","modem","wifi","wifi extender","ethernet","server","nas","hard drive","ssd","ram","cpu","graphics card","gpu","motherboard","printer","scanner","webcam","usb hub","external drive"] },
-    { name: "Mobile Phones & Accessories", synonyms: ["phone","smartphone","mobile","cell","iphone","samsung","google pixel","oneplus","xiaomi","charger","fast charger","cable","usb-c","lightning","case","phone case","cover","screen protector","tempered glass","pop socket","wallet case","wireless charger","powerbank","selfie stick"] },
-    { name: "Software & Apps", synonyms: ["app","application","program","software","windows","macos","linux","android","ios","office","word","excel","powerpoint","antivirus","vpn","adobe","photoshop","illustrator","premiere","license","subscription","steam","game key","activation code"] },
-    { name: "Digital Products & Downloads", synonyms: ["ebook","kindle","pdf","music","song","album","spotify","apple music","movie","netflix","digital movie","game","steam game","psn","xbox live","digital art","nft","crypto art","stock photo","font","template","website template","resume template","canva","video clip","stock footage","sound effect"] },
-    { name: "Health & Beauty", synonyms: ["skincare","face cream","moisturizer","serum","sunscreen","makeup","foundation","lipstick","mascara","eyeliner","perfume","cologne","fragrance","hair","shampoo","conditioner","hair dye","soap","body wash","shower gel","lotion","cream","deodorant","vitamin","supplement","protein","collagen","fitness","yoga mat","resistance band","massager"] },
-    { name: "Medical Equipment & Supplies", synonyms: ["thermometer","blood pressure","bp monitor","glucometer","mask","n95","surgical mask","syringe","needle","crutch","walker","wheelchair","bandage","plaster","first aid","nebulizer","pulse oximeter","oximeter","hearing aid","stethoscope","incontinence","hospital bed","oxygen concentrator"] },
-    { name: "Sports & Outdoors", synonyms: ["football","soccer","basketball","tennis","racket","gym","dumbbell","barbell","treadmill","exercise bike","bicycle","mountain bike","road bike","tent","camping","sleeping bag","fishing rod","reel","running shoes","trail shoes","yoga","yoga mat","hiking","backpack","swimming","goggles","snorkel"] },
-    { name: "Fashion & Apparel", synonyms: ["clothes","clothing","shirt","t-shirt","polo","dress","skirt","jeans","trousers","pants","jacket","hoodie","sweater","coat","shoes","sneakers","boots","heels","sandals","slipper","bag","handbag","purse","backpack","wallet","belt","scarf","hat","cap","sunglasses","jewelry"] },
-    { name: "Jewelry & Watches", synonyms: ["ring","engagement ring","wedding ring","necklace","chain","pendant","earring","stud","hoop","bracelet","bangle","anklet","watch","smartwatch","rolex","omega","luxury watch","analog watch","digital watch","chronograph"] },
-    { name: "Home & Garden", synonyms: ["furniture","sofa","couch","bed","mattress","table","dining table","coffee table","chair","office chair","recliner","plant","indoor plant","flower","pot","gardening","lawn mower","hose","decoration","wall art","mirror","lamp","ceiling fan","curtain","rug","carpet"] },
-    { name: "Kitchen & Dining", synonyms: ["cooker","rice cooker","blender","juicer","fridge","refrigerator","microwave","oven","stove","gas stove","induction","pot","pan","frying pan","saucepan","knife","cutlery","plate","bowl","glass","mug","coffee maker","kettle","toaster","air fryer"] },
-    { name: "Tools & DIY", synonyms: ["drill","power drill","hammer","screwdriver","screw","saw","jigsaw","paint","roller","brush","wood","plywood","timber","cement","tool box","wrench","pliers","measuring tape","level","soldering","welder","ladder"] },
-    { name: "Automotive Parts & Accessories", synonyms: ["car part","auto part","tire","tyre","wheel","rim","battery","car battery","oil","engine oil","filter","air filter","oil filter","headlight","tail light","fog light","bumper","car mat","seat cover","car cover","roof rack","bike rack"] },
-    { name: "Automobile & Vehicles", synonyms: ["car","sedan","suv","truck","pickup","van","bus","motorcycle","bike","scooter","electric scooter","atv","quad bike","tractor","used car","new car"] },
-    { name: "Industrial & Scientific", synonyms: ["machine","industrial","lab","laboratory","microscope","telescope","sensor","pump","motor","generator","welder","soldering iron","safety gear","hard hat","gloves","goggles"] },
-    { name: "Agriculture & Farming", synonyms: ["tractor","plough","seed","fertilizer","pesticide","farm tool","irrigation","sprinkler","water pump","chicken feed","animal feed","greenhouse","farming equipment"] },
-    { name: "Food & Beverages", synonyms: ["grocery","rice","pasta","oil","cooking oil","sugar","flour","snack","biscuit","chips","chocolate","candy","drink","soft drink","soda","juice","coffee","tea","milk","water","energy drink"] },
-    { name: "Office Supplies", synonyms: ["pen","ballpoint","marker","highlighter","paper","notebook","diary","journal","printer","ink","toner","stapler","paper clip","file folder","envelope","calculator","whiteboard"] },
-    { name: "Books, Music & Movies", synonyms: ["book","novel","textbook","magazine","comic","manga","music","cd","vinyl","record","song","album","movie","dvd","blu-ray","digital movie","audiobook","podcast"] },
-    { name: "Toys & Games", synonyms: ["toy","doll","action figure","lego","building block","puzzle","board game","card game","video game","ps5","xbox","nintendo switch","drone toy","educational toy"] },
-    { name: "Baby & Kids", synonyms: ["baby","infant","toddler","stroller","pram","diaper","nappy","baby food","crib","cot","high chair","baby clothes","kids toy","playpen"] },
-    { name: "Pets & Accessories", synonyms: ["pet","dog","puppy","cat","kitten","pet food","dog food","cat litter","cage","kennel","leash","collar","harness","aquarium","fish tank","bird cage","hamster wheel"] },
-    { name: "Art, Crafts & Sewing", synonyms: ["art","craft","painting","acrylic","watercolor","brush","canvas","easel","yarn","knitting","crochet","sewing machine","fabric","thread","beads","embroidery","origami"] },
-    { name: "Collectibles & Hobbies", synonyms: ["stamp","coin","postage","trading card","pokemon card","sports card","model kit","figurine","comic book","vintage toy","antique","memorabilia","funko pop"] },
-    { name: "Handmade & Custom Items", synonyms: ["handmade","handcrafted","custom made","personalized","engraved","monogram","bespoke","artisanal","craft fair"] },
-    { name: "Travel & Experiences", synonyms: ["luggage","suitcase","travel bag","backpack","passport","travel pillow","flight","ticket","hotel","booking","tour","visa","cruise","adventure"] },
-    { name: "House and Property", synonyms: ["house","home","apartment","flat","condo","land","plot","real estate","rent","for rent","for sale","property","commercial property"] },
-    { name: "Home Improvement & Repair", synonyms: ["handyman","repair","renovation","remodel","carpentry","carpenter","masonry","mason","plumbing","plumber","electrician","electrical","hvac","air conditioning","roofing","painting","drywall","flooring","tiling","fencing","deck","construction","contractor"] },
-    { name: "Cleaning & Maintenance", synonyms: ["cleaning","house cleaning","maid","janitorial","deep clean","window cleaning","carpet cleaning","pressure washing","lawn care","landscaping","gardening","pest control","extermination","junk removal","moving","packing","storage","gutter cleaning","pool cleaning"] },
-    { name: "Automotive Services", synonyms: ["car wash","auto detailing","mechanic","car repair","tyre change","oil change","car servicing","diagnostic","towing","body shop","paintless dent repair"] },
-    { name: "Professional Services", synonyms: ["consulting","legal","lawyer","attorney","accounting","accountant","bookkeeping","marketing","business","virtual assistant","freelance","graphic design","writing","copywriting","programming","web development","app development","seo","translation","data entry","photography","videography","event planning","project management","financial planning"] },
-    { name: "Personal & Wellness Services", synonyms: ["personal training","fitness","yoga","pilates","massage","spa","salon","haircut","barber","nails","manicure","pedicure","makeup artist","tattoo","piercing","life coaching","therapy","counseling","nutritionist","dietitian","pet sitting","dog walking","babysitting","elder care"] },
-    { name: "Education & Training", synonyms: ["course","online course","lesson","tutoring","private tutor","class","workshop","coding","programming","language","english","french","spanish","music lesson","instrument","test prep","exam","ielts","toefl"] },
-    { name: "Events & Experiences Services", synonyms: ["event planning","wedding planner","party planner","birthday","dj","mc","caterer","cake","decorator","photobooth","bounce house","magician","clown","face painting","venue rental"] },
-    { name: "Other Services", synonyms: ["service","gig","odd job","miscellaneous","consult","assist","delivery","transport","errand","personal shopper"] },
-    { name: "Other", synonyms: ["misc","etc","everything else","random","not listed","various","unknown"] }
-  ];
+            function attach() {
+                const input = document.getElementById('category-input');
+                const suggestions = document.getElementById('category-suggestions');
+                if (!input || !suggestions) return;
 
-  function attach() {
-    const input = document.getElementById('category-input');
-    const suggestions = document.getElementById('category-suggestions');
+                input.removeEventListener('input', handleInput);
+                input.removeEventListener('focus', handleFocus);
+                input.removeEventListener('blur', handleBlur);
+                input.removeEventListener('keydown', handleKeydown);
 
-    if (!input || !suggestions) return;
+                function handleInput(e) { updateSuggestions(e.target.value); }
+                function handleFocus() { updateSuggestions(input.value, true); }
+                function handleBlur() { setTimeout(() => { if (!suggestions.matches(':hover')) { suggestions.style.display = 'none'; } }, 150); }
+                function handleKeydown(e) {
+                    if (e.key === 'Enter' && suggestions.style.display === 'block') {
+                        e.preventDefault();
+                        const first = suggestions.querySelector('li');
+                        if (first) { const text = first.textContent; input.value = text.startsWith('Use: "') ? text.slice(6, -1) : text; suggestions.style.display = 'none'; }
+                    }
+                }
 
-    // Clear previous listeners if any (safety)
-    input.removeEventListener('input', handleInput);
-    input.removeEventListener('focus', handleFocus);
-    input.removeEventListener('blur', handleBlur);
-    input.removeEventListener('keydown', handleKeydown);
+                function updateSuggestions(value, forceShowAll = false) {
+                    const term = value.trim().toLowerCase();
+                    suggestions.innerHTML = '';
+                    if (term.length === 0 && !forceShowAll) { suggestions.style.display = 'none'; return; }
+                    if (term.length === 0 && forceShowAll) {
+                        categoryData.map(cat => cat.name).sort().forEach(cat => {
+                            const li = document.createElement('li');
+                            li.textContent = cat;
+                            li.style.padding = '10px 16px'; li.style.cursor = 'pointer'; li.style.borderBottom = '1px solid #eee';
+                            li.addEventListener('mouseover', () => li.style.background = '#f0f9f4');
+                            li.addEventListener('mouseout', () => li.style.background = '');
+                            li.addEventListener('mousedown', (e) => { e.preventDefault(); input.value = cat; suggestions.style.display = 'none'; });
+                            suggestions.appendChild(li);
+                        });
+                        suggestions.style.display = 'block'; return;
+                    }
+                    const matches = [];
+                    categoryData.forEach(cat => {
+                        if (cat.name.toLowerCase().includes(term)) matches.push(cat.name);
+                        else if (cat.synonyms.some(s => s.toLowerCase().includes(term))) matches.push(cat.name);
+                    });
+                    const unique = [...new Set(matches)];
+                    unique.forEach(cat => {
+                        const li = document.createElement('li');
+                        li.textContent = cat;
+                        li.style.padding = '10px 16px'; li.style.cursor = 'pointer'; li.style.borderBottom = '1px solid #eee';
+                        li.addEventListener('mouseover', () => li.style.background = '#f0f9f4');
+                        li.addEventListener('mouseout', () => li.style.background = '');
+                        li.addEventListener('mousedown', (e) => { e.preventDefault(); input.value = cat; suggestions.style.display = 'none'; });
+                        suggestions.appendChild(li);
+                    });
+                    if (unique.length === 0 && term.length >= 2) {
+                        const useTyped = document.createElement('li');
+                        useTyped.textContent = 'Use: "' + value.trim() + '"';
+                        useTyped.style.padding = '10px 16px'; useTyped.style.cursor = 'pointer'; useTyped.style.background = '#fff3e0'; useTyped.style.borderBottom = '1px solid #ffe0b2'; useTyped.style.fontStyle = 'italic';
+                        useTyped.addEventListener('mousedown', (e) => { e.preventDefault(); input.value = value.trim(); suggestions.style.display = 'none'; });
+                        suggestions.appendChild(useTyped);
+                        const other = document.createElement('li');
+                        other.textContent = 'Other'; other.style.padding = '10px 16px'; other.style.cursor = 'pointer'; other.style.background = '#f5f5f5';
+                        other.addEventListener('mousedown', (e) => { e.preventDefault(); input.value = 'Other'; suggestions.style.display = 'none'; });
+                        suggestions.appendChild(other);
+                    }
+                    suggestions.style.display = suggestions.children.length > 0 ? 'block' : 'none';
+                }
 
-    function handleInput(e) {
-      updateSuggestions(e.target.value);
-    }
+                input.addEventListener('input', handleInput);
+                input.addEventListener('focus', handleFocus);
+                input.addEventListener('blur', handleBlur);
+                input.addEventListener('keydown', handleKeydown);
+                const outsideClick = (e) => { if (!input.contains(e.target) && !suggestions.contains(e.target)) { suggestions.style.display = 'none'; } };
+                document.removeEventListener('click', outsideClick);
+                document.addEventListener('click', outsideClick);
+            }
 
-    function handleFocus() {
-      // On focus, show all categories (filtered if input already has text)
-      updateSuggestions(input.value, true); // true = force show all when empty
-    }
-
-    function handleBlur() {
-      setTimeout(() => {
-        if (!suggestions.matches(':hover')) {
-          suggestions.style.display = 'none';
-        }
-      }, 150);
-    }
-
-    function handleKeydown(e) {
-      if (e.key === 'Enter' && suggestions.style.display === 'block') {
-        e.preventDefault();
-        const first = suggestions.querySelector('li');
-        if (first) {
-          const text = first.textContent;
-          input.value = text.startsWith('Use: "') ? text.slice(6, -1) : text;
-          suggestions.style.display = 'none';
-        }
-      }
-    }
-
-    function updateSuggestions(value, forceShowAll = false) {
-      const term = value.trim().toLowerCase();
-      suggestions.innerHTML = '';
-
-      // If term is empty AND not forcing show all, hide suggestions
-      if (term.length === 0 && !forceShowAll) {
-        suggestions.style.display = 'none';
-        return;
-      }
-
-      // If term is empty but forcing show all (on focus), show all categories
-      if (term.length === 0 && forceShowAll) {
-        // Show all category names
-        const allCategories = categoryData.map(cat => cat.name);
-        // Sort alphabetically
-        allCategories.sort();
-        
-        allCategories.forEach(cat => {
-          const li = document.createElement('li');
-          li.textContent = cat;
-          li.style.padding = '10px 16px';
-          li.style.cursor = 'pointer';
-          li.style.borderBottom = '1px solid #eee';
-          li.addEventListener('mouseover', () => li.style.background = '#f0f9f4');
-          li.addEventListener('mouseout', () => li.style.background = '');
-          li.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            input.value = cat;
-            suggestions.style.display = 'none';
-          });
-          suggestions.appendChild(li);
-        });
-        
-        suggestions.style.display = 'block';
-        return;
-      }
-
-      // Normal search/filter mode
-      const matches = [];
-
-      categoryData.forEach(cat => {
-        // Check if category name matches
-        if (cat.name.toLowerCase().includes(term)) {
-          matches.push(cat.name);
-        } 
-        // Check if any synonym matches
-        else if (cat.synonyms.some(s => s.toLowerCase().includes(term))) {
-          matches.push(cat.name);
-        }
-      });
-
-      const unique = [...new Set(matches)];
-
-      unique.forEach(cat => {
-        const li = document.createElement('li');
-        li.textContent = cat;
-        li.style.padding = '10px 16px';
-        li.style.cursor = 'pointer';
-        li.style.borderBottom = '1px solid #eee';
-        li.addEventListener('mouseover', () => li.style.background = '#f0f9f4');
-        li.addEventListener('mouseout', () => li.style.background = '');
-        li.addEventListener('mousedown', (e) => {
-          e.preventDefault();
-          input.value = cat;
-          suggestions.style.display = 'none';
-        });
-        suggestions.appendChild(li);
-      });
-
-      // Fallback when no match
-      if (unique.length === 0 && term.length >= 2) {
-        const useTyped = document.createElement('li');
-        useTyped.textContent = `Use: "${value.trim()}"`;
-        useTyped.style.padding = '10px 16px';
-        useTyped.style.cursor = 'pointer';
-        useTyped.style.background = '#fff3e0';
-        useTyped.style.borderBottom = '1px solid #ffe0b2';
-        useTyped.style.fontStyle = 'italic';
-        useTyped.addEventListener('mousedown', (e) => {
-          e.preventDefault();
-          input.value = value.trim();
-          suggestions.style.display = 'none';
-        });
-        suggestions.appendChild(useTyped);
-
-        const other = document.createElement('li');
-        other.textContent = 'Other';
-        other.style.padding = '10px 16px';
-        other.style.cursor = 'pointer';
-        other.style.background = '#f5f5f5';
-        other.addEventListener('mousedown', (e) => {
-          e.preventDefault();
-          input.value = 'Other';
-          suggestions.style.display = 'none';
-        });
-        suggestions.appendChild(other);
-      }
-
-      suggestions.style.display = suggestions.children.length > 0 ? 'block' : 'none';
-    }
-
-    // Attach listeners
-    input.addEventListener('input', handleInput);
-    input.addEventListener('focus', handleFocus);
-    input.addEventListener('blur', handleBlur);
-    input.addEventListener('keydown', handleKeydown);
-
-    // Global click outside
-    const outsideClick = (e) => {
-      if (!input.contains(e.target) && !suggestions.contains(e.target)) {
-        suggestions.style.display = 'none';
-      }
-    };
-    document.removeEventListener('click', outsideClick); // prevent duplicates
-    document.addEventListener('click', outsideClick);
-  }
-
-  // Run immediately
-  attach();
-
-  // Re-attach when switching to create-listing section
-  document.querySelectorAll('[data-section="create-listing"]').forEach(item => {
-    item.addEventListener('click', () => setTimeout(attach, 100));
-  });
-
-  // Also re-attach on buttons that call showSection('create-listing')
-  document.querySelectorAll('[onclick*="showSection(\'create-listing\')"]').forEach(btn => {
-    btn.addEventListener('click', () => setTimeout(attach, 300));
-  });
-})();
+            attach();
+            document.querySelectorAll('[data-section="create-listing"]').forEach(item => { item.addEventListener('click', () => setTimeout(attach, 100)); });
+            document.querySelectorAll('[onclick*="showSection(\'create-listing\')"]').forEach(btn => { btn.addEventListener('click', () => setTimeout(attach, 300)); });
+        })();
 
         // Delete Listing
         document.querySelectorAll('.delete-listing').forEach(button => {
@@ -2933,228 +1603,107 @@ if (contactCheckbox && priceWrapper && priceInput) {
                 if (!confirm('Are you sure you want to delete this listing?')) return;
                 const listingId = button.dataset.id;
                 try {
-                    const resp = await fetch(`/listings/${listingId}`, {
-                        method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
+                    const resp = await fetch(`/listings/${listingId}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
                     const json = await resp.json();
-                    if (resp.ok && json.success) {
-                        button.closest('.listing-card').remove();
-                    } else {
-                        alert(json.error || 'Failed to delete listing.');
-                    }
-                } catch (err) {
-                    console.error(err);
-                    alert('An error occurred while deleting.');
-                }
+                    if (resp.ok && json.success) { button.closest('.listing-card').remove(); }
+                    else { alert(json.error || 'Failed to delete listing.'); }
+                } catch (err) { console.error(err); alert('An error occurred while deleting.'); }
             });
         });
 
-// ------- Proposals: API + UI (scoped, no CSRF) -------
-async function updateProposalStatus(card, newStatus) {
-  const id = card?.dataset.id;
-  if (!id) throw new Error('Missing proposal id');
+        // Proposals
+        async function updateProposalStatus(card, newStatus) {
+            const id = card?.dataset.id;
+            if (!id) throw new Error('Missing proposal id');
+            const res = await fetch(`/proposals/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'fetch' }, body: JSON.stringify({ status: newStatus }) });
+            if (res.status === 401) { location.href = `/login?next=${encodeURIComponent(location.pathname + location.search)}`; return; }
+            if (!res.ok) { const t = await res.text().catch(()=> ''); throw new Error(`HTTP ${res.status} ${t}`); }
+            const badge = card.querySelector('.status-badge');
+            if (badge) { badge.className = `status-badge status-${newStatus}`; badge.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1); if (newStatus === 'accepted') { badge.classList.add('accept-animation'); setTimeout(() => badge.classList.remove('accept-animation'), 600); } }
+            const actions = card.querySelector('.proposal-actions');
+            if (!actions) return;
+            if (newStatus === 'accepted') { actions.textContent = ''; const span = document.createElement('span'); span.className = 'status-badge status-accepted'; span.textContent = 'Accepted'; actions.appendChild(span); }
+            else if (newStatus === 'negotiated') { if (!actions.querySelector('.decline-proposal')) { const d = document.createElement('button'); d.className = 'btn btn-outline-danger decline-proposal'; d.textContent = 'Decline'; actions.appendChild(d); } }
+            else if (newStatus === 'declined') { const declineBtn = actions.querySelector('.decline-proposal'); if (declineBtn) declineBtn.remove(); if (!actions.querySelector('.accept-proposal')) { const a = document.createElement('button'); a.className = 'btn btn-success accept-proposal'; a.textContent = 'Accept'; actions.appendChild(a); } if (!actions.querySelector('.negotiate-proposal')) { const n = document.createElement('button'); n.className = 'btn btn-outline-warning negotiate-proposal'; n.textContent = 'Negotiate'; actions.appendChild(n); } }
+        }
 
-  const res = await fetch(`/proposals/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'fetch' },
-    body: JSON.stringify({ status: newStatus }) // accepted | declined | negotiated
-  });
-
-  if (res.status === 401) {
-    location.href = `/login?next=${encodeURIComponent(location.pathname + location.search)}`;
-    return;
-  }
-  if (!res.ok) {
-    const t = await res.text().catch(()=> '');
-    throw new Error(`HTTP ${res.status} ${t}`);
-  }
-
-  // --- Optimistic UI updates ---
-  const badge = card.querySelector('.status-badge');
-  if (badge) {
-    badge.className = `status-badge status-${newStatus}`;
-    badge.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
-    if (newStatus === 'accepted') {
-      badge.classList.add('accept-animation');
-      setTimeout(() => badge.classList.remove('accept-animation'), 600);
-    }
-  }
-
-  const actions = card.querySelector('.proposal-actions');
-  if (!actions) return;
-
-  if (newStatus === 'accepted') {
-    // Replace actions with static accepted badge
-    actions.textContent = '';
-    const span = document.createElement('span');
-    span.className = 'status-badge status-accepted';
-    span.textContent = 'Accepted';
-    actions.appendChild(span);
-  } else if (newStatus === 'negotiated') {
-    // Ensure Decline exists; keep Accept
-    if (!actions.querySelector('.decline-proposal')) {
-      const d = document.createElement('button');
-      d.className = 'btn btn-outline-danger decline-proposal';
-      d.textContent = 'Decline';
-      actions.appendChild(d);
-    }
-  } else if (newStatus === 'declined') {
-    // Remove the Decline button after declining (your requirement)
-    const declineBtn = actions.querySelector('.decline-proposal');
-    if (declineBtn) declineBtn.remove();
-
-    // Ensure Accept + Negotiate are present
-    if (!actions.querySelector('.accept-proposal')) {
-      const a = document.createElement('button');
-      a.className = 'btn btn-success accept-proposal';
-      a.textContent = 'Accept';
-      actions.appendChild(a);
-    }
-    if (!actions.querySelector('.negotiate-proposal')) {
-      const n = document.createElement('button');
-      n.className = 'btn btn-outline-warning negotiate-proposal';
-      n.textContent = 'Negotiate';
-      actions.appendChild(n);
-    }
-  }
-}
-
-// One delegated listener, scoped to the proposals section only
-const proposalsSection = document.getElementById('proposals');
-const proposalsList    = proposalsSection ? proposalsSection.querySelector('.proposals-list') : null;
-
-if (proposalsList) {
-  proposalsList.addEventListener('click', async (e) => {
-    const btn = e.target.closest('.accept-proposal, .decline-proposal, .negotiate-proposal');
-    if (!btn || !proposalsList.contains(btn)) return;
-
-    const card = btn.closest('.proposal-card');
-    if (!card) return;
-
-    const action = btn.classList.contains('accept-proposal')    ? 'accepted'
-                 : btn.classList.contains('decline-proposal')   ? 'declined'
-                 : btn.classList.contains('negotiate-proposal') ? 'negotiated'
-                 : null;
-    if (!action) return;
-
-    const ok = confirm({
-      accepted:   'Accept this proposal?',
-      declined:   'Decline this proposal?',
-      negotiated: 'Mark this proposal as negotiating?'
-    }[action] || 'Proceed?');
-    if (!ok) return;
-
-    // Busy state on the clicked button only
-    const prevHTML = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
-    try {
-      await updateProposalStatus(card, action);
-    } catch (err) {
-      console.error(err);
-      alert('Something went wrong. Please try again.');
-    } finally {
-      // The button may be removed after decline; guard DOM presence
-      if (document.body.contains(btn)) {
-        btn.disabled = false;
-        btn.innerHTML = prevHTML;
-      }
-    }
-  });
-}
-
-
-                // Image Modal
-                let currentImages = [];
-                let currentIndex = 0;
-
-                window.openModal = function(img) {
-                    const modal = document.getElementById('imageModal');
-                    const modalImg = document.getElementById('modalImage');
-                    const card = img.closest('.proposal-card');
-                    currentImages = Array.from(card.querySelectorAll('.proposal-image')).map(i => i.src);
-                    currentIndex = currentImages.indexOf(img.src);
-                    modalImg.src = img.src;
-                    modal.style.display = 'block';
-                    document.body.style.overflow = 'hidden';
-                };
-
-                window.closeModal = function() {
-                    const modal = document.getElementById('imageModal');
-                    modal.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                };
-
-                window.changeModalImage = function(direction) {
-                    currentIndex = (currentIndex + direction + currentImages.length) % currentImages.length;
-                    document.getElementById('modalImage').src = currentImages[currentIndex];
-                };
-
-                // Flash Messages Auto-Dismiss
-                document.querySelectorAll('.flash-message').forEach(msg => {
-                    setTimeout(() => {
-                        msg.style.opacity = '0';
-                        setTimeout(() => msg.remove(), 1000);
-                    }, 5000);
-                });
+        const proposalsSection = document.getElementById('proposals');
+        const proposalsList    = proposalsSection ? proposalsSection.querySelector('.proposals-list') : null;
+        if (proposalsList) {
+            proposalsList.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.accept-proposal, .decline-proposal, .negotiate-proposal');
+                if (!btn || !proposalsList.contains(btn)) return;
+                const card = btn.closest('.proposal-card');
+                if (!card) return;
+                const action = btn.classList.contains('accept-proposal') ? 'accepted' : btn.classList.contains('decline-proposal') ? 'declined' : btn.classList.contains('negotiate-proposal') ? 'negotiated' : null;
+                if (!action) return;
+                const ok = confirm({ accepted: 'Accept this proposal?', declined: 'Decline this proposal?', negotiated: 'Mark this proposal as negotiating?' }[action] || 'Proceed?');
+                if (!ok) return;
+                const prevHTML = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                try { await updateProposalStatus(card, action); } catch (err) { console.error(err); alert('Something went wrong. Please try again.'); }
+                finally { if (document.body.contains(btn)) { btn.disabled = false; btn.innerHTML = prevHTML; } }
             });
-    </script>
+        }
 
+        // Image Modal
+        let currentImages = [];
+        let currentIndex = 0;
+        window.openModal = function(img) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            const card = img.closest('.proposal-card');
+            currentImages = Array.from(card.querySelectorAll('.proposal-image')).map(i => i.src);
+            currentIndex = currentImages.indexOf(img.src);
+            modalImg.src = img.src;
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        };
+        window.closeModal = function() {
+            const modal = document.getElementById('imageModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        };
+        window.changeModalImage = function(direction) {
+            currentIndex = (currentIndex + direction + currentImages.length) % currentImages.length;
+            document.getElementById('modalImage').src = currentImages[currentIndex];
+        };
 
-
+        // Flash Messages Auto-Dismiss
+        document.querySelectorAll('.flash-message').forEach(msg => {
+            setTimeout(() => { msg.style.opacity = '0'; setTimeout(() => msg.remove(), 1000); }, 5000);
+        });
+    });
+</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const sections     = document.querySelectorAll('.dashboard-section');
-  const navItems     = document.querySelectorAll('.sidebar-nav .nav-item');
-  const sectionTitle = document.getElementById('section-title');
+    const sections     = document.querySelectorAll('.dashboard-section');
+    const navItems     = document.querySelectorAll('.sidebar-nav .nav-item');
+    const sectionTitle = document.getElementById('section-title');
 
-  function internalShowSection(sectionId) {
-    // Show the right section
-    sections.forEach(sec => {
-      sec.classList.toggle('active', sec.id === sectionId);
-    });
-
-    // Sidebar active state
-    navItems.forEach(item => {
-      item.classList.toggle('active', item.dataset.section === sectionId);
-    });
-
-    // Update heading text
-    if (sectionTitle) {
-      const activeNav = Array.from(navItems).find(item => item.dataset.section === sectionId);
-      if (activeNav) {
-        const labelSpan = activeNav.querySelector('span');
-        if (labelSpan) sectionTitle.textContent = labelSpan.textContent;
-      }
+    function internalShowSection(sectionId) {
+        sections.forEach(sec => { sec.classList.toggle('active', sec.id === sectionId); });
+        navItems.forEach(item => { item.classList.toggle('active', item.dataset.section === sectionId); });
+        if (sectionTitle) {
+            const activeNav = Array.from(navItems).find(item => item.dataset.section === sectionId);
+            if (activeNav) { const labelSpan = activeNav.querySelector('span'); if (labelSpan) sectionTitle.textContent = labelSpan.textContent; }
+        }
     }
-  }
 
-  // Global function so your HTML can call showSection('create-listing')
-  window.showSection = function(sectionId) {
-    internalShowSection(sectionId);
+    window.showSection = function(sectionId) {
+        internalShowSection(sectionId);
+        const url = new URL(window.location);
+        url.searchParams.set('section', sectionId);
+        window.history.replaceState({}, '', url);
+    };
 
-    // Keep URL in sync (so refresh retains section)
-    const url = new URL(window.location);
-    url.searchParams.set('section', sectionId);
-    window.history.replaceState({}, '', url);
-  };
+    navItems.forEach(item => { item.addEventListener('click', () => { const target = item.dataset.section; if (target) window.showSection(target); }); });
 
-  // Sidebar click wiring
-  navItems.forEach(item => {
-    item.addEventListener('click', () => {
-      const target = item.dataset.section;
-      if (target) window.showSection(target);
-    });
-  });
-
-  // Initial from URL (?section=create-listing)
-  const params         = new URLSearchParams(window.location.search);
-  const initialSection = params.get('section') || 'listings';
-
-  internalShowSection(initialSection);
+    const params = new URLSearchParams(window.location.search);
+    const initialSection = params.get('section') || 'listings';
+    internalShowSection(initialSection);
 });
 </script>
     <script src="{{ url_for('static', filename='heartbeat.js') }}"></script>
