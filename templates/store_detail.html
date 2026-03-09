@@ -12,7 +12,7 @@
     <meta property="og:url" content="{{ store.store_link }}">
     <meta property="og:title" content="{{ store.name }} – Shop on kwicshop">
     <meta property="og:description" content="{{ store.description | truncate(160) if store.description else 'Discover great deals and unique items at this store.' }}">
-    <meta property="og:image" content="{{ store.logo_url or url_for('static', filename='images/default-store-og.jpg', _external=True) }}">
+    <meta property="og:image" content="{{ store.logo or url_for('static', filename='images/default-store-og.jpg', _external=True) }}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:site_name" content="kwicshop">
@@ -21,7 +21,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ store.name }} – kwicshop">
     <meta name="twitter:description" content="{{ store.description | truncate(200) if store.description else 'Browse items and deals from this vendor.' }}">
-    <meta name="twitter:image" content="{{ store.logo_url or url_for('static', filename='images/default-store-og.jpg', _external=True) }}">
+    <meta name="twitter:image" content="{{ store.logo or url_for('static', filename='images/default-store-og.jpg', _external=True) }}">
     <meta name="twitter:url" content="{{ store.store_link }}">
     <style>
 :root {
