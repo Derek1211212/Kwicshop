@@ -4,10 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title>{{ listing.title }} - kwicshop</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="apple-touch-icon" href="/static/images/app-icon.png">
-  <!-- Open Graph Meta Tags -->
   {% if featured_listing %}
     <meta property="og:title" content="{{ featured_listing.title }}">
     <meta property="og:description" content="{{ featured_listing.description[:150] }}{% if featured_listing.description|length > 150 %}...{% endif %}">
@@ -19,1733 +18,302 @@
     <meta name="twitter:description" content="{{ featured_listing.description[:150] }}{% if featured_listing.description|length > 150 %}...{% endif %}">
     <meta name="twitter:image" content="{{ featured_listing.banner_image }}">
   {% endif %}
-
   <style>
     :root {
-      --primary-color: #2ECC71;
-      --secondary-color: #34495E;
-      --accent-color: #F1C40F;
-      --text-color: #2C3E50;
-      --light-gray: #F8F9FA;
-      --medium-gray: #EAEDED;
-      --dark-gray: #95A5A6;
-      --border-radius: 12px;
-      --box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-      --mobile-breakpoint: 768px;
+      --green:        #1a6b45;
+      --green-light:  #2d9b65;
+      --green-pale:   #e8f5ee;
+      --green-border: #b8ddc8;
+      --cream:        #faf8f4;
+      --cream-dark:   #ede9e0;
+      --ink:          #1c2421;
+      --ink-mid:      #3d4f47;
+      --ink-soft:     #6b7d74;
+      --ink-faint:    #a8b8b0;
+      --red:          #c0392b;
+      --red-pale:     #fdf0ee;
+      --gold:         #d4a017;
+      --white:        #ffffff;
+      --shadow-sm:    0 1px 4px rgba(28,36,33,0.07);
+      --shadow-md:    0 4px 20px rgba(28,36,33,0.10);
+      --shadow-lg:    0 12px 40px rgba(28,36,33,0.14);
+      --radius-sm:    6px;
+      --radius-md:    12px;
+      --radius-lg:    20px;
+      --font-display: 'DM Serif Display', Georgia, serif;
+      --font-body:    'DM Sans', system-ui, sans-serif;
+      --ease:         cubic-bezier(0.4,0,0.2,1);
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-    body {
-      font-family: 'Poppins', sans-serif;
-      background-color: var(--light-gray);
-      color: var(--text-color);
-      line-height: 1.6;
-      overflow-x: hidden;
-      max-width: 100%;
-    }
+    body { font-family: var(--font-body); background: var(--cream); color: var(--ink); line-height: 1.6; overflow-x: hidden; }
 
-    /* Navbar Styles */
+    /* Navbar */
     .navbar {
-      background: white;
-      padding: 1rem;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      background: var(--white);
+      border-bottom: 1px solid var(--cream-dark);
+      padding: 0 2rem;
+      height: 62px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       position: sticky;
       top: 0;
-      z-index: 100;
-    }
-
-    .brand {
-      font-size: 1.3rem;
-      font-weight: 600;
-      color: var(--primary-color);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .mobile-menu {
-      display: none;
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      color: var(--secondary-color);
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-    }
-
-    .nav-links a {
-      color: var(--secondary-color);
-      text-decoration: none;
-      font-weight: 500;
-      transition: color 0.3s ease;
-      font-size: 0.9rem;
-    }
-
-    .nav-links a:hover {
-      color: var(--primary-color);
-    }
-
-    /* Main Content Container */
-    .listing-details-container {
-      max-width: 1200px;
-      margin: 2rem auto;
-      padding: 2rem;
-      background: white;
-      border-radius: var(--border-radius);
-      box-shadow: var(--box-shadow);
-    }
-
-    /* Back Button */
-    .back-button {
-      background: var(--secondary-color);
-      color: white;
-      padding: 0.6rem 1rem;
-      border-radius: 30px;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      transition: transform 0.3s ease;
-      margin-bottom: 1.5rem;
-      font-size: 0.9rem;
-    }
-
-    .back-button:hover {
-      transform: translateX(-5px);
-    }
-
-    /* Image Gallery */
-    .image-gallery {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .main-image-container {
-      position: relative;
-      border-radius: var(--border-radius);
-      overflow: hidden;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      height: 400px;
-    }
-
-    .main-image {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      transition: opacity 0.3s ease, transform 0.5s ease;
-      cursor: pointer;
-    }
-
-    .image-changing {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-
-    /* Thumbnail Gallery */
-    .thumbnail-container {
-      display: flex;
-      gap: 1rem;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      padding-bottom: 1rem;
-      margin-top: 1rem;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .thumbnail-container::-webkit-scrollbar {
-      height: 4px;
-    }
-
-    .thumbnail-container::-webkit-scrollbar-thumb {
-      background: var(--primary-color);
-      border-radius: 2px;
-    }
-
-    .thumbnail {
-      flex: 0 0 auto;
-      width: 100px;
-      height: 100px;
-      border-radius: 8px;
-      object-fit: scale-down;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border: 2px solid transparent;
-      scroll-snap-align: start;
-    }
-
-    .thumbnail:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-
-    .thumbnail.active {
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 2px var(--primary-color);
-    }
-
-    .image-overlay {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      padding: 0.8rem;
-      background: linear-gradient(transparent, rgba(0,0,0,0.7));
-      color: white;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.9rem;
-    }
-
-    /* Details Grid Layout */
-    .details-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 2rem;
-      margin-top: 2rem;
-    }
-
-    /* Details Sections */
-    .details-section {
-      padding: 1.5rem;
-      background: var(--light-gray);
-      border-radius: var(--border-radius);
-      margin-bottom: 1.5rem;
-      transition: transform 0.3s ease;
-    }
-
-    .detail-header {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .detail-icon {
-      font-size: 1.5rem;
-      color: var(--primary-color);
-    }
-
-    .listing-title {
-      font-size: 2rem;
-      font-weight: 600;
-      color: var(--secondary-color);
-    }
-
-    .detail-content {
-      font-size: 1rem;
-      color: var(--secondary-color);
-      line-height: 1.8;
-    }
-
-    .detail-item {
-      margin-bottom: 1rem;
-    }
-
-    .detail-label {
-      color: var(--dark-gray);
-      font-weight: 500;
-      font-size: 0.9rem;
-      display: block;
-      margin-bottom: 0.3rem;
-    }
-
-    /* Cash Adjustment Badge */
-    .cash-adjustment {
-      background: var(--primary-color);
-      color: white;
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-weight: 500;
-      font-size: 0.9rem;
-    }
-
-    /* Contact Information */
-    .contact-info {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .contact-method {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    /* User Card */
-    .user-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      background: white;
-      border-radius: var(--border-radius);
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      text-align: center;
-    }
-
-    .user-avatar {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid var(--primary-color);
-    }
-
-    .user-info {
-      flex: 1;
-    }
-
-    .user-name {
-      font-weight: 600;
-      margin-bottom: 0.2rem;
-    }
-
-    .user-meta {
-      color: var(--dark-gray);
-      font-size: 0.9rem;
-    }
-
-    /* Action Buttons */
-    .action-section {
-      position: sticky;
-      bottom: 1rem;
-      background: white;
-      padding: 1rem;
-      border-radius: var(--border-radius);
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
-      margin-top: 1.5rem;
-      display: flex;
-      justify-content: center;
-    }
-
-    .offer-button {
-      background: var(--primary-color);
-      color: white;
-      padding: 1rem;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      box-shadow: 0 4px 8px rgba(46, 204, 113, 0.3);
-      width: 100%;
-      justify-content: center;
-    }
-
-    .offer-button:hover, .offer-button:active {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(46, 204, 113, 0.4);
-    }
-
-    .message-button {
-      background: white;
-      color: var(--primary-color);
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      border: 1px solid var(--primary-color);
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.9rem;
-      width: 100%;
-      justify-content: center;
-    }
-
-    .message-button:hover, .message-button:active {
-      background: var(--primary-color);
-      color: white;
-    }
-
-
-
-/* WhatsApp-specific styling */
-.whatsapp-message-button {
-  background: #25D366;
-  border-color: #1ebe5d;
-  color: #ffffff;
-}
-
-.whatsapp-message-button:hover,
-.whatsapp-message-button:active {
-  background: #1ebe5d;
-  color: #ffffff;
-}
-
-/* Small helper note under WhatsApp button */
-.whatsapp-note {
-  font-size: 0.8rem;
-  color: var(--dark-gray);
-  margin-top: 0.25rem;
-  margin-left: 1.6rem; /* roughly align under phone icon */
-}
-
-
-
-    /* Condition Badges */
-    .condition-badge {
-      display: inline-block;
-      padding: 0.3rem 0.8rem;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 500;
-    }
-
-    .condition-new {
-      background: #E3F9E5;
-      color: #1F9254;
-    }
-
-    .condition-used {
-      background: #FEF2E5;
-      color: #CD6200;
-    }
-
-    .condition-refurbished {
-      background: #EBE8FD;
-      color: #5C33CF;
-    }
-
-    /* Location Section */
-    .location-section {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
-    }
-
-
-
-/* ────────────────────────────────────────────── */
-/* Theme Variables */
-:root {
-  --white:         #ffffff;
-  --light-green:   #e6f9f0;  /* very pale green background */
-  --green:         #2ecc71;  /* primary green */
-  --green-dark:    #27ae60;  /* hover/active green */
-  --gray-medium:   #cccccc;
-  --gray-light:    #f0f2f5;
-  --dark-text:     #2c3e50;
-  --error:         #e74c3c;
-  --transition:    0.3s ease;
-  --border-radius: 8px;
-}
-
-/* ────────────────────────────────────────────── */
-/* Modal Styles */
-.modal {
-  display: none;
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background-color: rgba(0,0,0,0.7);
-  z-index: 1000;
-  overflow-y: auto;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-.modal.show {
-  display: block;
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* ────────────────────────────────────────────── */
-/* Modal Content */
-.modal-content {
-  background: var(--white);
-  margin: 5% auto;
-  padding: 2.5rem;
-  border-radius: var(--border-radius);
-  width: 90%;
-  max-width: 600px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
-  position: relative;
-  transform: translateY(-50px);
-  transition: transform 0.4s ease;
-}
-.modal.show .modal-content {
-  transform: translateY(0);
-}
-
-/* ────────────────────────────────────────────── */
-/* Close Button */
-.close-modal {
-  position: absolute;
-  top: 1.5rem; right: 1.5rem;
-  font-size: 1.8rem;
-  cursor: pointer;
-  color: var(--dark-text);
-  background: none;
-  border: none;
-  width: 40px; height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: var(--transition);
-}
-.close-modal:hover {
-  background: var(--light-green);
-  color: var(--green-dark);
-}
-
-/* ────────────────────────────────────────────── */
-/* Modal Title */
-.modal-title {
-  text-align: center;
-  margin-bottom: 2rem;
-  color: var(--green-dark);
-  position: relative;
-  padding-bottom: 15px;
-}
-.modal-title:after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 50%;
-  transform: translateX(-50%);
-  width: 80px; height: 4px;
-  background: var(--green);
-  border-radius: 2px;
-}
-
-/* ────────────────────────────────────────────── */
-/* Form Groups & Rows */
-.form-group {
-  margin-bottom: 1.5rem;
-  position: relative;
-}
-.form-row {
-  display: flex;
-  gap: 1.2rem;
-  margin-bottom: 1.5rem;
-}
-.form-row .form-group {
-  flex: 1;
-  margin-bottom: 0;
-}
-
-/* Labels & Inputs */
-.form-group label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 0.6rem;
-  font-weight: 600;
-  color: var(--green-dark);
-}
-.form-group label i {
-  color: var(--green);
-  font-size: 0.9rem;
-}
-.required {
-  color: var(--error);
-}
-
-.form-group input,
-.form-group textarea,
-.form-group select {
-  width: 100%;
-  padding: 0.9rem 1.2rem;
-  border: 2px solid var(--gray-medium);
-  border-radius: var(--border-radius);
-  font-size: 1rem;
-  transition: var(--transition);
-  background: var(--white);
-  color: var(--dark-text);
-}
-.form-group input::placeholder,
-.form-group textarea::placeholder {
-  color: var(--gray-medium);
-}
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
-}
-.form-group textarea {
-  min-height: 100px;
-  resize: vertical;
-}
-
-/* ────────────────────────────────────────────── */
-/* Image Upload Area */
-.image-upload-container {
-  border: 3px dashed var(--gray-medium);
-  border-radius: var(--border-radius);
-  padding: 2rem;
-  text-align: center;
-  margin-bottom: 1.5rem;
-  transition: var(--transition);
-  background: var(--gray-light);
-  position: relative;
-}
-.image-upload-container.dragover {
-  border-color: var(--green);
-  background: rgba(46, 204, 113, 0.1);
-}
-.upload-icon {
-  font-size: 2.5rem;
-  color: var(--green);
-  margin-bottom: 1rem;
-}
-.upload-text {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 0.8rem;
-  color: var(--green-dark);
-}
-.upload-subtext {
-  color: var(--dark-text);
-  margin-bottom: 1.5rem;
-  font-size: 0.9rem;
-}
-.upload-btn {
-  background: var(--green);
-  color: var(--white);
-  padding: 0.8rem 1.5rem;
-  border-radius: var(--border-radius);
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  border: none;
-  font-size: 1rem;
-}
-.upload-btn:hover {
-  background: var(--green-dark);
-  transform: translateY(-2px);
-}
-.file-input {
-  display: none;
-}
-
-/* File List & Previews */
-.file-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 1.5rem;
-  justify-content: center;
-}
-.file-item {
-  background: var(--white);
-  border: 1px solid var(--gray-medium);
-  border-radius: var(--border-radius);
-  padding: 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-.file-icon {
-  color: var(--green);
-  font-size: 1.1rem;
-}
-.file-info {
-  flex: 1;
-  min-width: 0;
-}
-.file-name {
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 0.9rem;
-}
-.file-size {
-  font-size: 0.8rem;
-  color: var(--dark-text);
-}
-.remove-file {
-  color: var(--error);
-  cursor: pointer;
-  transition: var(--transition);
-  padding: 4px;
-  border-radius: 4px;
-  font-size: 0.9rem;
-}
-.remove-file:hover {
-  background: rgba(231, 76, 60, 0.1);
-}
-.preview-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 15px;
-}
-.image-preview {
-  width: 80px; height: 80px;
-  border-radius: 6px;
-  object-fit: cover;
-  border: 1px solid var(--gray-medium);
-}
-
-/* ────────────────────────────────────────────── */
-/* Submit Button */
-.modal-submit-btn {
-  background: var(--green);
-  color: var(--white);
-  padding: 1.1rem;
-  border: none;
-  border-radius: var(--border-radius);
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  width: 100%;
-  transition: var(--transition);
-  margin-top: 0.5rem;
-  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
-}
-.modal-submit-btn:hover {
-  background: var(--green-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(46, 204, 113, 0.4);
-}
-.modal-submit-btn:active {
-  transform: translateY(0);
-}
-
-/* ────────────────────────────────────────────── */
-/* Form Note */
-.form-note {
-  text-align: center;
-  margin-top: 1.5rem;
-  color: var(--dark-text);
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-.form-note a {
-  color: var(--green);
-  text-decoration: none;
-  font-weight: 600;
-}
-.form-note a:hover {
-  text-decoration: underline;
-}
-
-/* ────────────────────────────────────────────── */
-/* Media Queries */
-@media (max-width: 768px) {
-  .close-modal {
-    top: 1rem; right: 1rem;
-    width: 50px; height: 50px;
-    font-size: 2.2rem;
-    z-index: 1001;
-  }
-  .modal-content {
-    padding: 2rem;
-  }
-  .form-row {
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-  .image-upload-container {
-    padding: 1.5rem;
-  }
-}
-@media (max-width: 480px) {
-  .modal-content {
-    padding: 1.5rem;
-    margin: 10% auto;
-  }
-  .modal-title {
-    font-size: 1.5rem;
-  }
-}
-@media (min-width: 992px) {
-  .modal-content {
-    width: 90vw;
-    max-width: none;
-    height: 90vh;
-    max-height: 90vh;
-    margin: 5vh auto;
-    overflow-y: auto;
-  }
-}
-
-
-
-
-
-
-
-
-.flash-messages {
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  z-index: 2000;
-}
-
-.flash-message {
-  padding: 1rem;
-  margin-bottom: 0.5rem;
-  border-radius: 5px;
-  color: #fff;
-
-  /* NEW: enable fade/slide transition */
-  opacity: 1;
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-
-/* NEW: what “fade-out” looks like */
-.flash-message.fade-out {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-.flash-success {
-  background-color: #2ecc71;
-}
-
-.flash-danger {
-  background-color: #e74c3c;
-}
-
-    .required-cash {
-      color: var(--primary-color);
-      font-size: 0.7em;
-      font-weight: 500;
-      margin-left: 0.3rem;
-    }
-
-    /* Ratings and Reviews Styles */
-    .rating-summary {
-      margin-bottom: 1.5rem;
-    }
-
-    .average-rating {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .rating-value {
-      font-size: 1.8rem;
-      font-weight: 600;
-      color: var(--secondary-color);
-    }
-
-    .stars {
-      color: var(--accent-color);
-      font-size: 1.2rem;
-    }
-
-    .rating-count {
-      color: var(--dark-gray);
-      font-size: 0.9rem;
-    }
-
-    .star-rating {
-      display: flex;
-      flex-direction: row-reverse;
-      justify-content: flex-end;
-      margin: 0.5rem 0;
-    }
-
-    .star-rating input {
-      display: none;
-    }
-
-    .star-rating label {
-      color: var(--medium-gray);
-      font-size: 1.5rem;
-      padding: 0 0.1rem;
-      cursor: pointer;
-      transition: color 0.2s;
-    }
-
-    .star-rating input:checked ~ label,
-    .star-rating input:hover ~ label,
-    .star-rating label:hover,
-    .star-rating label:hover ~ label {
-      color: var(--accent-color);
-    }
-
-    .submit-rating-btn,
-    .submit-review-btn {
-      background: var(--primary-color);
-      color: white;
-      border: none;
-      padding: 0.6rem 1.2rem;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-      font-size: 0.9rem;
-    }
-
-    .submit-rating-btn:hover,
-    .submit-review-btn:hover {
-      background-color: #27ae60;
-    }
-
-    .reviews-container {
-      margin-top: 2rem;
-    }
-
-    .review-item {
-      background: white;
-      border-radius: var(--border-radius);
-      padding: 1rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-
-    .review-header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.5rem;
-      font-size: 0.9rem;
-    }
-
-    .reviewer-name {
-      font-weight: 600;
-      color: var(--secondary-color);
-    }
-
-    .review-date {
-      color: var(--dark-gray);
-    }
-
-    .review-content p {
-      margin: 0;
-      color: var(--text-color);
-      line-height: 1.5;
-    }
-
-    .review-form {
-      margin-top: 1.5rem;
-    }
-
-    .review-form textarea {
-      width: 100%;
-      padding: 0.8rem;
-      border: 1px solid var(--medium-gray);
-      border-radius: 8px;
-      font-family: inherit;
-      margin-bottom: 0.5rem;
-      resize: vertical;
-      min-height: 100px;
-    }
-
-    .review-form h4 {
-      margin-bottom: 0.5rem;
-    }
-
-    /* Deal Type Banners */
-    .deal-type-banner {
-      padding: 1rem;
-      border-radius: var(--border-radius);
-      margin-bottom: 1.5rem;
-      text-align: center;
-      font-weight: 600;
-    }
-    
-    .swap-banner {
-      background: #E8F5E9;
-      color: #2ECC71;
-      border: 2px solid #2ECC71;
-    }
-
-    .sale-banner {
-      background: #FFEBEE;
-      color: #E74C3C;
-      border: 2px solid #E74C3C;
-    }
-
-    .price-display {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #E74C3C;
-      margin: 1rem 0;
-      text-align: center;
-    }
-
-    .purchase-details {
-      background: #FFF3E0;
-      border-left: 4px solid #FFA726;
-      padding: 1rem;
-      margin: 1rem 0;
-    }
-
-    /* Offered Item Card */
-    .offered-item-card {
-      background: white;
-      border-radius: var(--border-radius);
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .offered-item-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-    }
-
-    .item-title {
-      font-size: 1.2rem;
-      margin-bottom: 0.5rem;
-      color: var(--secondary-color);
-    }
-
-    .item-meta {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 0.8rem;
-    }
-
-    .item-description {
-      font-size: 0.9rem;
-      color: var(--dark-gray);
-      line-height: 1.5;
-    }
-
+      z-index: 200;
+    }
+    .brand { font-family: var(--font-display); font-size: 1.45rem; color: var(--green); display: flex; align-items: center; gap: 0.4rem; text-decoration: none; }
+    .brand-dot { color: var(--green-light); }
+    .nav-links { display: flex; align-items: center; gap: 0.4rem; }
+    .nav-links a { font-size: 0.875rem; font-weight: 500; color: var(--ink-mid); text-decoration: none; padding: 0.4rem 0.9rem; border-radius: var(--radius-sm); transition: background 0.2s, color 0.2s; }
+    .nav-links a:hover { background: var(--cream-dark); color: var(--ink); }
+    .nav-links .btn-signup { background: var(--green); color: var(--white); }
+    .nav-links .btn-signup:hover { background: var(--green-light); }
+    .mobile-menu { display: none; background: none; border: none; font-size: 1.35rem; color: var(--ink-mid); cursor: pointer; padding: 0.25rem; }
+
+    /* Page */
+    .page-wrap { max-width: 1140px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; animation: fadeUp 0.4s var(--ease) both; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+
+    /* Breadcrumb */
+    .breadcrumb { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--ink-soft); margin-bottom: 1.5rem; }
+    .breadcrumb a { color: var(--green); text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb .sep { font-size: 0.55rem; color: var(--ink-faint); }
+
+    /* Deal pill */
+    .deal-pill {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+      padding: 0.3rem 0.85rem; border-radius: 999px; margin-bottom: 1.5rem;
+    }
+    .deal-pill.swap { background: var(--green-pale); color: var(--green); border: 1px solid var(--green-border); }
+    .deal-pill.sale { background: var(--red-pale); color: var(--red); border: 1px solid #f5c5c0; }
+
+    /* Two-col grid */
+    .product-grid { display: grid; grid-template-columns: 1fr 400px; gap: 2.5rem; align-items: start; }
+    @media (max-width: 880px) { .product-grid { grid-template-columns: 1fr; } }
+
+    /* Gallery sticky */
+    .gallery-col { position: sticky; top: 82px; }
+    @media (max-width: 880px) { .gallery-col { position: static; } }
+
+    .item-eyebrow { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 0.3rem; }
+    .item-heading { font-family: var(--font-display); font-size: 1.65rem; line-height: 1.2; color: var(--ink); margin-bottom: 0.5rem; }
+    .item-desc { font-size: 0.875rem; color: var(--ink-soft); line-height: 1.7; margin-bottom: 1rem; }
+
+    .cond-pill { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.7rem; font-weight: 700; padding: 0.22rem 0.65rem; border-radius: 999px; margin-bottom: 0.6rem; }
+    .cond-new         { background: #e4f7ec; color: #1a7a42; }
+    .cond-used,
+    .cond-like_new    { background: #fff4e5; color: #9a5500; }
+    .cond-refurbished { background: #edeafd; color: #5b35b5; }
+
+    /* Main image */
+    .main-img-box {
+      position: relative; border-radius: var(--radius-lg); overflow: hidden;
+      background: var(--cream-dark); aspect-ratio: 4/3; box-shadow: var(--shadow-md);
+    }
+    .main-img { width: 100%; height: 100%; object-fit: contain; transition: opacity 0.22s, transform 0.38s; cursor: zoom-in; transform-origin: center; }
+    .main-img.zoomed { transform: scale(1.9); cursor: zoom-out; }
+    .main-img.image-changing { opacity: 0; transform: scale(0.96); }
+
+    .img-counter {
+      position: absolute; bottom: 0.9rem; right: 0.9rem;
+      background: rgba(28,36,33,0.5); backdrop-filter: blur(6px);
+      color: var(--white); font-size: 0.72rem; padding: 0.28rem 0.65rem;
+      border-radius: 999px; display: flex; align-items: center; gap: 0.35rem;
+    }
+    .zoom-fab {
+      position: absolute; bottom: 0.9rem; left: 0.9rem;
+      width: 33px; height: 33px; border-radius: 50%;
+      background: rgba(28,36,33,0.5); backdrop-filter: blur(6px);
+      border: none; color: var(--white); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+      transition: background 0.18s;
+    }
+    .zoom-fab:hover { background: rgba(28,36,33,0.85); }
+
+    /* Thumbnails */
+    .thumb-row { display: flex; gap: 0.55rem; margin-top: 0.8rem; overflow-x: auto; padding-bottom: 3px; scroll-snap-type: x mandatory; }
+    .thumb-row::-webkit-scrollbar { height: 3px; }
+    .thumb-row::-webkit-scrollbar-thumb { background: var(--green-border); border-radius: 2px; }
+    .thumb { flex: 0 0 auto; width: 68px; height: 68px; border-radius: var(--radius-sm); object-fit: cover; border: 2px solid transparent; cursor: pointer; transition: border-color 0.18s, transform 0.18s; scroll-snap-align: start; background: var(--cream-dark); }
+    .thumb:hover { transform: scale(1.07); }
+    .thumb.active { border-color: var(--green); box-shadow: 0 0 0 2px var(--green-pale); }
+
+    .item-divider { border: none; border-top: 1px dashed var(--cream-dark); margin: 1.8rem 0; }
+
+    /* Info panel */
+    .info-col { display: flex; flex-direction: column; gap: 1rem; }
+
+    .price-card { background: var(--white); border: 1px solid var(--cream-dark); border-radius: var(--radius-md); padding: 1.3rem 1.5rem; box-shadow: var(--shadow-sm); }
+    .price-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 0.25rem; }
+    .price-value { font-family: var(--font-display); font-size: 2.3rem; color: var(--red); line-height: 1; letter-spacing: -0.02em; }
+
+    .info-card { background: var(--white); border: 1px solid var(--cream-dark); border-radius: var(--radius-md); padding: 1.3rem 1.5rem; box-shadow: var(--shadow-sm); }
+    .info-card.swap-style { background: var(--green-pale); border-color: var(--green-border); }
+
+    .card-heading {
+      font-size: 0.67rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--ink-faint); margin-bottom: 0.9rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .card-heading i { color: var(--green); }
+    .card-heading::after { content: ''; flex: 1; height: 1px; background: var(--cream-dark); }
+    .info-card.swap-style .card-heading { color: var(--green); }
+    .info-card.swap-style .card-heading::after { background: var(--green-border); }
+
+    .info-row { display: flex; align-items: flex-start; gap: 0.7rem; padding: 0.55rem 0; border-bottom: 1px solid var(--cream); }
+    .info-card.swap-style .info-row { border-color: var(--green-border); }
+    .info-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .info-ico { width: 30px; height: 30px; background: var(--green-pale); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; color: var(--green); font-size: 0.75rem; flex-shrink: 0; margin-top: 2px; }
+    .info-card.swap-style .info-ico { background: rgba(255,255,255,0.55); }
+    .info-key { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 0.1rem; }
+    .info-val { font-size: 0.875rem; color: var(--ink-mid); font-weight: 500; }
+
+    .cash-tag { display: inline-flex; align-items: center; gap: 0.35rem; background: var(--green); color: var(--white); font-size: 0.82rem; font-weight: 700; padding: 0.3rem 0.8rem; border-radius: 999px; }
+
+    /* CTA buttons */
+    .cta { display: flex; align-items: center; justify-content: center; gap: 0.55rem; width: 100%; padding: 1rem 1.5rem; border-radius: var(--radius-md); border: none; font-family: var(--font-body); font-size: 0.975rem; font-weight: 700; cursor: pointer; transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease), background 0.18s; }
+    .cta:active { transform: translateY(0) !important; }
+    .cta-swap { background: var(--green); color: var(--white); box-shadow: 0 4px 14px rgba(26,107,69,0.28); }
+    .cta-swap:hover { background: var(--green-light); transform: translateY(-2px); box-shadow: 0 8px 22px rgba(26,107,69,0.34); }
+    .cta-wa   { background: #25d366; color: var(--white); box-shadow: 0 4px 14px rgba(37,211,102,0.25); }
+    .cta-wa:hover   { background: #1cbe5a; transform: translateY(-2px); box-shadow: 0 8px 22px rgba(37,211,102,0.35); }
+
+    /* Rating stars */
+    .star-row { color: var(--gold); font-size: 0.95rem; display: flex; gap: 2px; }
+    .star-row .far { color: var(--ink-faint); }
+    .rating-big { font-family: var(--font-display); font-size: 2.8rem; line-height: 1; color: var(--ink); }
+    .rating-block { display: flex; align-items: center; gap: 1rem; }
+    .rating-sub { font-size: 0.78rem; color: var(--ink-soft); margin-top: 0.15rem; }
+
+    .star-input { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 2px; margin: 0.5rem 0; }
+    .star-input input { display: none; }
+    .star-input label { color: var(--ink-faint); font-size: 1.35rem; cursor: pointer; transition: color 0.14s; }
+    .star-input input:checked ~ label,
+    .star-input label:hover,
+    .star-input label:hover ~ label { color: var(--gold); }
+
+    /* Reviews */
+    .section-panel { background: var(--white); border: 1px solid var(--cream-dark); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-sm); margin-top: 2.5rem; }
+    .section-title { font-family: var(--font-display); font-size: 1.45rem; color: var(--ink); margin-bottom: 1.5rem; }
+    .sub-label { font-size: 0.67rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 0.6rem; display: block; }
+    .divider { border: none; border-top: 1px solid var(--cream-dark); margin: 1.3rem 0; }
+
+    .review-card { background: var(--cream); border: 1px solid var(--cream-dark); border-radius: var(--radius-md); padding: 1rem 1.15rem; margin-bottom: 0.65rem; }
+    .review-top { display: flex; justify-content: space-between; margin-bottom: 0.35rem; }
+    .reviewer { font-weight: 700; font-size: 0.875rem; color: var(--ink); }
+    .review-date { font-size: 0.72rem; color: var(--ink-faint); }
+    .review-text { font-size: 0.875rem; color: var(--ink-mid); line-height: 1.6; }
+
+    .review-textarea { width: 100%; padding: 0.7rem 0.9rem; border: 1.5px solid var(--cream-dark); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 0.875rem; resize: vertical; min-height: 85px; margin-bottom: 0.55rem; color: var(--ink); background: var(--white); transition: border-color 0.18s; }
+    .review-textarea:focus { outline: none; border-color: var(--green); }
+
+    .btn-sm { background: var(--green); color: var(--white); border: none; padding: 0.6rem 1.3rem; border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: background 0.18s, transform 0.15s; }
+    .btn-sm:hover { background: var(--green-light); transform: translateY(-1px); }
+
+    /* Similar */
+    .similar-section { margin-top: 3.5rem; }
+    .similar-heading { font-family: var(--font-display); font-size: 1.7rem; color: var(--ink); margin-bottom: 0.2rem; }
+    .similar-sub { font-size: 0.83rem; color: var(--ink-soft); margin-bottom: 1.3rem; }
+
+    .similar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+    @media (max-width: 880px) { .similar-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 420px)  { .similar-grid { gap: 0.65rem; } }
+
+    .sim-link { text-decoration: none; color: inherit; display: flex; flex-direction: column; background: var(--white); border: 1px solid var(--cream-dark); border-radius: var(--radius-md); overflow: hidden; transition: transform 0.22s var(--ease), box-shadow 0.22s var(--ease); }
+    .sim-link:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+    .sim-img { aspect-ratio: 1; overflow: hidden; background: var(--cream-dark); display: flex; align-items: center; justify-content: center; }
+    .sim-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+    .sim-link:hover .sim-img img { transform: scale(1.06); }
+    .sim-img-placeholder { font-size: 2rem; color: var(--ink-faint); }
+    .sim-body { padding: 0.85rem; flex: 1; display: flex; flex-direction: column; gap: 0.28rem; }
+    .sim-title { font-size: 0.85rem; font-weight: 600; color: var(--ink); line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .sim-price { font-size: 0.975rem; font-weight: 700; color: var(--green); margin-top: auto; padding-top: 0.35rem; }
+    .sim-swap-pill { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.68rem; font-weight: 700; background: var(--green-pale); color: var(--green); border-radius: 999px; padding: 0.18rem 0.55rem; }
+    .sim-loc { font-size: 0.72rem; color: var(--ink-faint); display: flex; align-items: center; gap: 0.2rem; }
+
+    /* Flash */
+    .flash-messages { position: fixed; top: 78px; right: 1.2rem; z-index: 2000; display: flex; flex-direction: column; gap: 0.45rem; }
+    .flash-message { padding: 0.85rem 1.15rem; border-radius: var(--radius-sm); color: var(--white); font-size: 0.85rem; font-weight: 500; box-shadow: var(--shadow-md); max-width: 300px; opacity: 1; transform: translateX(0); transition: opacity 0.4s, transform 0.4s; }
+    .flash-message.fade-out { opacity: 0; transform: translateX(18px); }
+    .flash-success { background: var(--green); }
+    .flash-danger  { background: var(--red); }
+
+    /* Modal */
+    .modal { display: none; position: fixed; inset: 0; background: rgba(28,36,33,0.65); backdrop-filter: blur(5px); z-index: 1000; overflow-y: auto; opacity: 0; transition: opacity 0.24s; pointer-events: none; }
+    .modal.show { display: block; opacity: 1; pointer-events: auto; }
+    .modal-box { background: var(--white); margin: 4vh auto; padding: 2.4rem; border-radius: var(--radius-lg); width: 92%; max-width: 600px; box-shadow: var(--shadow-lg); position: relative; transform: translateY(-24px); transition: transform 0.32s cubic-bezier(0.34,1.56,0.64,1); }
+    .modal.show .modal-box { transform: translateY(0); }
+    @media (min-width: 992px) { .modal-box { max-width: none; width: 86vw; max-height: 90vh; overflow-y: auto; margin: 5vh auto; } }
+    .modal-close { position: absolute; top: 1.1rem; right: 1.1rem; width: 36px; height: 36px; border-radius: 50%; background: var(--cream-dark); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; color: var(--ink-mid); transition: background 0.18s, color 0.18s; z-index: 5; }
+    .modal-close:hover { background: var(--ink); color: var(--white); }
+    .modal-title { font-family: var(--font-display); font-size: 1.55rem; color: var(--ink); margin-bottom: 0.3rem; }
+    .modal-sub { font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 1.6rem; padding-bottom: 1.4rem; border-bottom: 1px solid var(--cream-dark); }
+
+    .form-group  { margin-bottom: 1.1rem; }
+    .form-row    { display: flex; gap: 0.9rem; }
+    .form-row .form-group { flex: 1; }
+    .form-label  { display: flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-mid); margin-bottom: 0.38rem; }
+    .form-label i { color: var(--green); font-size: 0.7rem; }
+    .required { color: var(--red); }
+    .form-ctrl { width: 100%; padding: 0.72rem 0.95rem; border: 1.5px solid var(--cream-dark); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 0.875rem; color: var(--ink); background: var(--white); transition: border-color 0.18s, box-shadow 0.18s; }
+    .form-ctrl:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(26,107,69,0.1); }
+    .form-ctrl::placeholder { color: var(--ink-faint); }
+    textarea.form-ctrl { min-height: 85px; resize: vertical; }
+
+    .upload-zone { border: 2px dashed var(--cream-dark); border-radius: var(--radius-md); padding: 1.8rem 1.4rem; text-align: center; background: var(--cream); cursor: pointer; transition: border-color 0.18s, background 0.18s; }
+    .upload-zone.dragover { border-color: var(--green); background: var(--green-pale); }
+    .upload-zone-icon { font-size: 1.8rem; color: var(--green); margin-bottom: 0.5rem; }
+    .upload-zone-title { font-size: 0.875rem; font-weight: 700; color: var(--ink-mid); margin-bottom: 0.25rem; }
+    .upload-zone-sub   { font-size: 0.78rem; color: var(--ink-soft); margin-bottom: 0.9rem; }
+    .pick-btn { background: var(--green); color: var(--white); border: none; padding: 0.55rem 1.1rem; border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: background 0.18s; }
+    .pick-btn:hover { background: var(--green-light); }
+    .file-input { display: none; }
+    .file-list { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 0.85rem; justify-content: center; }
+    .file-chip { background: var(--white); border: 1px solid var(--cream-dark); border-radius: var(--radius-sm); padding: 5px 9px; display: flex; align-items: center; gap: 5px; font-size: 0.77rem; }
+    .chip-name { max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+    .chip-size { color: var(--ink-soft); font-size: 0.7rem; }
+    .chip-rm   { color: var(--red); cursor: pointer; font-size: 0.72rem; }
+    .preview-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; justify-content: center; }
+    .preview-thumb { width: 65px; height: 65px; border-radius: var(--radius-sm); object-fit: cover; border: 1px solid var(--cream-dark); }
+
+    .modal-submit { width: 100%; padding: 0.95rem; background: var(--green); color: var(--white); border: none; border-radius: var(--radius-md); font-family: var(--font-body); font-size: 0.975rem; font-weight: 700; cursor: pointer; margin-top: 0.4rem; box-shadow: 0 4px 14px rgba(26,107,69,0.24); transition: background 0.18s, transform 0.18s, box-shadow 0.18s; }
+    .modal-submit:hover { background: var(--green-light); transform: translateY(-2px); box-shadow: 0 8px 22px rgba(26,107,69,0.3); }
+
+    .form-note { text-align: center; font-size: 0.75rem; color: var(--ink-soft); margin-top: 0.9rem; line-height: 1.6; }
+    .form-note a { color: var(--green); text-decoration: none; font-weight: 600; }
+
+    /* Mobile */
     @media (max-width: 768px) {
-      .details-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .main-image-container {
-        height: 300px;
-      }
+      .page-wrap { padding: 1.4rem 1rem 3rem; }
+      .navbar { padding: 0 1rem; }
+      .mobile-menu { display: block; }
+      .nav-links { display: none; flex-direction: column; position: absolute; top: 62px; left: 0; right: 0; background: var(--white); padding: 0.8rem; border-bottom: 1px solid var(--cream-dark); gap: 0.25rem; z-index: 199; }
+      .nav-links.open { display: flex; }
+      .nav-links a { width: 100%; padding: 0.55rem 0.9rem; }
+      .form-row { flex-direction: column; gap: 0; }
+      .modal-box { padding: 1.4rem; margin: 2vh auto; }
+      @media (max-width: 420px) { .main-img-box { aspect-ratio: 1; } }
     }
-
-    .offered-gallery-block {
-      margin-bottom: 2rem;
-    }
-
-    .offered-item-header {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      margin-bottom: 0.75rem;
-    }
-
-    .gallery-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--secondary-color);
-      margin-bottom: 0.25rem;
-    }
-
-    .offered-item-header .condition-badge {
-      font-size: 0.85rem;
-      padding: 0.25rem 0.6rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .gallery-description {
-      font-size: 0.95rem;
-      color: var(--dark-gray);
-      line-height: 1.4;
-      margin-bottom: 0.5rem;
-    }
-
-
-/* Similar Items Section */
-.similar-items-section {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--medium-gray);
-}
-.section-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 1.5rem;
-    color: var(--secondary-color);
-}
-.similar-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);  /* 2 columns on mobile */
-    gap: 1rem;
-}
-@media (min-width: 1024px) {
-    .similar-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-.similar-card-link {
-    text-decoration: none;
-    color: inherit;
-    display: block;
-    transition: transform 0.2s;
-}
-.similar-card-link:hover {
-    transform: translateY(-4px);
-}
-.similar-card {
-    background: white;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    box-shadow: var(--box-shadow);
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-.similar-image {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    overflow: hidden;
-    background: var(--light-gray);
-}
-.similar-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s;
-}
-.similar-card-link:hover .similar-image img {
-    transform: scale(1.05);
-}
-.similar-content {
-    padding: 1rem;
-    flex: 1;
-}
-.similar-title {
-    font-size: 1rem;
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-.similar-price {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--primary-color);
-}
-.swap-label {
-    background: var(--primary-color);
-    color: white;
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    display: inline-block;
-}
   </style>
 </head>
 <body>
-  <nav class="navbar">
-    <div class="brand">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="var(--primary-color)">
-        <path d="M11 5h2v14h-2V5zm-4 7h2v7H7v-7zm8-7h2v14h-2V5z"/>
-      </svg>
-     kwicshop
-    </div>
-    <button class="mobile-menu" id="mobileMenuBtn">
-      <i class="fas fa-bars"></i>
-    </button>
-    <div class="nav-links" id="navLinks">
-      {% if 'user_id' in session %}
-        <a href="/logout">Logout</a>
-      {% else %}
-        <a href="/login">Login</a>
-        <a href="/signup" style="background: var(--primary-color); color: white; padding: 0.5rem 1rem; border-radius: 8px;">Sign Up</a>
-      {% endif %}
-    </div>
-  </nav>
 
-  <div class="listing-details-container">
-
-    <!-- Deal Type Banner -->
-    <div class="deal-type-banner {% if listing.deal_type == 'Swap Deal' %}swap-banner{% else %}sale-banner{% endif %}">
-      {% if listing.deal_type == 'Swap Deal' %}
-        <i class="fas fa-exchange-alt"></i> Swap Deal Available
-      {% else %}
-        <i class="fas fa-tag"></i> Now On Sale
-      {% endif %}
-    </div>
-
-    {% if listing.deal_type == 'Outright Sales' %}
-      <div class="price-display">
-        GHS {{ "{:,.2f}".format(listing.price|float) if listing.price is not none else 'Price not specified' }}
-      </div>
-    {% endif %}
-
-    <div class="details-grid">
-      <!-- Gallery Column -->
-      <div class="gallery-column">
-        {% if listing.deal_type == 'Outright Sales' %}
-          <!-- Outright Sales: Images from listings table -->
-          <div class="sale-gallery-block">
-            <div class="offered-item-header">
-              <h4 class="gallery-title">{{ listing.title }}</h4>
-              <span class="condition-badge">{{ listing.condition }}</span>
-              <p class="gallery-description">{{ listing.description }}</p>
-            </div>
-
-            <div class="image-gallery">
-              {# Build list of normalized URLs provided by the backend #}
-              {% set sale_imgs = [listing.image_url, listing.image1, listing.image2, listing.image3, listing.image4]
-                                  | reject("none") | reject("equalto", "") | list %}
-
-              <div class="main-image-container">
-                {% if sale_imgs %}
-                  <img
-                    id="mainImage-sale"
-                    class="main-image"
-                    src="{{ sale_imgs[0] }}"
-                    alt="{{ listing.title }}"
-                  />
-                {% else %}
-                  {# Hard-coded placeholder is fine to keep static #}
-                  <img
-                    id="mainImage-sale"
-                    class="main-image"
-                    src="{{ url_for('static', filename='images/placeholder.jpg') }}"
-                    alt="{{ listing.title }}"
-                  />
-                {% endif %}
-                <div class="image-overlay">
-                  <div class="listing-meta">
-                    <i class="fas fa-images"></i>
-                    <span id="image-counter-sale">1 of {{ sale_imgs | length }}</span>
-                  </div>
-                  <button
-                    class="zoom-button"
-                    onclick="toggleZoom('mainImage-sale')"
-                    style="background:none;border:none;color:white;cursor:pointer;"
-                  >
-                    <i class="fas fa-search-plus"></i>
-                  </button>
-                </div>
-              </div>
-
-              <div class="thumbnail-container" id="thumbnailContainer-sale">
-                {% for img in sale_imgs %}
-                  <img
-                    src="{{ img }}"
-                    class="thumbnail {% if loop.first %}active{% endif %}"
-                    alt="Thumbnail {{ loop.index }} of {{ listing.title }}"
-                    onclick="changeMainImage(this, '{{ img }}', 'mainImage-sale', 'thumbnailContainer-sale')"
-                  />
-                {% endfor %}
-              </div>
-            </div>
-          </div>
-
-        {% else %}
-          <!-- Swap Deal -->
-          {% if listing.offered_items %}
-            <!-- Multi-item Swap: Images from offered_items -->
-            {% for item in listing.offered_items %}
-              {% set idx = loop.index0 %}
-              <div class="offered-gallery-block">
-                <div class="offered-item-header">
-                  <h4 class="gallery-title">{{ item.title }}</h4>
-                  <span class="condition-badge condition-{{ item.condition|lower }}">{{ item.condition }}</span>
-                  <p class="gallery-description">{{ item.description }}</p>
-                </div>
-
-                <div class="image-gallery">
-                  {# Each item.image* is already normalized in the backend #}
-                  {% set imgs = [item.image1, item.image2, item.image3, item.image4]
-                                | reject("none") | reject("equalto", "") | list %}
-
-                  <div class="main-image-container">
-                    {% if imgs %}
-                      <img
-                        id="mainImage-{{ idx }}"
-                        class="main-image"
-                        src="{{ imgs[0] }}"
-                        alt="{{ item.title }}"
-                      />
-                    {% else %}
-                      <img
-                        id="mainImage-{{ idx }}"
-                        class="main-image"
-                        src="{{ url_for('static', filename='images/placeholder.jpg') }}"
-                        alt="{{ item.title }}"
-                      />
-                    {% endif %}
-                    <div class="image-overlay">
-                      <div class="listing-meta">
-                        <i class="fas fa-images"></i>
-                        <span id="image-counter-{{ idx }}">1 of {{ imgs | length }}</span>
-                      </div>
-                      <button
-                        class="zoom-button"
-                        onclick="toggleZoom('mainImage-{{ idx }}')"
-                        style="background:none;border:none;color:white;cursor:pointer;"
-                      >
-                        <i class="fas fa-search-plus"></i>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div class="thumbnail-container" id="thumbnailContainer-{{ idx }}">
-                    {% for img in imgs %}
-                      <img
-                        src="{{ img }}"
-                        class="thumbnail {% if loop.first %}active{% endif %}"
-                        alt="Thumbnail {{ loop.index }} of {{ item.title }}"
-                        onclick="changeMainImage(this, '{{ img }}', 'mainImage-{{ idx }}', 'thumbnailContainer-{{ idx }}')"
-                      />
-                    {% endfor %}
-                  </div>
-                </div>
-              </div>
-            {% endfor %}
-          {% else %}
-            <!-- Single-item Swap: Images from listings -->
-            <div class="offer-gallery-block">
-              <div class="offered-item-header">
-                <h4 class="gallery-title">{{ listing.title }}</h4>
-                <span class="condition-badge">{{ listing.condition }}</span>
-                <p class="gallery-description">{{ listing.description }}</p>
-              </div>
-
-              <div class="image-gallery">
-                {% set imgs = [listing.image_url, listing.image1, listing.image2, listing.image3, listing.image4]
-                              | reject("none") | reject("equalto", "") | list %}
-
-                <div class="main-image-container">
-                  {% if imgs %}
-                    <img
-                      id="mainImage-swap"
-                      class="main-image"
-                      src="{{ imgs[0] }}"
-                      alt="{{ listing.title }}"
-                    />
-                  {% else %}
-                    <img
-                      id="mainImage-swap"
-                      class="main-image"
-                      src="{{ url_for('static', filename='images/placeholder.jpg') }}"
-                      alt="{{ listing.title }}"
-                    />
-                  {% endif %}
-                  <div class="image-overlay">
-                    <div class="listing-meta">
-                      <i class="fas fa-images"></i>
-                      <span id="image-counter-swap">1 of {{ imgs | length }}</span>
-                    </div>
-                    <button
-                      class="zoom-button"
-                      onclick="toggleZoom('mainImage-swap')"
-                      style="background:none;border:none;color:white;cursor:pointer;"
-                    >
-                      <i class="fas fa-search-plus"></i>
-                    </button>
-                  </div>
-                </div>
-
-                <div class="thumbnail-container" id="thumbnailContainer-swap">
-                  {% for img in imgs %}
-                    <img
-                      src="{{ img }}"
-                      class="thumbnail {% if loop.first %}active{% endif %}"
-                      alt="Thumbnail {{ loop.index }} of {{ listing.title }}"
-                      onclick="changeMainImage(this, '{{ img }}', 'mainImage-swap', 'thumbnailContainer-swap')"
-                    />
-                  {% endfor %}
-                </div>
-              </div>
-            </div>
-          {% endif %}
-        {% endif %}
-      </div>
-
-      {% if listing.deal_type == 'Swap Deal' %}
-        <div class="details-section">
-          <div class="detail-header">
-            <i class="fas fa-exchange-alt detail-icon"></i>
-            <h3>Swap Requirements</h3>
-          </div>
-          
-          <div class="detail-item">
-            <span class="detail-label">Desired Item</span>
-            <p class="detail-content">{{ listing.desired_swap }}</p>
-          </div>
-          
-          <div class="detail-item">
-            <span class="detail-label">Desired Description</span>
-            <p class="detail-content">{{ listing.desired_swap_description or 'No description provided' }}</p>
-          </div>
-          
-          <div class="detail-item">
-            <span class="detail-label">Desired Condition</span>
-            <span class="condition-badge condition-{{ listing.desired_condition|lower }}">{{ listing.condition or 'Any' }}</span>
-          </div>
-
-          {% if listing.additional_cash|float > 0 %}
-            <div class="detail-item">
-              <span class="detail-label">Cash Adjustment</span>
-              <p class="cash-adjustment">
-                <i class="fas fa-coins"></i> + GHS {{ "{:,.2f}".format(listing.additional_cash|float) }}
-              </p>
-            </div>
-          {% endif %}
-        </div>
-      {% endif %}
-
-      <!-- Contact Information -->
-      <div class="details-section">
-        <div class="detail-header">
-          <i class="fas fa-user detail-icon"></i>
-          <h3>Contact Information</h3>
-        </div>
-        <div class="contact-info">
-          <div class="contact-method">
-            <i class="fas fa-user" style="color:var(--primary-color)"></i>
-            <span>{{ listing.username }}</span>
-          </div>
-          {% if listing.contact %}
-            <div class="contact-method">
-              <i class="fas fa-phone" style="color:var(--primary-color)"></i>
-              <span>{{ listing.contact }}</span>
-            </div>
-
-            {# ✅ Only show quick WhatsApp chat for NON-swap deals #}
-            {% if listing.deal_type != 'Swap Deal' %}
-              <div class="contact-method">
-                <a href="javascript:void(0)" id="whatsappQuickLink" class="message-button whatsapp-message-button">
-                  <i class="fab fa-whatsapp"></i> Chat via WhatsApp
-                </a>
-              </div>
-            {% endif %}
-          {% endif %}
-
-          {% if listing.email %}
-            <div class="contact-method">
-              <i class="fas fa-envelope" style="color:var(--primary-color)"></i>
-              <span>{{ listing.email }}</span>
-            </div>
-          {% endif %}
-        </div>
-      </div>
-
-
-
-      <!-- Additional Information -->
-      <div class="details-section">
-        <div class="detail-header">
-          <i class="fas fa-info-circle detail-icon"></i>
-          <h3>Additional Information</h3>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Category</span>
-          <p class="detail-content">{{ listing.category }}</p>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Listed On</span>
-          <p class="detail-content">
-            {{ listing.created_at.strftime('%d %b %Y at %H:%M') if listing.created_at else 'Not specified' }}
-          </p>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Location</span>
-          <p class="detail-content">{{ listing.location or 'Not specified' }}</p>
-        </div>
-      </div>
-
-      <!-- Action Button -->
-      {% if listing.deal_type == 'Swap Deal' %}
-        <div class="action-section">
-          <button class="offer-button" id="offerButton">
-            <i class="fab fa-whatsapp" style="margin-right: 0.4rem;"></i>
-            <span>Make Swap Offer</span>
-          </button>
-        </div>
-      {% endif %}
-
-
-<!-- Similar Items HTML (unchanged) -->
-{% if similar_listings %}
-<div class="similar-items-section">
-    <h2 class="section-title">Similar Items</h2>
-    <div class="similar-grid">
-        {% for item in similar_listings %}
-        <a href="{{ url_for('listing_details', listing_id=item.listing_id) }}" class="similar-card-link">
-            <div class="similar-card">
-                <div class="similar-image">
-                    <img src="{{ item.main_image }}" alt="{{ item.title }}" loading="lazy">
-                </div>
-                <div class="similar-content">
-                    <h3 class="similar-title">{{ item.title }}</h3>
-                    <div class="similar-price">
-                        {% if item.deal_type == 'Outright Sales' and item.get('price_float', 0) > 0 %}
-                            GHS {{ "{:,.2f}".format(item.get('price_float', 0)) }}
-                        {% elif item.deal_type == 'Swap Deal' %}
-                            <span class="swap-label">Swap</span>
-                        {% else %}
-                            Contact for price
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </a>
-        {% endfor %}
-    </div>
-</div>
-{% endif %}
-
-
-  <!-- Ratings & Reviews Section -->
-  <div class="details-section">
-    <div class="detail-header">
-      <i class="fas fa-star detail-icon"></i>
-      <h3>Ratings & Reviews</h3>
-    </div>
-
-    <div class="rating-summary">
-      {% if listing.rating_count > 0 %}
-        <div class="average-rating">
-          <span class="rating-value">{{ "%.1f"|format(listing.avg_rating) }}</span>
-          <div class="stars">
-            {% for i in range(1,6) %}
-              {% if i <= listing.avg_rating|int %}
-                <i class="fas fa-star"></i>
-              {% elif i - 0.5 <= listing.avg_rating %}
-                <i class="fas fa-star-half-alt"></i>
-              {% else %}
-                <i class="far fa-star"></i>
-              {% endif %}
-            {% endfor %}
-          </div>
-          <span class="rating-count">
-            ({{ listing.rating_count }} review{% if listing.rating_count != 1 %}s{% endif %})
-          </span>
-        </div>
-      {% else %}
-        <p>No ratings yet</p>
-      {% endif %}
-    </div>
-
-    {% if session.get('user_id') and session['user_id'] != listing.user_id %}
-      <form id="ratingForm" class="rating-form">
-        <h4>Rate this listing</h4>
-        <div class="star-rating">
-          {% for i in range(5,0,-1) %}
-            <input
-              type="radio"
-              id="star{{ i }}"
-              name="rating"
-              value="{{ i }}"
-            />
-            <label for="star{{ i }}" title="{{ i }} star{% if i != 1 %}s{% endif %}">
-              <i class="fas fa-star"></i>
-            </label>
-          {% endfor %}
-        </div>
-        <button type="button" id="submitRating" class="submit-rating-btn">
-          Submit Rating
-        </button>
-      </form>
-    {% elif not session.get('user_id') %}
-      <p>
-        <a href="{{ url_for('login', next=url_for('listing_details', listing_id=listing.listing_id)) }}">
-          Log in
-        </a> to rate this listing
-      </p>
-    {% endif %}
-
-    <div class="reviews-container">
-      <h4>Reviews</h4>
-      {% if listing.reviews %}
-        <div class="reviews-list">
-          {% for review in listing.reviews %}
-            <div class="review-item">
-              <div class="review-header">
-                <span class="reviewer-name">{{ review.reviewer }}</span>
-                <span class="review-date">{{ review.created_at }}</span>
-              </div>
-              <div class="review-content">
-                <p>{{ review.review_text }}</p>
-              </div>
-            </div>
-          {% endfor %}
-        </div>
-      {% else %}
-        <p>No reviews yet</p>
-      {% endif %}
-    </div>
-
-    {% if session.get('user_id') and session['user_id'] != listing.user_id %}
-      <form id="reviewForm" class="review-form">
-        <h4>Write a review</h4>
-        <textarea
-          id="reviewText"
-          name="review_text"
-          placeholder="Share your experience..."
-          rows="4"
-        ></textarea>
-        <button type="button" id="submitReview" class="submit-review-btn">
-          Submit Review
-        </button>
-      </form>
-    {% elif not session.get('user_id') %}
-      <p>
-        <a href="{{ url_for('login', next=url_for('listing_details', listing_id=listing.listing_id)) }}">
-          Log in
-        </a> to write a review
-      </p>
+<nav class="navbar">
+  <a href="/" class="brand">kwic<span class="brand-dot">.</span>shop</a>
+  <button class="mobile-menu" id="mobileMenuBtn" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
+  <div class="nav-links" id="navLinks">
+    {% if 'user_id' in session %}
+      <a href="/logout"><i class="fas fa-sign-out-alt" style="margin-right:.3rem"></i>Logout</a>
+    {% else %}
+      <a href="/login">Log in</a>
+      <a href="/signup" class="btn-signup">Sign up</a>
     {% endif %}
   </div>
-<!-- Proposal Modal -->
-<div id="proposalModal" class="modal">
-  <div class="modal-content">
-    <button class="close-modal" id="closeModal" aria-label="Close Modal">×</button>
-    <h2 class="modal-title">Make Swap Offer</h2>
-    <form id="proposalForm" action="{{ url_for('create_proposal', listing_id=listing_id) }}" method="POST" enctype="multipart/form-data" novalidate>
-      <div class="form-group">
-        <label for="proposed_item">
-          <i class="fas fa-gift"></i> Item You’re Offering <span class="required">*</span>
-        </label>
-        <input
-          type="text"
-          id="proposed_item"
-          name="proposed_item"
-          required
-          placeholder="Enter the item you’re offering for swap"
-        />
-      </div>
-      <div class="form-row">
-<div class="form-group">
-  <label for="additional_cash">
-    <i class="fas fa-money-bill-wave"></i> Additional Cash (GHS)
-  </label>
-  <input
-    type="number"
-    id="additional_cash"
-    name="additional_cash"
-    step="0.01"
-    min="0"
-    placeholder="0.00"
-  />
-</div>
-        <div class="form-group">
-          <label for="condition">
-            <i class="fas fa-star"></i> Condition <span class="required">*</span>
-          </label>
-          <select id="condition" name="condition" required>
-            <option value="" disabled selected>Select Condition</option>
-            <option value="new">New</option>
-            <option value="like_new">Slightly used</option>
-            <option value="used">Used</option>
-            <option value="refurbished">Needs Repair</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>
-          <i class="fas fa-images"></i> Upload Item Images (Max 4)
-        </label>
-        <div class="image-upload-container" id="uploadContainer">
-          <div class="upload-icon">
-            <i class="fas fa-cloud-upload-alt"></i>
-          </div>
-          <h3 class="upload-text">Drag & Drop your images here</h3>
-          <p class="upload-subtext">or click to browse files</p>
-          <button type="button" class="upload-btn">
-            <i class="fas fa-folder-open"></i> Select Images
-          </button>
-  <input type="file" id="image1" name="image1" class="file-input" accept="image/*" multiple hidden />
-  <input type="file" id="image2" name="image2" class="file-input" accept="image/*" hidden />
-  <input type="file" id="image3" name="image3" class="file-input" accept="image/*" hidden />
-  <input type="file" id="image4" name="image4" class="file-input" accept="image/*" hidden />
-          <div class="file-list" id="fileList">
-            <p class="upload-subtext">No images selected</p>
-          </div>
-          <div class="preview-container" id="previewContainer"></div>
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="detailed_description">
-          <i class="fas fa-align-left"></i> Detailed Description <span class="required">*</span>
-        </label>
-        <textarea
-          id="detailed_description"
-          name="detailed_description"
-          rows="4"
-          required
-          placeholder="Describe your item including any flaws, special features, etc."
-        ></textarea>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label for="phone_number">
-            <i class="fas fa-phone"></i> Phone Number <span class="required">*</span>
-          </label>
-          <input
-            type="text"
-            id="phone_number"
-            name="phone_number"
-            required
-            placeholder="e.g., 0241234567"
-          />
-        </div>
-        <div class="form-group">
-          <label for="email_address">
-            <i class="fas fa-envelope"></i> Email Address <span class="required">*</span>
-          </label>
-          <input
-            type="email"
-            id="email_address"
-            name="email_address"
-            required
-            placeholder="e.g., yourname@example.com"
-          />
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="message">
-          <i class="fas fa-comment"></i> Message to Owner (Optional)
-        </label>
-        <textarea
-          id="message"
-          name="message"
-          rows="3"
-          placeholder="Add a personal message to the owner of the item"
-        ></textarea>
-      </div>
-      <button type="submit" class="modal-submit-btn">
-        <div class="btn-content">
-          <i class="fas fa-paper-plane"></i> Submit Offer
-        </div>
-      </button>
-      <p class="form-note">
-        By submitting this offer, you agree to our
-        <a href="/privacy-policy">Terms of Service</a> and <a href="/privacy-policy">Privacy Policy</a>.
-        Required fields are marked with <span class="required">*</span>.
-      </p>
-    </form>
-  </div>
-</div>
+</nav>
 
-  <!-- Flash Messages -->
 {% with messages = get_flashed_messages(with_categories=True) %}
   {% if messages %}
     <div class="flash-messages">
@@ -1756,597 +324,497 @@
   {% endif %}
 {% endwith %}
 
+<div class="page-wrap">
+
+  <nav class="breadcrumb">
+    <a href="/">Home</a><span class="sep"><i class="fas fa-chevron-right"></i></span>
+    <a href="/?category={{ listing.category }}">{{ listing.category }}</a><span class="sep"><i class="fas fa-chevron-right"></i></span>
+    <span>{{ listing.title[:50] }}{% if listing.title|length > 50 %}…{% endif %}</span>
+  </nav>
+
+  <span class="deal-pill {% if listing.deal_type == 'Swap Deal' %}swap{% else %}sale{% endif %}">
+    {% if listing.deal_type == 'Swap Deal' %}<i class="fas fa-exchange-alt"></i> Swap Deal
+    {% else %}<i class="fas fa-tag"></i> For Sale{% endif %}
+  </span>
+
+  <div class="product-grid">
+
+    <!-- ── LEFT: Gallery ── -->
+    <div class="gallery-col">
+      {% if listing.deal_type == 'Outright Sales' %}
+        <div style="margin-bottom:1rem">
+          <div class="item-eyebrow">{{ listing.category }}</div>
+          <h1 class="item-heading">{{ listing.title }}</h1>
+          <span class="cond-pill cond-{{ listing.condition|lower|replace(' ','_') }}"><i class="fas fa-circle" style="font-size:.42rem"></i> {{ listing.condition }}</span>
+          <p class="item-desc">{{ listing.description }}</p>
+        </div>
+        {% set sale_imgs = [listing.image_url, listing.image1, listing.image2, listing.image3, listing.image4] | reject("none") | reject("equalto","") | list %}
+        <div class="main-img-box">
+          <img id="mainImage-sale" class="main-img" src="{% if sale_imgs %}{{ sale_imgs[0] }}{% else %}{{ url_for('static', filename='images/placeholder.jpg') }}{% endif %}" alt="{{ listing.title }}">
+          <div class="img-counter"><i class="fas fa-images"></i><span id="image-counter-sale">1 of {{ sale_imgs|length }}</span></div>
+          <button class="zoom-fab" onclick="toggleZoom('mainImage-sale')"><i class="fas fa-search-plus"></i></button>
+        </div>
+        <div class="thumb-row" id="thumbnailContainer-sale">
+          {% for img in sale_imgs %}
+            <img src="{{ img }}" class="thumb {% if loop.first %}active{% endif %}" alt="Thumb {{ loop.index }}" onclick="changeMainImage(this,'{{ img }}','mainImage-sale','thumbnailContainer-sale')">
+          {% endfor %}
+        </div>
+
+      {% else %}
+        {% if listing.offered_items %}
+          {% for item in listing.offered_items %}
+            {% set idx = loop.index0 %}
+            {% if not loop.first %}<hr class="item-divider">{% endif %}
+            <div style="margin-bottom:1rem">
+              <div class="item-eyebrow">Item {{ loop.index }}</div>
+              <h2 class="item-heading">{{ item.title }}</h2>
+              <span class="cond-pill cond-{{ item.condition|lower|replace(' ','_') }}"><i class="fas fa-circle" style="font-size:.42rem"></i> {{ item.condition }}</span>
+              <p class="item-desc">{{ item.description }}</p>
+            </div>
+            {% set imgs = [item.image1, item.image2, item.image3, item.image4] | reject("none") | reject("equalto","") | list %}
+            <div class="main-img-box">
+              <img id="mainImage-{{ idx }}" class="main-img" src="{% if imgs %}{{ imgs[0] }}{% else %}{{ url_for('static', filename='images/placeholder.jpg') }}{% endif %}" alt="{{ item.title }}">
+              <div class="img-counter"><i class="fas fa-images"></i><span id="image-counter-{{ idx }}">1 of {{ imgs|length }}</span></div>
+              <button class="zoom-fab" onclick="toggleZoom('mainImage-{{ idx }}')"><i class="fas fa-search-plus"></i></button>
+            </div>
+            <div class="thumb-row" id="thumbnailContainer-{{ idx }}">
+              {% for img in imgs %}
+                <img src="{{ img }}" class="thumb {% if loop.first %}active{% endif %}" alt="Thumb {{ loop.index }}" onclick="changeMainImage(this,'{{ img }}','mainImage-{{ idx }}','thumbnailContainer-{{ idx }}')">
+              {% endfor %}
+            </div>
+          {% endfor %}
+        {% else %}
+          <div style="margin-bottom:1rem">
+            <div class="item-eyebrow">{{ listing.category }}</div>
+            <h1 class="item-heading">{{ listing.title }}</h1>
+            <span class="cond-pill cond-{{ listing.condition|lower|replace(' ','_') }}"><i class="fas fa-circle" style="font-size:.42rem"></i> {{ listing.condition }}</span>
+            <p class="item-desc">{{ listing.description }}</p>
+          </div>
+          {% set imgs = [listing.image_url, listing.image1, listing.image2, listing.image3, listing.image4] | reject("none") | reject("equalto","") | list %}
+          <div class="main-img-box">
+            <img id="mainImage-swap" class="main-img" src="{% if imgs %}{{ imgs[0] }}{% else %}{{ url_for('static', filename='images/placeholder.jpg') }}{% endif %}" alt="{{ listing.title }}">
+            <div class="img-counter"><i class="fas fa-images"></i><span id="image-counter-swap">1 of {{ imgs|length }}</span></div>
+            <button class="zoom-fab" onclick="toggleZoom('mainImage-swap')"><i class="fas fa-search-plus"></i></button>
+          </div>
+          <div class="thumb-row" id="thumbnailContainer-swap">
+            {% for img in imgs %}
+              <img src="{{ img }}" class="thumb {% if loop.first %}active{% endif %}" alt="Thumb {{ loop.index }}" onclick="changeMainImage(this,'{{ img }}','mainImage-swap','thumbnailContainer-swap')">
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <!-- ── RIGHT: Info ── -->
+    <div class="info-col">
+
+      {% if listing.deal_type == 'Outright Sales' %}
+        <div class="price-card">
+          <div class="price-label">Asking Price</div>
+          <div class="price-value">GHS {{ "{:,.2f}".format(listing.price|float) if listing.price is not none else '—' }}</div>
+        </div>
+      {% else %}
+        <div class="info-card swap-style">
+          <div class="card-heading"><i class="fas fa-exchange-alt"></i> Swap Requirements</div>
+          <div class="info-row">
+            <div class="info-ico"><i class="fas fa-box-open"></i></div>
+            <div><div class="info-key">Desired Item</div><div class="info-val">{{ listing.desired_swap }}</div></div>
+          </div>
+          {% if listing.desired_swap_description %}
+            <div class="info-row">
+              <div class="info-ico"><i class="fas fa-align-left"></i></div>
+              <div><div class="info-key">Description</div><div class="info-val">{{ listing.desired_swap_description }}</div></div>
+            </div>
+          {% endif %}
+          <div class="info-row">
+            <div class="info-ico"><i class="fas fa-star"></i></div>
+            <div><div class="info-key">Condition Wanted</div><div class="info-val">{{ listing.condition or 'Any' }}</div></div>
+          </div>
+          {% if listing.additional_cash|float > 0 %}
+            <div class="info-row">
+              <div class="info-ico"><i class="fas fa-coins"></i></div>
+              <div><div class="info-key">Cash Top-up</div><div class="info-val"><span class="cash-tag"><i class="fas fa-plus"></i> GHS {{ "{:,.2f}".format(listing.additional_cash|float) }}</span></div></div>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <div class="info-card">
+        <div class="card-heading"><i class="fas fa-user"></i> Seller</div>
+        <div class="info-row">
+          <div class="info-ico"><i class="fas fa-user"></i></div>
+          <div><div class="info-key">Username</div><div class="info-val">{{ listing.username }}</div></div>
+        </div>
+        {% if listing.contact %}
+          <div class="info-row">
+            <div class="info-ico"><i class="fas fa-phone"></i></div>
+            <div><div class="info-key">Phone</div><div class="info-val">{{ listing.contact }}</div></div>
+          </div>
+        {% endif %}
+        {% if listing.email %}
+          <div class="info-row">
+            <div class="info-ico"><i class="fas fa-envelope"></i></div>
+            <div><div class="info-key">Email</div><div class="info-val">{{ listing.email }}</div></div>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="info-card">
+        <div class="card-heading"><i class="fas fa-info-circle"></i> Details</div>
+        <div class="info-row">
+          <div class="info-ico"><i class="fas fa-tag"></i></div>
+          <div><div class="info-key">Category</div><div class="info-val">{{ listing.category }}</div></div>
+        </div>
+        <div class="info-row">
+          <div class="info-ico"><i class="fas fa-map-marker-alt"></i></div>
+          <div><div class="info-key">Location</div><div class="info-val">{{ listing.location or 'Not specified' }}</div></div>
+        </div>
+        <div class="info-row">
+          <div class="info-ico"><i class="fas fa-calendar"></i></div>
+          <div><div class="info-key">Listed</div><div class="info-val">{{ listing.created_at.strftime('%d %b %Y') if listing.created_at else '—' }}</div></div>
+        </div>
+      </div>
+
+      {% if listing.rating_count > 0 %}
+        <div class="info-card">
+          <div class="card-heading"><i class="fas fa-star"></i> Rating</div>
+          <div class="rating-block">
+            <div class="rating-big">{{ "%.1f"|format(listing.avg_rating) }}</div>
+            <div>
+              <div class="star-row">
+                {% for i in range(1,6) %}
+                  {% if i <= listing.avg_rating|int %}<i class="fas fa-star"></i>
+                  {% elif i - 0.5 <= listing.avg_rating %}<i class="fas fa-star-half-alt"></i>
+                  {% else %}<i class="far fa-star"></i>{% endif %}
+                {% endfor %}
+              </div>
+              <div class="rating-sub">{{ listing.rating_count }} review{% if listing.rating_count != 1 %}s{% endif %}</div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if listing.deal_type == 'Swap Deal' %}
+        <button class="cta cta-swap" id="offerButton">
+          <i class="fab fa-whatsapp" style="font-size:1.1rem"></i> Make a Swap Offer
+        </button>
+      {% else %}
+        {% if listing.contact %}
+          <button class="cta cta-wa" id="whatsappQuickLink">
+            <i class="fab fa-whatsapp" style="font-size:1.1rem"></i> Chat on WhatsApp
+          </button>
+        {% endif %}
+      {% endif %}
+
+    </div>
+  </div>
+
+  <!-- ── Ratings & Reviews ── -->
+  <div class="section-panel">
+    <h2 class="section-title">Ratings &amp; Reviews</h2>
+
+    {% if session.get('user_id') and session['user_id'] != listing.user_id %}
+      <span class="sub-label">Your Rating</span>
+      <div class="star-input">
+        {% for i in range(5,0,-1) %}
+          <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}">
+          <label for="star{{ i }}"><i class="fas fa-star"></i></label>
+        {% endfor %}
+      </div>
+      <button id="submitRating" class="btn-sm" style="margin-top:.4rem">Submit Rating</button>
+      <hr class="divider">
+    {% elif not session.get('user_id') %}
+      <p style="font-size:.875rem;color:var(--ink-soft);margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--cream-dark)">
+        <a href="{{ url_for('login', next=url_for('listing_details', listing_id=listing.listing_id)) }}" style="color:var(--green);font-weight:700;text-decoration:none">Log in</a> to rate this listing.
+      </p>
+    {% endif %}
+
+    <span class="sub-label">{{ listing.rating_count }} Review{% if listing.rating_count != 1 %}s{% endif %}</span>
+    {% if listing.reviews %}
+      <div class="reviews-list">
+        {% for review in listing.reviews %}
+          <div class="review-card">
+            <div class="review-top">
+              <span class="reviewer">{{ review.reviewer }}</span>
+              <span class="review-date">{{ review.created_at }}</span>
+            </div>
+            <p class="review-text">{{ review.review_text }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="font-size:.875rem;color:var(--ink-faint);font-style:italic">No reviews yet — be the first!</p>
+    {% endif %}
+
+    {% if session.get('user_id') and session['user_id'] != listing.user_id %}
+      <hr class="divider">
+      <span class="sub-label">Write a Review</span>
+      <textarea id="reviewText" class="review-textarea" placeholder="Share your experience…"></textarea>
+      <button id="submitReview" class="btn-sm">Submit Review</button>
+    {% elif not session.get('user_id') %}
+      <p style="margin-top:1rem;font-size:.875rem;color:var(--ink-soft)">
+        <a href="{{ url_for('login', next=url_for('listing_details', listing_id=listing.listing_id)) }}" style="color:var(--green);font-weight:700;text-decoration:none">Log in</a> to write a review.
+      </p>
+    {% endif %}
+  </div>
+
+  <!-- ── Similar Items ── -->
+  {% if similar_listings %}
+    <div class="similar-section">
+      <h2 class="similar-heading">More in <em>{{ listing.category }}</em></h2>
+      <p class="similar-sub">Other listings you might like</p>
+      <div class="similar-grid">
+        {% for item in similar_listings %}
+          <a href="{{ url_for('listing_details', listing_id=item.listing_id) }}" class="sim-link">
+            <div class="sim-img">
+              {% if item.main_image %}
+                <img src="{{ item.main_image }}" alt="{{ item.title }}" loading="lazy">
+              {% else %}
+                <div class="sim-img-placeholder"><i class="fas fa-image"></i></div>
+              {% endif %}
+            </div>
+            <div class="sim-body">
+              <div class="sim-title">{{ item.title }}</div>
+              {% if item.location %}
+                <div class="sim-loc"><i class="fas fa-map-marker-alt"></i> {{ item.location }}</div>
+              {% endif %}
+              <div style="margin-top:auto;padding-top:.35rem">
+                {% if item.deal_type == 'Outright Sales' and item.price %}
+                  <div class="sim-price">GHS {{ "{:,.0f}".format(item.price|float) }}</div>
+                {% elif item.deal_type == 'Swap Deal' %}
+                  <span class="sim-swap-pill"><i class="fas fa-exchange-alt"></i> Swap</span>
+                {% else %}
+                  <span style="font-size:.78rem;color:var(--ink-soft)">Contact for price</span>
+                {% endif %}
+              </div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+
+<!-- ── Modal ── -->
+<div id="proposalModal" class="modal">
+  <div class="modal-box">
+    <button class="modal-close" id="closeModal" aria-label="Close">×</button>
+    <h2 class="modal-title">Make a Swap Offer</h2>
+    <p class="modal-sub">Fill in the details and we'll connect you with the seller via WhatsApp.</p>
+
+    <form id="proposalForm" action="{{ url_for('create_proposal', listing_id=listing_id) }}" method="POST" enctype="multipart/form-data" novalidate>
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-gift"></i> Item You're Offering <span class="required">*</span></label>
+        <input type="text" class="form-ctrl" id="proposed_item" name="proposed_item" required placeholder="e.g. Samsung Galaxy S22">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-coins"></i> Cash Top-up (GHS)</label>
+          <input type="number" class="form-ctrl" id="additional_cash" name="additional_cash" step="0.01" min="0" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-star"></i> Condition <span class="required">*</span></label>
+          <select class="form-ctrl" id="condition" name="condition" required>
+            <option value="" disabled selected>Select condition</option>
+            <option value="new">New</option>
+            <option value="like_new">Slightly Used</option>
+            <option value="used">Used</option>
+            <option value="refurbished">Needs Repair</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-images"></i> Item Photos (up to 4)</label>
+        <div class="upload-zone" id="uploadContainer">
+          <div class="upload-zone-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+          <div class="upload-zone-title">Drag &amp; drop images here</div>
+          <div class="upload-zone-sub">or click to browse</div>
+          <button type="button" class="pick-btn"><i class="fas fa-folder-open"></i> Choose Images</button>
+          <input type="file" id="image1" name="image1" class="file-input" accept="image/*" multiple hidden>
+          <input type="file" id="image2" name="image2" class="file-input" accept="image/*" hidden>
+          <input type="file" id="image3" name="image3" class="file-input" accept="image/*" hidden>
+          <input type="file" id="image4" name="image4" class="file-input" accept="image/*" hidden>
+          <div class="file-list" id="fileList"><span style="font-size:.78rem;color:var(--ink-faint)">No images selected</span></div>
+          <div class="preview-row" id="previewContainer"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-align-left"></i> Detailed Description <span class="required">*</span></label>
+        <textarea class="form-ctrl" id="detailed_description" name="detailed_description" required placeholder="Describe your item — condition, age, any flaws…"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-phone"></i> Phone Number <span class="required">*</span></label>
+          <input type="text" class="form-ctrl" id="phone_number" name="phone_number" required placeholder="e.g. 0241234567">
+        </div>
+        <div class="form-group">
+          <label class="form-label"><i class="fas fa-envelope"></i> Email <span class="required">*</span></label>
+          <input type="email" class="form-ctrl" id="email_address" name="email_address" required placeholder="you@example.com">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-comment"></i> Message <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+        <textarea class="form-ctrl" id="message" name="message" rows="3" placeholder="Any extra info…"></textarea>
+      </div>
+      <button type="submit" class="modal-submit"><span class="btn-content"><i class="fas fa-paper-plane"></i> Send Swap Offer</span></button>
+      <p class="form-note">By submitting you agree to our <a href="/privacy-policy">Terms</a> &amp; <a href="/privacy-policy">Privacy Policy</a>. Fields marked <span style="color:var(--red)">*</span> are required.</p>
+    </form>
+  </div>
+</div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
+  const vendorWhatsAppRaw = "{{ listing.contact|default('', true) }}";
+  const ownerName         = {{ listing.username|tojson }};
+  const listingTitle      = {{ listing.title|tojson }};
+  const currentUrl        = "{{ url_for('listing_details', listing_id=listing_id, _external=True) }}";
 
-  /* WhatsApp: config pulled from Jinja.
-     listing.contact should already contain full number INCLUDING country code,
-     e.g. 233544156292 (no plus sign). */
-  const vendorWhatsAppRaw  = "{{ listing.contact|default('', true) }}";
-  const ownerName          = {{ listing.username|tojson }};
-  const listingTitle       = {{ listing.title|tojson }};
-  const currentListingUrl  = "{{ url_for('listing_details', listing_id=listing_id, _external=True) }}";
+  function normalizePhone(r) { return r ? r.replace(/\D/g,'') : ''; }
 
-  /* Simple phone normalizer: strip everything except digits */
-  function normalizePhone(raw) {
-    if (!raw) return '';
-    return raw.replace(/\D/g, '');
-  }
-
-  /* Use the number from DB as the source of truth.
-     It already has the correct country code attached from signup. */
-  function getWhatsAppNumber(raw) {
-    return normalizePhone(raw);
-  }
-
-  // --- Quick WhatsApp chat button (top Contact section) ---
-  const whatsappQuickLink = document.getElementById('whatsappQuickLink');
-
-  if (whatsappQuickLink) {
-    whatsappQuickLink.addEventListener('click', function (e) {
-      e.preventDefault(); // stop jumping to top
-
-      const phoneDigits = getWhatsAppNumber(vendorWhatsAppRaw);
-      if (!phoneDigits) {
-        alert('Seller WhatsApp number is missing or invalid.');
-        return;
-      }
-
-      const lines = [
-        `Hi ${ownerName || 'there'},`,
-        '',
-        `I'm interested in your listing "${listingTitle}" on SwapHub.`,
-        `Listing link: ${currentListingUrl}`
-      ];
-
-      const waUrl = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(lines.join('\n'))}`;
-      window.open(waUrl, '_blank');
-    });
-  }
-
-  // Modal Controls
-  const modal            = document.getElementById('proposalModal');
-  const offerButton      = document.getElementById('offerButton');
-  const closeModalButton = document.getElementById('closeModal');
-  const proposalForm     = document.getElementById('proposalForm');
-
-  function openModal() {
-    modal.style.display = 'block';
-    setTimeout(() => {
-      modal.classList.add('show');
-      document.body.style.overflow = 'hidden';
-    }, 10);
-  }
-
-  function closeModal() {
-    modal.classList.remove('show');
-    setTimeout(() => {
-      modal.style.display = 'none';
-      document.body.style.overflow = 'auto';
-    }, 300);
-  }
-
-  // Handle "Make Swap Offer" button click
-  if (offerButton) {
-    offerButton.addEventListener('click', function(e) {
+  const waBtn = document.getElementById('whatsappQuickLink');
+  if (waBtn) {
+    waBtn.addEventListener('click', function(e) {
       e.preventDefault();
-      fetch('/check_login')
-        .then(response => response.json())
-        .then(data => {
-          if (data.logged_in) {
-            openModal();
-          } else {
-            const nextUrl = window.location.pathname + '?open_modal=true';
-            window.location.href = '/login?next=' + encodeURIComponent(nextUrl);
-          }
-        })
-        .catch(error => {
-          console.error('Error checking login status:', error);
-          alert('An error occurred. Please try again.');
-        });
+      const ph = normalizePhone(vendorWhatsAppRaw);
+      if (!ph) { alert('Seller WhatsApp number is missing.'); return; }
+      const msg = `Hi ${ownerName||'there'},\n\nI'm interested in your listing "${listingTitle}" on kwicshop.\nListing: ${currentUrl}`;
+      window.open(`https://wa.me/${ph}?text=${encodeURIComponent(msg)}`, '_blank');
     });
   }
 
-  // Close modal handlers
-  if (closeModalButton) {
-    closeModalButton.addEventListener('click', closeModal);
-    closeModalButton.addEventListener('touchend', closeModal);
-  }
+  const modal    = document.getElementById('proposalModal');
+  const offerBtn = document.getElementById('offerButton');
+  const closeBtn = document.getElementById('closeModal');
 
-  if (modal) {
-    modal.addEventListener('click', function(e) {
-      if (e.target === modal) {
-        closeModal();
-      }
-    });
-    modal.addEventListener('touchend', function(e) {
-      if (e.target === modal) {
-        closeModal();
-      }
+  function openModal()  { modal.style.display='block'; setTimeout(()=>{ modal.classList.add('show'); document.body.style.overflow='hidden'; },10); }
+  function closeModal() { modal.classList.remove('show'); setTimeout(()=>{ modal.style.display='none'; document.body.style.overflow=''; },280); }
+
+  if (offerBtn) {
+    offerBtn.addEventListener('click', e => {
+      e.preventDefault();
+      fetch('/check_login').then(r=>r.json()).then(d=>{
+        if (d.logged_in) openModal();
+        else window.location.href='/login?next='+encodeURIComponent(window.location.pathname+'?open_modal=true');
+      }).catch(()=>alert('An error occurred.'));
     });
   }
 
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && modal.classList.contains('show')) {
-      closeModal();
-    }
-  });
+  if (closeBtn) { closeBtn.addEventListener('click', closeModal); closeBtn.addEventListener('touchend', closeModal); }
+  if (modal)    modal.addEventListener('click', e=>{ if(e.target===modal) closeModal(); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape'&&modal&&modal.classList.contains('show')) closeModal(); });
+  if (new URLSearchParams(window.location.search).get('open_modal')==='true') openModal();
 
-  // Check URL for modal trigger after login/signup
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('open_modal') === 'true') {
-    openModal();
-  }
-
-  // Proposal Form Submission (backend handles WhatsApp redirect)
-  const uploadBtn        = document.querySelector('.upload-btn');
-  const fileInput        = document.getElementById('image1');
-  const uploadContainer  = document.getElementById('uploadContainer');
-  const fileList         = document.getElementById('fileList');
-  const previewContainer = document.getElementById('previewContainer');
-
+  // File upload
+  const pickBtn    = document.querySelector('.pick-btn');
+  const fileInput  = document.getElementById('image1');
+  const uploadZone = document.getElementById('uploadContainer');
+  const fileList   = document.getElementById('fileList');
+  const previewCt  = document.getElementById('previewContainer');
   let files = [];
-  const maxFiles = 4;
 
+  function handleFiles(sel) {
+    files = [];
+    for (let i=0; i<sel.length && files.length<4; i++) if(sel[i].type.match('image.*')) files.push(sel[i]);
+    if(sel.length>4) alert('Max 4 images. Using first 4.');
+    [1,2,3,4].forEach(n=>{ const el=document.getElementById(`image${n}`); if(el) el.files=new DataTransfer().files; });
+    files.forEach((f,i)=>{ const el=document.getElementById(`image${i+1}`); if(el){ const dt=new DataTransfer(); dt.items.add(f); el.files=dt.files; } });
+    renderFiles(); renderPreviews();
+  }
+
+  function renderFiles() {
+    if (!files.length) { fileList.innerHTML='<span style="font-size:.78rem;color:var(--ink-faint)">No images selected</span>'; return; }
+    fileList.innerHTML='';
+    files.forEach((f,i)=>{ const c=document.createElement('div'); c.className='file-chip'; c.innerHTML=`<i class="fas fa-file-image" style="color:var(--green)"></i><span class="chip-name">${f.name}</span><span class="chip-size">${(f.size/1024).toFixed(0)}KB</span><span class="chip-rm" data-i="${i}"><i class="fas fa-times"></i></span>`; fileList.appendChild(c); });
+    fileList.querySelectorAll('.chip-rm').forEach(el=>el.addEventListener('click',function(){ files.splice(+this.dataset.i,1); handleFiles(files); }));
+  }
+
+  function renderPreviews() {
+    previewCt.innerHTML='';
+    files.forEach((f,i)=>{ const r=new FileReader(); r.onload=e=>{ const img=document.createElement('img'); img.className='preview-thumb'; img.src=e.target.result; previewCt.appendChild(img); }; r.readAsDataURL(f); });
+  }
+
+  if (pickBtn) pickBtn.addEventListener('click', ()=>fileInput.click());
+  if (fileInput) fileInput.addEventListener('change', function(){ if(this.files.length) handleFiles(this.files); });
+  if (uploadZone) {
+    ['dragenter','dragover','dragleave','drop'].forEach(ev=>uploadZone.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();}));
+    ['dragenter','dragover'].forEach(ev=>uploadZone.addEventListener(ev,()=>uploadZone.classList.add('dragover')));
+    ['dragleave','drop'].forEach(ev=>uploadZone.addEventListener(ev,()=>uploadZone.classList.remove('dragover')));
+    uploadZone.addEventListener('drop',e=>handleFiles(e.dataTransfer.files));
+    uploadZone.addEventListener('click',()=>fileInput.click());
+  }
+  renderFiles();
+
+  const proposalForm = document.getElementById('proposalForm');
   if (proposalForm) {
     proposalForm.addEventListener('submit', function(e) {
-      const proposedItem        = document.getElementById('proposed_item');
-      const detailedDescription = document.getElementById('detailed_description');
-      const condition           = document.getElementById('condition');
-      const phoneNumber         = document.getElementById('phone_number');
-      const emailAddress        = document.getElementById('email_address');
-
-      // Client-side validation – only prevent default when invalid
-      if (proposedItem.value.trim() === '') {
-        e.preventDefault();
-        alert('Please enter the item you are offering');
-        return;
-      }
-      if (detailedDescription.value.trim() === '') {
-        e.preventDefault();
-        alert('Please provide a detailed description');
-        return;
-      }
-      if (!condition.value) {
-        e.preventDefault();
-        alert('Please select a condition');
-        return;
-      }
-      if (phoneNumber.value.trim() === '') {
-        e.preventDefault();
-        alert('Please enter a phone number');
-        return;
-      }
-      if (emailAddress.value.trim() === '') {
-        e.preventDefault();
-        alert('Please enter an email address');
-        return;
-      }
-
-      // Valid -> let browser submit normally (Flask will redirect to WhatsApp)
-      const submitBtn = proposalForm.querySelector('.modal-submit-btn');
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.querySelector('.btn-content').innerHTML =
-          '<i class="fas fa-spinner fa-spin"></i> Submitting...';
-      }
+      const checks=[['proposed_item','Please enter the item you are offering'],['detailed_description','Please provide a detailed description'],['condition','Please select a condition'],['phone_number','Please enter a phone number'],['email_address','Please enter an email address']];
+      for (const [id,msg] of checks) { const el=document.getElementById(id); if(!el||!el.value.trim()){ e.preventDefault(); alert(msg); return; } }
+      const sb=proposalForm.querySelector('.modal-submit');
+      if(sb){ sb.disabled=true; sb.querySelector('.btn-content').innerHTML='<i class="fas fa-spinner fa-spin"></i> Sending…'; }
     });
-
-    // File upload handling (unchanged)
-    if (uploadBtn) {
-      uploadBtn.addEventListener('click', function() {
-        fileInput.click();
-      });
-    }
-
-    if (fileInput) {
-      fileInput.addEventListener('change', function() {
-        if (this.files && this.files.length > 0) {
-          handleFiles(this.files);
-        }
-      });
-    }
-
-    if (uploadContainer) {
-      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        uploadContainer.addEventListener(eventName, preventDefaults, false);
-      });
-
-      function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-
-      ['dragenter', 'dragover'].forEach(eventName => {
-        uploadContainer.addEventListener(eventName, highlight, false);
-      });
-
-      ['dragleave', 'drop'].forEach(eventName => {
-        uploadContainer.addEventListener(eventName, unhighlight, false);
-      });
-
-      function highlight() {
-        uploadContainer.classList.add('dragover');
-      }
-
-      function unhighlight() {
-        uploadContainer.classList.remove('dragover');
-      }
-
-      uploadContainer.addEventListener('drop', handleDrop, false);
-      function handleDrop(e) {
-        const dt = e.dataTransfer;
-        const droppedFiles = dt.files;
-        handleFiles(droppedFiles);
-      }
-
-      uploadContainer.addEventListener('click', () => {
-        fileInput.click();
-      });
-    }
-
-    function handleFiles(selectedFiles) {
-      files = [];
-      for (let i = 0; i < selectedFiles.length && files.length < maxFiles; i++) {
-        const file = selectedFiles[i];
-        if (file.type.match('image.*')) {
-          files.push(file);
-        }
-      }
-      if (selectedFiles.length > maxFiles) {
-        alert(`Maximum ${maxFiles} images allowed. Only the first ${maxFiles} will be used.`);
-      }
-
-      for (let i = 1; i <= maxFiles; i++) {
-        const targetInput = document.getElementById(`image${i}`);
-        if (targetInput) {
-          targetInput.files = new DataTransfer().files;
-        }
-      }
-
-      files.forEach((file, index) => {
-        const targetInput = document.getElementById(`image${index + 1}`);
-        if (targetInput) {
-          const dataTransfer = new DataTransfer();
-          dataTransfer.items.add(file);
-          targetInput.files = dataTransfer.files;
-        }
-      });
-
-      renderFileList();
-      renderPreviews();
-    }
-
-    function renderFileList() {
-      fileList.innerHTML = '';
-      if (files.length === 0) {
-        fileList.innerHTML = '<p class="upload-subtext">No images selected</p>';
-        return;
-      }
-      files.forEach((file, index) => {
-        const fileItem = document.createElement('div');
-        fileItem.className = 'file-item';
-        fileItem.innerHTML = `
-          <div class="file-icon"><i class="fas fa-file-image"></i></div>
-          <div class="file-info">
-            <div class="file-name">${file.name}</div>
-            <div class="file-size">${formatFileSize(file.size)}</div>
-          </div>
-          <div class="remove-file" data-index="${index}">
-            <i class="fas fa-times"></i>
-          </div>
-        `;
-        fileList.appendChild(fileItem);
-      });
-      document.querySelectorAll('.remove-file').forEach(button => {
-        button.addEventListener('click', function() {
-          const index = parseInt(this.getAttribute('data-index'));
-          files.splice(index, 1);
-          handleFiles(files);
-        });
-      });
-    }
-
-    function renderPreviews() {
-      previewContainer.innerHTML = '';
-      if (files.length === 0) return;
-      files.forEach((file, index) => {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const preview = document.createElement('img');
-          preview.className = 'image-preview';
-          preview.src = e.target.result;
-          preview.alt = `Preview ${index + 1}`;
-          preview.title = file.name;
-          preview.style.width  = '80px';
-          preview.style.height = '80px';
-          preview.style.objectFit = 'cover';
-          preview.style.borderRadius = '6px';
-          preview.style.margin = '0 5px 5px 0';
-          previewContainer.appendChild(preview);
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-
-    function formatFileSize(bytes) {
-      if (bytes === 0) return '0 Bytes';
-      const k = 1024;
-      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-    }
-
-    renderFileList();
   }
 
-  // Mobile Menu Toggle
   const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-  const navLinks      = document.getElementById('navLinks');
-
-  if (mobileMenuBtn && navLinks) {
-    mobileMenuBtn.addEventListener('click', () => {
-      navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.navbar') && window.innerWidth < 768) {
-        navLinks.style.display = 'none';
-      }
-    });
+  const navLinks = document.getElementById('navLinks');
+  if (mobileMenuBtn&&navLinks) {
+    mobileMenuBtn.addEventListener('click', ()=>navLinks.classList.toggle('open'));
+    document.addEventListener('click', e=>{ if(!e.target.closest('.navbar')&&window.innerWidth<768) navLinks.classList.remove('open'); });
   }
 
-  // Image Gallery Functionality (same as before)
-  function changeMainImage(thumbnail, imageUrl, mainImageId, thumbnailContainerId) {
-    const mainImage          = document.getElementById(mainImageId);
-    const thumbnailContainer = document.getElementById(thumbnailContainerId);
-    const thumbnails         = thumbnailContainer.querySelectorAll('.thumbnail');
-
-    mainImage.classList.add('image-changing');
-    thumbnails.forEach(thumb => thumb.classList.remove('active'));
-    thumbnail.classList.add('active');
-
-    const currentIndex = Array.from(thumbnails).indexOf(thumbnail) + 1;
-    const counterId    = mainImageId.replace('mainImage', 'image-counter');
-    const imageCounter = document.getElementById(counterId);
-    if (imageCounter) {
-      imageCounter.textContent = `${currentIndex} of ${thumbnails.length}`;
-    }
-
-    setTimeout(() => {
-      mainImage.src = imageUrl;
-      mainImage.classList.remove('image-changing');
-      thumbnail.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center'
-      });
-    }, 150);
-  }
-
-  function toggleZoom(mainImageId) {
-    const img      = document.getElementById(mainImageId);
-    const isZoomed = img.style.transform === 'scale(2)';
-    img.style.transform       = isZoomed ? 'scale(1)' : 'scale(2)';
-    img.style.cursor          = isZoomed ? 'zoom-in' : 'zoom-out';
-    img.style.transformOrigin = 'center center';
-  }
-
-  const mainImages = document.querySelectorAll('.main-image');
-  mainImages.forEach(img => {
-    let lastTouch = 0;
-    img.addEventListener('touchend', (e) => {
-      const now = Date.now();
-      if (now - lastTouch <= 300) {
-        toggleZoom(img.id);
-        e.preventDefault();
-      }
-      lastTouch = now;
-    });
-  });
-
-  const thumbnailContainers = document.querySelectorAll('.thumbnail-container');
-  thumbnailContainers.forEach(container => {
-    let isDragging = false;
-    let startX = 0;
-    let scrollLeft = 0;
-
-    container.addEventListener('touchstart', (e) => {
-      isDragging = true;
-      startX = e.touches[0].pageX - container.offsetLeft;
-      scrollLeft = container.scrollLeft;
-    });
-
-    container.addEventListener('touchmove', (e) => {
-      if (!isDragging) return;
-      e.preventDefault();
-      const x = e.touches[0].pageX - container.offsetLeft;
-      const walk = (x - startX) * 2;
-      container.scrollLeft = scrollLeft - walk;
-    });
-
-    container.addEventListener('touchend', () => {
-      isDragging = false;
-    });
-  });
-
-  // Responsive Adjustments
-  if (window.innerWidth < 768) {
-    if (navLinks)      navLinks.style.display = 'none';
-    if (mobileMenuBtn) mobileMenuBtn.style.display = 'block';
-
-    const firstThumbnail = document.querySelector('#thumbnailContainer .thumbnail');
-    if (firstThumbnail) {
-      setTimeout(() => {
-        firstThumbnail.scrollIntoView({
-          block: 'nearest',
-          inline: 'center'
-        });
-      }, 100);
-    }
-  } else {
-    if (mobileMenuBtn) mobileMenuBtn.style.display = 'none';
-  }
-
-  window.addEventListener('resize', function() {
-    if (window.innerWidth >= 768) {
-      if (navLinks)      navLinks.style.display = 'flex';
-      if (mobileMenuBtn) mobileMenuBtn.style.display = 'none';
-    } else {
-      if (mobileMenuBtn) mobileMenuBtn.style.display = 'block';
-    }
-  });
-
-  // Preload Thumbnails
-  const thumbnails = document.querySelectorAll('.thumbnail');
-  const images = [];
-  thumbnails.forEach(thumb => {
-    const img = new Image();
-    img.src = thumb.src;
-    images.push(img);
-  });
-
-  // Rating Submission
   const submitRating = document.getElementById('submitRating');
   if (submitRating) {
     submitRating.addEventListener('click', async function() {
-      const ratingInput = document.querySelector('input[name="rating"]:checked');
-      if (!ratingInput) {
-        alert('Please select a rating');
-        return;
-      }
-
+      const ri = document.querySelector('input[name="rating"]:checked');
+      if (!ri) { alert('Please select a rating'); return; }
       try {
-        const response = await fetch(`/submit_rating/{{ listing.listing_id }}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `rating=${ratingInput.value}`
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-          alert('Rating submitted successfully!');
-          location.reload();
-        } else {
-          alert('Error: ' + data.message);
-        }
-      } catch (error) {
-        console.error('Error submitting rating:', error);
-        alert('An error occurred while submitting your rating');
-      }
+        const res=await fetch(`/submit_rating/{{ listing.listing_id }}`,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:`rating=${ri.value}`});
+        const d=await res.json();
+        if(d.success){alert('Rating submitted!');location.reload();}else alert('Error: '+d.message);
+      } catch { alert('An error occurred.'); }
     });
   }
 
-  // Review Submission
   const submitReview = document.getElementById('submitReview');
   if (submitReview) {
     submitReview.addEventListener('click', async function() {
-      const reviewText = document.getElementById('reviewText').value.trim();
-      if (!reviewText) {
-        alert('Please write a review before submitting');
-        return;
-      }
-
+      const rt = document.getElementById('reviewText').value.trim();
+      if(!rt){alert('Please write a review');return;}
       try {
-        const response = await fetch(`/submit_review/{{ listing.listing_id }}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `review_text=${encodeURIComponent(reviewText)}`
-        });
-
-        const data = await response.json();
-        console.log('Review submission response:', data);
-
-        if (data.success) {
-          const reviewsContainer = document.querySelector('.reviews-container');
-          let reviewsList = document.querySelector('.reviews-list');
-
-          if (!reviewsList) {
-            reviewsList = document.createElement('div');
-            reviewsList.classList.add('reviews-list');
-            const emptyP = reviewsContainer.querySelector('p');
-            if (emptyP) emptyP.remove();
-            reviewsContainer.prepend(reviewsList);
-          }
-
-          const reviewItem = document.createElement('div');
-          reviewItem.className = 'review-item';
-          reviewItem.innerHTML = `
-            <div class="review-header">
-              <span class="reviewer-name">${data.review.reviewer || 'Anonymous'}</span>
-              <span class="review-date">${data.review.created_at}</span>
-            </div>
-            <div class="review-content">
-              <p>${data.review.review_text}</p>
-            </div>
-          `;
-
-          reviewsList.prepend(reviewItem);
-          document.getElementById('reviewText').value = '';
-          alert('Review submitted successfully!');
-        } else {
-          alert('Error: ' + data.message);
-        }
-      } catch (error) {
-        console.error('Error submitting review:', error);
-        alert('An error occurred while submitting your review');
-      }
+        const res=await fetch(`/submit_review/{{ listing.listing_id }}`,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:`review_text=${encodeURIComponent(rt)}`});
+        const d=await res.json();
+        if(d.success){
+          let list=document.querySelector('.reviews-list');
+          if(!list){list=document.createElement('div');list.className='reviews-list';const ep=document.querySelector('.reviews-list + p');if(ep)ep.remove();document.querySelector('.section-panel .reviews-list')?.before(list)||(document.querySelector('.section-panel').appendChild(list));}
+          const c=document.createElement('div');c.className='review-card';c.innerHTML=`<div class="review-top"><span class="reviewer">${d.review.reviewer||'Anonymous'}</span><span class="review-date">${d.review.created_at}</span></div><p class="review-text">${d.review.review_text}</p>`;
+          list.prepend(c);document.getElementById('reviewText').value='';alert('Review submitted!');
+        } else alert('Error: '+d.message);
+      } catch { alert('An error occurred.'); }
     });
   }
+
+  document.querySelectorAll('.flash-message').forEach(msg=>{
+    setTimeout(()=>{ msg.classList.add('fade-out'); msg.addEventListener('transitionend',()=>msg.remove()); },3000);
+  });
 });
 
-// Global helpers for inline onclicks in the HTML
-function changeMainImage(el, src, mainImageId, thumbnailContainerId) {
-  const mainImg = document.getElementById(mainImageId);
-  mainImg.src = src;
-
-  const thumbs = document.getElementById(thumbnailContainerId).querySelectorAll('.thumbnail');
-  thumbs.forEach(img => img.classList.remove('active'));
+function changeMainImage(el, src, mainId, thumbCId) {
+  const mi=document.getElementById(mainId);
+  mi.classList.add('image-changing');
+  document.getElementById(thumbCId).querySelectorAll('.thumb').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-
-  const counterId    = mainImageId.replace('mainImage', 'image-counter');
-  const currentIndex = Array.from(thumbs).indexOf(el) + 1;
-  const counter      = document.getElementById(counterId);
-  if (counter) {
-    counter.textContent = `${currentIndex} of ${thumbs.length}`;
-  }
+  const ctr=document.getElementById(mainId.replace('mainImage','image-counter'));
+  const thumbs=document.getElementById(thumbCId).querySelectorAll('.thumb');
+  if(ctr) ctr.textContent=`${Array.from(thumbs).indexOf(el)+1} of ${thumbs.length}`;
+  setTimeout(()=>{ mi.src=src; mi.classList.remove('image-changing'); el.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); },150);
 }
 
-function toggleZoom(imageId) {
-  const img = document.getElementById(imageId);
-  if (img.classList.contains('zoomed')) {
-    img.classList.remove('zoomed');
-  } else {
-    img.classList.add('zoomed');
-  }
+function toggleZoom(id) {
+  const img=document.getElementById(id);
+  img.classList.toggle('zoomed');
 }
 </script>
 
-
-
-<script>
-  window.addEventListener('load', function() {
-    document.querySelectorAll('.flash-message').forEach(function(msg) {
-      // after 3 seconds, start fade
-      setTimeout(function() {
-        msg.classList.add('fade-out');
-        // when transition ends, remove from DOM
-        msg.addEventListener('transitionend', function() {
-          msg.remove();
-        });
-      }, 2000);
-    });
-  });
-</script>
 <script src="{{ url_for('static', filename='heartbeat.js') }}"></script>
-
-
-
 </body>
 </html>
