@@ -1077,6 +1077,45 @@ def listing_details(listing_id):
         """, (listing_id,))
         listing['offered_items'] = cursor.fetchall() or []
 
+        # Step 4: Fetch similar listings by category (exclude current listing)
+        app.logger.debug("Fetching similar listings by category")
+        cursor.execute("""
+            SELECT l.listing_id, l.title, l.description, l.category,
+                   l.image_url, l.image1, l.image2, l.image3, l.image4,
+                   l.price, l.deal_type, l.condition, l.location,
+                   COALESCE(avg_r.avg_rating, 0) AS avg_rating,
+                   COALESCE(avg_r.rating_count, 0) AS rating_count
+            FROM listings AS l
+            LEFT JOIN (
+                SELECT listing_id, AVG(rating_value) AS avg_rating, COUNT(*) AS rating_count
+                FROM ratings
+                GROUP BY listing_id
+            ) AS avg_r ON l.listing_id = avg_r.listing_id
+            WHERE l.category = %s
+              AND l.listing_id != %s
+              AND (l.status IS NULL OR l.status != 'sold')
+            ORDER BY l.created_at DESC
+            LIMIT 8
+        """, (listing['category'], listing_id))
+        similar_listings = cursor.fetchall() or []
+
+        # Process similar listings to set main_image and price_float
+        for item in similar_listings:
+            # Collect all possible image fields
+            images = [img for img in [
+                item.get('image_url'),
+                item.get('image1'),
+                item.get('image2'),
+                item.get('image3'),
+                item.get('image4')
+            ] if img]
+            item['main_image'] = images[0] if images else '/static/images/placeholder.jpg'
+            # Convert price to float for display
+            try:
+                item['price_float'] = float(item['price']) if item['price'] else 0.0
+            except:
+                item['price_float'] = 0.0
+
         app.logger.debug(f"Listing data loaded successfully: {listing}")
 
     except mysql.connector.Error as e:
@@ -1098,7 +1137,8 @@ def listing_details(listing_id):
     return render_template(
         'listing_details.html',
         listing=listing,
-        listing_id=listing_id
+        listing_id=listing_id,
+        similar_listings=similar_listings
     )
 
 
@@ -8912,6 +8952,9 @@ def follow_store(store_id):
         cursor.close()
         conn.close()
 
+
+
+
 @app.route('/store/<int:store_id>/unfollow', methods=['POST'])
 def unfollow_store(store_id):
     if 'user_id' not in session:
@@ -8935,6 +8978,9 @@ def unfollow_store(store_id):
         cursor.close()
         conn.close()
 
+
+
+
 @app.route('/store/<int:store_id>/follow-status', methods=['GET'])
 def follow_status(store_id):
     if 'user_id' not in session:
@@ -8955,6 +9001,7 @@ def follow_status(store_id):
 
 
 
+
 @app.route('/notifications/unread-count', methods=['GET'])
 def unread_notifications_count():
     if 'user_id' not in session:
@@ -8971,7 +9018,9 @@ def unread_notifications_count():
     conn.close()
     return jsonify({'count': count})
 
-    
+
+
+
 
 @app.route('/notifications', methods=['GET'])
 def get_notifications():
@@ -9000,6 +9049,10 @@ def get_notifications():
     conn.close()
     return jsonify(notifications)
 
+
+
+
+
 @app.route('/notifications/mark-read', methods=['POST'])
 def mark_notifications_read():
     if 'user_id' not in session:
@@ -9009,21 +9062,24 @@ def mark_notifications_read():
     notification_ids = data.get('ids', [])
     user_id = session['user_id']
 
+    print(f"Mark-read request: user_id={user_id}, ids={notification_ids}")  # Debug
+
     if not notification_ids:
         return jsonify({'success': True})
 
     conn = get_db_connection()
     cursor = conn.cursor()
-    # Ensure user can only mark their own notifications as read
     format_strings = ','.join(['%s'] * len(notification_ids))
-    cursor.execute(
-        f"UPDATE notifications SET is_read = 1 WHERE user_id = %s AND id IN ({format_strings})",
-        (user_id, *notification_ids)
-    )
+    sql = f"UPDATE notifications SET is_read = 1 WHERE user_id = %s AND id IN ({format_strings})"
+    cursor.execute(sql, (user_id, *notification_ids))
+    affected = cursor.rowcount
     conn.commit()
     cursor.close()
     conn.close()
-    return jsonify({'success': True})    
+
+    print(f"Rows updated: {affected}")  # Debug
+
+    return jsonify({'success': True, 'updated': affected})   
 
 
 

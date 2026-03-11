@@ -2544,7 +2544,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 <script>
-// Notification FAB functionality with instant popup
+// Notification FAB functionality with instant popup and mark‑read on open
 document.addEventListener('DOMContentLoaded', function() {
     const fab = document.getElementById('notificationFab');
     if (!fab) return; // not logged in
@@ -2566,7 +2566,10 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         cachedNotifications.forEach(n => {
-            if (!n.is_read) unreadIds.add(n.id);
+            if (!n.is_read) {
+                unreadIds.add(n.id);
+                console.log('Unread ID added:', n.id);   // DEBUG
+            }
             const item = document.createElement('a');
             item.href = n.listing_id ? `/listing/${n.listing_id}` : '#';
             item.className = `notification-item ${n.is_read ? '' : 'unread'}`;
@@ -2609,6 +2612,36 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
+    // --- Mark given IDs as read on the server ---
+    function markAsRead(ids) {
+        if (!ids || ids.length === 0) return Promise.resolve();
+        console.log('Sending mark-read for IDs:', ids);   // DEBUG
+        return fetch('/notifications/mark-read', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'include',   // ensure session cookie is sent
+            body: JSON.stringify({ids: ids})
+        })
+        .then(res => {
+            if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+            return res.json();
+        })
+        .then(data => {
+            console.log('Mark-read response:', data);   // DEBUG
+            if (data.success) {
+                // Update local cache: mark those as read
+                cachedNotifications = cachedNotifications.map(n => {
+                    if (ids.includes(n.id)) n.is_read = 1;
+                    return n;
+                });
+                updateUnreadCount();
+                // Clear from unreadIds set
+                ids.forEach(id => unreadIds.delete(id));
+            }
+        })
+        .catch(err => console.error('Mark-read fetch error:', err));
+    }
+
     // --- Initial load: fetch notifications and count ---
     fetchNotifications();
     updateUnreadCount();
@@ -2621,8 +2654,13 @@ document.addEventListener('DOMContentLoaded', function() {
             dropdown.style.display = 'block';
             // Show cached notifications instantly
             renderNotifications();
-            // Then fetch fresh data in background (optional, but keeps it updated)
+            // Then fetch fresh data in background
             fetchNotifications();
+
+            // --- NEW: Mark all currently unread notifications as read ---
+            if (unreadIds.size > 0) {
+                markAsRead(Array.from(unreadIds));
+            }
         } else {
             dropdown.style.display = 'none';
         }
@@ -2635,25 +2673,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- Click outside to close and mark as read ---
+    // --- Click outside to close (optional, but kept for safety) ---
     document.addEventListener('click', (e) => {
         if (!fab.contains(e.target) && dropdown.style.display === 'block') {
+            console.log('Dropdown closing, unreadIds size:', unreadIds.size);   // DEBUG
             dropdown.style.display = 'none';
+            // Optionally mark any remaining unread (should be none if marked on open)
             if (unreadIds.size > 0) {
-                fetch('/notifications/mark-read', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ids: Array.from(unreadIds)})
-                })
-                .then(() => {
-                    // Update local cache: mark those as read
-                    cachedNotifications = cachedNotifications.map(n => {
-                        if (unreadIds.has(n.id)) n.is_read = 1;
-                        return n;
-                    });
-                    updateUnreadCount();
-                    unreadIds.clear();
-                });
+                markAsRead(Array.from(unreadIds));
             }
         }
     });

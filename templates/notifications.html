@@ -132,7 +132,7 @@
     {% if notifications %}
         <div class="notifications-list">
             {% for n in notifications %}
-            <div class="notification-item {% if not n.is_read %}unread{% endif %}">
+            <div class="notification-item {% if not n.is_read %}unread{% endif %}" data-notification-id="{{ n.id }}">
                 <div class="notification-icon">
                     <i class="fas fa-store-alt"></i>
                 </div>
@@ -161,4 +161,33 @@
         </div>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const unreadItems = document.querySelectorAll('.notification-item.unread');
+    console.log('Unread items found:', unreadItems.length);
+    if (unreadItems.length === 0) return;
+
+    const unreadIds = Array.from(unreadItems).map(item => {
+        const id = item.dataset.notificationId;
+        console.log('Item ID from dataset:', id);
+        return id;
+    });
+    console.log('Sending IDs to mark-read:', unreadIds);
+
+    fetch('/notifications/mark-read', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ids: unreadIds})
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log('Mark-read response:', data);
+        if (data.success) {
+            unreadItems.forEach(item => item.classList.remove('unread'));
+        }
+    })
+    .catch(err => console.error('Fetch error:', err));
+});
+</script>
 {% endblock %}
