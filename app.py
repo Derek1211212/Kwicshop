@@ -143,7 +143,9 @@ cloudinary.config(
 )
 
 
-
+@app.context_processor
+def inject_user():
+    return dict(is_logged_in='user_id' in session)
 
 
 
@@ -301,6 +303,8 @@ def _get_category_counts(cursor, *, search, deal_type, location):
     cursor.execute(base_q, tuple(params))
 
     return {row['category']: row['total'] for row in cursor.fetchall()}
+
+
 
 
 
@@ -6940,6 +6944,34 @@ def store_add_item():
 
         conn.commit()
 
+        # ─── NOTIFY FOLLOWERS ─────────────────────────────────────────────
+        if listing_id:
+            try:
+                # Get followers of this store
+                notif_cur = conn.cursor(dictionary=True)
+                notif_cur.execute(
+                    "SELECT user_id FROM follows WHERE store_id = %s",
+                    (store_id,)
+                )
+                followers = notif_cur.fetchall()
+                notif_cur.close()
+
+                if followers:
+                    message = f"New item: {title}"
+                    insert_data = [(f['user_id'], store_id, listing_id, message) for f in followers]
+                    notif_cur = conn.cursor()
+                    notif_cur.executemany(
+                        "INSERT INTO notifications (user_id, store_id, listing_id, message) VALUES (%s, %s, %s, %s)",
+                        insert_data
+                    )
+                    conn.commit()
+                    notif_cur.close()
+            except Exception as notif_e:
+                # Log the error but don't interrupt the user – the listing is already saved
+                print(f"Failed to send notifications: {notif_e}")
+                # The transaction for notifications will be rolled back when the connection closes
+                pass
+
         return jsonify({
             "success": True,
             "message": "Item added successfully!",
@@ -7196,20 +7228,20 @@ def store_detail(slug):
                 store_id,
                 user_id,
                 name,
-                slug,                 -- included for reference/safety
+                slug,
                 logo,
                 banner,
                 tour_video,
                 description,
                 location,
-                contact,              -- store-level contact (fallback)
+                contact,
                 delivery_options,
                 verified,
                 store_type,
                 rating_avg,
                 rating_count,
                 created_at,
-                color_theme           -- for theme selection
+                color_theme
             FROM stores
             WHERE slug = %s 
               AND is_active = 1
@@ -7233,12 +7265,12 @@ def store_detail(slug):
         store['store_type']        = store.get('store_type', 'General')
         store['rating_avg']        = float(store.get('rating_avg') or 0.0)
         store['rating_count']      = int(store.get('rating_count') or 0)
-        store['color_theme']       = store.get('color_theme') or 'default'  # safe fallback
+        store['color_theme']       = store.get('color_theme') or 'default'
 
         # Format join date
         store['join_date'] = store['created_at'].strftime("%b %Y") if store.get('created_at') else "Unknown"
 
-        # 2. Fetch seller username + contact (phone for WhatsApp)
+        # 2. Fetch seller username + contact
         cursor.execute("""
             SELECT 
                 username,
@@ -7256,7 +7288,7 @@ def store_detail(slug):
         is_logged_in = 'user_id' in session
         is_owner = is_logged_in and session.get('user_id') == store['user_id']
 
-        # 4. Fetch active promotion popup (only one per store, if active and in date range)
+        # 4. Fetch active promotion popup
         cursor.execute("""
             SELECT 
                 media_type,
@@ -7273,7 +7305,6 @@ def store_detail(slug):
             LIMIT 1
         """, (store['store_id'],))
         promo = cursor.fetchone() or {}
-        # Simple active flag for template
         promo['active'] = bool(promo.get('media_url'))
 
         # 5. Fetch active listings
@@ -7304,7 +7335,14 @@ def store_detail(slug):
         
         listings = cursor.fetchall()
 
+        # ---------- NEW LOGIC: Add is_new flag ----------
+        now = datetime.now()
+        seven_days_ago = now - timedelta(days=7)
+
         for listing in listings:
+            # Check if created_at is within last 7 days
+            listing['is_new'] = listing['created_at'] >= seven_days_ago
+
             if listing.get('deal_type') == 'Swap Deal':
                 cursor.execute("""
                     SELECT 
@@ -8846,6 +8884,183 @@ def delete_store_listing(slug, listing_id):
         conn.close()
 
     return redirect(url_for('store_inventory', slug=slug))
+
+
+
+
+
+@app.route('/store/<int:store_id>/follow', methods=['POST'])
+def follow_store(store_id):
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': 'You must be logged in'}), 401
+
+    user_id = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(
+            "INSERT INTO follows (user_id, store_id) VALUES (%s, %s)",
+            (user_id, store_id)
+        )
+        conn.commit()
+        return jsonify({'success': True, 'message': 'Store followed'})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 400
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route('/store/<int:store_id>/unfollow', methods=['POST'])
+def unfollow_store(store_id):
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'message': 'Not logged in'}), 401
+
+    user_id = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(
+            "DELETE FROM follows WHERE user_id = %s AND store_id = %s",
+            (user_id, store_id)
+        )
+        conn.commit()
+        return jsonify({'success': True, 'message': 'Store unfollowed'})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 400
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route('/store/<int:store_id>/follow-status', methods=['GET'])
+def follow_status(store_id):
+    if 'user_id' not in session:
+        return jsonify({'followed': False})
+
+    user_id = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute(
+        "SELECT id FROM follows WHERE user_id = %s AND store_id = %s",
+        (user_id, store_id)
+    )
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return jsonify({'followed': row is not None})
+
+
+
+@app.route('/notifications/unread-count', methods=['GET'])
+def unread_notifications_count():
+    if 'user_id' not in session:
+        return jsonify({'count': 0})
+    user_id = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT COUNT(*) FROM notifications WHERE user_id = %s AND is_read = 0",
+        (user_id,)
+    )
+    count = cursor.fetchone()[0]
+    cursor.close()
+    conn.close()
+    return jsonify({'count': count})
+
+    
+
+@app.route('/notifications', methods=['GET'])
+def get_notifications():
+    if 'user_id' not in session:
+        return jsonify([])
+
+    user_id = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Get latest 20 notifications, newest first
+    cursor.execute("""
+        SELECT n.id, n.message, n.is_read, n.created_at,
+               s.name as store_name, s.slug as store_slug,
+               l.listing_id, l.title as item_title
+        FROM notifications n
+        JOIN stores s ON n.store_id = s.store_id
+        LEFT JOIN listings l ON n.listing_id = l.listing_id
+        WHERE n.user_id = %s
+        ORDER BY n.created_at DESC
+        LIMIT 20
+    """, (user_id,))
+    notifications = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+    return jsonify(notifications)
+
+@app.route('/notifications/mark-read', methods=['POST'])
+def mark_notifications_read():
+    if 'user_id' not in session:
+        return jsonify({'success': False}), 401
+
+    data = request.get_json() or {}
+    notification_ids = data.get('ids', [])
+    user_id = session['user_id']
+
+    if not notification_ids:
+        return jsonify({'success': True})
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    # Ensure user can only mark their own notifications as read
+    format_strings = ','.join(['%s'] * len(notification_ids))
+    cursor.execute(
+        f"UPDATE notifications SET is_read = 1 WHERE user_id = %s AND id IN ({format_strings})",
+        (user_id, *notification_ids)
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({'success': True})    
+
+
+
+
+
+
+
+@app.route('/notifications')
+def notifications_page():
+    """Display a full page of all notifications for the logged-in user."""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT n.id, n.message, n.is_read, n.created_at,
+               s.name as store_name, s.slug as store_slug,
+               l.listing_id, l.title as item_title
+        FROM notifications n
+        JOIN stores s ON n.store_id = s.store_id
+        LEFT JOIN listings l ON n.listing_id = l.listing_id
+        WHERE n.user_id = %s
+        ORDER BY n.created_at DESC
+    """, (user_id,))
+    notifications = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return render_template('notifications.html', notifications=notifications)
+
+
+
+
+
 
 
 

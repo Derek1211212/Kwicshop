@@ -302,6 +302,61 @@ footer { background:var(--surface); padding:48px 0 28px; border-top:1px solid va
 .text-center { text-align:center; } .text-muted { color:var(--text-2); }
 .mb-3 { margin-bottom:12px; } .mb-4 { margin-bottom:16px; }
 .mt-3 { margin-top:12px; }   .mt-4 { margin-top:16px; }
+
+/* NEW badge styling */
+.new-badge {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: #f97316;        /* bright orange */
+    color: white;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 5px 11px;
+    border-radius: 100px;
+    z-index: 2;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+
+/* Follow button inside seller strip */
+.follow-row {
+    padding: 15px 20px 20px;  /* spacing above the button */
+    text-align: center;
+    border-top: 1px solid var(--border); /* subtle separator */
+    margin-top: 5px;
+}
+.follow-btn {
+    background: white;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 10px 28px;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: var(--font-display);
+    min-width: 140px;
+}
+.follow-btn.following {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+.follow-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 480px) {
+    .follow-btn {
+        width: 100%;
+        max-width: 280px;
+    }
+}
     </style>
 </head>
 <body>
@@ -353,6 +408,16 @@ footer { background:var(--surface); padding:48px 0 28px; border-top:1px solid va
                 <div><div class="strip-label">Rating</div><div class="strip-value">{{ store.rating_avg|round(1) or '0.0' }} ({{ store.rating_count or 0 }})</div></div>
             </div>
         </div>
+
+        <!-- Follow button row (only for logged‑in non‑owners) -->
+        {% if is_logged_in and not is_owner %}
+        <div class="follow-row">
+            <button id="followBtn" class="follow-btn" data-store-id="{{ store.store_id }}">
+                <span class="follow-text">Follow Store</span>
+                <span class="following-text" style="display:none;">Following</span>
+            </button>
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -434,19 +499,25 @@ footer { background:var(--surface); padding:48px 0 28px; border-top:1px solid va
             <div class="products-grid" id="productsGrid">
                 {% if listings %}
                     {% for listing in listings %}
-                        <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
-                           class="product-card-link track-listing"
-                           data-listing-id="{{ listing.listing_id }}">
-                            <div class="product-card {% if listing.deal_type == 'Swap Deal' %}swap-card{% endif %}"
-                                 data-title="{{ listing.title|lower }}"
-                                 data-description="{{ (listing.description or '')|lower }}"
-                                 data-category="{{ (listing.category or '')|lower }}">
+                <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
+                   class="product-card-link track-listing"
+                   data-listing-id="{{ listing.listing_id }}">
+                    <div class="product-card {% if listing.deal_type == 'Swap Deal' %}swap-card{% endif %}"
+                         data-title="{{ listing.title|lower }}"
+                         data-description="{{ (listing.description or '')|lower }}"
+                         data-category="{{ (listing.category or '')|lower }}">
 
-                                {% if listing.deal_type == 'Swap Deal' %}
-                                    <span class="deal-badge swap">{{ listing.deal_type }}</span>
-                                {% else %}
-                                    <span class="deal-badge sale">{{ listing.deal_type or 'For Sale' }}</span>
-                                {% endif %}
+                        <!-- Deal badge (existing) -->
+                        {% if listing.deal_type == 'Swap Deal' %}
+                            <span class="deal-badge swap">{{ listing.deal_type }}</span>
+                        {% else %}
+                            <span class="deal-badge sale">{{ listing.deal_type or 'For Sale' }}</span>
+                        {% endif %}
+
+                        <!-- NEW badge for recent items -->
+                        {% if listing.is_new %}
+                            <span class="new-badge">NEW</span>
+                        {% endif %}
 
                                 <div class="product-media">
                                     {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 0 %}
@@ -805,6 +876,53 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }
+});
+</script>
+
+<script>
+    // Follow/unfollow functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const followBtn = document.getElementById('followBtn');
+    if (!followBtn) return;
+
+    const storeId = followBtn.dataset.storeId;
+
+    // Check initial follow status
+    fetch(`/store/${storeId}/follow-status`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.followed) {
+                followBtn.classList.add('following');
+                followBtn.querySelector('.follow-text').style.display = 'none';
+                followBtn.querySelector('.following-text').style.display = 'inline';
+            }
+        });
+
+    // Handle click
+    followBtn.addEventListener('click', function() {
+        const isFollowing = this.classList.contains('following');
+        const url = isFollowing ? `/store/${storeId}/unfollow` : `/store/${storeId}/follow`;
+
+        fetch(url, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    this.classList.toggle('following');
+                    const followText = this.querySelector('.follow-text');
+                    const followingText = this.querySelector('.following-text');
+                    if (this.classList.contains('following')) {
+                        followText.style.display = 'none';
+                        followingText.style.display = 'inline';
+                    } else {
+                        followText.style.display = 'inline';
+                        followingText.style.display = 'none';
+                    }
+                } else {
+                    alert(data.message || 'Something went wrong');
+                }
+            })
+            .catch(() => alert('Network error – please try again'));
+    });
 });
 </script>
 

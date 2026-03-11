@@ -630,8 +630,40 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
-    .header-nav, .store-link-container { display: none; }
-    .mobile-menu-toggle { display: block; }
+    /* Hide the desktop navigation only */
+    .header-nav {
+        display: none;
+    }
+
+    /* Allow the header to wrap and adjust spacing */
+    .header-container {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    /* The div containing logo + store link */
+    .header-container > div:first-child {
+        flex: 1 1 auto;
+        min-width: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    /* Make the store link container visible and mobile-friendly */
+    .store-link-container {
+        display: flex !important;   /* override any previous hiding */
+        margin-left: 0;
+        padding: 4px 10px;
+        font-size: 0.75rem;
+    }
+
+    /* Keep the mobile menu toggle visible and non‑wrapping */
+    .mobile-menu-toggle {
+        flex-shrink: 0;
+    }
+
+    /* Rest of your existing mobile styles remain unchanged */
     .container { padding: 1rem; }
     .page-header { padding: 1.5rem; }
     .page-header h1 { font-size: 1.5rem; }
@@ -655,6 +687,68 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
 .metrics-grid { animation: fadeUp 0.4s 0.06s ease both; }
 .products-section { animation: fadeUp 0.4s 0.1s ease both; }
 .content-grid { animation: fadeUp 0.4s 0.14s ease both; }
+
+
+/* Stack the store link and copy button vertically inside the page header */
+.page-header .store-link-container {
+    flex-direction: column;      /* stack children */
+    align-items: stretch;        /* make children full width */
+    gap: 10px;                   /* space between the two buttons */
+    margin: 1rem 0 0.5rem 0;     /* add some spacing around */
+    background: transparent;      /* remove container background */
+    border: none;                 /* remove container border */
+    padding: 0;                   /* remove container padding */
+}
+
+/* Style the "View Store" link as a solid button */
+.page-header .store-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: white;
+    border: 1.5px solid var(--primary);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 1rem;
+    color: var(--primary-dark);
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.page-header .store-link:hover {
+    background: var(--primary-muted);
+    transform: translateY(-1px);
+}
+
+/* Style the "Copy Link" button as a solid primary button */
+.page-header .copy-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    background: var(--primary);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 1rem;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.page-header .copy-link:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+/* Optional: adjust for very small screens */
+@media (max-width: 480px) {
+    .page-header .store-link-container {
+        margin: 0.75rem 0;
+    }
+}
     </style>
 </head>
 <body>
@@ -664,16 +758,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
     <div class="header-container">
         <div style="display:flex;align-items:center;gap:0">
             <a href="/" class="logo"><i class="fas fa-recycle"></i> kwicshop</a>
-            {% if store.store_link %}
-                <div class="store-link-container">
-                    <a href="{{ store.store_link }}" target="_blank" class="store-link" rel="noopener">
-                        <i class="fas fa-external-link-alt"></i> View Store
-                    </a>
-                    <button class="copy-link" title="Copy store link" type="button" data-copy-link="{{ store.store_link }}">
-                        <i class="far fa-copy"></i>
-                    </button>
-                </div>
-            {% endif %}
+
         </div>
         <nav class="header-nav">
             <a href="/store/{{ store.slug }}" class="active">Home</a>
@@ -718,9 +803,16 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
         <div class="page-header-inner">
             <h1>{{ store.name }}</h1>
             <p>Vendor Dashboard</p>
-            <a href="{{ store.store_link }}" target="_blank" rel="noopener" class="view-store-link">
-                <i class="fas fa-external-link-alt"></i> View public store
-            </a>
+{% if store.store_link %}
+    <div class="store-link-container">
+        <a href="{{ store.store_link }}" target="_blank" class="store-link" rel="noopener">
+            <i class="fas fa-external-link-alt"></i> View Store
+        </a>
+        <button class="copy-link" title="Copy store link" type="button" data-copy-link="{{ store.store_link }}">
+            <i class="far fa-copy"></i> Copy Link
+        </button>
+    </div>
+{% endif %}
             <div class="quick-actions">
                 <button class="btn btn-primary" id="openAddItemModalFull">
                     <i class="fas fa-plus"></i> Add New Item
@@ -870,7 +962,7 @@ body { font-family: var(--font-body); background: var(--bg); color: var(--text);
     <div class="promo-banner">
         <div class="promo-banner-icon"><i class="fas fa-megaphone"></i></div>
         <div>
-            <h3>Run a simple pop-up ad</h3>
+            <h2>Discount & Promo Banner</h2>
             <p>Upload an image/video, write a short offer, pick dates → it shows when customers visit.</p>
         </div>
     </div>
