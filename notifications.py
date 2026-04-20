@@ -12,21 +12,8 @@ VAPID_CLAIMS = {"sub": "mailto:support@kwicshop.com"}
 
 def send_push_notification_to_store_followers(store_id, title, body, url):
     if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
-        print("VAPID keys not configured. Push notifications disabled.")
+        print("VAPID keys not configured.")
         return
-    
-    # Convert private key string to proper format if needed
-    private_key = None
-    try:
-        # Try to load as PEM
-        private_key = serialization.load_pem_private_key(
-            VAPID_PRIVATE_KEY.encode('utf-8'),
-            password=None,
-            backend=default_backend()
-        )
-    except:
-        # If it's already a key object, use as is
-        private_key = VAPID_PRIVATE_KEY
     
     from app import get_db_connection
     
@@ -44,12 +31,11 @@ def send_push_notification_to_store_followers(store_id, title, body, url):
     conn.close()
     
     if not subscriptions:
-        print(f"No subscriptions for store {store_id}")
         return
     
     payload = {"title": title, "body": body, "url": url}
     
-    def send(sub):
+    for sub in subscriptions:
         sub_info = {
             "endpoint": sub['endpoint'],
             "keys": {"p256dh": sub['p256dh'], "auth": sub['auth']}
@@ -58,14 +44,10 @@ def send_push_notification_to_store_followers(store_id, title, body, url):
             webpush(
                 subscription_info=sub_info,
                 data=json.dumps(payload),
-                vapid_private_key=private_key,
-                vapid_claims=VAPID_CLAIMS
+                vapid_private_key=VAPID_PRIVATE_KEY,
+                vapid_claims=VAPID_CLAIMS,
+                content_encoding="aes128gcm"
             )
-            print(f"Push sent to {sub['endpoint'][:50]}...")
-        except WebPushException as e:
+            print(f"Push sent successfully")
+        except Exception as e:
             print(f"Push failed: {e}")
-    
-    for sub in subscriptions:
-        t = threading.Thread(target=send, args=(sub,))
-        t.daemon = True
-        t.start()
