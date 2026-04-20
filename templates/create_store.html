@@ -974,18 +974,24 @@ form.addEventListener('submit', async function(e) {
 
     try {
         const formData = new FormData(this);
-        const response = await fetch('/create-store', {
-            method: 'POST',
-            body: formData,
-            credentials: 'include'
-        });
+const response = await fetch('/create-store', {
+    method: 'POST',
+    body: formData,
+    credentials: 'include',
+    headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+    }
+});
+
+        const rawBody = await response.text();
 
         let data;
-        const rawBody = await response.text();
         try {
             data = JSON.parse(rawBody);
-        } catch {
-            throw new Error(`Server returned status ${response.status} but response is not JSON`);
+        } catch (err) {
+            console.error("Non-JSON response from server:", rawBody);
+            throw new Error(`Server returned ${response.status} but not JSON`);
         }
 
         if (response.ok && data?.success === true) {

@@ -603,7 +603,7 @@
     <h2 class="modal-title">Make a Swap Offer</h2>
     <p class="modal-sub">Fill in the details and we'll connect you with the seller via WhatsApp.</p>
 
-    <form id="proposalForm" action="{{ url_for('create_proposal', listing_id=listing_id) }}" method="POST" enctype="multipart/form-data" novalidate>
+    <form id="proposalForm" action="{{ url_for('create_proposal', listing_id=listing.listing_id) }}"  method="POST" enctype="multipart/form-data" novalidate>
       <div class="form-group">
         <label class="form-label"><i class="fas fa-gift"></i> Item You're Offering <span class="required">*</span></label>
         <input type="text" class="form-ctrl" id="proposed_item" name="proposed_item" required placeholder="e.g. Samsung Galaxy S22">

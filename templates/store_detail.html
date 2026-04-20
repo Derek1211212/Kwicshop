@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Nunito+Sans:opsz,wght@6..12,400;6..12,500;6..12,600;6..12,700&display=swap" rel="stylesheet">
 
-        <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ store.store_link }}">
     <meta property="og:title" content="{{ store.name }} – Shop on kwicshop">
@@ -17,12 +16,12 @@
     <meta property="og:image:height" content="630">
     <meta property="og:site_name" content="kwicshop">
 
-    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ store.name }} – kwicshop">
     <meta name="twitter:description" content="{{ store.description | truncate(200) if store.description else 'Browse items and deals from this vendor.' }}">
     <meta name="twitter:image" content="{{ store.logo or url_for('static', filename='images/default-store-og.jpg', _external=True) }}">
     <meta name="twitter:url" content="{{ store.store_link }}">
+
     <style>
 :root {
     --primary: {% if store.color_theme == 'default' or store.color_theme is none %}#16a34a{% elif store.color_theme == 'warm-food' %}#dc2626{% elif store.color_theme == 'cool-ocean' %}#2563eb{% elif store.color_theme == 'gold-premium' %}#d97706{% elif store.color_theme == 'purple-luxury' %}#7c3aed{% elif store.color_theme == 'forest-green' %}#15803d{% elif store.color_theme == 'coral-vibrant' %}#e11d48{% elif store.color_theme == 'midnight-dark' %}#7c3aed{% elif store.color_theme == 'emerald-teal' %}#0d9488{% elif store.color_theme == 'sunset-orange' %}#ea580c{% elif store.color_theme == 'lavender-plum' %}#9333ea{% elif store.color_theme == 'sky-blue' %}#0284c7{% elif store.color_theme == 'ruby-red' %}#dc2626{% elif store.color_theme == 'mustard-yellow' %}#ca8a04{% elif store.color_theme == 'slate-charcoal' %}#475569{% elif store.color_theme == 'rose-gold' %}#be185d{% elif store.color_theme == 'deep-navy' %}#1e3a8a{% elif store.color_theme == 'burgundy-wine' %}#9f1239{% else %}#16a34a{% endif %};
@@ -50,7 +49,7 @@
 
 *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
 html { font-size:14px; scroll-behavior:smooth; }
-body { font-family:var(--font-body); background:var(--bg); color:var(--text); line-height:1.6; -webkit-font-smoothing:antialiased; }
+body { font-family:var(--font-body); background:var(--bg); color:var(--text); line-height:1.6; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
 
 .container { max-width:100%; margin:0 auto; padding:0 18px; }
 @media(min-width:640px)  { .container { max-width:640px;  padding:0 24px; } }
@@ -58,510 +57,828 @@ body { font-family:var(--font-body); background:var(--bg); color:var(--text); li
 @media(min-width:1024px) { .container { max-width:1024px; } }
 @media(min-width:1280px) { .container { max-width:1240px; } }
 
-/* ── HEADER ── */
-.store-header { background:var(--primary); position:relative; overflow:hidden; }
-.store-header::before { content:''; position:absolute; top:-100px; right:-100px; width:380px; height:380px; border-radius:50%; background:rgba(255,255,255,0.07); pointer-events:none; }
-.store-header::after  { content:''; position:absolute; bottom:10px; left:-70px; width:240px; height:240px; border-radius:50%; background:rgba(255,255,255,0.04); pointer-events:none; }
-.header-inner { position:relative; z-index:2; padding:28px 0 52px; }
-.store-name-row { display:flex; align-items:center; gap:16px; }
-.store-icon { width:54px; height:54px; border-radius:var(--radius); overflow:hidden; flex-shrink:0; background:rgba(255,255,255,0.18); display:flex; align-items:center; justify-content:center; border:2px solid rgba(255,255,255,0.28); backdrop-filter:blur(8px); }
-.store-icon img { width:100%; height:100%; object-fit:cover; }
-.store-icon i { font-size:1.6rem; color:rgba(255,255,255,0.92); }
-.store-name-section { flex:1; min-width:0; }
-.store-name { font-family:var(--font-display); font-size:1.7rem; font-weight:900; color:#fff; letter-spacing:-0.01em; line-height:1.15; }
-.store-tagline { font-size:0.9rem; color:rgba(255,255,255,0.78); margin-top:5px; font-weight:400; }
-.verified-badge { display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.32); color:#fff; font-size:0.72rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; padding:4px 11px; border-radius:100px; margin-left:10px; backdrop-filter:blur(8px); vertical-align:middle; }
-
-/* curved bottom */
-.header-curve { position:relative; z-index:3; background:var(--primary); margin-top:-2px; }
-.header-curve svg { display:block; width:100%; height:36px; }
-
-/* ── SELLER STRIP ── */
-.seller-strip-wrapper { position:relative; z-index:10; margin-top:-1px; }
-.seller-strip { background:var(--surface); border-radius:0 0 var(--radius-lg) var(--radius-lg); border:1px solid var(--border-2); border-top:none; box-shadow:var(--shadow); overflow:hidden; }
-.seller-strip-grid { display:grid; grid-template-columns:repeat(2,1fr); }
-@media(min-width:640px) { .seller-strip-grid { grid-template-columns:repeat(4,1fr); } }
-.seller-strip-item { display:flex; align-items:center; gap:12px; padding:18px 20px; border-right:1px solid var(--border); border-bottom:1px solid var(--border); }
-.seller-strip-item:last-child { border-right:none; }
-@media(min-width:640px) { .seller-strip-item { border-bottom:none; } .seller-strip-item:last-child { border-right:none; } }
-@media(max-width:640px) { .seller-strip-item:nth-child(even) { border-right:none; } .seller-strip-item:nth-child(3), .seller-strip-item:nth-child(4) { border-bottom:none; } }
-.strip-icon-wrap { width:38px; height:38px; border-radius:var(--radius-sm); background:var(--primary-muted); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.strip-icon-wrap i { font-size:0.95rem; color:var(--primary); }
-.strip-label { font-size:0.72rem; color:var(--text-3); font-weight:600; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:2px; }
-.strip-value { font-size:0.9rem; font-weight:700; color:var(--text); font-family:var(--font-display); }
-
-/* ── SEARCH ── */
-.search-section { background:var(--surface); padding:16px 0; position:sticky; top:0; z-index:50; border-bottom:1px solid var(--border-2); box-shadow:0 2px 14px rgba(0,0,0,0.05); margin-top:24px; margin-bottom:32px; }
-.search-container { display:flex; flex-direction:column; gap:12px; }
-.search-bar { position:relative; }
-.search-bar input { width:100%; padding:13px 16px 13px 46px; border:1.5px solid var(--border-2); border-radius:var(--radius); background:var(--bg-2); font-size:0.92rem; font-family:var(--font-body); color:var(--text); transition:all 0.22s var(--ease-smooth); font-weight:500; }
-.search-bar input:focus { outline:none; border-color:var(--primary); background:var(--surface); box-shadow:0 0 0 4px color-mix(in srgb,var(--primary) 11%,transparent); }
-.search-bar input::placeholder { color:var(--text-3); font-weight:400; }
-.search-bar i { position:absolute; left:15px; top:50%; transform:translateY(-50%); color:var(--text-3); font-size:1rem; }
-.filter-chips { display:flex; gap:8px; overflow-x:auto; padding-bottom:3px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
-.filter-chips::-webkit-scrollbar { display:none; }
-.chip { padding:8px 18px; background:var(--bg-2); color:var(--text-2); border-radius:100px; font-size:0.83rem; font-weight:700; border:1.5px solid var(--border-2); white-space:nowrap; flex-shrink:0; cursor:pointer; transition:all 0.2s var(--ease-smooth); font-family:var(--font-body); }
-.chip:hover { border-color:var(--primary); color:var(--primary); background:var(--primary-muted); }
-.chip.active { background:var(--primary); color:#fff; border-color:var(--primary); }
-
-/* ── MAIN ── */
-.main-content { padding-bottom:60px; }
-
-.info-section { display:grid; grid-template-columns:1fr; gap:20px; margin-bottom:40px; }
-@media(min-width:768px) { .info-section { grid-template-columns:1fr 1fr; gap:24px; } }
-
-.info-card { background:var(--surface); border-radius:var(--radius-lg); overflow:hidden; border:1px solid var(--border-2); box-shadow:var(--shadow-sm); }
-.card-header { display:flex; align-items:center; gap:12px; padding:18px 20px 15px; border-bottom:1px solid var(--border); }
-.card-header-icon { width:36px; height:36px; border-radius:var(--radius-sm); background:var(--primary-muted); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.card-header-icon i { font-size:0.95rem; color:var(--primary); }
-.card-title { font-family:var(--font-display); font-size:1rem; font-weight:800; color:var(--text); }
-.card-body { padding:18px 20px; }
-
-.delivery-options { display:grid; grid-template-columns:1fr; gap:10px; }
-@media(min-width:480px) { .delivery-options { grid-template-columns:repeat(2,1fr); } }
-.delivery-option { display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--bg-2); border-radius:var(--radius); border:1px solid var(--border); transition:all 0.2s var(--ease-smooth); }
-.delivery-option:hover { border-color:var(--primary); background:var(--primary-muted); transform:translateY(-1px); }
-.delivery-option-icon { width:32px; height:32px; border-radius:var(--radius-sm); background:var(--primary-muted); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-.delivery-option-icon i { font-size:0.85rem; color:var(--primary); }
-.delivery-text { font-size:0.88rem; font-weight:600; line-height:1.4; color:var(--text-2); }
-
-.tour-video-wrapper { border-radius:var(--radius); overflow:hidden; aspect-ratio:16/9; position:relative; background:#000; }
-.tour-label { position:absolute; top:12px; left:12px; background:rgba(0,0,0,0.68); backdrop-filter:blur(8px); color:#fff; padding:5px 12px; border-radius:100px; font-size:0.72rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; z-index:2; display:flex; align-items:center; gap:6px; }
-.video-placeholder { width:100%; height:100%; background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; padding:24px; text-align:center; }
-.video-placeholder i { font-size:2.4rem; margin-bottom:14px; opacity:0.85; }
-.video-placeholder h4 { font-family:var(--font-display); font-size:1.05rem; font-weight:800; margin-bottom:6px; }
-.video-placeholder p { font-size:0.83rem; opacity:0.75; }
-
-/* ── PRODUCTS ── */
-.products-section { margin-top:8px; }
-.section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
-.section-title { font-family:var(--font-display); font-size:1.55rem; font-weight:900; color:var(--text); letter-spacing:-0.01em; }
-.product-count { font-size:0.8rem; font-weight:700; color:var(--primary); background:var(--primary-muted); padding:6px 14px; border-radius:100px; }
-
-.products-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
-@media(min-width:768px)  { .products-grid { gap:18px; } }
-@media(min-width:1024px) { .products-grid { grid-template-columns:repeat(3,1fr); gap:20px; } }
-@media(min-width:1280px) { .products-grid { grid-template-columns:repeat(4,1fr); gap:22px; } }
-
-.product-card-link { display:block; text-decoration:none; color:inherit; height:100%; }
-.product-card { background:var(--surface); border-radius:var(--radius-lg); overflow:hidden; border:1.5px solid var(--border); transition:transform 0.25s var(--ease), box-shadow 0.25s var(--ease-smooth), border-color 0.25s var(--ease-smooth); display:flex; flex-direction:column; height:100%; position:relative; }
-.product-card-link:hover .product-card { border-color:var(--primary); box-shadow:0 10px 32px color-mix(in srgb,var(--primary) 14%,transparent); transform:translateY(-4px); }
-
-.deal-badge { position:absolute; top:10px; padding:5px 11px; border-radius:100px; font-size:0.68rem; font-weight:800; z-index:2; text-transform:uppercase; letter-spacing:0.06em; }
-.deal-badge.sale { left:10px; background:var(--primary); color:#fff; }
-.deal-badge.swap { right:10px; background:var(--swap); color:#fff; }
-
-/* ── PRODUCT IMAGE — fixed so images never stretch ── */
-.product-image {
-    width:100%;
-    /* fixed height creates a stable container */
-    height:160px;
-    position:relative;
-    overflow:hidden;
-    background:var(--bg-3);
-    /* flex centres a fallback icon if img fails */
-    display:flex;
-    align-items:center;
-    justify-content:center;
+/* ── HERO ── */
+.hero-section {
+    position: relative;
+    width: 100%;
+    background: #000;
+    overflow: hidden;
 }
-@media(min-width:768px)  { .product-image { height:175px; } }
-@media(min-width:1024px) { .product-image { height:195px; } }
-@media(max-width:480px)  { .product-image { height:140px; } }
-
-.product-image img {
-    /* fill the container in both dimensions */
-    position:absolute;
-    inset:0;
-    width:100%;
-    height:100%;
-    /* cover = fills box, clips edges — never stretches */
-    object-fit:cover;
-    object-position:center;
-    transition:transform 0.5s var(--ease-smooth);
-    display:block;
+.hero-video-wrap {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
+    overflow: hidden;
+    /* Desktop: let video dictate its natural height, capped at 72vh */
+    max-height: 72vh;
 }
-.product-card-link:hover .product-image img { transform:scale(1.06); }
-
-/* placeholder icon shown when img is missing/broken */
-.product-image::after {
-    content:'\f03e'; /* fa-image */
-    font-family:'Font Awesome 6 Free';
-    font-weight:900;
-    font-size:2rem;
-    color:var(--text-3);
-    opacity:0.35;
-    pointer-events:none;
+.hero-video-wrap video,
+.hero-video-wrap iframe {
+    /* Desktop: show full video without cropping */
+    width: 100%;
+    height: auto;
+    max-height: 72vh;
+    object-fit: contain;
+    display: block;
 }
-/* hide the pseudo-element once a real image loads */
-.product-image:has(img[src]:not([src=""])) ::after { display:none; }
-
-/* ── SWAP CARD ── */
-.swap-card .product-image { display:none; }
-.swap-row { display:flex; gap:7px; padding:12px 12px 0; background:var(--bg-2); }
-.swap-photo {
-    flex:1;
-    aspect-ratio:1;
-    overflow:hidden;
-    border-radius:var(--radius-sm);
-    border:1px solid var(--border);
-    position:relative;
-    background:var(--bg-3);
-}
-.swap-photo img {
-    position:absolute;
-    inset:0;
-    width:100%;
-    height:100%;
-    object-fit:cover;
-    object-position:center;
-    display:block;
-}
-
-/* ── PRODUCT CONTENT ── */
-.product-content { padding:14px 15px 15px; flex:1; display:flex; flex-direction:column; }
-.product-title { font-family:var(--font-display); font-size:0.92rem; font-weight:800; margin-bottom:7px; line-height:1.35; color:var(--text); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-.product-price { font-family:var(--font-display); font-size:1.2rem; font-weight:900; color:var(--primary); margin-bottom:12px; letter-spacing:-0.01em; }
-.swap-meta { margin-bottom:12px; }
-.swap-offer-line,.swap-wants-line,.swap-cash-line { font-size:0.82rem; margin:5px 0; color:var(--text-2); line-height:1.45; }
-.swap-offer-line strong,.swap-wants-line strong,.swap-cash-line strong { color:var(--text); font-weight:700; }
-.product-footer { margin-top:auto; padding-top:10px; border-top:1px solid var(--border); }
-.product-condition { display:inline-flex; align-items:center; gap:5px; font-size:0.75rem; color:var(--text-3); background:var(--bg-2); padding:4px 10px; border-radius:100px; font-weight:600; border:1px solid var(--border); }
-.product-condition i { font-size:0.7rem; color:var(--primary); }
-
-.empty-state { grid-column:1/-1; padding:56px 24px; text-align:center; background:var(--surface); border-radius:var(--radius-xl); border:2px dashed var(--border-2); }
-.empty-state i { font-size:2.5rem; color:var(--text-3); display:block; margin-bottom:16px; }
-.empty-state h3 { font-family:var(--font-display); font-size:1.2rem; font-weight:800; margin-bottom:8px; }
-.empty-state p { color:var(--text-2); font-size:0.9rem; max-width:280px; margin:0 auto; }
-
-/* ── RATING ── */
-.store-rating-section { background:var(--bg-2); border-top:1px solid var(--border); padding:56px 0; margin-top:48px; }
-.rating-card { max-width:720px; margin:0 auto; background:var(--surface); border-radius:var(--radius-xl); padding:40px 32px; border:1px solid var(--border-2); box-shadow:var(--shadow); }
-@media(max-width:480px) { .rating-card { padding:28px 18px; } }
-.rating-title { font-family:var(--font-display); font-size:1.6rem; font-weight:900; text-align:center; letter-spacing:-0.01em; margin-bottom:6px; color:var(--text); }
-.rating-description { text-align:center; color:var(--text-3); font-size:0.88rem; margin-bottom:28px; }
-.current-rating { text-align:center; margin-bottom:36px; }
-.big-stars { font-size:1.8rem; letter-spacing:3px; margin-bottom:12px; color:var(--gold); }
-.rating-overview { font-size:0.95rem; color:var(--text-2); }
-.rating-overview strong { font-family:var(--font-display); font-size:2.2rem; font-weight:900; color:var(--primary); letter-spacing:-0.02em; line-height:1; }
-.stars-input { display:flex; justify-content:center; gap:8px; margin:20px 0 28px; }
-.star-btn { background:none; border:none; font-size:2rem; color:var(--bg-3); cursor:pointer; transition:all 0.2s var(--ease); padding:4px; line-height:1; }
-.star-btn:hover,.star-btn.active { color:var(--gold); transform:scale(1.15); }
-.rating-comment { width:100%; padding:14px 16px; border:1.5px solid var(--border-2); border-radius:var(--radius); font-size:0.9rem; min-height:96px; resize:vertical; margin-bottom:20px; font-family:var(--font-body); background:var(--bg-2); color:var(--text); transition:all 0.22s var(--ease-smooth); font-weight:500; }
-.rating-comment:focus { border-color:var(--primary); outline:none; box-shadow:0 0 0 4px color-mix(in srgb,var(--primary) 11%,transparent); background:var(--surface); }
-.rating-comment::placeholder { color:var(--text-3); font-weight:400; }
-.btn-submit { padding:12px 32px; font-size:0.92rem; background:var(--primary); color:white; border:none; border-radius:var(--radius); font-weight:800; cursor:pointer; transition:all 0.22s var(--ease-smooth); display:inline-flex; align-items:center; gap:8px; font-family:var(--font-display); }
-.btn-submit:hover:not(:disabled) { background:var(--primary-dark); transform:translateY(-2px); box-shadow:0 6px 20px color-mix(in srgb,var(--primary) 35%,transparent); }
-.btn-submit:disabled { opacity:0.45; cursor:not-allowed; }
-.rating-message { min-height:20px; font-weight:700; text-align:center; margin-top:16px; font-size:0.88rem; }
-.comments-list { margin-top:40px; padding-top:32px; border-top:1px solid var(--border); }
-.comments-list h3 { font-family:var(--font-display); font-size:1.15rem; font-weight:900; text-align:center; margin-bottom:24px; color:var(--text); }
-.comment-item { background:var(--bg-2); border-radius:var(--radius); padding:18px 20px; margin-bottom:14px; border:1px solid var(--border); }
-.comment-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--border); }
-.comment-rating { font-size:1rem; color:var(--gold); }
-.comment-date { color:var(--text-3); font-size:0.8rem; font-weight:600; }
-.comment-text { font-size:0.9rem; line-height:1.6; color:var(--text-2); font-style:italic; }
-.no-comments { text-align:center; padding:28px 0; color:var(--text-3); font-size:0.9rem; }
-.notice-box { display:flex; flex-direction:column; align-items:center; text-align:center; padding:28px 24px; background:var(--primary-muted); border-radius:var(--radius-lg); border:1.5px solid color-mix(in srgb,var(--primary) 20%,transparent); gap:12px; }
-.notice-box i { font-size:1.6rem; color:var(--primary); }
-.notice-box h5 { font-family:var(--font-display); font-size:0.95rem; font-weight:800; color:var(--text); }
-.notice-box p { font-size:0.85rem; color:var(--text-2); }
-
-/* ── FOOTER ── */
-footer { background:var(--surface); padding:48px 0 28px; border-top:1px solid var(--border-2); }
-.footer-content { display:grid; grid-template-columns:1fr; gap:32px; }
-@media(min-width:768px) { .footer-content { grid-template-columns:1.4fr 1fr 1fr 1fr; gap:24px; } }
-.footer-logo { font-family:var(--font-display); font-size:1.5rem; font-weight:900; color:var(--primary); margin-bottom:12px; display:block; }
-.footer-section>p { color:var(--text-3); font-size:0.88rem; line-height:1.7; margin-bottom:20px; }
-.footer-links h4 { font-family:var(--font-display); font-size:0.88rem; font-weight:800; letter-spacing:0.04em; text-transform:uppercase; color:var(--text); margin-bottom:16px; }
-.footer-links ul { list-style:none; }
-.footer-links li { margin-bottom:10px; }
-.footer-links a { color:var(--text-2); text-decoration:none; font-size:0.88rem; display:inline-flex; align-items:center; gap:7px; transition:color 0.2s; font-weight:500; }
-.footer-links a i { font-size:0.75rem; color:var(--text-3); }
-.footer-links a:hover { color:var(--primary); }
-.social-links { display:flex; gap:8px; margin-top:4px; }
-.social-links a { width:36px; height:36px; border-radius:var(--radius-sm); background:var(--bg-2); color:var(--text-2); display:flex; align-items:center; justify-content:center; text-decoration:none; transition:all 0.22s var(--ease-smooth); font-size:0.9rem; border:1px solid var(--border-2); }
-.social-links a:hover { background:var(--primary); color:#fff; border-color:var(--primary); transform:translateY(-2px); }
-.copyright { text-align:center; color:var(--text-3); font-size:0.82rem; padding-top:28px; margin-top:32px; border-top:1px solid var(--border); grid-column:1/-1; }
-
-/* ── FLOAT SUPPORT ── */
-.support-float-btn { position:fixed; bottom:22px; right:22px; z-index:9999; width:54px; height:54px; background:var(--primary); border-radius:50%; box-shadow:0 4px 20px color-mix(in srgb,var(--primary) 40%,rgba(0,0,0,0.2)); display:flex; align-items:center; justify-content:center; color:white; text-decoration:none; transition:all 0.22s var(--ease-smooth); font-size:1.4rem; }
-.support-float-btn:hover { transform:scale(1.1) translateY(-2px); }
-@media(max-width:480px) { .support-float-btn { width:50px; height:50px; bottom:16px; right:16px; } }
-
-/* ── RESPONSIVE ── */
-@media(min-width:768px)  { html { font-size:15px; } .store-name { font-size:2.1rem; } .store-icon { width:60px; height:60px; } .header-inner { padding:36px 0 56px; } }
-@media(min-width:1024px) { .store-name { font-size:2.3rem; } }
-
-/* ── ANIMATION ── */
-@keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
-.store-header   { animation:fadeUp 0.45s ease both; }
-.search-section { animation:fadeUp 0.45s 0.05s ease both; }
-.info-section   { animation:fadeUp 0.45s 0.09s ease both; }
-.products-section { animation:fadeUp 0.45s 0.13s ease both; }
-
-.text-center { text-align:center; } .text-muted { color:var(--text-2); }
-.mb-3 { margin-bottom:12px; } .mb-4 { margin-bottom:16px; }
-.mt-3 { margin-top:12px; }   .mt-4 { margin-top:16px; }
-
-/* NEW badge styling */
-.new-badge {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    background: #f97316;        /* bright orange */
-    color: white;
-    font-size: 0.68rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 5px 11px;
-    border-radius: 100px;
-    z-index: 2;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-
-/* Follow button inside seller strip */
-.follow-row {
-    padding: 15px 20px 20px;  /* spacing above the button */
-    text-align: center;
-    border-top: 1px solid var(--border); /* subtle separator */
-    margin-top: 5px;
-}
-.follow-btn {
-    background: white;
-    border: 2px solid var(--primary);
-    color: var(--primary);
-    font-weight: 700;
-    font-size: 0.9rem;
-    padding: 10px 28px;
-    border-radius: 100px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-family: var(--font-display);
-    min-width: 140px;
-}
-.follow-btn.following {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
-}
-.follow-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-@media (max-width: 480px) {
-    .follow-btn {
+/* Mobile: fixed height, cover-crop to fill nicely */
+@media(max-width:768px) {
+    .hero-video-wrap {
+        height: 260px;
+        max-height: 260px;
+    }
+    .hero-video-wrap video,
+    .hero-video-wrap iframe {
         width: 100%;
-        max-width: 280px;
+        height: 100%;
+        max-height: none;
+        object-fit: cover;
     }
 }
+
+.video-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    text-align: center;
+    gap: 12px;
+    z-index: 0;
+}
+.video-placeholder i { font-size: 3rem; opacity: 0.9; }
+.video-placeholder h2 { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
+.video-placeholder p { font-size: 0.9rem; opacity: 0.8; }
+
+/* Hero Store Identity Panel */
+.hero-identity {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    padding: 0 24px 28px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.hero-store-info {
+    display: flex;
+    align-items: flex-end;
+    gap: 18px;
+}
+.hero-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 18px;
+    border: 3px solid rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.12);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+.hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.hero-avatar i { font-size: 1.8rem; color: rgba(255,255,255,0.7); }
+.hero-store-text { color: white; }
+.hero-store-name {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 6px;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+.hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.hero-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 11px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+}
+.hero-meta-pill.verified {
+    background: color-mix(in srgb, var(--primary) 70%, transparent);
+    border-color: rgba(255,255,255,0.3);
+}
+.hero-meta-pill i { font-size: 0.7rem; }
+.hero-meta-pill .star-i { color: var(--gold); }
+.hero-badge-wrap {
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: 4px;
+}
+@media(max-width:640px) {
+    .hero-identity { padding: 0 14px 20px; gap: 10px; }
+    .hero-avatar { width: 56px; height: 56px; border-radius: 14px; }
+    .hero-store-name { font-size: 1.3rem; }
+    .hero-store-info { gap: 12px; }
+}
+
+/* ── STICKY NAV ── */
+.sticky-nav {
+    position: sticky; top: 0; z-index: 50;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-2);
+    box-shadow: 0 2px 20px rgba(0,0,0,0.07);
+    backdrop-filter: blur(12px);
+}
+.sticky-nav-inner {
+    display: flex; align-items: center; gap: 14px;
+    padding: 10px 0;
+}
+.nav-brand {
+    font-family: var(--font-display);
+    font-size: 1rem; font-weight: 900;
+    color: var(--primary); white-space: nowrap;
+    text-decoration: none;
+    letter-spacing: -0.02em;
+}
+
+/* ── SEARCH + FILTER BLOCK (below profile card) ── */
+.search-filter-block {
+    margin: 0 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.nav-search {
+    position: relative;
+}
+.nav-search input {
+    width:100%; padding:11px 16px 11px 42px;
+    border:1.5px solid var(--border-2);
+    border-radius:var(--radius);
+    background:var(--surface); font-size:0.9rem;
+    font-family:var(--font-body); color:var(--text);
+    transition:all 0.22s var(--ease-smooth); font-weight:500;
+    box-shadow: var(--shadow-sm);
+}
+.nav-search input:focus {
+    outline:none; border-color:var(--primary);
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 12%,transparent);
+}
+.nav-search input::placeholder { color:var(--text-3); font-weight:400; }
+.nav-search i { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-3); font-size:0.9rem; pointer-events:none; }
+
+.filter-chips {
+    display:flex; gap:6px; overflow-x:auto;
+    -webkit-overflow-scrolling:touch; scrollbar-width:none; padding-bottom:2px;
+}
+.filter-chips::-webkit-scrollbar { display:none; }
+.chip {
+    padding: 7px 16px; background:var(--surface); color:var(--text-2);
+    border-radius:100px; font-size:0.8rem; font-weight:700;
+    border:1.5px solid var(--border-2); white-space:nowrap;
+    flex-shrink:0; cursor:pointer;
+    transition:all 0.18s var(--ease-smooth); font-family:var(--font-body);
+    display:inline-flex; align-items:center; gap:6px;
+    box-shadow: var(--shadow-sm);
+}
+.chip:hover { border-color:var(--primary); color:var(--primary); background:var(--primary-muted); }
+.chip.active { background:var(--primary); color:#fff; border-color:var(--primary); box-shadow:0 2px 10px color-mix(in srgb,var(--primary) 30%,transparent); }
+
+/* ── STORE PROFILE CARD ── */
+.store-profile-card {
+    margin: 24px 0;
+    background: var(--surface);
+    border-radius: var(--radius-xl);
+    border: 1.5px solid var(--border-2);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+.store-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+}
+@media(max-width:480px) {
+    .store-stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .store-stats-grid .stat-cell:last-child { grid-column: 1 / -1; border-right: none; }
+}
+.stat-cell {
+    padding: 20px 18px;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    transition: background 0.18s;
+    position: relative;
+    overflow: hidden;
+}
+.stat-cell::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 0;
+    background: var(--primary);
+    border-radius: 0 2px 2px 0;
+    transition: height 0.3s var(--ease-smooth);
+}
+.stat-cell:hover::before { height: 100%; }
+.stat-cell:hover { background: var(--bg-2); }
+.stat-cell:last-child { border-right: none; }
+@media(max-width:480px) {
+    .stat-cell:nth-child(2) { border-right: none; }
+}
+.stat-icon {
+    width: 40px; height: 40px;
+    border-radius: 11px;
+    background: var(--primary-muted);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: transform 0.2s var(--ease);
+}
+.stat-cell:hover .stat-icon { transform: scale(1.1); }
+.stat-icon i { font-size: 0.88rem; color: var(--primary); }
+.stat-label { font-size: 0.67rem; color: var(--text-3); font-weight: 700; letter-spacing:0.05em; text-transform:uppercase; margin-bottom: 2px; }
+.stat-value { font-size: 0.9rem; font-weight: 800; color: var(--text); font-family: var(--font-display); line-height:1.2; }
+.stat-value small { font-size: 0.75rem; color: var(--text-3); font-weight: 500; font-family: var(--font-body); }
+
+.follow-row {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: linear-gradient(135deg, var(--surface) 0%, var(--bg-2) 100%);
+}
+.follow-desc {
+    font-size: 0.82rem;
+    color: var(--text-2);
+    font-weight: 500;
+}
+.follow-desc strong { color: var(--text); }
+.follow-btn {
+    background: transparent;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    font-weight: 800; font-size: 0.83rem;
+    padding: 9px 24px; border-radius: 100px; cursor: pointer;
+    transition: all 0.22s var(--ease);
+    font-family: var(--font-display);
+    display: inline-flex; align-items: center; gap: 7px;
+    white-space: nowrap;
+}
+.follow-btn .heart-icon { transition: transform 0.3s var(--ease); }
+.follow-btn:hover .heart-icon { transform: scale(1.25); }
+.follow-btn.following {
+    background: var(--primary); color: white;
+    box-shadow: 0 4px 16px color-mix(in srgb,var(--primary) 30%,transparent);
+}
+.follow-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px color-mix(in srgb,var(--primary) 28%,transparent); }
+@media(max-width:480px) {
+    .follow-row { flex-direction: column; align-items: stretch; }
+    .follow-btn { width: 100%; justify-content: center; }
+}
+
+/* ── PRODUCTS SECTION ── */
+.products-section { margin-top: 8px; }
+.section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.section-title-wrap { display: flex; align-items: center; gap: 10px; }
+.section-title {
+    font-family: var(--font-display);
+    font-size: 1.35rem; font-weight: 900;
+    color: var(--text); letter-spacing: -0.02em;
+}
+.product-count {
+    font-size: 0.76rem; font-weight: 800; color: var(--primary);
+    background: var(--primary-muted); padding: 5px 13px;
+    border-radius: 100px; font-family: var(--font-display);
+}
+
+/* Grid */
+.products-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+@media(min-width:640px)  { .products-grid { gap:16px; } }
+@media(min-width:1024px) { .products-grid { grid-template-columns:repeat(3,1fr); gap:18px; } }
+@media(min-width:1280px) { .products-grid { grid-template-columns:repeat(4,1fr); gap:20px; } }
+
+.product-card-link { display:block; text-decoration:none; color:inherit; height:100%; }
+.product-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1.5px solid var(--border);
+    transition: transform 0.28s var(--ease), box-shadow 0.28s var(--ease-smooth), border-color 0.2s;
+    display: flex; flex-direction: column; height: 100%;
+    position: relative;
+}
+.product-card-link:hover .product-card {
+    border-color: var(--primary);
+    box-shadow: 0 14px 40px color-mix(in srgb,var(--primary) 13%,transparent), 0 2px 10px rgba(0,0,0,0.06);
+    transform: translateY(-5px);
+}
+
+/* Badges */
+.deal-badge {
+    position: absolute; top: 10px; z-index: 2;
+    padding: 4px 10px; border-radius: 100px;
+    font-size: 0.65rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.06em;
+}
+.deal-badge.sale { left: 10px; background: var(--primary); color: #fff; }
+.deal-badge.swap { right: 10px; background: var(--swap); color: #fff; }
+.new-badge {
+    position: absolute; bottom: 10px; right: 10px; z-index: 2;
+    background: #f97316; color: white;
+    font-size: 0.65rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 4px 10px; border-radius: 100px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.product-media { position: relative; }
+.product-image {
+    width: 100%; height: 160px; position: relative;
+    overflow: hidden; background: var(--bg-3);
+}
+@media(min-width:640px)  { .product-image { height: 172px; } }
+@media(min-width:1024px) { .product-image { height: 188px; } }
+@media(max-width:480px)  { .product-image { height: 140px; } }
+.product-image img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center;
+    transition: transform 0.55s var(--ease-smooth);
+}
+.product-card-link:hover .product-image img { transform: scale(1.07); }
+
+/* Image overlay shimmer on hover */
+.product-image::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, color-mix(in srgb,var(--primary) 18%,transparent) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.product-card-link:hover .product-image::after { opacity: 1; }
+
+.swap-row {
+    display: flex; gap: 6px;
+    padding: 10px 10px 0; background: var(--bg-2);
+}
+.swap-photo {
+    flex: 1; aspect-ratio: 1; overflow: hidden;
+    border-radius: var(--radius-sm); border: 1px solid var(--border);
+    position: relative; background: var(--bg-3);
+}
+.swap-photo img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center;
+}
+.product-content { padding: 13px 14px 14px; flex: 1; display: flex; flex-direction: column; }
+.product-title {
+    font-family: var(--font-display); font-size: 0.88rem; font-weight: 800;
+    margin-bottom: 5px; line-height: 1.35; color: var(--text);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.product-price {
+    font-family: var(--font-display); font-size: 1.15rem; font-weight: 900;
+    color: var(--primary); margin-bottom: 10px; letter-spacing: -0.01em;
+}
+.swap-meta { margin-bottom: 10px; }
+.swap-offer-line,.swap-wants-line,.swap-cash-line {
+    font-size: 0.78rem; margin: 4px 0; color: var(--text-2); line-height: 1.45;
+}
+.swap-offer-line strong,.swap-wants-line strong,.swap-cash-line strong { color: var(--text); font-weight: 700; }
+
+.product-footer { margin-top: auto; padding-top: 9px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.product-condition {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 0.71rem; color: var(--text-3);
+    background: var(--bg-2); padding: 3px 9px;
+    border-radius: 100px; font-weight: 600; border: 1px solid var(--border);
+}
+.product-condition i { font-size: 0.67rem; color: var(--primary); }
+.product-arrow {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--primary-muted);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.22s var(--ease);
+}
+.product-arrow i { font-size: 0.68rem; color: var(--primary); }
+.product-card-link:hover .product-arrow {
+    background: var(--primary);
+    transform: translateX(2px);
+}
+.product-card-link:hover .product-arrow i { color: white; }
+
+.empty-state {
+    grid-column:1/-1; padding: 56px 24px; text-align: center;
+    background: var(--surface); border-radius: var(--radius-xl);
+    border: 2px dashed var(--border-2);
+}
+.empty-state i { font-size: 2.4rem; color: var(--text-3); display: block; margin-bottom: 14px; opacity: 0.4; }
+.empty-state h3 { font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; margin-bottom: 6px; }
+.empty-state p { color: var(--text-2); font-size: 0.88rem; max-width: 280px; margin: 0 auto; }
+
+/* ── RATING SECTION ── */
+.rating-section {
+    margin-top: 56px;
+    padding-top: 56px;
+    border-top: 1px solid var(--border-2);
+}
+.rating-section-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+.rating-section-header h2 {
+    font-family: var(--font-display);
+    font-size: 1.6rem; font-weight: 900;
+    letter-spacing: -0.03em; margin-bottom: 6px;
+}
+.rating-section-header p { color: var(--text-3); font-size: 0.85rem; }
+
+.rating-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    max-width: 700px;
+    margin: 0 auto;
+}
+@media(min-width:640px) {
+    .rating-layout { grid-template-columns: 240px 1fr; }
+}
+
+/* Rating overview panel */
+.rating-overview-panel {
+    background: var(--surface);
+    border-radius: var(--radius-xl);
+    border: 1.5px solid var(--border-2);
+    padding: 28px 20px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.rating-big-num {
+    font-family: var(--font-display);
+    font-size: 4rem; font-weight: 900;
+    color: var(--primary); letter-spacing: -0.05em;
+    line-height: 1;
+}
+.rating-stars-display { font-size: 1.05rem; color: var(--gold); letter-spacing: 2px; }
+.rating-count-text { font-size: 0.78rem; color: var(--text-3); font-weight: 600; }
+.rating-divider { width: 40px; height: 2px; background: var(--border-2); border-radius: 2px; margin: 4px auto; }
+
+/* Rating form panel */
+.rating-form-panel {
+    background: var(--surface);
+    border-radius: var(--radius-xl);
+    border: 1.5px solid var(--border-2);
+    padding: 28px 24px;
+    box-shadow: var(--shadow);
+}
+@media(max-width:480px) { .rating-form-panel { padding: 20px 16px; } }
+
+.stars-input { display:flex; gap:6px; margin:4px 0 20px; }
+.star-btn {
+    background: none; border: none; font-size: 1.9rem;
+    color: var(--bg-3); cursor: pointer;
+    transition: all 0.18s var(--ease); padding: 3px; line-height: 1;
+}
+.star-btn:hover,.star-btn.active { color: var(--gold); transform: scale(1.18); }
+
+.rating-comment {
+    width: 100%; padding: 13px 15px;
+    border: 1.5px solid var(--border-2); border-radius: var(--radius-sm);
+    font-size: 0.88rem; min-height: 88px; resize: vertical;
+    margin-bottom: 18px; font-family: var(--font-body);
+    background: var(--bg-2); color: var(--text);
+    transition: all 0.22s var(--ease-smooth); font-weight: 500;
+}
+.rating-comment:focus {
+    border-color: var(--primary); outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb,var(--primary) 11%,transparent);
+    background: var(--surface);
+}
+.rating-comment::placeholder { color: var(--text-3); font-weight: 400; }
+
+.btn-submit {
+    padding: 11px 28px; font-size: 0.88rem;
+    background: var(--primary); color: white; border: none;
+    border-radius: var(--radius-sm); font-weight: 800; cursor: pointer;
+    transition: all 0.22s var(--ease-smooth);
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--font-display);
+}
+.btn-submit:hover:not(:disabled) {
+    background: var(--primary-dark); transform: translateY(-2px);
+    box-shadow: 0 6px 20px color-mix(in srgb,var(--primary) 32%,transparent);
+}
+.btn-submit:disabled { opacity: 0.45; cursor: not-allowed; }
+.rating-message { min-height: 20px; font-weight: 700; text-align: center; margin-top: 14px; font-size: 0.85rem; }
+
+.notice-box {
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    padding: 24px 20px; background: var(--primary-muted); border-radius: var(--radius-lg);
+    border: 1.5px solid color-mix(in srgb,var(--primary) 20%,transparent); gap: 8px;
+}
+.notice-box i { font-size: 1.5rem; color: var(--primary); }
+.notice-box h5 { font-family: var(--font-display); font-size: 0.92rem; font-weight: 800; color: var(--text); }
+.notice-box p { font-size: 0.82rem; color: var(--text-2); }
+
+/* Reviews */
+.reviews-section {
+    max-width: 700px;
+    margin: 28px auto 0;
+}
+.reviews-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+}
+.reviews-header h3 {
+    font-family: var(--font-display);
+    font-size: 1.05rem; font-weight: 900;
+}
+.reviews-count {
+    font-size: 0.76rem; color: var(--text-3); font-weight: 600;
+}
+.comment-item {
+    background: var(--surface); border-radius: var(--radius-lg);
+    padding: 16px 18px; margin-bottom: 10px;
+    border: 1.5px solid var(--border);
+    transition: border-color 0.18s, box-shadow 0.18s;
+}
+.comment-item:hover {
+    border-color: color-mix(in srgb,var(--primary) 30%,transparent);
+    box-shadow: 0 4px 16px color-mix(in srgb,var(--primary) 6%,transparent);
+}
+.comment-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:9px; padding-bottom:9px; border-bottom:1px solid var(--border); }
+.comment-rating { font-size: 0.9rem; color: var(--gold); }
+.comment-date { color: var(--text-3); font-size: 0.74rem; font-weight: 600; }
+.comment-text { font-size: 0.86rem; line-height: 1.65; color: var(--text-2); font-style: italic; }
+.no-comments { text-align: center; padding: 28px; color: var(--text-3); font-size: 0.88rem; }
+
+/* ── FOOTER ── */
+footer {
+    background: var(--surface);
+    padding: 52px 0 32px;
+    border-top: 1px solid var(--border-2);
+    margin-top: 64px;
+}
+.footer-content { display:grid; grid-template-columns:1fr; gap:32px; }
+@media(min-width:768px) { .footer-content { grid-template-columns:1.5fr 1fr 1fr 1fr; gap:24px; } }
+.footer-logo { font-family:var(--font-display); font-size:1.4rem; font-weight:900; color:var(--primary); margin-bottom:10px; display:block; letter-spacing:-0.02em; }
+.footer-section > p { color:var(--text-3); font-size:0.84rem; line-height:1.7; margin-bottom:18px; }
+.footer-links h4 { font-family:var(--font-display); font-size:0.78rem; font-weight:800; letter-spacing:0.05em; text-transform:uppercase; color:var(--text); margin-bottom:14px; }
+.footer-links ul { list-style:none; }
+.footer-links li { margin-bottom:9px; }
+.footer-links a { color:var(--text-2); text-decoration:none; font-size:0.84rem; display:inline-flex; align-items:center; gap:8px; transition:color 0.2s; font-weight:500; }
+.footer-links a i { font-size:0.72rem; color:var(--text-3); transition:color 0.2s; }
+.footer-links a:hover { color:var(--primary); }
+.footer-links a:hover i { color:var(--primary); }
+.social-links { display:flex; gap:8px; margin-top:4px; }
+.social-links a { width:36px; height:36px; border-radius:10px; background:var(--bg-2); color:var(--text-2); display:flex; align-items:center; justify-content:center; text-decoration:none; transition:all 0.22s var(--ease-smooth); font-size:0.85rem; border:1px solid var(--border-2); }
+.social-links a:hover { background:var(--primary); color:#fff; border-color:var(--primary); transform:translateY(-2px); }
+.copyright { text-align:center; color:var(--text-3); font-size:0.77rem; padding-top:24px; margin-top:28px; border-top:1px solid var(--border); grid-column:1/-1; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+@keyframes scaleIn { from { opacity:0; transform:scale(0.97); } to { opacity:1; transform:scale(1); } }
+
+.hero-section { animation:fadeUp 0.45s ease both; }
+.sticky-nav { animation:fadeUp 0.4s 0.04s ease both; }
+.store-profile-card { animation:fadeUp 0.4s 0.08s ease both; }
+.products-section { animation:fadeUp 0.4s 0.14s ease both; }
+.rating-section { animation:fadeUp 0.4s 0.2s ease both; }
+
+/* Scroll-reveal for cards */
+.product-card {
+    animation: scaleIn 0.3s ease both;
+}
+
+.text-center { text-align:center; }
+.text-muted { color:var(--text-2); }
     </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<header class="store-header">
-    <div class="container">
-        <div class="header-inner">
-            <div class="store-name-row">
-                <div class="store-icon">
-                    {% if store.logo %}<img src="{{ store.logo }}" alt="{{ store.name }} logo">{% else %}<i class="fas fa-store"></i>{% endif %}
-                </div>
-                <div class="store-name-section">
-                    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px">
-                        <h1 class="store-name">{{ store.name }}</h1>
-                        {% if store.verified %}<span class="verified-badge"><i class="fas fa-check-circle"></i> Verified</span>{% endif %}
-                    </div>
-                    <p class="store-tagline">{{ store.description or "Local Ghanaian dishes • International flavors" }}</p>
-                </div>
+<!-- ── HERO ── -->
+<div class="hero-section">
+    <div class="hero-video-wrap">
+        {% if store.tour_video %}
+            <video controls autoplay muted loop playsinline>
+                <source src="{{ store.tour_video }}" type="video/mp4">
+            </video>
+        {% else %}
+            <div class="video-placeholder">
+                <i class="fas fa-video"></i>
+                <h2>Store Tour Coming Soon</h2>
+                <p>Check back later for a virtual walkthrough</p>
             </div>
-        </div>
-    </div>
-</header>
-
-<div class="header-curve">
-    <svg viewBox="0 0 1440 36" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-        <path d="M0,36 L0,0 Q720,36 1440,0 L1440,36 Z" fill="var(--bg)"/>
-    </svg>
-</div>
-
-<!-- SELLER STRIP -->
-<div class="container seller-strip-wrapper">
-    <div class="seller-strip">
-        <div class="seller-strip-grid">
-            <div class="seller-strip-item">
-                <div class="strip-icon-wrap"><i class="fas fa-user"></i></div>
-                <div><div class="strip-label">Seller</div><div class="strip-value">{{ store.seller_username }}</div></div>
-            </div>
-            <div class="seller-strip-item">
-                <div class="strip-icon-wrap"><i class="fas fa-calendar-alt"></i></div>
-                <div><div class="strip-label">Since</div><div class="strip-value">{{ store.join_date }}</div></div>
-            </div>
-            <div class="seller-strip-item">
-                <div class="strip-icon-wrap"><i class="fas fa-map-marker-alt"></i></div>
-                <div><div class="strip-label">Location</div><div class="strip-value">{{ store.location or "Accra, Ghana" }}</div></div>
-            </div>
-            <div class="seller-strip-item">
-                <div class="strip-icon-wrap"><i class="fas fa-star"></i></div>
-                <div><div class="strip-label">Rating</div><div class="strip-value">{{ store.rating_avg|round(1) or '0.0' }} ({{ store.rating_count or 0 }})</div></div>
-            </div>
-        </div>
-
-        <!-- Follow button row (only for logged‑in non‑owners) -->
-        {% if is_logged_in and not is_owner %}
-        <div class="follow-row">
-            <button id="followBtn" class="follow-btn" data-store-id="{{ store.store_id }}">
-                <span class="follow-text">Follow Store</span>
-                <span class="following-text" style="display:none;">Following</span>
-            </button>
-        </div>
         {% endif %}
+        <div class="hero-gradient-top"></div>
+        <div class="hero-gradient-overlay"></div>
     </div>
-</div>
-
-<!-- SEARCH -->
-<div class="search-section">
-    <div class="container">
-        <div class="search-container">
-            <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="Search products in this store…">
+    <div class="hero-identity">
+        <div class="hero-store-info">
+            <div class="hero-avatar">
+                {% if store.logo %}
+                    <img src="{{ store.logo }}" alt="{{ store.name }}">
+                {% else %}
+                    <i class="fas fa-store"></i>
+                {% endif %}
             </div>
-            <div class="filter-chips">
-                <button class="chip active" data-category="">All Products</button>
-                {% for category in categories %}<button class="chip" data-category="{{ category|lower }}">{{ category }}</button>{% endfor %}
-                <button class="chip" data-category="sale"><i class="fas fa-tag"></i> On Sale</button>
+            <div class="hero-store-text">
+                <div class="hero-store-name">{{ store.name }}</div>
+                <div class="hero-meta">
+                    <span class="hero-meta-pill">
+                        <i class="fas fa-map-marker-alt"></i>
+                        {{ store.location or "Accra, Ghana" }}
+                    </span>
+                    <span class="hero-meta-pill">
+                        <i class="fas fa-star star-i" style="color:var(--gold)"></i>
+                        {{ "%.1f"|format(store.rating_avg or 0.0) }}
+                    </span>
+                    {% if store.verified %}
+                    <span class="hero-meta-pill verified">
+                        <i class="fas fa-check-circle"></i> Verified
+                    </span>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- MAIN -->
+<!-- ── MAIN ── -->
 <main class="main-content">
     <div class="container">
 
-        <div class="info-section">
-            <div class="info-card">
-                <div class="card-header">
-                    <div class="card-header-icon"><i class="fas fa-truck-fast"></i></div>
-                    <h3 class="card-title">Delivery Options</h3>
+        <!-- STORE PROFILE CARD -->
+        <div class="store-profile-card">
+            <div class="store-stats-grid">
+                <div class="stat-cell">
+                    <div class="stat-icon"><i class="fas fa-user"></i></div>
+                    <div>
+                        <div class="stat-label">Seller</div>
+                        <div class="stat-value">{{ store.name }}</div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="delivery-options">
-                        {% if store.delivery_options and store.delivery_options is iterable and not store.delivery_options is string %}
-                            {% for option in store.delivery_options %}
-                            <div class="delivery-option">
-                                <div class="delivery-option-icon"><i class="fas fa-shipping-fast"></i></div>
-                                <span class="delivery-text">{{ option }}</span>
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="delivery-option">
-                                <div class="delivery-option-icon"><i class="fas fa-info-circle"></i></div>
-                                <span class="delivery-text">Contact store for delivery options</span>
-                            </div>
-                        {% endif %}
+                <div class="stat-cell">
+                    <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+                    <div>
+                        <div class="stat-label">Member Since</div>
+                        <div class="stat-value">{{ store.created_at }}</div>
+                    </div>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-icon"><i class="fas fa-star"></i></div>
+                    <div>
+                        <div class="stat-label">Rating</div>
+                        <div class="stat-value">
+                            {{ store.rating_avg|round(1) or '0.0' }}
+                            <small>({{ store.rating_count or 0 }})</small>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="info-card tour-section">
-                <div class="card-header">
-                    <div class="card-header-icon"><i class="fas fa-video"></i></div>
-                    <h3 class="card-title">Store Tour</h3>
-                </div>
-                <div class="card-body">
-                    <div class="tour-video-wrapper">
-                        <div class="tour-label"><i class="fas fa-play-circle"></i> Shop Tour</div>
-                        {% if store.tour_video %}
-                            <iframe src="{{ store.tour_video }}" style="width:100%;height:100%;border:none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                        {% else %}
-                            <div class="video-placeholder">
-                                <i class="fas fa-store"></i>
-                                <h4>Store Tour Coming Soon</h4>
-                                <p>Check back later for a virtual tour</p>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
+{% if is_logged_in and not is_owner %}
+<div class="follow-row">
+    <div class="follow-desc">
+        Stay updated with <strong>{{ store.name }}</strong>'s latest listings
+    </div>
+<button id="followBtn" class="follow-btn" data-store-id="{{ store.store_id }}" data-store-name="{{ store.name }}">
+   <i class="far fa-heart heart-icon"></i>
+   <span class="follow-text">Follow Store</span>
+   <span class="following-text" style="display: none;">Following</span>
+</button>
+</div>
+{% endif %}
+        </div>
+
+        <!-- SEARCH & FILTER -->
+        <div class="search-filter-block">
+            <div class="nav-search">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search in {{ store.name }}…">
+            </div>
+            <div class="filter-chips">
+                <button class="chip active" data-category="">All Items</button>
+                {% for category in categories %}
+                    <button class="chip" data-category="{{ category|lower }}">{{ category }}</button>
+                {% endfor %}
+                <button class="chip" data-category="sale"><i class="fas fa-tag"></i> On Sale</button>
             </div>
         </div>
 
-        <!-- Products -->
+        <!-- PRODUCTS -->
         <div class="products-section">
             <div class="section-header">
-                <h2 class="section-title">items</h2>
-                <span class="product-count" id="productCount">{{ listings|length or 0 }} items</span>
+                <div class="section-title-wrap">
+                    <h2 class="section-title">Items</h2>
+                    <span class="product-count" id="productCount">{{ listings|length or 0 }} items</span>
+                </div>
             </div>
 
             <div class="products-grid" id="productsGrid">
                 {% if listings %}
                     {% for listing in listings %}
-                <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
-                   class="product-card-link track-listing"
-                   data-listing-id="{{ listing.listing_id }}">
-                    <div class="product-card {% if listing.deal_type == 'Swap Deal' %}swap-card{% endif %}"
-                         data-title="{{ listing.title|lower }}"
-                         data-description="{{ (listing.description or '')|lower }}"
-                         data-category="{{ (listing.category or '')|lower }}">
+                    <a href="{{ url_for('listing_details', listing_id=listing.listing_id) }}"
+                       class="product-card-link track-listing"
+                       data-listing-id="{{ listing.listing_id }}">
+                        <div class="product-card {% if listing.deal_type == 'Swap Deal' %}swap-card{% endif %}"
+                             data-title="{{ listing.title|lower }}"
+                             data-description="{{ (listing.description or '')|lower }}"
+                             data-category="{{ (listing.category or '')|lower }}">
 
-                        <!-- Deal badge (existing) -->
-                        {% if listing.deal_type == 'Swap Deal' %}
-                            <span class="deal-badge swap">{{ listing.deal_type }}</span>
-                        {% else %}
-                            <span class="deal-badge sale">{{ listing.deal_type or 'For Sale' }}</span>
-                        {% endif %}
+                            {% if listing.deal_type == 'Swap Deal' %}
+                                <span class="deal-badge swap">{{ listing.deal_type }}</span>
+                            {% else %}
+                                <span class="deal-badge sale">{{ listing.deal_type or 'For Sale' }}</span>
+                            {% endif %}
 
-                        <!-- NEW badge for recent items -->
-                        {% if listing.is_new %}
-                            <span class="new-badge">NEW</span>
-                        {% endif %}
+                            {% if listing.is_new %}
+                                <span class="new-badge">NEW</span>
+                            {% endif %}
 
-                                <div class="product-media">
-                                    {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 0 %}
-                                        <div class="swap-row">
-                                            {% for offer in listing.offers[:3] %}
-                                                <div class="swap-photo">
-                                                    <img src="{{ offer.image1 or offer.image_url or '/static/images/placeholder.jpg' }}"
-                                                         alt="{{ offer.title }}" loading="lazy">
-                                                </div>
-                                            {% endfor %}
-                                            {% if listing.offers|length > 3 %}
-                                                <div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-weight:800;font-size:0.85rem;font-family:var(--font-display)">
-                                                    +{{ listing.offers|length - 3 }}
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                    {% else %}
-                                        <div class="product-image">
-                                            <img src="{{ listing.main_image }}"
-                                                 alt="{{ listing.title }}"
-                                                 loading="lazy"
-                                                 onerror="this.style.display='none'">
-                                        </div>
-                                    {% endif %}
-                                </div>
-
-                                <div class="product-content">
-                                    {% if listing.deal_type == 'Swap Deal' %}
-                                        <div class="swap-meta">
-                                            {% set offer_titles = listing.offers | map(attribute='title') | list %}
-                                            <div class="swap-offer-line"><strong>Offer:</strong> {{ offer_titles | join(' + ') }}{% if listing.additional_cash_float > 0 %} + ₵{{ "{:,.2f}".format(listing.additional_cash_float) }}{% endif %}</div>
-                                            <div class="swap-wants-line"><strong>Wants:</strong> {{ listing.desired_swap or 'Any reasonable offer' }}</div>
-                                            {% if listing.required_cash_float > 0 %}<div class="swap-cash-line"><strong>Plus Cash:</strong> ₵{{ "{:,.2f}".format(listing.required_cash_float) }}</div>{% endif %}
-                                        </div>
-                                    {% else %}
-                                        <h3 class="product-title">{{ listing.title }}</h3>
-                                        <div class="product-price">{% if listing.price_float > 0 %}₵{{ "{:,.2f}".format(listing.price_float) }}{% else %}Contact for price{% endif %}</div>
-                                    {% endif %}
-                                    <div class="product-footer">
-                                        {% if listing.condition %}<div class="product-condition"><i class="fas fa-certificate"></i>{{ listing.condition }}</div>{% endif %}
+                            <div class="product-media">
+                                {% if listing.deal_type == 'Swap Deal' and listing.offers|length > 0 %}
+                                    <div class="swap-row">
+                                        {% for offer in listing.offers[:3] %}
+                                            <div class="swap-photo">
+                                                <img src="{{ offer.image1 or offer.image_url or '/static/images/placeholder.jpg' }}"
+                                                     alt="{{ offer.title }}" loading="lazy">
+                                            </div>
+                                        {% endfor %}
+                                        {% if listing.offers|length > 3 %}
+                                            <div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-weight:800;font-size:0.82rem;font-family:var(--font-display)">
+                                                +{{ listing.offers|length - 3 }}
+                                            </div>
+                                        {% endif %}
                                     </div>
+                                {% else %}
+                                    <div class="product-image">
+                                        <img src="{{ listing.main_image }}"
+                                             alt="{{ listing.title }}"
+                                             loading="lazy"
+                                             onerror="this.style.display='none'">
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="product-content">
+                                {% if listing.deal_type == 'Swap Deal' %}
+                                    <div class="swap-meta">
+                                        {% set offer_titles = listing.offers | map(attribute='title') | list %}
+                                        <div class="swap-offer-line"><strong>Offer:</strong> {{ offer_titles | join(' + ') }}{% if listing.additional_cash_float > 0 %} + ₵{{ "{:,.2f}".format(listing.additional_cash_float) }}{% endif %}</div>
+                                        <div class="swap-wants-line"><strong>Wants:</strong> {{ listing.desired_swap or 'Any reasonable offer' }}</div>
+                                        {% if listing.required_cash_float > 0 %}<div class="swap-cash-line"><strong>Plus Cash:</strong> ₵{{ "{:,.2f}".format(listing.required_cash_float) }}</div>{% endif %}
+                                    </div>
+                                {% else %}
+                                    <h3 class="product-title">{{ listing.title }}</h3>
+                                    <div class="product-price">{% if listing.price_float > 0 %}₵{{ "{:,.2f}".format(listing.price_float) }}{% else %}Contact for price{% endif %}</div>
+                                {% endif %}
+                                <div class="product-footer">
+                                    {% if listing.condition %}
+                                        <div class="product-condition"><i class="fas fa-certificate"></i>{{ listing.condition }}</div>
+                                    {% else %}
+                                        <div></div>
+                                    {% endif %}
+                                    <div class="product-arrow"><i class="fas fa-arrow-right"></i></div>
                                 </div>
                             </div>
-                        </a>
+                        </div>
+                    </a>
                     {% endfor %}
                 {% else %}
                     <div class="empty-state">
@@ -573,27 +890,28 @@ footer { background:var(--surface); padding:48px 0 28px; border-top:1px solid va
             </div>
         </div>
 
-        <!-- Rating -->
-        <section class="store-rating-section">
-            <div class="container">
-                <div class="rating-card">
-                    <h2 class="rating-title">Rate this store</h2>
-                    <p class="rating-description text-muted mb-4">Your feedback helps other buyers make informed decisions (1–5 stars)</p>
+        <!-- RATING & REVIEWS -->
+        <div class="rating-section">
+            <div class="rating-section-header">
+                <h2>Ratings &amp; Reviews</h2>
+                <p>Your feedback helps other buyers make informed decisions</p>
+            </div>
 
-                    <div class="current-rating">
-                        <div class="big-stars" id="currentStars"></div>
-                        <div class="rating-overview">
-                            <strong id="avgDisplay">{{ "%.1f"|format(store.rating_avg or 0.0) }}</strong>
-                            <span class="text-muted"> / 5</span>
-                            <span style="margin:0 10px;opacity:0.3">•</span>
-                            <span class="text-muted"><span id="countDisplay">{{ store.rating_count or 0 }}</span> ratings</span>
-                        </div>
-                    </div>
+            <div class="rating-layout">
+                <!-- Overview panel -->
+                <div class="rating-overview-panel">
+                    <div class="rating-big-num" id="avgDisplay">{{ "%.1f"|format(store.rating_avg or 0.0) }}</div>
+                    <div class="rating-stars-display" id="currentStars"></div>
+                    <div class="rating-divider"></div>
+                    <div class="rating-count-text"><span id="countDisplay">{{ store.rating_count or 0 }}</span> ratings</div>
+                </div>
 
+                <!-- Form panel -->
+                <div class="rating-form-panel">
                     {% if is_owner %}
                         <div class="notice-box">
                             <i class="fas fa-info-circle"></i>
-                            <h5>Store owners cannot rate their own store</h5>
+                            <h5>You can't rate your own store</h5>
                             <p>Thank you for understanding.</p>
                         </div>
                     {% elif not is_logged_in %}
@@ -601,9 +919,10 @@ footer { background:var(--surface); padding:48px 0 28px; border-top:1px solid va
                             <i class="fas fa-lock"></i>
                             <h5>Want to rate this store?</h5>
                             <p>Please log in to share your experience.</p>
-                            <a href="/login" class="btn-submit" style="text-decoration:none;margin-top:4px"><i class="fas fa-sign-in-alt"></i> Log In to Rate</a>
+                            <a href="/login" class="btn-submit" style="text-decoration:none;margin-top:6px"><i class="fas fa-sign-in-alt"></i> Log In to Rate</a>
                         </div>
                     {% else %}
+                        <p style="font-size:0.82rem;color:var(--text-3);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">Your rating</p>
                         <form id="ratingForm" class="rating-form">
                             <div class="stars-input" id="interactiveStars">
                                 <button type="button" class="star-btn" data-value="1"><i class="far fa-star"></i></button>
@@ -613,61 +932,76 @@ footer { background:var(--surface); padding:48px 0 28px; border-top:1px solid va
                                 <button type="button" class="star-btn" data-value="5"><i class="far fa-star"></i></button>
                             </div>
                             <textarea id="ratingComment" class="rating-comment" rows="3"
-                                      placeholder="Optional: tell us about your experience (max 250 characters)"
+                                      placeholder="Optional: share your experience (max 250 characters)"
                                       maxlength="250"></textarea>
-                            <div class="text-center">
-                                <button type="button" id="submitRatingBtn" class="btn-submit" disabled>
-                                    <i class="fas fa-paper-plane"></i> Submit Rating
-                                </button>
-                            </div>
+                            <button type="button" id="submitRatingBtn" class="btn-submit" disabled>
+                                <i class="fas fa-paper-plane"></i> Submit Rating
+                            </button>
                             <div id="ratingMessage" class="rating-message"></div>
                         </form>
                     {% endif %}
-
-                    <div class="comments-list">
-                        <h3>Customer Reviews</h3>
-                        {% if ratings and ratings|length > 0 %}
-                            {% for r in ratings %}
-                                <div class="comment-item">
-                                    <div class="comment-header">
-                                        <div class="comment-rating">
-                                            {% for i in range(1,6) %}<i class="{% if i <= r.rating %}fas fa-star{% else %}far fa-star{% endif %}"></i>{% endfor %}
-                                        </div>
-                                        <div class="comment-date">{{ r.created_at.strftime('%b %d, %Y') }}</div>
-                                    </div>
-                                    {% if r.comment %}<div class="comment-text">"{{ r.comment }}"</div>{% endif %}
-                                </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="no-comments">No reviews yet. Be the first to share your experience!</div>
-                        {% endif %}
-                    </div>
                 </div>
             </div>
-        </section>
 
-    </div>
+            <!-- Reviews list -->
+            <div class="reviews-section">
+                <div class="reviews-header">
+                    <h3>Customer Reviews</h3>
+                    {% if ratings %}
+                        <span class="reviews-count">{{ ratings|length }} review{{ 's' if ratings|length != 1 else '' }}</span>
+                    {% endif %}
+                </div>
+                {% if ratings and ratings|length > 0 %}
+                    {% for r in ratings %}
+                    <div class="comment-item">
+                        <div class="comment-header">
+                            <div class="comment-rating">
+                                {% for i in range(1,6) %}<i class="{% if i <= r.rating %}fas fa-star{% else %}far fa-star{% endif %}"></i>{% endfor %}
+                            </div>
+                            <div class="comment-date">{{ r.created_at.strftime('%b %d, %Y') }}</div>
+                        </div>
+                        {% if r.comment %}<div class="comment-text">"{{ r.comment }}"</div>{% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-comments">No reviews yet. Be the first to share your experience!</div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div><!-- /container -->
 </main>
 
-<!-- FOOTER -->
+<!-- ── FOOTER ── -->
 <footer>
     <div class="container">
         <div class="footer-content">
             <div class="footer-section">
-                <span class="footer-logo">kwicshop</span>
-                <p>Your trusted marketplace for buying, selling, and swapping items locally in Ghana.</p>
+                <span class="footer-logo">{{ store.name }}</span>
+                <p>{{ store.description }}</p>
                 <div class="social-links">
-                    <a href="#"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#"><i class="fab fa-twitter"></i></a>
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                    <a href="#"><i class="fab fa-whatsapp"></i></a>
+                    {% if store.facebook_url and store.facebook_url.strip() %}
+                    <a href="{{ store.facebook_url }}" target="_blank" rel="noopener noreferrer"><i class="fab fa-facebook-f"></i></a>
+                    {% endif %}
+                    {% if store.twitter_url and store.twitter_url.strip() %}
+                    <a href="{{ store.twitter_url }}" target="_blank" rel="noopener noreferrer"><i class="fab fa-twitter"></i></a>
+                    {% endif %}
+                    {% if store.instagram_url and store.instagram_url.strip() %}
+                    <a href="{{ store.instagram_url }}" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>
+                    {% endif %}
+                    {% if store.tiktok_url and store.tiktok_url.strip() %}
+                    <a href="{{ store.tiktok_url }}" target="_blank" rel="noopener noreferrer"><i class="fab fa-tiktok"></i></a>
+                    {% endif %}
+                    {% if store.contact %}
+                    <a href="https://wa.me/{{ store.contact|replace('+', '')|replace('(', '')|replace(')', '')|replace(' ', '')|replace('-', '') }}" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                    {% endif %}
                 </div>
             </div>
             <div class="footer-section footer-links"><h4>Shop</h4><ul>
                 <li><a href="#"><i class="fas fa-store"></i> All Stores</a></li>
                 <li><a href="#"><i class="fas fa-tags"></i> Categories</a></li>
                 <li><a href="#"><i class="fas fa-star"></i> Featured Items</a></li>
-                <li><a href="#"><i class="fas fa-tag"></i> Deals & Offers</a></li>
+                <li><a href="#"><i class="fas fa-tag"></i> Deals &amp; Offers</a></li>
             </ul></div>
             <div class="footer-section footer-links"><h4>Support</h4><ul>
                 <li><a href="#"><i class="fas fa-question-circle"></i> Help Center</a></li>
@@ -686,21 +1020,82 @@ footer { background:var(--surface); padding:48px 0 28px; border-top:1px solid va
     </div>
 </footer>
 
-<!-- FLOAT SUPPORT -->
-{% if store.vendor_contact and store.vendor_contact.strip() %}
-    {% set raw = store.vendor_contact.strip() %}
-    {% set clean = raw | replace("+","") | replace(" ","") | replace("-","") | trim %}
-    {% set looks_valid = clean and (clean.startswith("233") or clean.startswith("0") or clean|length >= 9) %}
-    {% if looks_valid %}
-        {% set wa_number = clean if clean.startswith("233") else "233" + clean[1:] if clean.startswith("0") else clean %}
-        <a href="https://wa.me/{{ wa_number }}" target="_blank" rel="noopener noreferrer"
-           title="Customer Support - Chat with {{ store.seller_username }}" class="support-float-btn">
-            <i class="fas fa-headset"></i>
-        </a>
-    {% endif %}
+
+<!-- Floating WhatsApp Button with "Reach Us" label -->
+{% if store.contact %}
+<style>
+    .whatsapp-float {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+    }
+    .whatsapp-label {
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(4px);
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 40px;
+        letter-spacing: 0.3px;
+        font-family: var(--font-display);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        white-space: nowrap;
+    }
+    .whatsapp-icon {
+        background-color: #25D366;
+        color: white;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+        transition: all 0.25s ease;
+        font-size: 28px;
+    }
+    .whatsapp-float:hover .whatsapp-icon {
+        transform: scale(1.08);
+        background-color: #128C7E;
+        box-shadow: 0 10px 28px rgba(37, 211, 102, 0.5);
+    }
+    @media (max-width: 640px) {
+        .whatsapp-icon {
+            width: 48px;
+            height: 48px;
+            font-size: 24px;
+        }
+        .whatsapp-float {
+            bottom: 16px;
+            right: 16px;
+        }
+        .whatsapp-label {
+            font-size: 0.65rem;
+            padding: 3px 8px;
+        }
+    }
+</style>
+<a href="https://wa.me/{{ store.contact|replace('+', '')|replace('(', '')|replace(')', '')|replace(' ', '')|replace('-', '') }}" 
+   class="whatsapp-float" 
+   target="_blank" 
+   rel="noopener noreferrer"
+   aria-label="Chat on WhatsApp">
+    <span class="whatsapp-label">Contact Us</span>
+    <span class="whatsapp-icon"><i class="fab fa-whatsapp"></i></span>
+</a>
 {% endif %}
 
-<!-- PROMO MODAL -->
+
+
+
+<!-- ── PROMO MODAL (unchanged) ── -->
 {% if promo.active %}
 <div class="modal fade" id="promoModal" tabindex="-1" aria-hidden="true" style="display:none;">
     <div class="modal-dialog modal-dialog-centered">
@@ -726,16 +1121,16 @@ footer { background:var(--surface); padding:48px 0 28px; border-top:1px solid va
 .modal-dialog-centered{display:flex;align-items:center;justify-content:center;min-height:calc(100% - 3.5rem)}
 .modal-content{position:relative;display:flex;flex-direction:column;width:100%;pointer-events:auto;background-color:#fff;border-radius:var(--radius-xl);overflow:hidden;border:none;box-shadow:0 24px 64px rgba(0,0,0,0.4)}
 .modal-body{position:relative;flex:1 1 auto;padding:0;background:white}
-.btn-close{position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:50%;background:white;border:1px solid rgba(0,0,0,0.1);color:#333;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;box-shadow:0 2px 10px rgba(0,0,0,0.12);transition:all 0.2s ease;font-family:inherit}
+.btn-close{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;background:white;border:1px solid rgba(0,0,0,0.1);color:#333;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;box-shadow:0 2px 10px rgba(0,0,0,0.12);transition:all 0.2s ease;font-family:inherit}
 .btn-close:hover{background:var(--primary);color:white}
 .modal-media{width:100%;background:#000;height:40vh;min-height:200px;max-height:360px;overflow:hidden;position:relative}
 .modal-media img,.modal-media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block}
 .promo-content{padding:24px;text-align:center}
-.promo-description{font-size:1rem;margin-bottom:18px;color:#333;line-height:1.6;font-family:var(--font-body)}
-.promo-btn{display:inline-block;padding:12px 32px;font-size:0.95rem;font-weight:800;border-radius:var(--radius);background:var(--primary);border:none;color:white;cursor:pointer;text-decoration:none;transition:all 0.2s ease;font-family:var(--font-display)}
+.promo-description{font-size:0.95rem;margin-bottom:16px;color:#333;line-height:1.6;font-family:var(--font-body)}
+.promo-btn{display:inline-block;padding:11px 28px;font-size:0.92rem;font-weight:800;border-radius:var(--radius-sm);background:var(--primary);border:none;color:white;cursor:pointer;text-decoration:none;transition:all 0.2s ease;font-family:var(--font-display)}
 .promo-btn:hover{background:var(--primary-dark);transform:translateY(-2px)}
 .fade{transition:opacity 0.15s linear}
-@media(max-width:576px){.modal-dialog{max-width:88%;margin:1rem auto;min-height:auto}.modal-dialog-centered{min-height:auto}.modal-media{max-height:38vh}.promo-content{padding:18px 16px}}
+@media(max-width:576px){.modal-dialog{max-width:88%;margin:1rem auto;min-height:auto}.modal-dialog-centered{min-height:auto}.modal-media{max-height:38vh}.promo-content{padding:16px}}
 </style>
 <script>
 (function(){document.addEventListener('DOMContentLoaded',function(){
@@ -783,10 +1178,6 @@ document.addEventListener("DOMContentLoaded", function () {
             this.classList.add("active"); filterProducts();
         });
     });
-    filterTargets.forEach(function (el) {
-        el.addEventListener("touchstart", function () { el.style.opacity = "0.9"; }, { passive: true });
-        el.addEventListener("touchend",   function () { el.style.opacity = "1";   }, { passive: true });
-    });
     filterProducts();
 
     function postMetric(url, payload) {
@@ -821,11 +1212,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    document.addEventListener("touchstart", function (e) {
-        var t = (e.target && e.target.tagName) || "";
-        if (t === "INPUT" || t === "TEXTAREA") e.target.style.fontSize = "16px";
-    }, { passive: true });
-
+    // Rating
     var form = document.getElementById("ratingForm");
     if (form) {
         var storeId = {{ store.store_id | tojson | safe }};
@@ -875,56 +1262,225 @@ document.addEventListener("DOMContentLoaded", function () {
                 msgEl.style.color = "#dc2626"; msgEl.textContent = err.message || "Could not submit rating. Please try again."; submitBtn.disabled = false;
             }
         });
+    } else {
+        var currentStarsEl = document.getElementById("currentStars");
+        if (currentStarsEl) {
+            var score = {{ store.rating_avg or 0.0 | tojson | safe }};
+            var full = Math.floor(score), half = (score - full) >= 0.5, html = "";
+            for (var i = 0; i < full; i++) html += '<i class="fas fa-star" style="color:var(--gold)"></i>';
+            if (half) html += '<i class="fas fa-star-half-alt" style="color:var(--gold)"></i>';
+            for (var i = full + (half ? 1 : 0); i < 5; i++) html += '<i class="far fa-star" style="color:var(--gold)"></i>';
+            currentStarsEl.innerHTML = html;
+        }
     }
-});
-</script>
 
-<script>
-    // Follow/unfollow functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const followBtn = document.getElementById('followBtn');
-    if (!followBtn) return;
-
+    // Follow button
+// Enhanced follow button logic with notification prompt
+// ======================== FOLLOW BUTTON + PUSH NOTIFICATIONS ========================
+const followBtn = document.getElementById('followBtn');
+if (followBtn) {
     const storeId = followBtn.dataset.storeId;
+    const followTextSpan = followBtn.querySelector('.follow-text');
+    const followingTextSpan = followBtn.querySelector('.following-text');
+    const heartIcon = followBtn.querySelector('.heart-icon');
 
-    // Check initial follow status
-    fetch(`/store/${storeId}/follow-status`)
+    function setFollowingState(isFollowing) {
+        if (isFollowing) {
+            followBtn.classList.add('following');
+            followTextSpan.style.display = 'none';
+            followingTextSpan.style.display = 'inline';
+            heartIcon.classList.add('fas');
+            heartIcon.classList.remove('far');
+        } else {
+            followBtn.classList.remove('following');
+            followTextSpan.style.display = 'inline';
+            followingTextSpan.style.display = 'none';
+            heartIcon.classList.add('far');
+            heartIcon.classList.remove('fas');
+        }
+    }
+
+    // Fetch initial follow status
+    fetch(`/store/${storeId}/follow-status`, { credentials: 'same-origin' })
         .then(res => res.json())
         .then(data => {
-            if (data.followed) {
-                followBtn.classList.add('following');
-                followBtn.querySelector('.follow-text').style.display = 'none';
-                followBtn.querySelector('.following-text').style.display = 'inline';
+            if (data && typeof data.followed === 'boolean') {
+                setFollowingState(data.followed);
+            } else {
+                setFollowingState(false);
             }
-        });
+        })
+        .catch(err => console.warn('Could not fetch follow status:', err));
 
-    // Handle click
-    followBtn.addEventListener('click', function() {
-        const isFollowing = this.classList.contains('following');
-        const url = isFollowing ? `/store/${storeId}/unfollow` : `/store/${storeId}/follow`;
-
-        fetch(url, { method: 'POST' })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    this.classList.toggle('following');
-                    const followText = this.querySelector('.follow-text');
-                    const followingText = this.querySelector('.following-text');
-                    if (this.classList.contains('following')) {
-                        followText.style.display = 'none';
-                        followingText.style.display = 'inline';
-                    } else {
-                        followText.style.display = 'inline';
-                        followingText.style.display = 'none';
-                    }
+    // Handle follow/unfollow click
+followBtn.addEventListener('click', async function(e) {
+    e.preventDefault();
+    const isCurrentlyFollowing = this.classList.contains('following');
+    const storeId = this.dataset.storeId;
+    const storeName = this.dataset.storeName;  // get store name from attribute
+    const url = isCurrentlyFollowing ? `/store/${storeId}/unfollow` : `/store/${storeId}/follow`;
+    
+    // If trying to follow, check notification permission
+    if (!isCurrentlyFollowing && 'Notification' in window) {
+        if (Notification.permission === 'default') {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                // User denied or dismissed – show guide banner
+                showNotificationGuide(storeName);
+                return;  // Stop follow action
+            }
+        } else if (Notification.permission === 'denied') {
+            // Already blocked – show guide and do not follow
+            showNotificationGuide(storeName);
+            return;
+        }
+    }
+    
+    // Perform follow/unfollow (permission is 'granted' or we are unfollowing)
+    try {
+        const res = await fetch(url, { method: 'POST', credentials: 'same-origin' });
+        const data = await res.json();
+        if (data.success) {
+            setFollowingState(!isCurrentlyFollowing);
+            
+            // If just followed and permission granted, subscribe to push
+            if (!isCurrentlyFollowing && Notification.permission === 'granted') {
+                const subscribed = await subscribeToStore(storeId);
+                if (subscribed) {
+                    console.log('Subscribed to push for store', storeId);
                 } else {
-                    alert(data.message || 'Something went wrong');
+                    alert('Could not subscribe to notifications. Please check your connection.');
                 }
-            })
-            .catch(() => alert('Network error – please try again'));
-    });
+            }
+        } else {
+            alert(data.message || 'Something went wrong.');
+        }
+    } catch (err) {
+        console.error('Follow error:', err);
+        alert('Network error – please try again.');
+    }
 });
-</script>
+}
 
+
+function showNotificationGuide(storeName) {
+    const existingBanner = document.getElementById('notificationGuide');
+    if (existingBanner) existingBanner.remove();
+    
+    const banner = document.createElement('div');
+    banner.id = 'notificationGuide';
+    banner.innerHTML = `
+        <div style="position: fixed; bottom: 20px; left: 20px; right: 20px; max-width: 360px; background: #fff; border-left: 4px solid #f59e0b; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 14px; z-index: 10000;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong style="color: #d97706;">🔔 Notifications blocked</strong>
+                <button id="closeGuideBtn" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">&times;</button>
+            </div>
+            <p style="margin-bottom: 10px; font-size: 0.85rem;">Click lock icon in address bar → Allow notifications</p>
+            <button id="openSettingsBtn" style="background: #16a34a; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">How to enable</button>
+        </div>
+    `;
+    document.body.appendChild(banner);
+    
+    document.getElementById('closeGuideBtn').onclick = () => banner.remove();
+    document.getElementById('openSettingsBtn').onclick = () => {
+        banner.remove();
+        alert('🔔 Click the lock icon in address bar → Notifications → Allow → Refresh page');
+    };
+    
+    setTimeout(() => {
+        if (document.getElementById('notificationGuide')) banner.remove();
+    }, 8000);
+}
+
+
+
+
+
+
+
+
+// ======================== BROWSER PUSH NOTIFICATIONS ========================
+const VAPID_PUBLIC_KEY = '{{ vapid_public_key }}';
+
+// Register service worker
+if ('serviceWorker' in navigator && 'PushManager' in window) {
+    navigator.serviceWorker.register('/static/sw.js')
+        .then(function(swReg) {
+            console.log('Service Worker registered', swReg);
+            window.swRegistration = swReg;
+        })
+        .catch(function(error) {
+            console.error('Service Worker registration failed:', error);
+        });
+} else {
+    console.warn('Push notifications not supported');
+}
+
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
+async function subscribeToStore(storeId) {
+    if (!window.swRegistration) {
+        console.log('Service Worker not ready');
+        return false;
+    }
+    
+    try {
+        const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+        const subscription = await window.swRegistration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: applicationServerKey
+        });
+        
+        const response = await fetch('/store/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                store_id: storeId,
+                subscription: subscription
+            }),
+            credentials: 'same-origin'
+        });
+        const data = await response.json();
+        if (data.success) {
+            console.log('Subscribed to push for store', storeId);
+            return true;
+        } else {
+            console.error('Subscription failed:', data.message);
+            return false;
+        }
+    } catch (err) {
+        console.error('Error subscribing:', err);
+        return false;
+    }
+}
+
+// Unsubscribe (optional)
+async function unsubscribeFromStore(storeId) {
+    if (!window.swRegistration) return false;
+    const subscription = await window.swRegistration.pushManager.getSubscription();
+    if (subscription) {
+        await subscription.unsubscribe();
+        // Optionally notify server to delete subscription
+        await fetch('/store/unsubscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ store_id: storeId }),
+            credentials: 'same-origin'
+        });
+        console.log('Unsubscribed from push notifications');
+        return true;
+    }
+    return false;
+}});
+</script>
 </body>
 </html>

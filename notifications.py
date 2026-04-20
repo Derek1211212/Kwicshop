@@ -1,80 +1,54 @@
 import json
+import os
+import threading
 from pywebpush import webpush, WebPushException
-from flask import current_app
 
-def send_push(user_id, title, body, url="/"):
-    """
-    Sends a web-push notification to every subscription for a given user_id.
-    Expects VAPID config from Flask's current_app.config.
-    """
-    from app import get_db_connection  # Your own DB helper
+VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY')
+VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY')
+VAPID_CLAIMS = {"sub": "mailto:support@kwicshop.com"}
 
-    # Fetch user's push subscriptions
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT endpoint, p256dh, auth
-        FROM push_subscriptions
-        WHERE user_id = %s
-    """, (user_id,))
-    subscriptions = cursor.fetchall()
-    cursor.close()
-    conn.close()
-
-    if not subscriptions:
-        current_app.logger.info(f"[send_push] No subscriptions found for user {user_id}")
+def send_push_notification_to_store_followers(store_id, title, body, url):
+    if not VAPID_PRIVATE_KEY or not VAPID_PUBLIC_KEY:
+        print("VAPID keys not configured. Push notifications disabled.")
         return
-
-    # Build the payload that the service worker will parse
-    payload = json.dumps({
-        "notification": {
-            "title": title,
-            "body": body,
-            "icon": "https://swap-chief.onrender.com/static/icons/ss.png",
-            "badge": "https://swap-chief.onrender.com/static/icons/ss.png",
-            "data": {
-                "url": url
-            }
+    
+    # Import db function here to avoid circular import
+    from app import get_db_connection   # adjust 'app' to your main filename if different
+    
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    
+    cur.execute("""
+        SELECT ps.endpoint, ps.p256dh, ps.auth
+        FROM push_subscriptions ps
+        JOIN follows sf ON ps.user_id = sf.user_id AND ps.store_id = sf.store_id
+        WHERE sf.store_id = %s
+    """, (store_id,))
+    subscriptions = cur.fetchall()
+    cur.close()
+    conn.close()
+    
+    if not subscriptions:
+        return
+    
+    payload = {"title": title, "body": body, "url": url}
+    
+    def send(sub):
+        sub_info = {
+            "endpoint": sub['endpoint'],
+            "keys": {"p256dh": sub['p256dh'], "auth": sub['auth']}
         }
-    })
-
-    # Get VAPID credentials from config
-    vapid_private_key = current_app.config["VAPID_PRIVATE_KEY"]
-    vapid_claims = current_app.config["VAPID_CLAIMS"]
-
-    for sub in subscriptions:
-        subscription_info = {
-            "endpoint": sub["endpoint"],
-            "keys": {
-                "p256dh": sub["p256dh"],
-                "auth": sub["auth"]
-            }
-        }
-
         try:
             webpush(
-                subscription_info=subscription_info,
-                data=payload,
-                vapid_private_key=vapid_private_key,
-                vapid_claims=vapid_claims
+                subscription_info=sub_info,
+                data=json.dumps(payload),
+                vapid_private_key=VAPID_PRIVATE_KEY,
+                vapid_claims=VAPID_CLAIMS
             )
-            current_app.logger.info(f"[send_push] Notification sent to user {user_id}")
-
-        except WebPushException as ex:
-            status = getattr(ex.response, 'status_code', None)
-            current_app.logger.warning(
-                f"[send_push] WebPushException (status {status}) for user {user_id}: {ex}"
-            )
-
-            # Remove expired/invalid subscriptions
-            if status in (404, 410):
-                current_app.logger.info(f"[send_push] Removing expired subscription for user {user_id}")
-                conn2 = get_db_connection()
-                cur2 = conn2.cursor()
-                cur2.execute(
-                    "DELETE FROM push_subscriptions WHERE user_id = %s AND endpoint = %s",
-                    (user_id, sub["endpoint"])
-                )
-                conn2.commit()
-                cur2.close()
-                conn2.close()
+        except WebPushException as e:
+            print(f"Push failed: {e}")
+    
+    for sub in subscriptions:
+        t = threading.Thread(target=send, args=(sub,))
+        t.daemon = True
+        t.start()
