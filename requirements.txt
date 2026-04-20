@@ -16,3 +16,4 @@ python-dotenv==1.2.2
 requests==2.33.1
 urllib3==2.6.3
 Werkzeug==3.1.8
+
