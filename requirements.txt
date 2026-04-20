@@ -23,3 +23,5 @@ cloudinary==1.41.0
 
 python-slugify==8.0.4
 
+pywebpush==1.14.0
+
