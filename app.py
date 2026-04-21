@@ -759,6 +759,31 @@ def store_home(store_id):
 
 
 
+
+
+
+@app.route('/store/<int:store_id>/categories')
+@login_required
+def get_store_categories(store_id):
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("""
+        SELECT DISTINCT category
+        FROM listings
+        WHERE store_id = %s AND category IS NOT NULL AND category != ''
+        ORDER BY category
+    """, (store_id,))
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    categories = [row['category'] for row in rows]
+    return jsonify(categories)
+
+
+
+
+
+
 @app.route('/store/<int:store_id>/update-socials', methods=['POST'])
 @login_required
 def update_store_socials(store_id):
@@ -1079,7 +1104,7 @@ def edit_inventory(slug, listing_id):
     conn.close()
     return render_template('edit_inventory.html', store=store, listing=listing, offers=offers)
 
-    
+
 
 
 
@@ -1844,6 +1869,15 @@ def store_detail(slug):
     # get listings
     cur.execute("SELECT * FROM listings WHERE store_id = %s AND status != 'deleted' ORDER BY created_at DESC", (store['store_id'],))
     listings = cur.fetchall()
+    cur.execute("""
+        SELECT DISTINCT category
+        FROM listings
+        WHERE store_id = %s AND category IS NOT NULL AND category != ''
+        ORDER BY category
+    """, (store['store_id'],))
+    category_rows = cur.fetchall()
+    categories = [row['category'] for row in category_rows]
+
     
     # Process each listing to add computed fields
     for listing in listings:
@@ -1903,6 +1937,7 @@ def store_detail(slug):
         listings=listings,
         ratings=ratings,
         promo=promo,
+        categories=categories, 
         is_logged_in=is_logged_in,
         is_owner=is_owner,
         vapid_public_key=VAPID_PUBLIC_KEY
@@ -2036,6 +2071,77 @@ def listing_details(listing_id):
         listing_id=listing_id,
         similar_listings=similar_listings
     )
+
+
+
+
+
+@app.route('/metrics/listing/impression', methods=['POST'])
+def track_listing_impression():
+    """
+    Increment impressions count for a listing.
+    Expects JSON: { "listing_id": 123 }
+    """
+    data = request.get_json()
+    if not data or 'listing_id' not in data:
+        return jsonify({'error': 'Missing listing_id'}), 400
+
+    listing_id = data['listing_id']
+    user_id = session.get('user_id')  # optional: track per user, but we'll just increment total
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        # Use INSERT ... ON DUPLICATE KEY UPDATE to handle first view
+        cur.execute("""
+            INSERT INTO listing_metrics (listing_id, impressions, clicks, updated_at)
+            VALUES (%s, 1, 0, NOW())
+            ON DUPLICATE KEY UPDATE
+                impressions = impressions + 1,
+                updated_at = NOW()
+        """, (listing_id,))
+        conn.commit()
+        return jsonify({'success': True}), 200
+    except mysql.connector.Error as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+
+@app.route('/metrics/listing/click', methods=['POST'])
+def track_listing_click():
+    """
+    Increment clicks count for a listing.
+    Expects JSON: { "listing_id": 123 }
+    """
+    data = request.get_json()
+    if not data or 'listing_id' not in data:
+        return jsonify({'error': 'Missing listing_id'}), 400
+
+    listing_id = data['listing_id']
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            INSERT INTO listing_metrics (listing_id, impressions, clicks, updated_at)
+            VALUES (%s, 0, 1, NOW())
+            ON DUPLICATE KEY UPDATE
+                clicks = clicks + 1,
+                updated_at = NOW()
+        """, (listing_id,))
+        conn.commit()
+        return jsonify({'success': True}), 200
+    except mysql.connector.Error as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+
+
+
 
 
 

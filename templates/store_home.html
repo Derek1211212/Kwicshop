@@ -1135,9 +1135,23 @@
                 <div class="modal-step-content active" data-step="1">
                     <h3 style="font-family:var(--font-display);font-weight:900;margin-bottom:1.5rem;letter-spacing:-0.01em">Item Details</h3>
                     <div style="display:grid;gap:1rem">
-                        <div class="form-group"><label class="form-label">Item Name *</label><input type="text" name="title" class="form-input" required></div>
-                        <div class="form-group"><label class="form-label">Listing Description *</label><textarea name="description" rows="4" class="form-textarea" required></textarea></div>
-                        <div class="form-group"><label class="form-label">Category *</label><div class="category-input-wrapper"><input type="text" name="category" class="form-input category-input" required placeholder="Type to search or select category" autocomplete="off"><div class="category-suggestions"></div></div></div>
+                        <div class="form-group">
+                            <label class="form-label">Item Name *</label>
+                            <input type="text" name="title" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Listing Description *</label>
+                            <textarea name="description" rows="4" class="form-textarea" required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Category of Product *</label>
+                            <div class="category-input-wrapper">
+                                <input type="text" name="category" class="form-input category-input" required placeholder="Type category of product" autocomplete="off">
+                                <div class="category-suggestions">
+                                </div>
+                            </div>
+                        </div>
                         <div class="form-group"><label class="form-label">Price (₵) *</label><input type="number" step="0.01" name="price" class="form-input" required placeholder="0.00"></div>
                         <div class="form-group"><label class="form-label">Condition *</label><select name="condition" class="form-select" required><option value="">Select condition</option><option>New</option><option>Slightly Used</option><option>Used but in Good Condition</option><option>Used and needs repairs</option></select></div>
                         <div class="form-group">
@@ -1346,7 +1360,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     })();
 
-    // --- Add Item Modal (simplified) ---
+    // ========== ADD ITEM MODAL (SIMPLIFIED – ONLY OUTRIGHT SALE, NO PLAN) ==========
     const modal = document.getElementById('addItemModal');
     if (!modal) return;
     const openBtns = [document.getElementById('openAddItemModal'), document.getElementById('openAddItemModalFull'), document.getElementById('fabAddItem'), document.getElementById('openAddItemModalFull2')];
@@ -1368,32 +1382,109 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.next-step').forEach(b => b.addEventListener('click', () => { const cur = parseInt(b.closest('.modal-step-content')?.dataset.step||0,10)+1; if (cur<=stepContents.length) goToStep(cur); }));
     document.querySelectorAll('.prev-step').forEach(b => b.addEventListener('click', () => { const cur = parseInt(b.closest('.modal-step-content')?.dataset.step||0,10)-1; if (cur>=1) goToStep(cur); }));
 
-    // Categories autocomplete (simplified)
-    const categories = ["Electronics","Clothing","Books","Furniture","Houses & Apartments","Toys","Lands & Plots","Real Estate Services","Sports","Beauty","Automobile & Vehicles","Music","Movies","Games","Pets","Mobile Phones & Accessories","Industrial & Scientific","Computer & Accessories","Food & Drinks","Agriculture & Agribusiness"];
-    const foodCategories = ["Food & Drinks","Agriculture & Agribusiness"];
+    // ========== DYNAMIC CATEGORY AUTOCOMPLETE (store-specific) ==========
+    let storeCategories = [];
+    const storeIdForCategories = {{ store.store_id }};
+
+    // Fetch existing categories for this store
+    fetch(`/store/${storeIdForCategories}/categories`, {
+        credentials: 'same-origin'
+    })
+    .then(res => res.json())
+    .then(data => {
+        storeCategories = data;
+        console.log('Loaded store categories:', storeCategories);
+    })
+    .catch(err => console.error('Failed to load store categories:', err));
+
     function updateCondition(input) {
-        const container = input.closest('.modal-step-content'); if (!container) return;
-        const sel = container.querySelector('select[name="condition"]'); if (!sel) return;
-        const cat = input.value.trim(); const opts = foodCategories.includes(cat) ? ["Fresh","Good","Near Expiry","Processed","Dried","Organic"] : ["New","Slightly Used","Used but in Good Condition","Used - Needs Repair"];
-        const curVal = sel.value; sel.innerHTML = '<option value="" disabled selected>Select condition</option>' + opts.map(o => `<option value="${o}">${o}</option>`).join('');
+        const container = input.closest('.modal-step-content');
+        if (!container) return;
+        const sel = container.querySelector('select[name="condition"]');
+        if (!sel) return;
+        const cat = input.value.trim();
+        const foodCategories = ["Food & Drinks","Agriculture & Agribusiness"];
+        const opts = foodCategories.includes(cat)
+            ? ["Fresh","Good","Near Expiry","Processed","Dried","Organic"]
+            : ["New","Slightly Used","Used but in Good Condition","Used - Needs Repair"];
+        const curVal = sel.value;
+        sel.innerHTML = '<option value="" disabled selected>Select condition</option>' + opts.map(o => `<option value="${o}">${o}</option>`).join('');
         if (curVal && opts.includes(curVal)) sel.value = curVal;
     }
+
     function attachCategoryAutocomplete(scope) {
         scope.querySelectorAll('.category-input').forEach(input => {
-            input.removeEventListener('input', catInput); input.removeEventListener('focus', catFocus); input.removeEventListener('blur', catBlur);
-            input.addEventListener('input', catInput); input.addEventListener('focus', catFocus); input.addEventListener('blur', catBlur);
+            input.removeEventListener('input', catInput);
+            input.removeEventListener('focus', catFocus);
+            input.removeEventListener('blur', catBlur);
+            input.addEventListener('input', catInput);
+            input.addEventListener('focus', catFocus);
+            input.addEventListener('blur', catBlur);
         });
     }
+
     function showSuggestions(input, matches) {
-        const wrapper = input.closest('.category-input-wrapper'); if (!wrapper) return;
-        const suggestions = wrapper.querySelector('.category-suggestions'); if (!suggestions) return;
-        suggestions.innerHTML = matches.map(m => `<div>${m}</div>`).join('');
-        suggestions.style.display = matches.length ? 'block' : 'none';
-        suggestions.querySelectorAll('div').forEach(div => { div.addEventListener('click', () => { input.value = div.textContent; suggestions.style.display = 'none'; updateCondition(input); }); });
+        const wrapper = input.closest('.category-input-wrapper');
+        if (!wrapper) return;
+        let suggestionsDiv = wrapper.querySelector('.category-suggestions');
+        if (!suggestionsDiv) {
+            suggestionsDiv = document.createElement('div');
+            suggestionsDiv.className = 'category-suggestions';
+            wrapper.appendChild(suggestionsDiv);
+        }
+        suggestionsDiv.innerHTML = matches.map(m => `<div>${escapeHtml(m)}</div>`).join('');
+        suggestionsDiv.style.display = matches.length ? 'block' : 'none';
+        suggestionsDiv.querySelectorAll('div').forEach(div => {
+            div.addEventListener('click', () => {
+                input.value = div.textContent;
+                suggestionsDiv.style.display = 'none';
+                updateCondition(input);
+            });
+        });
     }
-    function catFocus(e) { const input = e.target; const val = input.value.trim().toLowerCase(); showSuggestions(input, val ? categories.filter(c => c.toLowerCase().includes(val)) : categories); }
-    function catInput(e) { const input = e.target; const val = input.value.trim().toLowerCase(); showSuggestions(input, val ? categories.filter(c => c.toLowerCase().includes(val)) : categories); }
-    function catBlur(e) { setTimeout(() => { const input = e.target; const wrapper = input.closest('.category-input-wrapper'); if (wrapper) { const suggestions = wrapper.querySelector('.category-suggestions'); if (suggestions) suggestions.style.display = 'none'; } if (categories.includes(input.value.trim())) updateCondition(input); }, 200); }
+
+    function catFocus(e) {
+        const input = e.target;
+        const val = input.value.trim().toLowerCase();
+        const matches = val
+            ? storeCategories.filter(c => c.toLowerCase().includes(val))
+            : storeCategories;
+        showSuggestions(input, matches);
+    }
+
+    function catInput(e) {
+        const input = e.target;
+        const val = input.value.trim().toLowerCase();
+        const matches = val
+            ? storeCategories.filter(c => c.toLowerCase().includes(val))
+            : storeCategories;
+        showSuggestions(input, matches);
+    }
+
+    function catBlur(e) {
+        setTimeout(() => {
+            const input = e.target;
+            const wrapper = input.closest('.category-input-wrapper');
+            if (wrapper) {
+                const suggestionsDiv = wrapper.querySelector('.category-suggestions');
+                if (suggestionsDiv) suggestionsDiv.style.display = 'none';
+            }
+            if (storeCategories.includes(input.value.trim())) {
+                updateCondition(input);
+            }
+        }, 200);
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    // Attach autocomplete to the modal
     attachCategoryAutocomplete(modal);
 
     // Image preview
