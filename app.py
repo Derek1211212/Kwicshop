@@ -132,7 +132,7 @@ def delete_from_cloudinary(public_id, resource_type="image"):
         return False
 
 
-        
+
 
 def send_email_notification(recipient, subject, body):
     """Simple SMTP mail (MailerSend or any SMTP)"""
@@ -1078,6 +1078,8 @@ def edit_inventory(slug, listing_id):
     cur.close()
     conn.close()
     return render_template('edit_inventory.html', store=store, listing=listing, offers=offers)
+
+    
 
 
 
