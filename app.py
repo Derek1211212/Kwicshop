@@ -597,10 +597,13 @@ def create_store():
         logo = None
         banner = None
         
-        if 'logo' in request.files:
-            logo = upload_to_cloudinary(request.files['logo'], 'stores/logos')
-        if 'banner' in request.files:
-            banner = upload_to_cloudinary(request.files['banner'], 'stores/banners')
+        if 'logo' in request.files and request.files['logo'].filename != '':
+            logo_upload = upload_to_cloudinary(request.files['logo'], 'stores/logos')
+            logo = logo_upload.get('secure_url')  # 👈 FIX
+
+        if 'banner' in request.files and request.files['banner'].filename != '':
+            banner_upload = upload_to_cloudinary(request.files['banner'], 'stores/banners')
+            banner = banner_upload.get('secure_url')  # 👈 FIX
         
         conn = get_db_connection()
         cur = conn.cursor()
