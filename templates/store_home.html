@@ -6,6 +6,9 @@
     <title>{{ store.name }} - Vendor Dashboard | kwicshop</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Nunito+Sans:opsz,wght@6..12,400;6..12,500;6..12,600;6..12,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/introjs.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/intro.min.js"></script>
     <style>
         /* ---------- ORIGINAL STYLES (preserved) ---------- */
         :root {
@@ -768,6 +771,85 @@
         .btn:active { transform: scale(0.96); }
         .theme-option { transition: transform 0.1s ease; }
         .theme-option:active { transform: scale(0.97); }
+
+
+/* ===================== INTRO.JS CUSTOM THEME ===================== */
+
+.introjs-tooltip {
+    font-family: var(--font-body);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    max-width: 380px;
+    padding: 14px 16px;
+}
+
+/* ===================== BUTTONS ===================== */
+
+/* Primary buttons (Next / Done) */
+.introjs-button {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 40px;
+    padding: 8px 18px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.25s ease;
+}
+
+.introjs-button:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+/* Skip button */
+.introjs-skipbutton {
+    color: var(--text-2);
+    background: transparent;
+    border: 1px solid var(--border-2);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: all 0.25s ease;
+}
+
+.introjs-skipbutton:hover {
+    background: var(--primary-muted);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* Disabled state */
+.introjs-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===================== TOOLTIP LAYOUT ===================== */
+
+.introjs-tooltipbuttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+/* Button order */
+.introjs-prevbutton { order: 1; }
+.introjs-nextbutton { order: 2; }
+.introjs-skipbutton { order: 3; }
+
+/* ===================== HIGHLIGHT LAYER ===================== */
+
+.introjs-helperLayer {
+    border-radius: var(--radius-sm);
+    box-shadow: 
+        0 0 0 4px rgba(22, 163, 74, 0.25),
+        0 0 0 9999px rgba(0, 0, 0, 0.65);
+    transition: all 0.3s ease;
+}
     </style>
 </head>
 <body>
@@ -789,9 +871,12 @@
             <a href="/store/{{ store.slug }}" class="active">Dashboard</a>
             <a href="{{ url_for('store_inventory', slug=store.slug) }}">Inventory</a>
         </nav>
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <button class="mobile-menu-toggle" id="mobileMenuBtn" aria-label="Open menu">☰</button>
-        </div>
+<div style="display: flex; align-items: center; gap: 12px;">
+    <button id="startTourBtn" class="btn-outline" style="background: none; border: 1px solid var(--border-2); padding: 8px 12px; border-radius: 8px; font-size: 0.8rem;">
+        <i class="fas fa-question-circle"></i> Click for Quick page tour
+    </button>
+ <button class="mobile-menu-toggle" id="mobileMenuBtn" aria-label="Open menu">☰</button>
+</div>
     </div>
 </header>
 
@@ -1273,6 +1358,138 @@ document.addEventListener('DOMContentLoaded', function() {
     const fabBtn = document.getElementById('fabAddItem');
     if (fabBtn) fabBtn.addEventListener('click', () => document.getElementById('openAddItemModalFull')?.click());
     document.getElementById('openAddItemModalFull2')?.addEventListener('click', () => document.getElementById('openAddItemModalFull')?.click());
+
+
+
+
+// ===================== GUIDED TOUR (INTRO.JS) =====================
+
+function getTourSteps() {
+    return [
+        {
+            selector: '#openAddItemModalFull',
+            title: "📦 Add New Item",
+            intro: "Click here to add a new product to your store. Include photos, pricing, and condition."
+        },
+        {
+            selector: '.hero-actions a.btn-primary[href*="store/"]:last-child',
+            title: "👁️ View Store",
+            intro: "Preview your live store exactly as customers see it."
+        },
+        {
+            selector: '.hero-actions a.btn-outline[href*="inventory"]',
+            title: "📋 Inventory",
+            intro: "Manage listings, edit products, and track performance."
+        },
+        {
+            selector: '.hero-actions a.btn-outline[href*="edit"]',
+            title: "⚙️ Store Settings",
+            intro: "Update store name, branding, delivery options, and more."
+        },
+        {
+            selector: '.shop-video-card .upload-area, .shop-video-card .video-container',
+            title: "🎥 Shop Tour Video",
+            intro: "Upload a short video showcasing your shop. It plays automatically on your store page."
+        },
+        {
+            selector: '.promo-wrapper',
+            title: "📢 Promo Banner",
+            intro: "Create eye-catching promotions using images or videos."
+        },
+        {
+            selector: '#socialMediaCard',
+            title: "🔗 Social Media Links",
+            intro: "Connect your social accounts to grow your brand."
+        },
+        {
+            selector: '.theme-card:last-of-type',
+            title: "🎨 Color Theme",
+            intro: "Customize your store’s look instantly with themes."
+        }
+    ];
+}
+
+
+/**
+ * Build only steps that exist in the DOM
+ */
+function buildValidSteps() {
+    return getTourSteps()
+        .map(step => {
+            const element = document.querySelector(step.selector);
+            return element ? { ...step, element } : null;
+        })
+        .filter(Boolean);
+}
+
+
+/**
+ * Start Intro.js Tour
+ */
+function startTour() {
+    const steps = buildValidSteps();
+
+    if (!steps.length) {
+        console.warn("Tour aborted: No valid elements found.");
+        return;
+    }
+
+    const intro = introJs();
+
+    intro.setOptions({
+        steps: steps,
+        showProgress: true,
+        showButtons: true,
+        exitOnOverlayClick: true,
+        disableInteraction: false,
+
+        nextLabel: "Next →",
+        prevLabel: "← Back",
+        skipLabel: "Skip",
+        doneLabel: "Got it!",
+
+        tooltipPosition: 'bottom'
+    });
+
+    intro.start();
+}
+
+
+// ===================== AUTO START (FIRST VISIT) =====================
+
+function initAutoTour() {
+    const TOUR_KEY = 'kwicshop_tour_completed';
+
+    if (!localStorage.getItem(TOUR_KEY)) {
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                startTour();
+                localStorage.setItem(TOUR_KEY, 'true');
+            }, 800);
+        });
+    }
+}
+
+
+// ===================== MANUAL TRIGGER =====================
+
+function initTourButton() {
+    const btn = document.getElementById('startTourBtn');
+
+    if (btn) {
+        btn.addEventListener('click', startTour);
+    }
+}
+
+
+// ===================== INIT =====================
+
+initAutoTour();
+initTourButton();
+
+
+
+
 
     // --- VIDEO UPLOAD SETUP ---
     const videoInput = document.getElementById('videoInput');
