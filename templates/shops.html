@@ -269,13 +269,12 @@
                 {% endfor %}
               </span>
               <span class="rating-value">{{ rating|round(1) }}</span>
-              <span class="trust-score">Trust {{ store.trust_score|default(0)|round(1) }}/5</span>
             </div>
             <div class="card-location">
               <i class="fas fa-map-marker-alt"></i>
               <span>{{ store.location or 'Online' }}</span>
             </div>
-            <div class="visit-btn">Visit store <i class="fas fa-arrow-right"></i></div>
+           
           </div>
         </a>
       {% else %}
