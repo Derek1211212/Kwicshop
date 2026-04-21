@@ -97,15 +97,42 @@ def get_db_connection():
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png','jpg','jpeg','gif','webp','avif'}
 
-def upload_to_cloudinary(file, folder):
-    if not file or not file.filename:
-        return None
+
+# ---------- CLOUDINARY HELPERS ----------
+def upload_to_cloudinary(file, folder="store_promos", resource_type="auto"):
     try:
-        result = cloudinary.uploader.upload(file, folder=folder, resource_type="image")
-        return result.get("secure_url")
+        timestamp = int(time.time())
+        original_filename = secure_filename(file.filename)
+        name_without_ext = os.path.splitext(original_filename)[0]
+        public_id = f"{folder}/{name_without_ext}_{timestamp}"
+
+        upload_result = cloudinary.uploader.upload(
+            file,
+            public_id=public_id,
+            resource_type=resource_type,
+            folder=folder,
+            overwrite=True
+        )
+        return {
+            'success': True,
+            'url': upload_result['secure_url'],
+            'public_id': upload_result['public_id'],
+            'resource_type': upload_result['resource_type']
+        }
     except Exception as e:
-        app.logger.error(f"Cloudinary upload error: {e}")
-        return None
+        current_app.logger.error(f"Cloudinary upload error: {str(e)}")
+        return {'success': False, 'error': str(e)}
+
+def delete_from_cloudinary(public_id, resource_type="image"):
+    try:
+        result = cloudinary.uploader.destroy(public_id, resource_type=resource_type)
+        return result.get('result') == 'ok'
+    except Exception as e:
+        current_app.logger.error(f"Cloudinary delete error: {str(e)}")
+        return False
+
+
+        
 
 def send_email_notification(recipient, subject, body):
     """Simple SMTP mail (MailerSend or any SMTP)"""
@@ -774,7 +801,7 @@ def update_store_socials(store_id):
 
 
 
-@app.route('/store/<slug>/edit', methods=['GET','POST'])
+@app.route('/store/<slug>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_store(slug):
     conn = get_db_connection()
@@ -782,30 +809,91 @@ def edit_store(slug):
     cur.execute("SELECT * FROM stores WHERE slug = %s AND user_id = %s", (slug, session['user_id']))
     store = cur.fetchone()
     if not store:
-        flash("Store not found", "danger")
+        flash("Store not found or you don't have permission.", "danger")
+        cur.close()
+        conn.close()
         return redirect(url_for('all_shops'))
+
     if request.method == 'POST':
+        # Basic fields
         name = request.form.get('name', '').strip()
         description = request.form.get('description', '').strip()
         location = request.form.get('location', '').strip()
         contact = request.form.get('contact', '').strip()
         store_type = request.form.get('store_type', '').strip()
-        logo = store['logo']
-        banner = store['banner']
-        if 'logo' in request.files and request.files['logo'].filename:
-            logo = upload_to_cloudinary(request.files['logo'], 'stores/logos')
-        if 'banner' in request.files and request.files['banner'].filename:
-            banner = upload_to_cloudinary(request.files['banner'], 'stores/banners')
+
+        # Delivery options (checkbox list)
+        delivery_options = request.form.getlist('delivery_options')
+        delivery_json = json.dumps(delivery_options)
+
+        # Start with existing media
+        logo_url = store.get('logo')
+        banner_url = store.get('banner')
+        tour_video_url = store.get('tour_video')
+
+        # Handle logo removal
+        if request.form.get('remove_logo'):
+            logo_url = None
+        # Handle logo upload (replaces existing)
+        elif 'logo' in request.files and request.files['logo'].filename:
+            logo_result = upload_to_cloudinary(request.files['logo'], 'stores/logos')
+            if logo_result and logo_result.get('success'):
+                logo_url = logo_result.get('url')
+            else:
+                flash("Logo upload failed", "warning")
+
+        # Handle banner removal
+        if request.form.get('remove_banner'):
+            banner_url = None
+        elif 'banner' in request.files and request.files['banner'].filename:
+            banner_result = upload_to_cloudinary(request.files['banner'], 'stores/banners')
+            if banner_result and banner_result.get('success'):
+                banner_url = banner_result.get('url')
+            else:
+                flash("Banner upload failed", "warning")
+
+        # Handle tour video removal
+        if request.form.get('remove_tour_video'):
+            tour_video_url = None
+        elif 'tour_video' in request.files and request.files['tour_video'].filename:
+            video_result = upload_to_cloudinary(request.files['tour_video'], 'stores/videos')
+            if video_result and video_result.get('success'):
+                tour_video_url = video_result.get('url')
+            else:
+                flash("Tour video upload failed", "warning")
+
+        # Update the store
         cur.execute("""
-            UPDATE stores SET name=%s, description=%s, location=%s, contact=%s, store_type=%s, logo=%s, banner=%s
-            WHERE store_id=%s
-        """, (name, description, location, contact, store_type, logo, banner, store['store_id']))
+            UPDATE stores
+            SET name = %s,
+                description = %s,
+                location = %s,
+                contact = %s,
+                store_type = %s,
+                delivery_options = %s,
+                logo = %s,
+                banner = %s,
+                tour_video = %s
+            WHERE store_id = %s
+        """, (name, description, location, contact, store_type, delivery_json,
+              logo_url, banner_url, tour_video_url, store['store_id']))
         conn.commit()
-        flash("Store updated", "success")
+        flash("Store updated successfully!", "success")
+        cur.close()
+        conn.close()
         return redirect(url_for('store_home', store_id=store['store_id']))
+
+    # For GET request: prepare current delivery options as list
+    current_delivery = []
+    if store.get('delivery_options'):
+        try:
+            current_delivery = json.loads(store['delivery_options'])
+        except (json.JSONDecodeError, TypeError):
+            current_delivery = []
+
     cur.close()
     conn.close()
-    return render_template('edit_store.html', store=store)
+    return render_template('edit_store.html', store=store, current_delivery=current_delivery)
 
 
 
@@ -894,77 +982,97 @@ def edit_inventory(slug, listing_id):
         """, (listing_id,))
         offers = cur.fetchall()
 
+    # Helper to upload a file and return URL string (or None)
+    def upload_file_and_get_url(file, folder):
+        if file and file.filename:
+            result = upload_to_cloudinary(file, folder)
+            if result and isinstance(result, dict):
+                return result.get('url')  # extract URL
+            return result  # fallback in case it's already a string
+        return None
+
     # POST handling
     if request.method == 'POST':
-        def upload_if_exists(field, folder):
-            file = request.files.get(field)
-            if file and file.filename:
-                return upload_to_cloudinary(file, folder)
-            return None
-
-        # Whitelisted safe update
+        # Whitelisted safe update fields
         allowed = ['title', 'description', 'category', 'condition', 'location',
                    'contact', 'status', 'price', 'desired_swap', 'required_cash',
                    'additional_cash', 'swap_notes']
+        update_fields = {}
+        for k in allowed:
+            val = request.form.get(k)
+            if val is not None:
+                update_fields[k] = val
 
-        update_fields = {k: request.form.get(k) for k in allowed if request.form.get(k) is not None}
-
-        # Main images
+        # Handle main listing images
         for key in ['image_url', 'image1', 'image2', 'image3', 'image4']:
-            url = upload_if_exists(f"{key}_file", 'listings')
+            file = request.files.get(f"{key}_file")
+            url = upload_file_and_get_url(file, 'listings')
             if url:
                 update_fields[key] = url
 
+        # Update main listing
         if update_fields:
             set_sql = ", ".join(f"`{k}`=%s" for k in update_fields)
             values = list(update_fields.values()) + [listing_id]
             cur.execute(f"UPDATE listings SET {set_sql} WHERE listing_id=%s", values)
 
-        # Swap Deal offered items logic (same as before)
+        # Swap Deal offered items logic
         if listing.get('deal_type') == 'Swap Deal':
-            # First offered item
+            # First offered item (always present)
             cur.execute("SELECT item_id FROM offered_items WHERE listing_id=%s ORDER BY item_id ASC LIMIT 1", (listing_id,))
             first = cur.fetchone()
             if first:
-                cur.execute("""
-                    UPDATE offered_items
-                    SET title=%s, description=%s, `condition`=%s,
-                        image_url=%s, image1=%s, image2=%s, image3=%s, image4=%s
-                    WHERE item_id=%s
-                """, (
-                    update_fields.get('title', listing.get('title')),
-                    update_fields.get('description', listing.get('description')),
-                    update_fields.get('condition', listing.get('condition')),
-                    request.form.get('offer_image_url_0') or listing.get('image_url'),
-                    request.form.get('offer_image1_0') or listing.get('image1'),
-                    request.form.get('offer_image2_0') or listing.get('image2'),
-                    request.form.get('offer_image3_0') or listing.get('image3'),
-                    request.form.get('offer_image4_0') or listing.get('image4'),
-                    first['item_id']
-                ))
+                # Build update fields for first offered item
+                offer_fields = {}
+                # Title, description, condition come from main listing or override?
+                # Usually they are separate – we'll use form data for offered items
+                offer_fields['title'] = request.form.get('offer_title_0') or listing.get('title')
+                offer_fields['description'] = request.form.get('offer_description_0') or listing.get('description')
+                offer_fields['condition'] = request.form.get('offer_condition_0') or listing.get('condition')
+                # Images
+                for img_key in ['image_url', 'image1', 'image2', 'image3', 'image4']:
+                    file = request.files.get(f"offer_{img_key}_0")
+                    url = upload_file_and_get_url(file, 'offers')
+                    if url:
+                        offer_fields[img_key] = url
+                    elif not url and first.get(img_key):
+                        # Keep existing if no new upload
+                        offer_fields[img_key] = first.get(img_key)
 
-            # Additional offers
+                # Update first offered item
+                set_sql = ", ".join(f"`{k}`=%s" for k in offer_fields)
+                values = list(offer_fields.values()) + [first['item_id']]
+                cur.execute(f"UPDATE offered_items SET {set_sql} WHERE item_id=%s", values)
+
+            # Additional offers (index 1+)
             titles = request.form.getlist('offer_title[]')
             descs = request.form.getlist('offer_description[]')
             conds = request.form.getlist('offer_condition[]')
-
+            # Image file lists for each additional offer
+            # We'll iterate over the existing offers (they are already in the DB)
             for idx, offer in enumerate(offers):
                 if idx < len(titles):
-                    img_fields = []
-                    for name in ['image_url','image1','image2','image3','image4']:
-                        uploaded = upload_if_exists(f"offer_{name}_{idx+1}", 'offers')
-                        img_fields.append(uploaded or offer.get(name))
-
-                    cur.execute("""
-                        UPDATE offered_items
-                        SET title=%s, description=%s, `condition`=%s,
-                            image_url=%s, image1=%s, image2=%s, image3=%s, image4=%s
-                        WHERE item_id=%s
-                    """, (titles[idx], descs[idx], conds[idx], *img_fields, offer['item_id']))
+                    offer_fields = {
+                        'title': titles[idx],
+                        'description': descs[idx],
+                        'condition': conds[idx]
+                    }
+                    # Handle images
+                    for img_key in ['image_url', 'image1', 'image2', 'image3', 'image4']:
+                        file = request.files.get(f"offer_{img_key}_{idx+1}")
+                        url = upload_file_and_get_url(file, 'offers')
+                        if url:
+                            offer_fields[img_key] = url
+                        elif not url and offer.get(img_key):
+                            offer_fields[img_key] = offer.get(img_key)
+                    set_sql = ", ".join(f"`{k}`=%s" for k in offer_fields)
+                    values = list(offer_fields.values()) + [offer['item_id']]
+                    cur.execute(f"UPDATE offered_items SET {set_sql} WHERE item_id=%s", values)
 
         conn.commit()
         cur.close()
         conn.close()
+        flash("Item updated successfully!", "success")
         return redirect(url_for('store_inventory', slug=slug))
 
     cur.close()
@@ -1225,38 +1333,6 @@ def rate_store():
 
 
 
-# ---------- CLOUDINARY HELPERS ----------
-def upload_to_cloudinary(file, folder="store_promos", resource_type="auto"):
-    try:
-        timestamp = int(time.time())
-        original_filename = secure_filename(file.filename)
-        name_without_ext = os.path.splitext(original_filename)[0]
-        public_id = f"{folder}/{name_without_ext}_{timestamp}"
-
-        upload_result = cloudinary.uploader.upload(
-            file,
-            public_id=public_id,
-            resource_type=resource_type,
-            folder=folder,
-            overwrite=True
-        )
-        return {
-            'success': True,
-            'url': upload_result['secure_url'],
-            'public_id': upload_result['public_id'],
-            'resource_type': upload_result['resource_type']
-        }
-    except Exception as e:
-        current_app.logger.error(f"Cloudinary upload error: {str(e)}")
-        return {'success': False, 'error': str(e)}
-
-def delete_from_cloudinary(public_id, resource_type="image"):
-    try:
-        result = cloudinary.uploader.destroy(public_id, resource_type=resource_type)
-        return result.get('result') == 'ok'
-    except Exception as e:
-        current_app.logger.error(f"Cloudinary delete error: {str(e)}")
-        return False
 
 
 
