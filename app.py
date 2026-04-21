@@ -602,35 +602,48 @@ def google_callback():
 def create_store():
     if request.method == 'POST':
         wants_json = (
-    request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-    or request.accept_mimetypes.best == 'application/json'
-)
+            request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+            or request.accept_mimetypes.best == 'application/json'
+        )
         name = request.form.get('name', '').strip()
         description = request.form.get('description', '').strip()
         location = request.form.get('location', '').strip()
         contact = request.form.get('contact', '').strip()
         store_type = request.form.get('store_type', '').strip()
         
-        # Validation
         if not name or not store_type or not location or not contact:
             msg = "All fields except description are required"
-            # AJAX request? → return JSON error
             if wants_json:
                 return jsonify({"success": False, "message": msg}), 400
             flash(msg, "danger")
             return redirect(url_for('create_store'))
         
         slug = slugify(name)
+        
+        # Helper to extract URL from Cloudinary result
+        def get_url(result):
+            if not result:
+                return None
+            if isinstance(result, dict):
+                return result.get('secure_url') or result.get('url')
+            return result
+        
         logo = None
         banner = None
         
-        if 'logo' in request.files and request.files['logo'].filename != '':
-            logo_upload = upload_to_cloudinary(request.files['logo'], 'stores/logos')
-            logo = logo_upload.get('secure_url')  # 👈 FIX
-
-        if 'banner' in request.files and request.files['banner'].filename != '':
-            banner_upload = upload_to_cloudinary(request.files['banner'], 'stores/banners')
-            banner = banner_upload.get('secure_url')  # 👈 FIX
+        logo_file = request.files.get('logo')
+        if logo_file and logo_file.filename:
+            logo_upload = upload_to_cloudinary(logo_file, 'stores/logos')
+            logo = get_url(logo_upload)
+            if not logo:
+                print("Logo upload failed:", logo_upload)
+        
+        banner_file = request.files.get('banner')
+        if banner_file and banner_file.filename:
+            banner_upload = upload_to_cloudinary(banner_file, 'stores/banners')
+            banner = get_url(banner_upload)
+            if not banner:
+                print("Banner upload failed:", banner_upload)
         
         conn = get_db_connection()
         cur = conn.cursor()
@@ -639,36 +652,27 @@ def create_store():
                 INSERT INTO stores (user_id, name, slug, logo, banner, description, location, contact, store_type)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (session['user_id'], name, slug, logo, banner, description, location, contact, store_type))
-
             conn.commit()
             store_id = cur.lastrowid
-
+            
             if wants_json:
                 return jsonify({
                     "success": True,
                     "redirect": url_for('store_home', store_id=store_id),
                     "message": "Store created successfully!"
                 })
-
             flash("Store created successfully!", "success")
             return redirect(url_for('store_home', store_id=store_id))
-
         except mysql.connector.IntegrityError:
             msg = "A store with this name already exists"
             if wants_json:
                 return jsonify({"success": False, "message": msg}), 409
             flash(msg, "danger")
             return redirect(url_for('create_store'))
-
         except Exception as e:
-            print("ERROR CREATING STORE:", e)  # 👈 THIS WILL SHOW IN YOUR TERMINAL
-
+            print("ERROR CREATING STORE:", e)
             if wants_json:
-                return jsonify({
-                    "success": False,
-                    "message": "Server error while creating store"
-                }), 500
-
+                return jsonify({"success": False, "message": "Server error while creating store"}), 500
             flash("Server error while creating store", "danger")
             return redirect(url_for('create_store'))
         finally:
