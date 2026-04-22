@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>kwicshop – About, Legal & Support</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --green-50: #f0faf2;
+            --green-100: #dcf1e4;
+            --green-200: #b8e2c8;
+            --green-300: #86efac;
+            --green-400: #4ade80;
+            --green-500: #22c55e;
+            --green-600: #16a34a;
+            --green-700: #15803d;
+            --ink: #0e1a11;
+            --ink-soft: #2e4233;
+            --ink-muted: #5a7060;
+            --surface: #f6faf7;
+            --card-bg: #ffffff;
+            --border: #e0eae2;
+            --radius-sm: 12px;
+            --radius-md: 18px;
+            --radius-lg: 28px;
+            --radius-xl: 100px;
+        }
+        body {
+            font-family: 'Sora', sans-serif;
+            background: var(--surface);
+            color: var(--ink);
+            line-height: 1.6;
+            scroll-behavior: smooth;
+        }
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        .site-header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.92);
+        }
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            padding: 0.8rem 0;
+            gap: 1rem;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: var(--green-600);
+        }
+        .logo-icon {
+            width: 34px;
+            height: 34px;
+            background: var(--green-600);
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .nav-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+        }
+        .nav-btn {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-xl);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--ink-soft);
+            font-family: 'Sora', sans-serif;
+        }
+        .nav-btn:hover {
+            border-color: var(--green-400);
+            color: var(--green-700);
+            background: var(--green-50);
+        }
+        .hero-section {
+            text-align: center;
+            padding: 3rem 0 2rem;
+        }
+        .hero-section h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+        .hero-section p {
+            color: var(--ink-muted);
+            max-width: 600px;
+            margin: 1rem auto 0;
+        }
+        .section-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            margin-bottom: 2.5rem;
+            padding: 2rem 2rem 2.5rem;
+            scroll-margin-top: 80px;
+        }
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 5px solid var(--green-500);
+            padding-left: 1rem;
+        }
+        .section-title i {
+            color: var(--green-600);
+        }
+        .section-content {
+            color: var(--ink-soft);
+        }
+        .section-content h3 {
+            font-size: 1.25rem;
+            margin: 1.5rem 0 0.8rem;
+            color: var(--ink);
+        }
+        .section-content p, .section-content ul {
+            margin-bottom: 1rem;
+        }
+        .section-content ul {
+            margin-left: 1.8rem;
+        }
+        .contact-info-box {
+            background: var(--green-50);
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            border-left: 4px solid var(--green-500);
+            margin-bottom: 1.5rem;
+        }
+        .contact-info-box p {
+            margin-bottom: 0.75rem;
+        }
+        .contact-info-box a {
+            color: var(--green-600);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .contact-info-box a:hover {
+            text-decoration: underline;
+        }
+        .stories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        .story-card {
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+        .story-card h4 {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        .story-card .story-meta {
+            font-size: 0.75rem;
+            color: var(--green-600);
+            margin-bottom: 0.8rem;
+        }
+        .footer {
+            background: white;
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+            padding: 2rem;
+            text-align: center;
+            color: var(--ink-muted);
+        }
+        @media (max-width: 700px) {
+            .container { padding: 0 1.2rem; }
+            .section-title { font-size: 1.5rem; }
+            .header-inner { flex-direction: column; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="site-header">
+    <div class="container">
+        <div class="header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">K</span>
+                <span>kwicshop</span>
+            </a>
+            <div class="nav-buttons">
+                <button class="nav-btn" data-section="about"><i class="fas fa-info-circle"></i> About</button>
+                <button class="nav-btn" data-section="terms"><i class="fas fa-file-contract"></i> Terms</button>
+                <button class="nav-btn" data-section="privacy"><i class="fas fa-lock"></i> Privacy</button>
+                <button class="nav-btn" data-section="contact"><i class="fas fa-headset"></i> Contact Support</button>
+                <button class="nav-btn" data-section="help"><i class="fas fa-question-circle"></i> Help Center</button>
+                <button class="nav-btn" data-section="stories"><i class="fas fa-star"></i> Success Stories</button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main>
+    <div class="container">
+        <div class="hero-section">
+            <h1>About, Legal & Support</h1>
+            <p>Learn more about kwicshop, our terms, privacy practices, and how to get help or share your success.</p>
+        </div>
+
+        <!-- ABOUT SECTION (new) -->
+        <section id="about" class="section-card">
+            <div class="section-title">
+                <i class="fas fa-info-circle"></i>
+                <span>About kwicshop</span>
+            </div>
+            <div class="section-content">
+                <p><strong>kwicshop</strong> is the simplest way to launch an e‑commerce store – without writing a single line of code. Founded in 2024, our mission is to empower entrepreneurs across Africa and beyond to sell online with ease.</p>
+                <p>We provide beautiful storefronts, smart analytics, and marketing tools – all in one platform. Whether you're selling fashion, electronics, or handmade goods, kwicshop gives you the freedom to focus on your products while we handle the technology.</p>
+                <h3>🌍 Our Vision</h3>
+                <p>To become the go‑to platform for zero‑code commerce in emerging markets, enabling anyone to start and grow their online business.</p>
+                <h3>✨ Why kwicshop?</h3>
+                <ul>
+                    <li>Setup in under 3 minutes – no technical skills required.</li>
+                    <li>Free to start, with affordable upgrades as you grow.</li>
+                    <li>Local payment methods and support for multiple currencies (coming soon).</li>
+                    <li>Dedicated customer support and a community of like‑sized sellers.</li>
+                </ul>
+                <p>We're headquartered in Accra, Ghana, with remote teams across the continent. Join over 15,000 merchants who already trust kwicshop.</p>
+            </div>
+        </section>
+
+        <!-- TERMS SECTION -->
+        <section id="terms" class="section-card">
+            <div class="section-title">
+                <i class="fas fa-file-contract"></i>
+                <span>Terms of Service</span>
+            </div>
+            <div class="section-content">
+                <p><strong>Effective date:</strong> January 1, 2025</p>
+                <p>By accessing or using kwicshop, you agree to be bound by these Terms of Service.</p>
+                <h3>1. Use of Platform</h3>
+                <p>kwicshop provides a no‑code store builder. You are solely responsible for your products, content, and compliance with applicable laws.</p>
+                <h3>2. Account Responsibility</h3>
+                <p>You must keep your login credentials secure. You are liable for all activities under your account.</p>
+                <h3>3. Prohibited Items</h3>
+                <p>Illegal goods, counterfeit products, or items that infringe intellectual property are strictly forbidden. We reserve the right to suspend stores that violate these terms.</p>
+                <h3>4. Fees & Payments</h3>
+                <p>kwicshop offers a free plan with basic features. Paid plans may be introduced in the future; you will be notified before any charges apply.</p>
+                <h3>5. Termination</h3>
+                <p>We may suspend or terminate your account for breach of these terms. You may delete your store at any time from your dashboard.</p>
+                <p><em>Last updated: February 2025</em></p>
+            </div>
+        </section>
+
+        <!-- PRIVACY SECTION -->
+        <section id="privacy" class="section-card">
+            <div class="section-title">
+                <i class="fas fa-lock"></i>
+                <span>Privacy Policy</span>
+            </div>
+            <div class="section-content">
+                <p>Your privacy is important to us. This policy explains what data we collect and how we use it.</p>
+                <h3>Information We Collect</h3>
+                <ul>
+                    <li><strong>Account info:</strong> name, email, store details.</li>
+                    <li><strong>Usage data:</strong> pages visited, clicks, views (to improve our service).</li>
+                    <li><strong>Payment info:</strong> if you purchase a plan, we use secure third‑party processors (we never store full card details).</li>
+                </ul>
+                <h3>How We Use Data</h3>
+                <p>We use your data to operate the platform, analyse performance, and communicate important updates. We do not sell your personal information to third parties.</p>
+                <h3>Cookies</h3>
+                <p>We use essential cookies for authentication and analytics. You can disable non‑essential cookies in your browser settings.</p>
+                <h3>Your Rights</h3>
+                <p>You can request a copy of your data or ask for deletion by contacting <strong>privacy@kwicshop.com</strong>.</p>
+            </div>
+        </section>
+
+        <!-- CONTACT SUPPORT SECTION (no form, only email/phone) -->
+        <section id="contact" class="section-card">
+            <div class="section-title">
+                <i class="fas fa-headset"></i>
+                <span>Contact Support</span>
+            </div>
+            <div class="section-content">
+                <div class="contact-info-box">
+                    <p><i class="fas fa-envelope"></i> <strong>Email us:</strong><br>
+                    <a href="mailto:support@kwicshop.com">support@kwicshop.com</a> – For general inquiries, billing, or technical help.</p>
+                    <p><i class="fas fa-phone-alt"></i> <strong>Call or WhatsApp:</strong><br>
+                    🇬🇭 +233 (0) 30 123 4567 (Monday–Friday, 9am–6pm GMT)<br>
+                    🇺🇸 +1 (800) 555‑0199 (North America)</p>
+                    <p><i class="fas fa-clock"></i> <strong>Response times:</strong> Within 24 hours for email, immediate for calls during business hours.</p>
+                    <p><i class="fas fa-comment-dots"></i> <strong>Live chat</strong> (coming soon) – we're working on it!</p>
+                </div>
+                <p>You can also reach us on social media: <a href="#">Instagram</a>, <a href="#">X (Twitter)</a>, and <a href="#">Facebook</a>.</p>
+            </div>
+        </section>
+
+        <!-- HELP CENTER SECTION -->
+        <section id="help" class="section-card">
+            <div class="section-title">
+                <i class="fas fa-question-circle"></i>
+                <span>Help Center</span>
+            </div>
+            <div class="section-content">
+                <h3>🔹 Getting Started</h3>
+                <p>Create your store in 3 minutes: sign up, choose a template, add products. <a href="#">Watch tutorial video →</a></p>
+                <h3>🔹 Managing Products</h3>
+                <p>You can add, edit, or delete products from the Inventory page. Use high‑quality images and clear descriptions to boost sales.</p>
+                <h3>🔹 Promotions & Banners</h3>
+                <p>Use the Promo Banner tool (in your dashboard) to display discount offers or videos. Customers will see a pop‑up when they visit your store.</p>
+                <h3>🔹 Understanding Metrics</h3>
+                <p>The dashboard shows views, clicks, and CTR for your store and individual products. Use these insights to improve your listing.</p>
+                <h3>🔹 Custom Domain</h3>
+                <p>Want to use your own domain (e.g., shop.yourbrand.com)? Contact support to enable this feature.</p>
+                <h3>📘 Video Library</h3>
+                <p>Check our <a href="#">YouTube channel</a> for step‑by‑step guides on using kwicshop.</p>
+            </div>
+        </section>
+
+        <!-- SUCCESS STORIES SECTION -->
+        <section id="stories" class="section-card">
+            <div class="section-title">
+                <i class="fas fa-star"></i>
+                <span>Success Stories</span>
+            </div>
+            <div class="section-content">
+                <p>Real merchants who built thriving online stores with kwicshop – zero code, zero hassle.</p>
+                <div class="stories-grid">
+                    <div class="story-card">
+                        <h4>🌸 Abena’s Beauty</h4>
+                        <div class="story-meta">Accra, Ghana · 500+ sales</div>
+                        <p>“I started selling shea butter and organic cosmetics. kwicshop made it super easy to set up my store. Within 3 months, I’ve expanded to two more product lines!”</p>
+                    </div>
+                    <div class="story-card">
+                        <h4>⚡ TechVille</h4>
+                        <div class="story-meta">Lagos, Nigeria · 1,200+ visitors/month</div>
+                        <p>“The promo banner helped us clear old stock in a weekend. The analytics dashboard showed us exactly which products got the most clicks.”</p>
+                    </div>
+                    <div class="story-card">
+                        <h4>🌿 GreenRoots</h4>
+                        <div class="story-meta">Nairobi, Kenya · Featured store</div>
+                        <p>“From a small farm to an online organic grocery – kwicshop gave us a professional store without hiring a developer. Our customers love the clean design.”</p>
+                    </div>
+                    <div class="story-card">
+                        <h4>👕 Urban Threads</h4>
+                        <div class="story-meta">Cape Town, South Africa · Top seller</div>
+                        <p>“We migrated from a basic social media shop to kwicshop. The inventory management and QR code feature helped us at pop‑up markets. Sales doubled!”</p>
+                    </div>
+                </div>
+                <p style="margin-top: 1.8rem; text-align: center;"><em>Want to share your story? <a href="#contact">Contact us</a> and you could be featured here.</em></p>
+            </div>
+        </section>
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <p>© 2025 kwicshop – No code, no stress. All rights reserved.</p>
+        <p style="margin-top: 0.5rem; font-size: 0.75rem;">
+            <a href="#" style="color: var(--ink-muted); text-decoration: none;">Back to top ↑</a>
+        </p>
+    </div>
+</footer>
+
+<script>
+    // Smooth scroll to section when nav buttons are clicked
+    const buttons = document.querySelectorAll('.nav-btn');
+    buttons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const sectionId = this.getAttribute('data-section');
+            const target = document.getElementById(sectionId);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Highlight effect
+                target.style.transition = 'box-shadow 0.3s';
+                target.style.boxShadow = '0 0 0 3px var(--green-300)';
+                setTimeout(() => { target.style.boxShadow = ''; }, 800);
+            }
+        });
+    });
+
+    // Handle URL hash on load – scroll to section if hash matches an id
+    function scrollToHash() {
+        const hash = window.location.hash.substring(1);
+        if (hash) {
+            const target = document.getElementById(hash);
+            if (target) {
+                setTimeout(() => {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+        }
+    }
+    window.addEventListener('load', scrollToHash);
+    window.addEventListener('hashchange', scrollToHash);
+</script>
+</body>
+</html>

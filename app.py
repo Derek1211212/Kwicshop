@@ -2438,6 +2438,12 @@ def subscribe_to_store():
 
 
 
+@app.route('/info')
+def info_page():
+    return render_template('info.html')
+
+
+
 
 
 # ------------------------------
