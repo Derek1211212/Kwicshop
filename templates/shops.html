@@ -236,21 +236,109 @@
     .store-card:hover .card-img-overlay { opacity: 1; }
     .card-badges { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; }
     .verified-stamp { background: rgba(255,255,255,0.95); backdrop-filter: blur(6px); padding: 0.22rem 0.65rem; border-radius: 40px; font-size: 0.63rem; font-weight: 700; color: var(--green-700); display: flex; align-items: center; gap: 4px; }
-    .card-info { padding: 1.1rem 1.2rem 1.2rem; flex: 1; display: flex; flex-direction: column; }
+    .card-info {
+  padding: 1.1rem 1.2rem 1.2rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
     .card-top-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 0.65rem; }
-    .store-name { font-size: 1rem; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); line-height: 1.25; }
-    .store-category { flex-shrink: 0; font-size: 0.6rem; background: var(--green-50); border: 1px solid var(--green-200); padding: 0.2rem 0.55rem; border-radius: 50px; font-weight: 700; color: var(--green-700); text-transform: uppercase; }
+    .store-name {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.store-category-wrapper {
+  margin-top: -0.1rem;
+}
+    .store-category {
+  display: inline-block;
+  font-size: 0.6rem;
+  background: var(--green-50);
+  border: 1px solid var(--green-200);
+  padding: 0.2rem 0.55rem;
+  border-radius: 50px;
+  font-weight: 700;
+  color: var(--green-700);
+  text-transform: uppercase;
+}
+
+.rating-wrapper {
+  margin: 0.15rem 0;
+}
     /* Improved rating container */
     .card-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem 0.9rem; margin-bottom: 0.85rem; }
-    .rating { display: inline-flex; align-items: center; gap: 0.6rem; flex-wrap: nowrap; background: var(--green-50); padding: 0.2rem 0.7rem 0.2rem 0.55rem; border-radius: 60px; transition: background 0.2s; }
-    .stars { display: inline-flex; align-items: center; gap: 2px; color: var(--star-gold); font-size: 0.7rem; }
-    .stars i { font-size: 0.72rem; width: 0.85em; text-align: center; transition: transform 0.1s ease; }
+ .rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--green-50);
+  padding: 0.2rem 0.7rem 0.2rem 0.55rem;
+  border-radius: 60px;
+}
+.stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--star-gold);
+  font-size: 0.7rem;
+}
+    .stars i {
+  font-size: 0.72rem;
+  width: 0.85em;
+  text-align: center;
+}
     .store-card:hover .stars i { transform: scale(1.02); }
-    .rating-value { font-weight: 700; font-size: 0.8rem; color: var(--ink-soft); background: white; padding: 0.1rem 0.35rem; border-radius: 30px; line-height: 1.3; letter-spacing: -0.01em; box-shadow: inset 0 0 0 1px var(--border); }
-    .card-location { display: inline-flex; align-items: center; gap: 5px; font-size: 0.7rem; color: var(--ink-muted); font-weight: 500; background: var(--surface); padding: 0.2rem 0.6rem; border-radius: 60px; }
-    .card-location i { font-size: 0.65rem; color: var(--green-500); }
-    .visit-btn { display: flex; align-items: center; justify-content: center; gap: 6px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; padding: 0.55rem; font-weight: 700; font-size: 0.78rem; text-decoration: none; color: var(--ink-soft); transition: all 0.2s; margin-top: auto; }
-    .visit-btn:hover { background: var(--ink); color: white; border-color: var(--ink); }
+  .rating-value {
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  background: white;
+  padding: 0.1rem 0.35rem;
+  border-radius: 30px;
+  line-height: 1.3;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+    .card-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  color: var(--ink-muted);
+  font-weight: 500;
+  background: var(--surface);
+  padding: 0.2rem 0.6rem;
+  border-radius: 60px;
+}
+   .card-location i {
+  font-size: 0.65rem;
+  color: var(--green-500);
+}
+    .visit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 0.55rem;
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-decoration: none;
+  color: var(--ink-soft);
+  transition: all 0.2s;
+  margin-top: 0.25rem;
+}
+   .visit-btn:hover {
+  background: var(--ink);
+  color: white;
+  border-color: var(--ink);
+}
 
     .empty-state { grid-column: 1 / -1; text-align: center; padding: 5rem 2rem; background: white; border-radius: var(--radius-lg); border: 1.5px dashed var(--border); }
     .empty-icon { width: 72px; height: 72px; background: var(--green-50); border-radius: 50%; display: grid; place-items: center; margin: 0 auto 1.2rem; }
@@ -383,36 +471,38 @@
                 {% if store.verified %}<div class="verified-stamp"><i class="fas fa-check-circle"></i> Verified</div>{% else %}<div></div>{% endif %}
               </div>
             </div>
-            <div class="card-info">
-              <div class="card-top-row">
-                <div class="store-name">{{ store.name }}</div>
-                <span class="store-category">{{ store.store_type or 'Shop' }}</span>
-              </div>
-              <div class="card-meta">
-                <div class="rating">
-                  <span class="stars">
-                    {% set rating = store.rating_avg|float or 0 %}
-                    {% set full = rating|int %}
-                    {% set half = (rating - full) >= 0.5 %}
-                    {% for i in range(5) %}
-                      {% if i < full %}
-                        <i class="fas fa-star"></i>
-                      {% elif half and i == full %}
-                        <i class="fas fa-star-half-alt"></i>
-                      {% else %}
-                        <i class="far fa-star"></i>
-                      {% endif %}
-                    {% endfor %}
-                  </span>
-                  <span class="rating-value">{{ "%.1f"|format(rating) }}</span>
-                </div>
-                <div class="card-location">
-                  <i class="fas fa-map-marker-alt"></i>
-                  <span>{{ store.location or 'Online' }}</span>
-                </div>
-              </div>
-              <div class="visit-btn">Visit store <i class="fas fa-arrow-right"></i></div>
-            </div>
+ <div class="card-info">
+  <div class="store-name">{{ store.name }}</div>
+  <div class="store-category-wrapper">
+    <span class="store-category">{{ store.store_type or 'Shop' }}</span>
+  </div>
+  <div class="rating-wrapper">
+    <div class="rating">
+      <span class="stars">
+        {% set rating = store.rating_avg|float or 0 %}
+        {% set full = rating|int %}
+        {% set half = (rating - full) >= 0.5 %}
+        {% for i in range(5) %}
+          {% if i < full %}
+            <i class="fas fa-star"></i>
+          {% elif half and i == full %}
+            <i class="fas fa-star-half-alt"></i>
+          {% else %}
+            <i class="far fa-star"></i>
+          {% endif %}
+        {% endfor %}
+      </span>
+      <span class="rating-value">{{ "%.1f"|format(rating) }}</span>
+    </div>
+  </div>
+  <div class="location-wrapper">
+    <div class="card-location">
+      <i class="fas fa-map-marker-alt"></i>
+      <span>{{ store.location or 'Online' }}</span>
+    </div>
+  </div>
+  <div class="visit-btn">Visit store <i class="fas fa-arrow-right"></i></div>
+</div>
           </a>
         {% else %}
           <div class="empty-state">
