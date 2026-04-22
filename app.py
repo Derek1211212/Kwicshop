@@ -696,11 +696,14 @@ def store_home(store_id):
         flash("Store not found or you don't have permission.", "danger")
         return redirect(url_for('home'))
 
+    # Build absolute store URL (e.g., https://kwicshop.com/store/haven-apple-store)
+    store_absolute_url = url_for('store_detail', slug=store['slug'], _external=True)
+
     # 2. Promo
     cur.execute("SELECT * FROM store_promos WHERE store_id = %s AND active = 1", (store_id,))
     promo = cur.fetchone() or {}
 
-    # 3. Metrics (store_metrics only – no ambiguity)
+    # 3. Metrics
     cur.execute("""
         SELECT SUM(views) as views, SUM(clicks) as clicks,
                SUM(chats) as chats, SUM(swaps) as swaps, SUM(sales) as sales
@@ -717,7 +720,7 @@ def store_home(store_id):
         'sales':   {'current': row['sales'] or 0, 'change': 0},
     }
 
-    # 4. Top products – fully qualified column names
+    # 4. Top products
     cur.execute("""
         SELECT 
             l.listing_id, 
@@ -759,7 +762,8 @@ def store_home(store_id):
                           metrics=metrics,
                           top_by_impressions=top_by_impressions,
                           top_by_clicks=top_by_clicks,
-                          now=datetime.utcnow())
+                          now=datetime.utcnow(),
+                          store_absolute_url=store_absolute_url)   # <-- ADD THIS
 
 
 

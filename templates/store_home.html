@@ -9,6 +9,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/introjs.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/intro.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         /* ---------- ORIGINAL STYLES (preserved) ---------- */
         :root {
@@ -875,7 +876,7 @@
     <button id="startTourBtn" class="btn-outline" style="background: none; border: 1px solid var(--border-2); padding: 8px 12px; border-radius: 8px; font-size: 0.8rem;">
         <i class="fas fa-question-circle"></i> Click for Quick page tour
     </button>
- <button class="mobile-menu-toggle" id="mobileMenuBtn" aria-label="Open menu">☰</button>
+ <!-- <button class="mobile-menu-toggle" id="mobileMenuBtn" aria-label="Open menu">☰</button> -->
 </div>
     </div>
 </header>
@@ -1001,21 +1002,51 @@
         </div>
     </div>
 
-    <!-- ACTION CARDS -->
-    <div class="action-row">
-        <div class="action-card">
-            <div class="action-card-header">
-                <div class="action-card-icon"><i class="fas fa-plus-circle"></i></div>
-                <div>
-                    <div class="action-card-title">Add New Item</div>
-                    <div class="action-card-desc">List a product with photos and pricing.</div>
-                </div>
-            </div>
-            <div class="action-buttons">
-                <button class="btn btn-primary btn-full" id="openAddItemModalFull2"><i class="fas fa-plus"></i> Add Item</button>
-                <button class="btn btn-outline btn-full" onclick="showToast('Import feature coming soon!')"><i class="fas fa-upload"></i> Import</button>
+
+
+<!-- QR CODE & SHARE SECTION -->
+<div class="theme-card" id="qrCard">
+    <div class="theme-card-header">
+        <div class="theme-card-icon"><i class="fas fa-qrcode"></i></div>
+        <div>
+            <div class="theme-card-title">Store QR Code</div>
+            <div class="theme-card-desc">Scan to visit your store instantly. Download and share on packaging, flyers, or social media.</div>
+        </div>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 2rem; align-items: center; justify-content: space-between;">
+        <div style="text-align: center;">
+            <div id="qrcodeCanvas" style="padding: 12px; background: white; border-radius: 16px; display: inline-block; box-shadow: var(--shadow-sm);"></div>
+            <div style="margin-top: 1rem; display: flex; gap: 0.75rem; justify-content: center;">
+                <button id="downloadQrBtn" class="btn btn-primary"><i class="fas fa-download"></i> Download QR Code</button>
+                <button id="copyStoreLinkBtn" class="btn btn-outline"><i class="far fa-copy"></i> Copy Store Link</button>
             </div>
         </div>
+        <div style="flex:1; min-width: 200px;">
+            <div class="info-box">
+                <i class="fas fa-mobile-alt"></i>
+                <span>Customers can scan this QR code with their phone camera to open your store instantly. Great for business cards, receipts, and posters.</span>
+            </div>
+            <div class="info-box" style="margin-top: 0.8rem;">
+                <i class="fas fa-link"></i>
+                <span>Store URL: <strong id="storeUrlDisplay">{{ store_absolute_url }}</strong></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- ACTION CARDS -->
+    <div class="action-row">
         <div class="action-card shop-video-card">
             <div class="action-card-header">
                 <div class="action-card-icon"><i class="fas fa-video"></i></div>
@@ -1174,6 +1205,42 @@
         </div>
     </div>
 </div>
+
+
+
+
+<!-- QR CODE & SHARE SECTION -->
+<div class="theme-card" id="qrCard">
+    <div class="theme-card-header">
+        <div class="theme-card-icon"><i class="fas fa-qrcode"></i></div>
+        <div>
+            <div class="theme-card-title">Store QR Code</div>
+            <div class="theme-card-desc">Scan to visit your store instantly. Download and share on packaging, flyers, or social media.</div>
+        </div>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 2rem; align-items: center; justify-content: space-between;">
+        <div style="text-align: center;">
+            <div id="qrcodeCanvas" style="padding: 12px; background: white; border-radius: 16px; display: inline-block; box-shadow: var(--shadow-sm);"></div>
+            <div style="margin-top: 1rem; display: flex; gap: 0.75rem; justify-content: center;">
+                <button id="downloadQrBtn" class="btn btn-primary"><i class="fas fa-download"></i> Download QR Code</button>
+                <button id="copyStoreLinkBtn" class="btn btn-outline"><i class="far fa-copy"></i> Copy Store Link</button>
+            </div>
+        </div>
+        <div style="flex:1; min-width: 200px;">
+            <div class="info-box">
+                <i class="fas fa-mobile-alt"></i>
+                <span>Customers can scan this QR code with their phone camera to open your store instantly. Great for business cards, receipts, and posters.</span>
+            </div>
+            <div class="info-box" style="margin-top: 0.8rem;">
+                <i class="fas fa-link"></i>
+                <span>Store URL: <strong id="storeUrlDisplay">{{ store_absolute_url }}</strong></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 
 <!-- FOOTER -->
 <footer class="footer">
@@ -1794,6 +1861,70 @@ initTourButton();
         });
     }
 });
+
+
+
+
+// ----- QR CODE GENERATION & DOWNLOAD (absolute URL) -----
+const storeAbsoluteUrl = "{{ store_absolute_url or url_for('store_detail', slug=store.slug, _external=True) }}";
+const qrDiv = document.getElementById('qrcodeCanvas');
+
+if (qrDiv && storeAbsoluteUrl) {
+    // Clear any previous content
+    qrDiv.innerHTML = '';
+
+    // Generate QR code using qrcodejs library
+    new QRCode(qrDiv, {
+        text: storeAbsoluteUrl,
+        width: 180,
+        height: 180,
+        colorDark: "#0e1a11",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+
+    // --- Download QR code as PNG ---
+    const downloadBtn = document.getElementById('downloadQrBtn');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', function() {
+            const canvas = qrDiv.querySelector('canvas');
+            if (canvas) {
+                const link = document.createElement('a');
+                link.download = 'store_qrcode.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                showToast('QR Code downloaded!');
+            } else {
+                showToast('QR code not ready yet');
+            }
+        });
+    }
+
+    // --- Copy store link to clipboard ---
+    const copyLinkBtn = document.getElementById('copyStoreLinkBtn');
+    if (copyLinkBtn) {
+        copyLinkBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(storeAbsoluteUrl);
+                showToast('Store link copied to clipboard!');
+            } catch (err) {
+                showToast('Failed to copy link');
+            }
+        });
+    }
+
+    // Also ensure the displayed URL text matches the absolute URL
+    const urlDisplaySpan = document.getElementById('storeUrlDisplay');
+    if (urlDisplaySpan) {
+        urlDisplaySpan.textContent = storeAbsoluteUrl;
+    }
+}
+
+
+
+
+
+
 </script>
 </body>
 </html>
