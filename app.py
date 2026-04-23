@@ -2445,6 +2445,10 @@ def google_verification():
     return render_template('googlefbaf22f94e24fef4.html')    
 
 
+@app.route('/sitemap.xml')
+def sitemap():
+    return render_template('sitemap.xml')
+
 
 
 @app.route('/info')
