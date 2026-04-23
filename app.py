@@ -2438,6 +2438,15 @@ def subscribe_to_store():
 
 
 
+from flask import send_from_directory
+
+@app.route('/googlefbaf22f94e24fef4.html')
+def google_verification():
+    return render_template('googlefbaf22f94e24fef4.html')    
+
+
+
+
 @app.route('/info')
 def info_page():
     return render_template('info.html')
