@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- Primary SEO – Google loves clear, keyword-rich title + description -->
-  <title>kwicshop – Buy, Sell & Swap in Ghana | Trusted Marketplace</title>
-  <meta name="description" content="kwicshop is Ghana's modern trading platform. Buy, sell, swap phones, fashion, electronics, services, real estate and more. Safe deals, great prices – join today!">
+  <title>SellKwic – Buy, Sell & Swap in Ghana | Trusted Marketplace</title>
+  <meta name="description" content="SellKwic is Ghana's modern trading platform. Buy, sell, swap phones, fashion, electronics, services, real estate and more. Safe deals, great prices – join today!">
 
   <!-- Canonical – prevents duplicate content confusion -->
   <link rel="canonical" href="{{ url_for('home', _external=True) }}" />
@@ -15,16 +15,16 @@
   <meta name="google-site-verification" content="CDFPsBn2ylbdyqghZGpCzLCFRwK74P5t5jnJTe-qKHw" />
 
   <!-- Open Graph – fallback to homepage defaults when no featured listing -->
-  <meta property="og:title" content="{% if featured_listing %}{{ featured_listing.title }}{% else %}kwicshop – Ghana Buy Sell Swap Marketplace{% endif %}">
+  <meta property="og:title" content="{% if featured_listing %}{{ featured_listing.title }}{% else %}SellKwic – Ghana Buy Sell Swap Marketplace{% endif %}">
   <meta property="og:description" content="{% if featured_listing %}{{ featured_listing.description[:150] }}{% if featured_listing.description|length > 150 %}...{% endif %}{% else %}Buy, sell, and swap anything in Ghana safely. Trusted local marketplace for phones, fashion, electronics, jobs, property and more.{% endif %}">
   <meta property="og:image" content="{% if featured_listing %}{{ featured_listing.banner_image }}{% else %}{{ url_for('static', filename='images/og-default.jpg', _external=True) }}{% endif %}">
   <meta property="og:type" content="website">
   <meta property="og:url" content="{{ url_for('home', _external=True) }}">
-  <meta property="og:site_name" content="kwicshop">
+  <meta property="og:site_name" content="SellKwic">
 
   <!-- Twitter / X Cards – same fallback logic -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{% if featured_listing %}{{ featured_listing.title }}{% else %}kwicshop – Ghana Marketplace{% endif %}">
+  <meta name="twitter:title" content="{% if featured_listing %}{{ featured_listing.title }}{% else %}SellKwic – Ghana Marketplace{% endif %}">
   <meta name="twitter:description" content="{% if featured_listing %}{{ featured_listing.description[:150] }}{% if featured_listing.description|length > 150 %}...{% endif %}{% else %}Ghana's go-to platform for buying, selling, and swapping items and services.{% endif %}">
   <meta name="twitter:image" content="{% if featured_listing %}{{ featured_listing.banner_image }}{% else %}{{ url_for('static', filename='images/twitter-default.jpg', _external=True) }}{% endif %}">
 
@@ -33,13 +33,13 @@
   {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "kwicshop",
+    "name": "SellKwic",
     "url": "{{ url_for('home', _external=True) }}",
     "description": "Ghana's trusted marketplace for buying, selling, and swapping goods and services.",
     },
     "publisher": {
       "@type": "Organization",
-      "name": "kwicshop",
+      "name": "Sellkwic",
       "logo": {
         "@type": "ImageObject",
         "url": "{{ url_for('static', filename='images/logo.png', _external=True) }}",
@@ -1277,7 +1277,7 @@
       <svg class="brand-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
         <path d="M11 5h2v14h-2V5zm-4 7h2v7H7v-7zm8-7h2v14h-2V5z"/>
       </svg>
-      <span>kwicshop</span>
+      <span>SellKwic</span>
     </a>
 
     <div class="nav-links" id="primary-links">
@@ -2248,7 +2248,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <div>
         <div class="footer-logo">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 5h2v14h-2V5zm-4 7h2v7H7v-7zm8-7h2v14h-2V5z"/></svg>
-        <span>kwicshop</span>
+        <span>SellKwic</span>
         </div>
         <p>The modern platform for item exchange and bartering. Swap your unused items for things you want.</p>
         <div style="display:flex;gap:.65rem;margin-top:.5rem">
@@ -2268,14 +2268,14 @@ document.addEventListener('DOMContentLoaded', function() {
       <div>
         <h3 style="font-weight:800;color:#fff;margin-bottom:.6rem">Contact Us</h3>
         <ul class="footer-links">
-          <li><i class="fas fa-envelope"></i> support@kwicshop.com</li>
+          <li><i class="fas fa-envelope"></i> support@SellKwic.com</li>
           <li><i class="fas fa-phone"></i> (+233) 54-6476-036</li>
           <li><i class="fas fa-map-marker-alt"></i> 123 Trade Street, Accra, Ghana</li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
-      <p>&copy; 2026 kwicshop. All rights reserved. | <a href="{{ url_for('privacy_policy') }}">Privacy Policy</a> | <a href="{{ url_for('privacy_policy') }}">Terms &amp; Conditions</a></p>
+      <p>&copy; 2026 SellKwic. All rights reserved. | <a href="{{ url_for('privacy_policy') }}">Privacy Policy</a> | <a href="{{ url_for('privacy_policy') }}">Terms &amp; Conditions</a></p>
     </div>
   </footer>
 

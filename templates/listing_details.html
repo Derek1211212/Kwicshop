@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>{{ listing.title }} - kwicshop</title>
+  <title>{{ listing.title }} - SellKwic</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="apple-touch-icon" href="/static/images/app-icon.png">
@@ -678,7 +678,7 @@ document.addEventListener('DOMContentLoaded', function () {
       e.preventDefault();
       const ph = normalizePhone(vendorWhatsAppRaw);
       if (!ph) { alert('Seller WhatsApp number is missing.'); return; }
-      const msg = `Hi ${ownerName||'there'},\n\nI'm interested in your listing "${listingTitle}" on kwicshop.\nListing: ${currentUrl}`;
+      const msg = `Hi ${ownerName||'there'},\n\nI'm interested in your listing "${listingTitle}" on SellKwic.\nListing: ${currentUrl}`;
       window.open(`https://wa.me/${ph}?text=${encodeURIComponent(msg)}`, '_blank');
     });
   }
