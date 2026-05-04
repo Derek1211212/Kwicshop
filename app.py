@@ -1806,42 +1806,59 @@ def home():
     
     query = "SELECT * FROM stores WHERE is_active = 1"
     params = []
+
     if search:
         query += " AND name LIKE %s"
         params.append(f"%{search}%")
+
     if location:
         query += " AND location LIKE %s"
         params.append(f"%{location}%")
+
     if store_type:
         query += " AND store_type = %s"
         params.append(store_type)
-    query += " ORDER BY Plan_priority DESC, trust_score DESC, created_at DESC"
+
+    query += " ORDER BY Plan_priority DESC, trust_score DESC, created_at DESC LIMIT 4"
+
     cur.execute(query, params)
     stores = cur.fetchall()
     
-    cur.execute("SELECT DISTINCT store_type FROM stores WHERE store_type IS NOT NULL AND store_type != ''")
+    cur.execute("""
+        SELECT DISTINCT store_type 
+        FROM stores 
+        WHERE store_type IS NOT NULL 
+        AND store_type != ''
+    """)
     store_types = cur.fetchall()
+
     cur.close()
     conn.close()
     
-    # mark followed status if logged in
+    # Mark followed status if logged in
     if 'user_id' in session:
         conn = get_db_connection()
         cur = conn.cursor()
+
         for s in stores:
-            cur.execute("SELECT 1 FROM follows WHERE user_id=%s AND store_id=%s", (session['user_id'], s['store_id']))
+            cur.execute(
+                "SELECT 1 FROM follows WHERE user_id=%s AND store_id=%s",
+                (session['user_id'], s['store_id'])
+            )
             s['is_followed'] = cur.fetchone() is not None
+
         cur.close()
         conn.close()
     
-    # ✅ Render the correct listing template (not store_home.html)
-    return render_template('shops.html', 
-                          stores=stores, 
-                          store_types=store_types,
-                          search=search, 
-                          location=location, 
-                          store_type=store_type,
-                          is_logged_in='user_id' in session)
+    return render_template(
+        'shops.html',
+        stores=stores,
+        store_types=store_types,
+        search=search,
+        location=location,
+        store_type=store_type,
+        is_logged_in='user_id' in session
+    )
 
 
 
