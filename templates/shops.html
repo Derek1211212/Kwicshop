@@ -164,7 +164,7 @@
     .hero-cta { display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap; }
     .btn-primary { background: var(--green-600); color: white; padding: 0.85rem 1.8rem; border-radius: var(--radius-xl); font-family: 'Sora', sans-serif; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; transition: all 0.25s; box-shadow: 0 6px 20px rgba(22,163,74,0.35); }
     .btn-primary:hover { background: var(--green-700); transform: translateY(-2px); box-shadow: 0 12px 30px rgba(22,163,74,0.4); }
-    .btn-outline { background: white; border: 1.5px solid var(--border); padding: 0.85rem 1.6rem; border-radius: var(--radius-xl); font-family: 'Sora', sans-serif; font-weight: 600; text-decoration: none; color: var(--ink-soft); display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; transition: all 0.2s; }
+    .btn-outline { color: white; background: var(--green-600); border: 1.5px solid var(--border); padding: 0.85rem 1.6rem; border-radius: var(--radius-xl); font-family: 'Sora', sans-serif; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; transition: all 0.2s; }
     .btn-outline:hover { border-color: var(--green-400); color: var(--green-700); background: var(--green-50); }
     .hero-stats { display: flex; gap: 1rem; margin-top: 3rem; padding-top: 2.5rem; border-top: 1px solid var(--border); flex-wrap: wrap; }
     .stat-num { font-family: 'Lora', serif; font-size: 1.7rem; font-weight: 600; color: var(--ink); display: block; line-height: 1; letter-spacing: -0.02em; margin-bottom: 0.2rem; }
@@ -390,17 +390,52 @@
     padding: 2.5rem 1.5rem;     /* ensure inner spacing doesn't cause overflow */
   }
 }
+
+
+/* Marketplace button - always visible on all devices */
+.btn-marketplace {
+  background: var(--green-50);
+  border: 1.5px solid var(--green-200);
+  padding: 0.45rem 1rem;
+  border-radius: var(--radius-xl);
+  font-family: 'Sora', sans-serif;
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: var(--green-700);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.2s;
+}
+
+.btn-marketplace:hover {
+  background: var(--green-100);
+  border-color: var(--green-400);
+  transform: translateY(-1px);
+}
+
+/* Ensure it stays visible even on mobile (the hide rule only targets .btn-nav-ghost) */
+@media (max-width: 600px) {
+  .btn-marketplace {
+    display: inline-flex;  /* overrides any potential hidden */
+  }
+}
   </style>
 </head>
 <body>
   <header class="navbar">
     <div class="nav-inner">
       <a href="/" class="logo"><span class="logo-mark">K</span><span class="logo-text">SellKwic</span></a>
-      <nav class="nav-links"><a href="#">Discover</a><a href="#">How it works</a><a href="#">Community</a></nav>
-      <div class="nav-actions">
-        <a href="#stores" class="btn-nav-ghost">Browse shops</a>
-        <a href="/my-store" class="btn-nav-primary"><i class="fas fa-store"></i><span>{% if is_logged_in %}My Store{% else %}Get a Shop!{% endif %}</span></a>
-      </div>
+      <nav class="nav-links">
+  <a href="#">Discover</a>
+  <a href="#">How it works</a>
+  <a href="#">Community</a>
+</nav>
+<div class="nav-actions">
+  <a href="#stores" class="btn-nav-ghost">Browse shops</a>
+  <a href="/my-store" class="btn-nav-primary"><i class="fas fa-store"></i><span>{% if is_logged_in %}My Store{% else %}Get a Shop!{% endif %}</span></a>
+</div>
     </div>
   </header>
 
@@ -410,10 +445,11 @@
         <div class="hero-badge"><span class="hero-badge-dot"></span>Zero coding · Instant setup</div>
         <h1>Your shop online<br>in <span class="accent">3 minutes</span></h1>
         <p class="hero-sub">Everything you need to sell — beautiful storefronts, smart analytics, zero code. Start for free today.</p>
-        <div class="hero-cta">
-          <a href="/my-store" class="btn-primary"><i class="fas fa-{% if is_logged_in %}store{% else %}rocket{% endif %}"></i>{% if is_logged_in %}Go to my store{% else %}Start my free shop{% endif %}</a>
-          <a href="#stores" class="btn-outline"><i class="fas fa-compass"></i> Browse stores</a>
-        </div>
+<div class="hero-cta">
+  <a href="/my-store" class="btn-primary"><i class="fas fa-{% if is_logged_in %}store{% else %}rocket{% endif %}"></i>{% if is_logged_in %}Go to my store{% else %}Start my free shop{% endif %}</a>
+  <a href="/marketplace" class="btn-outline"><i class="fas fa-store"></i> Marketplace</a>
+  <a href="#stores" class="btn-outline"><i class="fas fa-compass"></i> Browse stores</a>
+</div>
         <div class="hero-stats">
           <div class="stat-item"><span class="stat-num">15k+</span><span class="stat-label">Stores created</span></div>
           <div class="stat-item"><span class="stat-num">3 min</span><span class="stat-label">Avg. setup</span></div>

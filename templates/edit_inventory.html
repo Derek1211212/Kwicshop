@@ -5,323 +5,1080 @@
 <title>Edit Listing – {{ listing.title }}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-<!-- Tom Select CDN (latest stable version as of early 2026) -->
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
 
 <style>
 :root {
-    --primary:#16a34a;
-    --dark:#1f2937;
-    --muted:#6b7280;
-    --bg:#f9fafb;
-    --card:#ffffff;
-    --danger:#dc2626;
+    --green-900: #14532d;
+    --green-700: #15803d;
+    --green-600: #16a34a;
+    --green-500: #22c55e;
+    --green-200: #bbf7d0;
+    --green-100: #dcfce7;
+    --green-50:  #f0fdf4;
+    --white:     #ffffff;
+    --gray-900:  #111827;
+    --gray-600:  #4b5563;
+    --gray-400:  #9ca3af;
+    --gray-200:  #e5e7eb;
+    --gray-100:  #f3f4f6;
+    --amber-50:  #fffbeb;
+    --amber-400: #fbbf24;
+    --red-500:   #ef4444;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
+    --shadow-md: 0 4px 16px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.05);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,.1), 0 4px 12px rgba(0,0,0,.06);
+    --transition: 0.18s ease;
 }
 
-body { margin:0; font-family:Inter,system-ui,sans-serif; background:var(--bg); color:var(--dark); }
-.container { max-width:1000px; margin:auto; padding:30px 20px; }
-.header { display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; }
-.header h2 { margin:0; }
-.back { text-decoration:none; color:var(--primary); font-weight:600; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-.card { background:var(--card); border-radius:14px; padding:25px; box-shadow:0 8px 24px rgba(0,0,0,.06); margin-bottom:25px; }
-.section-title { font-size:1.1rem; margin-bottom:15px; font-weight:700; }
-.form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:15px; }
-label { font-size:.85rem; font-weight:600; }
-input, select, textarea { width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; font-size:.9rem; }
-textarea { resize:vertical; min-height:90px; }
-.image-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:10px; margin-top:10px; }
-.image-box { position:relative; }
-.image-box img { width:100%; height:100px; object-fit:cover; border-radius:6px; margin-bottom:5px; }
-.remove-img { position:absolute; top:2px; right:5px; background:#dc2626; color:#fff; border-radius:50%; width:18px; height:18px; text-align:center; cursor:pointer; line-height:18px; font-size:12px; display:flex; justify-content:center; align-items:center; }
-.badge { padding:4px 10px; font-size:.75rem; border-radius:20px; font-weight:600; }
-.swap { background:#eef2ff; color:#4338ca; }
-.sale { background:#ecfdf5; color:#047857; }
-.offer-card { border:1px dashed #ccc; border-radius:12px; padding:15px; margin-bottom:15px; }
-.actions { display:flex; justify-content:flex-end; gap:12px; margin-top:25px; }
-.btn { padding:10px 18px; border-radius:10px; border:none; font-weight:600; cursor:pointer; }
-.save { background:var(--primary); color:#fff; }
-.cancel { background:#e5e7eb; }
+body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--green-50);
+    color: var(--gray-900);
+    min-height: 100vh;
+    background-image:
+        radial-gradient(circle at 10% 10%, rgba(34,197,94,.12) 0%, transparent 50%),
+        radial-gradient(circle at 90% 85%, rgba(21,128,61,.08) 0%, transparent 45%);
+}
+
+/* ── Top bar ── */
+.topbar {
+    background: var(--white);
+    border-bottom: 1px solid var(--green-100);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(22,163,74,.07);
+}
+.topbar-inner {
+    max-width: 1040px;
+    margin: auto;
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.topbar-logo {
+    font-family: 'Fraunces', serif;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--green-700);
+    letter-spacing: -.5px;
+}
+.topbar-logo span { color: var(--green-500); }
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    text-decoration: none;
+    color: var(--green-700);
+    font-size: .875rem;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--green-200);
+    background: var(--green-50);
+    transition: all var(--transition);
+}
+.back-link:hover {
+    background: var(--green-100);
+    border-color: var(--green-500);
+    color: var(--green-600);
+    transform: translateX(-2px);
+}
+
+/* ── Page wrapper ── */
+.container {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+}
+
+/* ── Page heading ── */
+.page-header {
+    margin-bottom: 28px;
+}
+.page-header h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.9rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    letter-spacing: -.5px;
+    line-height: 1.2;
+}
+.page-header p {
+    margin-top: 5px;
+    color: var(--gray-600);
+    font-size: .9rem;
+}
+.header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+/* ── Badge ── */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .3px;
+    text-transform: uppercase;
+}
+.badge-swap {
+    background: #eef2ff;
+    color: #4338ca;
+    border: 1.5px solid #c7d2fe;
+}
+.badge-sale {
+    background: var(--green-100);
+    color: var(--green-700);
+    border: 1.5px solid var(--green-200);
+}
+
+/* ── Step progress ── */
+.steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 28px;
+    background: var(--white);
+    border-radius: var(--radius-md);
+    padding: 16px 22px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--green-100);
+    overflow-x: auto;
+}
+.step {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-shrink: 0;
+    cursor: default;
+}
+.step-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .78rem;
+    font-weight: 700;
+    background: var(--gray-100);
+    color: var(--gray-400);
+    border: 2px solid var(--gray-200);
+    transition: all var(--transition);
+}
+.step.active .step-num {
+    background: var(--green-600);
+    color: var(--white);
+    border-color: var(--green-600);
+    box-shadow: 0 0 0 4px rgba(22,163,74,.15);
+}
+.step.done .step-num {
+    background: var(--green-100);
+    color: var(--green-700);
+    border-color: var(--green-200);
+}
+.step-label {
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--gray-400);
+}
+.step.active .step-label { color: var(--gray-900); }
+.step.done .step-label { color: var(--green-700); }
+.step-divider {
+    flex: 1;
+    height: 2px;
+    background: var(--gray-200);
+    margin: 0 10px;
+    min-width: 24px;
+}
+.step-divider.done { background: var(--green-200); }
+
+/* ── Card ── */
+.card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(22,163,74,.09);
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: box-shadow var(--transition);
+}
+.card:hover { box-shadow: var(--shadow-lg); }
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 18px 24px 16px;
+    border-bottom: 1px solid var(--green-50);
+    background: linear-gradient(to right, var(--green-50), var(--white));
+}
+.card-header-icon {
+    width: 36px; height: 36px;
+    border-radius: var(--radius-sm);
+    background: var(--green-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--green-700);
+    font-size: .9rem;
+    flex-shrink: 0;
+}
+.card-header h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    letter-spacing: -.2px;
+}
+.card-header p {
+    font-size: .78rem;
+    color: var(--gray-400);
+    margin-top: 1px;
+}
+.card-body { padding: 22px 24px; }
+
+/* ── Form elements ── */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+}
+.form-grid-3 {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-field label {
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--gray-600);
+    letter-spacing: .2px;
+    text-transform: uppercase;
+}
+.form-field label .req { color: var(--red-500); margin-left: 2px; }
+
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="file"],
+select,
+textarea {
+    width: 100%;
+    padding: 10px 13px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    color: var(--gray-900);
+    background: var(--white);
+    transition: all var(--transition);
+    outline: none;
+    appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+    border-color: var(--green-500);
+    box-shadow: 0 0 0 3px rgba(34,197,94,.15);
+    background: #fafffe;
+}
+input:hover:not(:focus), select:hover:not(:focus), textarea:hover:not(:focus) {
+    border-color: var(--green-300, #86efac);
+}
+textarea {
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.6;
+}
+input[type="file"] {
+    padding: 8px;
+    font-size: .8rem;
+    color: var(--gray-600);
+    cursor: pointer;
+    background: var(--gray-100);
+    border-style: dashed;
+}
+input[type="file"]:hover {
+    background: var(--green-50);
+    border-color: var(--green-500);
+}
+
+/* price input */
+.price-wrap { position: relative; }
+.price-wrap .currency {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: .85rem;
+    font-weight: 700;
+    color: var(--gray-400);
+    pointer-events: none;
+}
+.price-wrap input { padding-left: 32px; }
+
+/* ── Status toggle ── */
+.status-toggle {
+    display: flex;
+    gap: 8px;
+}
+.status-option {
+    flex: 1;
+    position: relative;
+}
+.status-option input[type="radio"] { display: none; }
+.status-option label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--gray-400);
+    transition: all var(--transition);
+    text-transform: none;
+    letter-spacing: 0;
+}
+.status-option input:checked + label {
+    border-color: var(--green-500);
+    background: var(--green-50);
+    color: var(--green-700);
+    box-shadow: 0 0 0 3px rgba(34,197,94,.12);
+}
+.status-option label:hover { border-color: var(--green-300, #86efac); }
+
+/* ── Image upload grid ── */
+.image-upload-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 12px;
+    margin-top: 4px;
+}
+.image-box {
+    position: relative;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1.5px dashed var(--gray-200);
+    background: var(--gray-100);
+    transition: all var(--transition);
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.image-box:hover { border-color: var(--green-400, #4ade80); background: var(--green-50); }
+.image-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    inset: 0;
+    border-radius: calc(var(--radius-md) - 2px);
+}
+.image-box .placeholder-icon {
+    font-size: 1.4rem;
+    color: var(--gray-300);
+    margin-bottom: 6px;
+}
+.image-box .placeholder-text {
+    font-size: .7rem;
+    color: var(--gray-400);
+    text-align: center;
+    padding: 0 8px;
+}
+.image-box input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    height: 100%;
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 0;
+}
+.image-box input[type="file"]:hover { background: transparent; }
+
+.remove-img {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 22px; height: 22px;
+    background: rgba(239,68,68,.9);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: .75rem;
+    z-index: 10;
+    transition: all var(--transition);
+    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
+.remove-img:hover { background: var(--red-500); transform: scale(1.1); }
+
+.img-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,.55), transparent);
+    color: #fff;
+    font-size: .65rem;
+    font-weight: 700;
+    text-align: center;
+    padding: 6px 4px 4px;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    pointer-events: none;
+}
+
+/* ── Offer card ── */
+.offer-card {
+    border: 1.5px solid var(--green-100);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-bottom: 16px;
+    background: var(--green-50);
+    position: relative;
+}
+.offer-number {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--green-700);
+    background: var(--green-100);
+    padding: 4px 10px;
+    border-radius: 100px;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+}
+
+/* ── Divider ── */
+.divider {
+    height: 1px;
+    background: var(--green-50);
+    margin: 20px 0;
+}
+
+/* ── Action bar ── */
+.action-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--green-100);
+    padding: 14px 24px;
+    z-index: 200;
+    box-shadow: 0 -4px 20px rgba(0,0,0,.08);
+}
+.action-bar-inner {
+    max-width: 1040px;
+    margin: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+.action-bar-info {
+    font-size: .8rem;
+    color: var(--gray-400);
+}
+.action-bar-info strong {
+    color: var(--gray-600);
+    font-weight: 700;
+}
+.action-buttons { display: flex; gap: 10px; }
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 22px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .875rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition);
+    text-decoration: none;
+    letter-spacing: -.1px;
+}
+.btn-primary {
+    background: var(--green-600);
+    color: var(--white);
+    box-shadow: 0 2px 10px rgba(22,163,74,.3);
+}
+.btn-primary:hover {
+    background: var(--green-700);
+    box-shadow: 0 4px 16px rgba(22,163,74,.4);
+    transform: translateY(-1px);
+}
+.btn-primary:active { transform: translateY(0); }
+.btn-ghost {
+    background: transparent;
+    color: var(--gray-600);
+    border: 1.5px solid var(--gray-200);
+}
+.btn-ghost:hover {
+    background: var(--gray-100);
+    border-color: var(--gray-300, #d1d5db);
+    color: var(--gray-900);
+}
+
+/* ── Saving overlay ── */
 .overlay {
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.5);
-    z-index:9999;
-    justify-content:center;
-    align-items:center;
-    color:#fff;
-    font-size:1.5rem;
-    font-weight:bold;
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+.overlay-box {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 36px 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    box-shadow: var(--shadow-lg);
+}
+.spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--green-100);
+    border-top-color: var(--green-600);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.overlay-label {
+    font-weight: 700;
+    color: var(--gray-900);
+    font-size: 1rem;
+}
+.overlay-sub {
+    font-size: .82rem;
+    color: var(--gray-400);
+    margin-top: -6px;
 }
 
-/* Tom Select styling adjustments to blend with your theme */
-.ts-wrapper {
-    font-family: inherit;
+/* ── Tom Select overrides ── */
+.ts-wrapper.single .ts-control,
+.ts-wrapper.multi .ts-control {
+    border: 1.5px solid var(--gray-200) !important;
+    border-radius: var(--radius-sm) !important;
+    box-shadow: none !important;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    padding: 8px 12px !important;
+    background: var(--white) !important;
+    min-height: 42px;
+    transition: all var(--transition);
 }
-.ts-wrapper.single .ts-control {
-    border:1px solid #ddd;
-    border-radius:8px;
-    padding:9px 10px;
-    background:#fff;
-    height:auto;
-    min-height:38px;
-}
-.ts-wrapper .ts-control input {
-    font-size:.9rem;
+.ts-wrapper.single.focus .ts-control,
+.ts-wrapper.multi.focus .ts-control {
+    border-color: var(--green-500) !important;
+    box-shadow: 0 0 0 3px rgba(34,197,94,.15) !important;
 }
 .ts-dropdown {
-    border-radius:8px;
-    box-shadow:0 8px 24px rgba(0,0,0,.1);
-    border:1px solid #ddd;
+    border-radius: var(--radius-md) !important;
+    border: 1.5px solid var(--green-100) !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,.1) !important;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .88rem;
+    margin-top: 4px;
 }
-.ts-dropdown .option {
-    padding:8px 12px;
-}
-.ts-dropdown .option.active,
-.ts-dropdown .option.selected {
-    background:#ecfdf5;
-    color:var(--primary);
-}
+.ts-dropdown .option { padding: 9px 14px !important; }
+.ts-dropdown .option.active { background: var(--green-50) !important; color: var(--green-700) !important; }
+.ts-dropdown .option.selected { background: var(--green-100) !important; color: var(--green-700) !important; font-weight: 600; }
 .ts-wrapper.multi .ts-control > div {
-    background:var(--primary);
-    color:#fff;
-    border-radius:6px;
+    background: var(--green-600) !important;
+    color: var(--white) !important;
+    border-radius: 6px !important;
+    font-size: .8rem;
+    border: none !important;
 }
-.ts-wrapper .no-results {
-    padding:10px;
-    color:var(--muted);
+
+/* ── Responsive ── */
+@media(max-width: 600px) {
+    .container { padding: 20px 16px 90px; }
+    .steps { gap: 0; padding: 12px 16px; }
+    .step-label { display: none; }
+    .action-bar-info { display: none; }
+    .form-grid { grid-template-columns: 1fr; }
+    .card-body { padding: 18px 16px; }
+}
+
+/* ── Animations ── */
+.card {
+    animation: slideUp .35s ease both;
+}
+.card:nth-child(1) { animation-delay: .05s }
+.card:nth-child(2) { animation-delay: .1s }
+.card:nth-child(3) { animation-delay: .15s }
+.card:nth-child(4) { animation-delay: .2s }
+.card:nth-child(5) { animation-delay: .25s }
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 </style>
 </head>
 
 <body>
+
+<!-- Top bar -->
+<div class="topbar">
+    <div class="topbar-inner">
+        <span class="topbar-logo">Sell<span>Kwic</span></span>
+        <a href="{{ url_for('store_inventory', slug=store.slug) }}" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i> Back to Inventory
+        </a>
+    </div>
+</div>
+
 <div class="container">
 
-<div class="header">
-    <h2>Edit Listing</h2>
-    <a href="{{ url_for('store_inventory', slug=store.slug) }}" class="back">
-        ← Back to Inventory
-    </a>
-</div>
-
-<form method="POST" enctype="multipart/form-data" id="editForm">
-
-<!-- Listing Info -->
-<div class="card">
-    <div class="section-title">
-        Listing Details
-        {% if listing.deal_type == 'Swap Deal' %}
-            <span class="badge swap">Swap Deal</span>
-        {% else %}
-            <span class="badge sale">Outright Sale</span>
-        {% endif %}
-    </div>
-
-    <div class="form-grid">
-        <div>
-            <label>Title</label>
-            <input name="title" value="{{ listing.title }}" required>
-        </div>
-        
-        <div>
-            <label for="category">Category</label>
-            <select name="category" id="category" required>
-                <option value="">-- Start typing to search categories --</option>
-                <option value="Electronics" {{ 'selected' if listing.category == 'Electronics' }}>Electronics</option>
-                <option value="Computers & Networking" {{ 'selected' if listing.category == 'Computers & Networking' }}>Computers & Networking</option>
-                <option value="Mobile Phones & Accessories" {{ 'selected' if listing.category == 'Mobile Phones & Accessories' }}>Mobile Phones & Accessories</option>
-                <option value="Software & Apps" {{ 'selected' if listing.category == 'Software & Apps' }}>Software & Apps</option>
-                <option value="Digital Products & Downloads" {{ 'selected' if listing.category == 'Digital Products & Downloads' }}>Digital Products & Downloads</option>
-                <option value="Health & Beauty" {{ 'selected' if listing.category == 'Health & Beauty' }}>Health & Beauty</option>
-                <option value="Medical Equipment & Supplies" {{ 'selected' if listing.category == 'Medical Equipment & Supplies' }}>Medical Equipment & Supplies</option>
-                <option value="Sports & Outdoors" {{ 'selected' if listing.category == 'Sports & Outdoors' }}>Sports & Outdoors</option>
-                <option value="Fashion & Apparel" {{ 'selected' if listing.category == 'Fashion & Apparel' }}>Fashion & Apparel</option>
-                <option value="Jewelry & Watches" {{ 'selected' if listing.category == 'Jewelry & Watches' }}>Jewelry & Watches</option>
-                <option value="Home & Garden" {{ 'selected' if listing.category == 'Home & Garden' }}>Home & Garden</option>
-                <option value="Kitchen & Dining" {{ 'selected' if listing.category == 'Kitchen & Dining' }}>Kitchen & Dining</option>
-                <option value="Tools & DIY" {{ 'selected' if listing.category == 'Tools & DIY' }}>Tools & DIY</option>
-                <option value="Automotive Parts & Accessories" {{ 'selected' if listing.category == 'Automotive Parts & Accessories' }}>Automotive Parts & Accessories</option>
-                <option value="Automobile & Vehicles" {{ 'selected' if listing.category == 'Automobile & Vehicles' }}>Automobile & Vehicles</option>
-                <option value="Industrial & Scientific" {{ 'selected' if listing.category == 'Industrial & Scientific' }}>Industrial & Scientific</option>
-                <option value="Agriculture & Farming" {{ 'selected' if listing.category == 'Agriculture & Farming' }}>Agriculture & Farming</option>
-                <option value="Food & Beverages" {{ 'selected' if listing.category == 'Food & Beverages' }}>Food & Beverages</option>
-                <option value="Office Supplies" {{ 'selected' if listing.category == 'Office Supplies' }}>Office Supplies</option>
-                <option value="Books, Music & Movies" {{ 'selected' if listing.category == 'Books, Music & Movies' }}>Books, Music & Movies</option>
-                <option value="Toys & Games" {{ 'selected' if listing.category == 'Toys & Games' }}>Toys & Games</option>
-                <option value="Baby & Kids" {{ 'selected' if listing.category == 'Baby & Kids' }}>Baby & Kids</option>
-                <option value="Pets & Accessories" {{ 'selected' if listing.category == 'Pets & Accessories' }}>Pets & Accessories</option>
-                <option value="Art, Crafts & Sewing" {{ 'selected' if listing.category == 'Art, Crafts & Sewing' }}>Art, Crafts & Sewing</option>
-                <option value="Collectibles & Hobbies" {{ 'selected' if listing.category == 'Collectibles & Hobbies' }}>Collectibles & Hobbies</option>
-                <option value="Handmade & Custom Items" {{ 'selected' if listing.category == 'Handmade & Custom Items' }}>Handmade & Custom Items</option>
-                <option value="Travel & Experiences" {{ 'selected' if listing.category == 'Travel & Experiences' }}>Travel & Experiences</option>
-                <option value="House and Property" {{ 'selected' if listing.category == 'House and Property' }}>House and Property</option>
-                <option value="Home Improvement & Repair" {{ 'selected' if listing.category == 'Home Improvement & Repair' }}>Home Improvement & Repair</option>
-                <option value="Cleaning & Maintenance" {{ 'selected' if listing.category == 'Cleaning & Maintenance' }}>Cleaning & Maintenance</option>
-                <option value="Automotive Services" {{ 'selected' if listing.category == 'Automotive Services' }}>Automotive Services</option>
-                <option value="Professional Services" {{ 'selected' if listing.category == 'Professional Services' }}>Professional Services</option>
-                <option value="Personal & Wellness Services" {{ 'selected' if listing.category == 'Personal & Wellness Services' }}>Personal & Wellness Services</option>
-                <option value="Education & Training" {{ 'selected' if listing.category == 'Education & Training' }}>Education & Training</option>
-                <option value="Events & Experiences Services" {{ 'selected' if listing.category == 'Events & Experiences Services' }}>Events & Experiences Services</option>
-                <option value="Other Services" {{ 'selected' if listing.category == 'Other Services' }}>Other Services</option>
-                <option value="Other" {{ 'selected' if listing.category == 'Other' }}>Other</option>
-            </select>
-        </div>
-        
-        <div>
-            <label>Condition</label>
-            <input name="condition" value="{{ listing.condition }}">
-        </div>
-        <div>
-            <label>Status</label>
-            <select name="status">
-                <option value="active" {{ 'selected' if listing.status=='active' }}>Active</option>
-                <option value="inactive" {{ 'selected' if listing.status=='inactive' }}>Inactive</option>
-            </select>
-        </div>
-        <div>
-            <label>Location</label>
-            <input name="location" value="{{ listing.location }}">
-        </div>
-        <div>
-            <label>Contact</label>
-            <input name="contact" value="{{ listing.contact }}">
-        </div>
-    </div>
-
-    <div style="margin-top:15px;">
-        <label>Description</label>
-        <textarea name="description">{{ listing.description }}</textarea>
-    </div>
-</div>
-
-<!-- Sale Fields -->
-{% if listing.deal_type != 'Swap Deal' %}
-<div class="card">
-    <div class="section-title">Pricing</div>
-    <input name="price" value="{{ listing.price }}">
-</div>
-{% endif %}
-
-<!-- Swap Preferences -->
-{% if listing.deal_type == 'Swap Deal' %}
-<div class="card">
-    <div class="section-title">Swap Preferences</div>
-    <div class="form-grid">
-        <div>
-            <label>Desired Swap</label>
-            <input name="desired_swap" value="{{ listing.desired_swap }}">
-        </div>
-        <div>
-            <label>Required Cash</label>
-            <input type="number" name="required_cash" value="{{ listing.required_cash }}">
-        </div>
-        <div>
-            <label>Additional Cash</label>
-            <input type="number" step="0.01" name="additional_cash" value="{{ listing.additional_cash }}">
-        </div>
-    </div>
-    <div style="margin-top:15px;">
-        <label>Swap Notes</label>
-        <textarea name="swap_notes">{{ listing.swap_notes }}</textarea>
-    </div>
-</div>
-{% endif %}
-
-<!-- Main Images -->
-<div class="card">
-    <div class="section-title">Main Listing Images</div>
-    <div class="image-grid">
-        {% set main_imgs = ['image_url','image1','image2','image3','image4'] %}
-        {% for img_field in main_imgs %}
-        <div class="image-box">
-            {% if listing[img_field] %}
-            <img src="{{ listing[img_field] }}">
-            <span class="remove-img" onclick="this.previousElementSibling.src=''; this.parentNode.querySelector('input').value=''">×</span>
-            {% endif %}
-            <input type="file" name="{{ img_field }}_file">
-        </div>
-        {% endfor %}
-    </div>
-</div>
-
-<!-- Offered Items -->
-{% if listing.deal_type=='Swap Deal' and offers %}
-<div class="card">
-    <div class="section-title">Offered Items</div>
-    {% set offer_idx = 0 %}
-    {% for offer in offers %}
-    <div class="offer-card">
-        <strong>Item {{ offer_idx + 1 }}</strong>
-
-        <label>Title</label>
-        <input name="offer_title[]" value="{{ offer.title }}">
-
-        <label>Description</label>
-        <textarea name="offer_description[]">{{ offer.description }}</textarea>
-
-        <label>Condition</label>
-        <input name="offer_condition[]" value="{{ offer.condition }}">
-
-        <div class="image-grid">
-            {% for img_field in ['image_url','image1','image2','image3','image4'] %}
-            <div class="image-box">
-                {% if offer[img_field] %}
-                <img src="{{ offer[img_field] }}">
-                <span class="remove-img" onclick="this.previousElementSibling.src=''; this.parentNode.querySelector('input').value=''">×</span>
-                {% endif %}
-                <input type="file" name="offer_{{ offer_idx }}_{{ img_field }}">
+    <!-- Page header -->
+    <div class="page-header">
+        <div class="header-row">
+            <div>
+                <h1>Edit Listing</h1>
+                <p>Update your listing details below — changes are saved immediately.</p>
             </div>
+            {% if listing.deal_type == 'Swap Deal' %}
+                <span class="badge badge-swap"><i class="fa-solid fa-arrows-rotate"></i> Swap Deal</span>
+            {% else %}
+                <span class="badge badge-sale"><i class="fa-solid fa-tag"></i> Outright Sale</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" id="editForm">
+
+    <!-- ── Listing Details ── -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-header-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+            <div>
+                <h3>Listing Details</h3>
+                <p>Basic information about your item</p>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="form-grid">
+                <div class="form-field" style="grid-column: 1 / -1;">
+                    <label>Title <span class="req">*</span></label>
+                    <input type="text" name="title" value="{{ listing.title }}" required placeholder="What are you listing?">
+                </div>
+
+                <div class="form-field">
+                    <label>Category <span class="req">*</span></label>
+                    <select name="category" id="category" required>
+                        <option value="">-- Search categories --</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Computers &amp; Networking">Computers &amp; Networking</option>
+                        <option value="Mobile Phones &amp; Accessories">Mobile Phones &amp; Accessories</option>
+                        <option value="Software &amp; Apps">Software &amp; Apps</option>
+                        <option value="Digital Products &amp; Downloads">Digital Products &amp; Downloads</option>
+                        <option value="Health &amp; Beauty">Health &amp; Beauty</option>
+                        <option value="Medical Equipment &amp; Supplies">Medical Equipment &amp; Supplies</option>
+                        <option value="Sports &amp; Outdoors">Sports &amp; Outdoors</option>
+                        <option value="Fashion &amp; Apparel">Fashion &amp; Apparel</option>
+                        <option value="Jewelry &amp; Watches">Jewelry &amp; Watches</option>
+                        <option value="Home &amp; Garden">Home &amp; Garden</option>
+                        <option value="Kitchen &amp; Dining">Kitchen &amp; Dining</option>
+                        <option value="Tools &amp; DIY">Tools &amp; DIY</option>
+                        <option value="Automotive Parts &amp; Accessories">Automotive Parts &amp; Accessories</option>
+                        <option value="Automobile &amp; Vehicles">Automobile &amp; Vehicles</option>
+                        <option value="Industrial &amp; Scientific">Industrial &amp; Scientific</option>
+                        <option value="Agriculture &amp; Farming">Agriculture &amp; Farming</option>
+                        <option value="Food &amp; Beverages">Food &amp; Beverages</option>
+                        <option value="Office Supplies">Office Supplies</option>
+                        <option value="Books, Music &amp; Movies">Books, Music &amp; Movies</option>
+                        <option value="Toys &amp; Games">Toys &amp; Games</option>
+                        <option value="Baby &amp; Kids">Baby &amp; Kids</option>
+                        <option value="Pets &amp; Accessories">Pets &amp; Accessories</option>
+                        <option value="Art, Crafts &amp; Sewing">Art, Crafts &amp; Sewing</option>
+                        <option value="Collectibles &amp; Hobbies">Collectibles &amp; Hobbies</option>
+                        <option value="Handmade &amp; Custom Items">Handmade &amp; Custom Items</option>
+                        <option value="Travel &amp; Experiences">Travel &amp; Experiences</option>
+                        <option value="House and Property">House and Property</option>
+                        <option value="Home Improvement &amp; Repair">Home Improvement &amp; Repair</option>
+                        <option value="Cleaning &amp; Maintenance">Cleaning &amp; Maintenance</option>
+                        <option value="Automotive Services">Automotive Services</option>
+                        <option value="Professional Services">Professional Services</option>
+                        <option value="Personal &amp; Wellness Services">Personal &amp; Wellness Services</option>
+                        <option value="Education &amp; Training">Education &amp; Training</option>
+                        <option value="Events &amp; Experiences Services">Events &amp; Experiences Services</option>
+                        <option value="Other Services">Other Services</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label>Condition</label>
+                    <select name="condition" id="condition">
+                        <option value="">-- Select condition --</option>
+                        <option value="New">New</option>
+                        <option value="Used">Used</option>
+                        <option value="Refurbished">Refurbished</option>
+                        <option value="Open Box">Open Box</option>
+                        <option value="For Parts">For Parts</option>
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label>Location</label>
+                    <input type="text" name="location" value="{{ listing.location }}" placeholder="City, region…">
+                </div>
+
+                <div class="form-field">
+                    <label>Contact</label>
+                    <input type="text" name="contact" value="{{ listing.contact }}" placeholder="Phone / WhatsApp / email…">
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Status -->
+            <div class="form-field">
+                <label>Status</label>
+                <div class="status-toggle">
+                    <div class="status-option">
+                        <input type="radio" name="status" id="status-active" value="active" {{ 'checked' if listing.status=='active' }}>
+                        <label for="status-active">
+                            <i class="fa-solid fa-circle-check"></i> Active
+                        </label>
+                    </div>
+                    <div class="status-option">
+                        <input type="radio" name="status" id="status-inactive" value="inactive" {{ 'checked' if listing.status=='inactive' }}>
+                        <label for="status-inactive">
+                            <i class="fa-regular fa-circle-pause"></i> Inactive
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="form-field">
+                <label>Description</label>
+                <textarea name="description" placeholder="Describe your item — condition, features, why you're selling…">{{ listing.description }}</textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Pricing (Sale only) ── -->
+    {% if listing.deal_type != 'Swap Deal' %}
+    <div class="card">
+        <div class="card-header">
+            <div class="card-header-icon"><i class="fa-solid fa-coins"></i></div>
+            <div>
+                <h3>Pricing</h3>
+                <p>Set your asking price</p>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="form-grid" style="max-width: 320px;">
+                <div class="form-field">
+                    <label>Asking Price</label>
+                    <div class="price-wrap">
+                        <span class="currency">₵</span>
+                        <input type="text" name="price" value="{{ listing.price }}" placeholder="0.00">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ── Swap Preferences ── -->
+    {% if listing.deal_type == 'Swap Deal' %}
+    <div class="card">
+        <div class="card-header">
+            <div class="card-header-icon"><i class="fa-solid fa-arrows-rotate"></i></div>
+            <div>
+                <h3>Swap Preferences</h3>
+                <p>What you're looking for in return</p>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="form-grid form-grid-3">
+                <div class="form-field">
+                    <label>Desired Swap Item</label>
+                    <input type="text" name="desired_swap" value="{{ listing.desired_swap }}" placeholder="What do you want in return?">
+                </div>
+                <div class="form-field">
+                    <label>Required Cash (₵)</label>
+                    <div class="price-wrap">
+                        <span class="currency">₵</span>
+                        <input type="number" name="required_cash" value="{{ listing.required_cash }}" placeholder="0">
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label>Additional Cash (₵)</label>
+                    <div class="price-wrap">
+                        <span class="currency">₵</span>
+                        <input type="number" step="0.01" name="additional_cash" value="{{ listing.additional_cash }}" placeholder="0.00">
+                    </div>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="form-field">
+                <label>Swap Notes</label>
+                <textarea name="swap_notes" placeholder="Any special terms or conditions for the swap?">{{ listing.swap_notes }}</textarea>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ── Main Listing Images ── -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-header-icon"><i class="fa-solid fa-images"></i></div>
+            <div>
+                <h3>Listing Images</h3>
+                <p>Upload up to 5 photos — first image is your cover</p>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="image-upload-grid">
+                {% set main_imgs = [('image_url','Cover'), ('image1','Photo 2'), ('image2','Photo 3'), ('image3','Photo 4'), ('image4','Photo 5')] %}
+                {% for img_field, img_label in main_imgs %}
+                <div class="image-box" id="imgbox-{{ img_field }}">
+                    {% if listing[img_field] %}
+                    <img src="{{ listing[img_field] }}" id="preview-{{ img_field }}">
+                    <div class="img-label">{{ img_label }}</div>
+                    <span class="remove-img" onclick="removeImg('{{ img_field }}')"><i class="fa-solid fa-xmark"></i></span>
+                    {% else %}
+                    <i class="fa-regular fa-image placeholder-icon"></i>
+                    <span class="placeholder-text">{{ img_label }}</span>
+                    {% endif %}
+                    <input type="file" name="{{ img_field }}_file" accept="image/*" onchange="previewImg(this, '{{ img_field }}')">
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Offered Items (Swap) ── -->
+    {% if listing.deal_type=='Swap Deal' and offers %}
+    <div class="card">
+        <div class="card-header">
+            <div class="card-header-icon"><i class="fa-solid fa-box-open"></i></div>
+            <div>
+                <h3>Offered Items</h3>
+                <p>Items offered by interested buyers</p>
+            </div>
+        </div>
+        <div class="card-body">
+            {% set offer_idx = 0 %}
+            {% for offer in offers %}
+            <div class="offer-card">
+                <span class="offer-number"><i class="fa-solid fa-cube"></i> Item {{ offer_idx + 1 }}</span>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label>Title</label>
+                        <input type="text" name="offer_title[]" value="{{ offer.title }}" placeholder="Item name">
+                    </div>
+                    <div class="form-field">
+                        <label>Condition</label>
+                        <input type="text" name="offer_condition[]" value="{{ offer.condition }}" placeholder="e.g. Used, Good">
+                    </div>
+                </div>
+                <div class="form-field" style="margin-top:12px;">
+                    <label>Description</label>
+                    <textarea name="offer_description[]">{{ offer.description }}</textarea>
+                </div>
+                <div style="margin-top:14px;">
+                    <label style="font-size:.78rem;font-weight:700;color:var(--gray-600);text-transform:uppercase;letter-spacing:.2px;">Photos</label>
+                    <div class="image-upload-grid" style="margin-top:8px;">
+                        {% for img_field in ['image_url','image1','image2','image3','image4'] %}
+                        <div class="image-box">
+                            {% if offer[img_field] %}
+                            <img src="{{ offer[img_field] }}">
+                            <span class="remove-img" onclick="this.previousElementSibling.src=''; this.closest('.image-box').querySelector('input').value=''"><i class="fa-solid fa-xmark"></i></span>
+                            {% else %}
+                            <i class="fa-regular fa-image placeholder-icon"></i>
+                            {% endif %}
+                            <input type="file" name="offer_{{ offer_idx }}_{{ img_field }}" accept="image/*">
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% set offer_idx = offer_idx + 1 %}
             {% endfor %}
         </div>
     </div>
-    {% set offer_idx = offer_idx + 1 %}
-    {% endfor %}
+    {% endif %}
+
+    </form><!-- end form -->
+
+</div><!-- end container -->
+
+<!-- ── Fixed action bar ── -->
+<div class="action-bar">
+    <div class="action-bar-inner">
+        <p class="action-bar-info">Editing: <strong>{{ listing.title }}</strong></p>
+        <div class="action-buttons">
+            <a href="{{ url_for('store_inventory', slug=store.slug) }}" class="btn btn-ghost">
+                <i class="fa-solid fa-xmark"></i> Cancel
+            </a>
+            <button type="submit" form="editForm" class="btn btn-primary" id="saveBtn">
+                <i class="fa-solid fa-floppy-disk"></i> Save Changes
+            </button>
+        </div>
+    </div>
 </div>
-{% endif %}
 
-<!-- Actions -->
-<div class="actions">
-    <a href="{{ url_for('store_inventory', slug=store.slug) }}" class="btn cancel">Cancel</a>
-    <button type="submit" class="btn save">Save Changes</button>
+<!-- Saving overlay -->
+<div class="overlay" id="overlay">
+    <div class="overlay-box">
+        <div class="spinner"></div>
+        <span class="overlay-label">Saving your listing…</span>
+        <span class="overlay-sub">This will only take a moment</span>
+    </div>
 </div>
-
-</form>
-
-<div class="overlay" id="overlay">Saving...</div>
 
 <script>
-// Show loading overlay on form submit
-document.getElementById('editForm').addEventListener('submit', function(e){
-    document.getElementById('overlay').style.display = 'flex';
-});
+document.addEventListener('DOMContentLoaded', function () {
 
-// Initialize Tom Select for searchable category dropdown
-document.addEventListener('DOMContentLoaded', function() {
-    new TomSelect('#category', {
+    // ── Category TomSelect ──
+    const categoryValue = "{{ listing.category or '' }}";
+    const categorySelect = new TomSelect('#category', {
         maxOptions: 50,
         searchField: ['text'],
         sortField: 'text',
-        placeholder: '-- Start typing to search categories --',
+        placeholder: '-- Start typing to search --',
         plugins: ['clear_button'],
-        loadThrottle: 150,
-        shouldLoad: function(query) {
-            return query.length >= 1;
-        },
-        render: {
-            option: function(data, escape) {
-                return '<div>' + escape(data.text) + '</div>';
-            },
-            item: function(data, escape) {
-                return '<div>' + escape(data.text) + '</div>';
-            }
-        }
+        create: true,
+        allowEmptyOption: true
     });
+    if (categoryValue && categoryValue !== 'None' && categoryValue !== '') {
+        if (!categorySelect.getOption(categoryValue)) {
+            categorySelect.addOption({ value: categoryValue, text: categoryValue });
+        }
+        categorySelect.setValue(categoryValue);
+    }
+
+    // ── Condition TomSelect ──
+    const conditionValue = "{{ listing.condition or '' }}";
+    const conditionSelect = new TomSelect('#condition', {
+        plugins: ['clear_button'],
+        create: true,
+        allowEmptyOption: true,
+        placeholder: '-- Select or type --'
+    });
+    if (conditionValue && conditionValue !== 'None' && conditionValue !== '') {
+        if (!conditionSelect.getOption(conditionValue)) {
+            conditionSelect.addOption({ value: conditionValue, text: conditionValue });
+        }
+        conditionSelect.setValue(conditionValue);
+    }
+
+    // ── Show saving overlay on submit ──
+    document.getElementById('editForm').addEventListener('submit', function () {
+        const overlay = document.getElementById('overlay');
+        overlay.style.display = 'flex';
+    });
+
+    // ── Status radio init ──
+    const statusVal = "{{ listing.status or 'active' }}";
+    const statusRadio = document.getElementById('status-' + statusVal);
+    if (statusRadio) statusRadio.checked = true;
+
 });
+
+// ── Image preview helper ──
+function previewImg(input, fieldId) {
+    if (input.files && input.files[0]) {
+        const box = document.getElementById('imgbox-' + fieldId) || input.closest('.image-box');
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            let img = box.querySelector('img');
+            if (!img) {
+                img = document.createElement('img');
+                box.insertBefore(img, box.querySelector('input'));
+            }
+            img.src = e.target.result;
+            // ensure overlay label and remove btn exist
+            if (!box.querySelector('.img-label')) {
+                const lbl = document.createElement('div');
+                lbl.className = 'img-label';
+                lbl.textContent = box.querySelector('.placeholder-text')?.textContent || '';
+                box.appendChild(lbl);
+            }
+            if (!box.querySelector('.remove-img')) {
+                const rm = document.createElement('span');
+                rm.className = 'remove-img';
+                rm.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                rm.onclick = function () { removeBoxImg(box, fieldId); };
+                box.appendChild(rm);
+            }
+            box.querySelector('.placeholder-icon')?.remove();
+            box.querySelector('.placeholder-text')?.remove();
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function removeImg(fieldId) {
+    const box = document.getElementById('imgbox-' + fieldId);
+    if (box) removeBoxImg(box, fieldId);
+}
+
+function removeBoxImg(box, fieldId) {
+    box.querySelector('img')?.remove();
+    box.querySelector('.img-label')?.remove();
+    box.querySelector('.remove-img')?.remove();
+    const fi = box.querySelector('input[type=file]');
+    if (fi) fi.value = '';
+    // restore placeholder
+    if (!box.querySelector('.placeholder-icon')) {
+        const icon = document.createElement('i');
+        icon.className = 'fa-regular fa-image placeholder-icon';
+        box.insertBefore(icon, box.querySelector('input'));
+        const txt = document.createElement('span');
+        txt.className = 'placeholder-text';
+        txt.textContent = fieldId === 'image_url' ? 'Cover' : 'Photo';
+        box.insertBefore(txt, box.querySelector('input'));
+    }
+}
 </script>
 
-</div>
 </body>
 </html>

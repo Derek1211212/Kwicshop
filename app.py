@@ -991,9 +991,11 @@ def edit_inventory(slug, listing_id):
         conn.close()
         abort(403)
 
-    # Verify listing
+    # Verify listing - use backticks around condition since it's a reserved word
     cur.execute("""
-        SELECT *
+        SELECT listing_id, user_id, store_id, title, description, category, 
+               `condition` as item_condition, location, contact, price, status, deal_type,
+               image_url, image1, image2, image3, image4, created_at
         FROM listings
         WHERE listing_id = %s AND store_id = %s
     """, (listing_id, store['store_id']))
@@ -1003,6 +1005,10 @@ def edit_inventory(slug, listing_id):
         cur.close()
         conn.close()
         abort(404)
+    
+    # Rename the key to 'condition' for template compatibility
+    if listing and 'item_condition' in listing:
+        listing['condition'] = listing['item_condition']
 
     # Load additional offers for Swap Deals
     offers = []
@@ -1188,6 +1194,7 @@ def store_add_item():
     title = request.form.get('title', '').strip()
     description = request.form.get('description', '').strip()
     category = request.form.get('category', '').strip()
+    condition = request.form.get('condition', '').strip()   # <--- NEW: read condition field
     location = request.form.get('location', '').strip()
     contact = request.form.get('contact', '').strip()
     price = request.form.get('price')
@@ -1199,7 +1206,13 @@ def store_add_item():
         conn.close()
         return jsonify({"success": False, "message": "Missing required fields"}), 400
     
-    # Handle images (up to 5) – extract URL from dict if needed
+    # Condition is required for Outright Sales
+    if deal_type == 'Outright Sales' and not condition:
+        cur.close()
+        conn.close()
+        return jsonify({"success": False, "message": "Please select a condition for the product"}), 400
+    
+    # Handle images (up to 5)
     images = []
     for f in request.files.getlist('images[]'):
         if f and allowed_file(f.filename):
@@ -1217,20 +1230,20 @@ def store_add_item():
         conn.close()
         return jsonify({"success": False, "message": "At least one image required"}), 400
     
-    # Insert listing
+    # Insert listing with condition column
     padded = (images + [None]*5)[:5]
     cur.execute("""
-        INSERT INTO listings (user_id, store_id, title, description, category, location, contact,
+        INSERT INTO listings (user_id, store_id, title, description, category, `condition`, location, contact,
                               price, deal_type, Plan, image_url, image1, image2, image3, image4)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """, (user_id, store_id, title, description, category, location, contact,
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """, (user_id, store_id, title, description, category, condition, location, contact,
           price, deal_type, plan, padded[0], padded[1], padded[2], padded[3], padded[4]))
     listing_id = cur.lastrowid
     conn.commit()
     cur.close()
     conn.close()
     
-    # Send push notification (lazy import to avoid circular import)
+    # Send push notification
     try:
         from notifications import send_push_notification_to_store_followers
         send_push_notification_to_store_followers(
@@ -1242,16 +1255,13 @@ def store_add_item():
     except Exception as e:
         print(f"Push notification error (non-critical): {e}")
     
-    # Flash message (will survive redirect)
     flash(f"Item '{title}' added successfully!", "success")
     
-    # Return JSON with redirect URL (frontend will handle)
     return jsonify({
         "success": True,
         "redirect": url_for('store_home', store_id=store_id),
         "message": "Item added successfully!"
     })
-
 
 
 
@@ -2451,6 +2461,112 @@ def subscribe_to_store():
     conn.close()
     
     return jsonify({"success": True})
+
+
+
+
+@app.route('/marketplace')
+def marketplace():
+    return render_template('marketplace.html')    
+
+
+
+
+
+
+@app.route('/api/marketplace/products')
+def api_marketplace_products():
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    search = request.args.get('search', '')
+    category = request.args.get('category', '')
+    condition = request.args.get('condition', '')
+    deal_type = request.args.get('deal_type', '')
+    sort = request.args.get('sort', 'newest')
+    
+    offset = (page - 1) * per_page
+    
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    
+    # Build WHERE clause dynamically
+    where_parts = ["l.status = 'active'"]
+    params = []
+    
+    if search:
+        where_parts.append("l.title LIKE %s")
+        params.append(f"%{search}%")
+    if category:
+        where_parts.append("l.category = %s")
+        params.append(category)
+    if condition:
+        where_parts.append("l.condition = %s")
+        params.append(condition)
+    if deal_type:
+        where_parts.append("l.deal_type = %s")
+        params.append(deal_type)
+    
+    where_clause = "WHERE " + " AND ".join(where_parts)
+    
+    # COUNT query (to get total number of products)
+    count_query = f"""
+        SELECT COUNT(*) as total
+        FROM listings l
+        {where_clause}
+    """
+    cur.execute(count_query, params)
+    total = cur.fetchone()['total']   # This will now work
+    
+    # Main data query
+    query = f"""
+        SELECT l.listing_id, l.title, l.image_url, l.image1, l.category, 
+               l.price, l.deal_type, l.condition, l.is_featured, l.store_id,
+               s.name as store_name, s.trust_score,
+               COALESCE(lm.impressions, 0) as impressions,
+               COALESCE(lm.clicks, 0) as clicks
+        FROM listings l
+        LEFT JOIN stores s ON l.store_id = s.store_id
+        LEFT JOIN listing_metrics lm ON l.listing_id = lm.listing_id
+        {where_clause}
+    """
+    
+    # Sorting
+    if sort == 'price_asc':
+        query += " ORDER BY l.price ASC"
+    elif sort == 'price_desc':
+        query += " ORDER BY l.price DESC"
+    elif sort == 'popular':
+        query += " ORDER BY COALESCE(lm.impressions, 0) DESC"
+    else:  # newest
+        query += " ORDER BY l.created_at DESC"
+    
+    # Pagination
+    query += " LIMIT %s OFFSET %s"
+    params.extend([per_page, offset])
+    
+    cur.execute(query, params)
+    products = cur.fetchall()
+    
+    cur.close()
+    conn.close()
+    
+    return jsonify({
+        'success': True,
+        'products': products,
+        'pagination': {
+            'current_page': page,
+            'per_page': per_page,
+            'total': total,
+            'total_pages': (total + per_page - 1) // per_page
+        }
+    })
+
+
+
+
+
+
+
 
 
 

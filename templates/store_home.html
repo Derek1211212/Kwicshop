@@ -1633,7 +1633,42 @@ initTourButton();
         stepCircles.forEach((c,i) => { const num=i+1; c.classList.toggle('active',num===n); c.classList.toggle('completed',num<n); });
         connectors.forEach((c,i) => c.classList.toggle('completed', i<n-1));
     }
-    document.querySelectorAll('.next-step').forEach(b => b.addEventListener('click', () => { const cur = parseInt(b.closest('.modal-step-content')?.dataset.step||0,10)+1; if (cur<=stepContents.length) goToStep(cur); }));
+    // ======================== STRICT VALIDATION FOR STEP 1 ========================
+    function validateStep1() {
+        const step1 = document.querySelector('.modal-step-content[data-step="1"]');
+        if (!step1) return false;
+
+        const title = step1.querySelector('input[name="title"]')?.value.trim();
+        const description = step1.querySelector('textarea[name="description"]')?.value.trim();
+        const category = step1.querySelector('input[name="category"]')?.value.trim();
+        const price = step1.querySelector('input[name="price"]')?.value.trim();
+        const condition = step1.querySelector('select[name="condition"]')?.value;
+        const fileInput = document.getElementById('sale-images');
+        const files = fileInput ? fileInput.files : [];
+
+        if (!title) { showToast('❌ Please enter the item name.'); return false; }
+        if (!description) { showToast('❌ Please enter the listing description.'); return false; }
+        if (!category) { showToast('❌ Please enter a category for the product.'); return false; }
+        if (!price || parseFloat(price) <= 0) { showToast('❌ Please enter a valid price greater than 0.'); return false; }
+        if (!condition) { showToast('❌ Please select the product condition.'); return false; }
+        if (files.length === 0) { showToast('❌ Please upload at least one product image.'); return false; }
+
+        return true;
+    }
+
+    document.querySelectorAll('.next-step').forEach(b => b.addEventListener('click', () => {
+        const currentStepElem = b.closest('.modal-step-content');
+        if (!currentStepElem) return;
+        const curStep = parseInt(currentStepElem.dataset.step, 10);
+
+        // Strict validation: Step 1 must have all required fields filled
+        if (curStep === 1 && !validateStep1()) {
+            return; // Block moving to next page
+        }
+
+        const nextStep = curStep + 1;
+        if (nextStep <= stepContents.length) goToStep(nextStep);
+    }));
     document.querySelectorAll('.prev-step').forEach(b => b.addEventListener('click', () => { const cur = parseInt(b.closest('.modal-step-content')?.dataset.step||0,10)-1; if (cur>=1) goToStep(cur); }));
 
     // ========== DYNAMIC CATEGORY AUTOCOMPLETE (store-specific) ==========
