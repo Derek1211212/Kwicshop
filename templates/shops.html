@@ -161,9 +161,6 @@
     .hero h1 { font-family: 'Sora', sans-serif; font-size: clamp(2.6rem, 4.5vw, 3.6rem); font-weight: 800; line-height: 1.08; letter-spacing: -0.04em; color: var(--ink); margin-bottom: 1.3rem; }
     .hero h1 .accent { color: var(--green-600); font-style: italic; font-family: 'Lora', serif; font-weight: 600; }
     .hero-sub { font-size: 1rem; color: var(--ink-muted); line-height: 1.7; margin-bottom: 2.2rem; font-weight: 400; max-width: 440px; }
-    .hero-cta { display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap; }
-    .btn-primary { background: var(--green-600); color: white; padding: 0.85rem 1.8rem; border-radius: var(--radius-xl); font-family: 'Sora', sans-serif; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; transition: all 0.25s; box-shadow: 0 6px 20px rgba(22,163,74,0.35); }
-    .btn-primary:hover { background: var(--green-700); transform: translateY(-2px); box-shadow: 0 12px 30px rgba(22,163,74,0.4); }
     .btn-outline { color: white; background: var(--green-600); border: 1.5px solid var(--border); padding: 0.85rem 1.6rem; border-radius: var(--radius-xl); font-family: 'Sora', sans-serif; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; transition: all 0.2s; }
     .btn-outline:hover { border-color: var(--green-400); color: var(--green-700); background: var(--green-50); }
     .hero-stats { display: flex; gap: 1rem; margin-top: 3rem; padding-top: 2.5rem; border-top: 1px solid var(--border); flex-wrap: wrap; }
@@ -421,6 +418,76 @@
     display: inline-flex;  /* overrides any potential hidden */
   }
 }
+
+/* ── HERO CTA LAYOUT ─────────────────────── */
+.hero-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.hero-cta .btn-primary {
+  width: 100%;
+  justify-content: center;
+}
+
+.hero-cta-secondary {
+  display: flex;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.hero-cta-secondary .btn-outline {
+  flex: 1;
+  justify-content: center;
+  font-size: 0.82rem;
+  padding: 0.75rem 1rem;
+  background: white;
+  color: var(--ink-soft);
+  border-color: var(--border);
+}
+
+.hero-cta-secondary .btn-outline:hover {
+  border-color: var(--green-400);
+  color: var(--green-700);
+  background: var(--green-50);
+}
+
+/* Marketplace gets a subtle green tint to distinguish it */
+.btn-outline--market {
+  background: var(--green-50) !important;
+  border-color: var(--green-200) !important;
+  color: var(--green-700) !important;
+}
+
+.btn-outline--market:hover {
+  background: var(--green-100) !important;
+  border-color: var(--green-400) !important;
+}
+
+/* Desktop: all three in a row */
+@media (min-width: 640px) {
+  .hero-cta {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .hero-cta .btn-primary {
+    width: auto;
+  }
+
+  .hero-cta-secondary {
+    width: auto;
+    flex: none;
+  }
+
+  .hero-cta-secondary .btn-outline {
+    flex: none;
+    white-space: nowrap;
+  }
+}
   </style>
 </head>
 <body>
@@ -446,9 +513,18 @@
         <h1>Your shop online<br>in <span class="accent">3 minutes</span></h1>
         <p class="hero-sub">Everything you need to sell — beautiful storefronts, smart analytics, zero code. Start for free today.</p>
 <div class="hero-cta">
-  <a href="/my-store" class="btn-primary"><i class="fas fa-{% if is_logged_in %}store{% else %}rocket{% endif %}"></i>{% if is_logged_in %}Go to my store{% else %}Start my free shop{% endif %}</a>
-  <a href="/marketplace" class="btn-outline"><i class="fas fa-store"></i> Marketplace</a>
-  <a href="#stores" class="btn-outline"><i class="fas fa-compass"></i> Browse stores</a>
+  <a href="/my-store" class="btn-primary">
+    <i class="fas fa-{% if is_logged_in %}store{% else %}rocket{% endif %}"></i>
+    {% if is_logged_in %}Go to my store{% else %}Start my free shop{% endif %}
+  </a>
+  <div class="hero-cta-secondary">
+    <a href="/marketplace" class="btn-outline btn-outline--market">
+      <i class="fas fa-store"></i> Marketplace
+    </a>
+    <a href="#stores" class="btn-outline">
+      <i class="fas fa-compass"></i> Browse stores
+    </a>
+  </div>
 </div>
         <div class="hero-stats">
           <div class="stat-item"><span class="stat-num">15k+</span><span class="stat-label">Stores created</span></div>
