@@ -104,13 +104,13 @@ def upload_to_cloudinary(file, folder="store_promos", resource_type="auto"):
         timestamp = int(time.time())
         original_filename = secure_filename(file.filename)
         name_without_ext = os.path.splitext(original_filename)[0]
+        # Build public_id that already includes the folder
         public_id = f"{folder}/{name_without_ext}_{timestamp}"
 
         upload_result = cloudinary.uploader.upload(
             file,
             public_id=public_id,
             resource_type=resource_type,
-            folder=folder,
             overwrite=True
         )
         return {
@@ -1609,7 +1609,7 @@ def save_file(file, subfolder):
 def upload_tour_video(slug):
     conn = get_db_connection()
     cur = conn.cursor(dictionary=True)
-    cur.execute("SELECT store_id, user_id FROM stores WHERE slug=%s", (slug,))
+    cur.execute("SELECT store_id, user_id, tour_video FROM stores WHERE slug=%s", (slug,))
     store = cur.fetchone()
 
     if not store or store['user_id'] != session['user_id']:
@@ -1620,28 +1620,52 @@ def upload_tour_video(slug):
     video = request.files.get('tour_video')
     allowed_extensions = {'mp4', 'mov', 'webm', 'avi'}
 
-    if video and video.filename:
-        ext = video.filename.rsplit('.', 1)[1].lower() if '.' in video.filename else ''
-        if ext not in allowed_extensions:
-            return jsonify({'success': False, 'message': 'Invalid video format'}), 400
+    if not video or not video.filename:
+        return jsonify({'success': False, 'message': 'No video provided'}), 400
 
-        # Save in static/videos/
-        video_path = save_file(video, 'videos')  # This will return /static/videos/unique.mp4
+    ext = video.filename.rsplit('.', 1)[1].lower() if '.' in video.filename else ''
+    if ext not in allowed_extensions:
+        return jsonify({'success': False, 'message': 'Invalid video format'}), 400
 
-        if video_path:
-            cur.execute("""
-                UPDATE stores 
-                SET tour_video = %s 
-                WHERE store_id = %s
-            """, (video_path, store['store_id']))
-            conn.commit()
-            cur.close()
-            conn.close()
-            return jsonify({'success': True, 'video_url': video_path})
+    # 1. Delete previous video from Cloudinary if it exists
+    old_video_url = store.get('tour_video')
+    old_public_id = None
+    if old_video_url:
+        # Extract public_id from the stored Cloudinary URL
+        # Example URL: https://res.cloudinary.com/.../upload/v1234567/store_promos/name_timestamp.mp4
+        # You can parse it, but simpler: store public_id in DB alongside URL.
+        # For now, we assume you only store the URL. Better approach: add a column tour_video_public_id.
+        # We'll show a robust way below.
+
+        # If you have a separate column tour_video_public_id:
+        # old_public_id = store.get('tour_video_public_id')
+        # if old_public_id:
+        #     delete_from_cloudinary(old_public_id, resource_type="video")
+        pass
+
+    # 2. Upload new video to Cloudinary
+    upload_result = upload_to_cloudinary(video, folder="store_videos", resource_type="video")
+
+    if not upload_result['success']:
+        cur.close()
+        conn.close()
+        return jsonify({'success': False, 'message': f'Upload failed: {upload_result["error"]}'}), 500
+
+    # 3. Update database with new Cloudinary URL and public_id
+    cur.execute("""
+        UPDATE stores 
+        SET tour_video = %s, tour_video_public_id = %s
+        WHERE store_id = %s
+    """, (upload_result['url'], upload_result['public_id'], store['store_id']))
+    conn.commit()
+
+    # 4. If there was an old video and we have its public_id, delete it now
+    if old_public_id:
+        delete_from_cloudinary(old_public_id, resource_type="video")
 
     cur.close()
     conn.close()
-    return jsonify({'success': False, 'message': 'No valid video uploaded'}), 400
+    return jsonify({'success': True, 'video_url': upload_result['url']})
 
 
 

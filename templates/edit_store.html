@@ -6,884 +6,793 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Edit Store - {{ store.name }}</title>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css">
+
   <style>
     :root {
-      --bg: #f8fdf9;
-      --card: #ffffff;
-      --text: #1a3c2e;
-      --muted: #5a7c6c;
-      --border: #d4e8df;
+      --bg: #f2faf6;
+      --surface: #ffffff;
+      --surface-2: #f7fdf9;
+      --text: #0f2b1e;
+      --text-2: #3d6b55;
+      --text-3: #7aab90;
+      --border: #c8e8d8;
+      --border-2: #e4f4ec;
       --primary: #10b981;
-      --primary-dark: #0da271;
-      --primary-light: #d1fae5;
+      --primary-dk: #059669;
+      --primary-xl: #d1fae5;
+      --primary-glow: rgba(16,185,129,0.18);
       --danger: #ef4444;
-      --warning: #f59e0b;
-      --info: #3b82f6;
-      --shadow: 0 8px 30px rgba(16, 185, 129, 0.08);
-      --shadow-hover: 0 12px 40px rgba(16, 185, 129, 0.12);
-      --radius: 16px;
-      --radius-sm: 10px;
-      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      --danger-bg: #fef2f2;
+      --danger-border: #fecaca;
+      --shadow-sm: 0 2px 8px rgba(16,185,129,0.07);
+      --shadow: 0 8px 32px rgba(16,185,129,0.10);
+      --shadow-lg: 0 20px 60px rgba(16,185,129,0.14);
+      --radius: 20px;
+      --radius-sm: 12px;
+      --radius-xs: 8px;
+      --ease: cubic-bezier(0.4,0,0.2,1);
+      --font: 'Sora', sans-serif;
+      --mono: 'DM Mono', monospace;
     }
-    
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+      font-family: var(--font);
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
       min-height: 100vh;
-      padding: 20px;
+      background-image:
+        radial-gradient(ellipse 70% 50% at 10% 0%, rgba(16,185,129,0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 60% at 90% 100%, rgba(16,185,129,0.06) 0%, transparent 70%);
     }
-    
-    .container {
-      max-width: 1000px;
+
+    /* ── Layout ── */
+    .page-wrapper {
+      max-width: 1020px;
       margin: 0 auto;
-      padding: 0 20px;
+      padding: 36px 24px 80px;
     }
-    
-    /* Header */
-    .header {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      margin-bottom: 32px;
-      padding-bottom: 24px;
-      border-bottom: 2px solid var(--primary-light);
+
+    /* ── Flash Messages ── */
+    .flashes { list-style: none; margin-bottom: 28px; display: flex; flex-direction: column; gap: 10px; }
+
+    .flash {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 500;
+      border: 1.5px solid transparent;
+      animation: slideDown 0.35s var(--ease);
     }
-    
-    .header-main {
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .flash-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+
+    .flash.success { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+    .flash.success .flash-dot { background: #16a34a; }
+    .flash.danger  { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+    .flash.danger  .flash-dot { background: #ef4444; }
+    .flash.warning { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+    .flash.warning .flash-dot { background: #f59e0b; }
+    .flash.info    { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
+    .flash.info    .flash-dot { background: #3b82f6; }
+
+    /* ── Page Header ── */
+    .page-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      flex-wrap: wrap;
       gap: 20px;
-    }
-    
-    .header-title h1 {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--text);
-      margin: 0;
-      background: linear-gradient(135deg, var(--primary) 0%, #0d9488 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    
-    .header-subtitle {
-      color: var(--muted);
-      font-size: 15px;
-      margin-top: 8px;
-      max-width: 600px;
-    }
-    
-    .header-actions {
-      display: flex;
-      gap: 12px;
+      margin-bottom: 36px;
+      padding-bottom: 32px;
+      border-bottom: 1.5px solid var(--border-2);
       flex-wrap: wrap;
     }
-    
-    /* Buttons */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 12px 20px;
-      border-radius: var(--radius-sm);
-      border: 1.5px solid transparent;
-      font-weight: 600;
-      font-size: 14px;
-      text-decoration: none;
-      cursor: pointer;
-      transition: var(--transition);
-      white-space: nowrap;
-      background: white;
+
+    .page-header-left { flex: 1; min-width: 0; }
+
+    .page-eyebrow {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--primary);
+      background: var(--primary-xl);
+      padding: 5px 12px;
+      border-radius: 40px;
+      margin-bottom: 14px;
+    }
+
+    .page-eyebrow svg { width: 13px; height: 13px; }
+
+    .page-title {
+      font-size: clamp(26px, 4vw, 36px);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
       color: var(--text);
-      border-color: var(--border);
     }
-    
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-hover);
-      border-color: var(--primary);
+
+    .page-subtitle {
+      font-size: 15px;
+      color: var(--text-2);
+      margin-top: 8px;
+      font-weight: 400;
     }
-    
+
+    .slug-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin-top: 14px;
+      padding: 8px 14px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 40px;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      color: var(--text-2);
+    }
+
+    .slug-pill span { color: var(--text-3); }
+
+    .header-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 11px 20px;
+      border-radius: var(--radius-xs);
+      border: 1.5px solid transparent;
+      font-family: var(--font);
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s var(--ease);
+      white-space: nowrap;
+      letter-spacing: -0.01em;
+    }
+
+    .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
     .btn-primary {
       background: var(--primary);
       border-color: var(--primary);
-      color: white;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(16,185,129,0.35);
     }
-    
     .btn-primary:hover {
-      background: var(--primary-dark);
-      border-color: var(--primary-dark);
+      background: var(--primary-dk);
+      border-color: var(--primary-dk);
+      box-shadow: 0 6px 20px rgba(16,185,129,0.45);
+      transform: translateY(-1px);
     }
-    
-    .btn-outline {
-      background: transparent;
+
+    .btn-ghost {
+      background: var(--surface);
       border-color: var(--border);
-      color: var(--muted);
+      color: var(--text-2);
     }
-    
-    .btn-outline:hover {
-      background: var(--primary-light);
-      color: var(--primary-dark);
+    .btn-ghost:hover {
+      background: var(--primary-xl);
       border-color: var(--primary);
+      color: var(--primary-dk);
+      transform: translateY(-1px);
     }
-    
-    /* Card */
+
+    /* ── Card ── */
     .card {
-      background: var(--card);
+      background: var(--surface);
       border-radius: var(--radius);
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border-2);
       box-shadow: var(--shadow);
       overflow: hidden;
-      margin-bottom: 30px;
+      margin-bottom: 32px;
+      animation: fadeUp 0.5s var(--ease) both;
     }
-    
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
     .card-header {
-      padding: 24px;
-      border-bottom: 1px solid var(--border);
-      background: linear-gradient(to right, #f0fdf9, #ffffff);
+      padding: 28px 32px;
+      background: linear-gradient(105deg, #f2fdf8 0%, #ffffff 60%);
+      border-bottom: 1.5px solid var(--border-2);
+      display: flex; align-items: center; gap: 16px;
     }
-    
-    .card-header h2 {
-      font-size: 20px;
-      font-weight: 600;
-      margin: 0;
-      color: var(--text);
+
+    .card-header-icon {
+      width: 42px; height: 42px;
+      background: var(--primary-xl);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
     }
-    
-    .card-subtitle {
-      color: var(--muted);
-      font-size: 14px;
-      margin-top: 6px;
+
+    .card-header-icon svg { width: 20px; height: 20px; color: var(--primary); }
+
+    .card-header-text {}
+    .card-header h2 { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
+    .card-header p  { font-size: 13px; color: var(--text-3); margin-top: 2px; font-weight: 400; }
+
+    .card-body { padding: 32px; }
+
+    /* ── Section ── */
+    .section { padding-top: 36px; margin-top: 36px; border-top: 1.5px solid var(--border-2); }
+    .section:first-child { padding-top: 0; margin-top: 0; border-top: none; }
+
+    .section-label {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--primary);
+      margin-bottom: 24px;
     }
-    
-    .card-body {
-      padding: 24px;
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-2);
     }
-    
-    /* Form */
+
+    /* ── Form Grid ── */
     .form-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 24px;
+      gap: 20px 24px;
     }
-    
-    @media (max-width: 768px) {
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
+
+    @media (max-width: 680px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .card-body  { padding: 24px; }
+      .card-header { padding: 22px 24px; }
     }
-    
-    .form-group {
-      margin-bottom: 20px;
-    }
-    
-    .form-group.full-width {
-      grid-column: 1 / -1;
-    }
-    
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full-width { grid-column: 1 / -1; }
+
     label {
       display: block;
-      font-weight: 600;
-      font-size: 14px;
-      margin-bottom: 8px;
-      color: var(--text);
-    }
-    
-    .form-hint {
       font-size: 13px;
-      color: var(--muted);
-      margin-top: 6px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    .required-star { color: var(--primary); margin-left: 2px; }
+
+    .form-hint {
+      font-size: 12px;
+      color: var(--text-3);
       line-height: 1.5;
     }
-    
+
+    /* ── Inputs ── */
     input[type="text"],
-    input[type="file"],
     textarea,
     select {
       width: 100%;
-      padding: 14px 16px;
-      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      border-radius: var(--radius-xs);
       border: 1.5px solid var(--border);
-      background: #ffffff;
+      background: var(--surface-2);
       color: var(--text);
-      font-size: 15px;
-      transition: var(--transition);
-      font-family: inherit;
+      font-size: 14.5px;
+      font-family: var(--font);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none;
     }
-    
-    input:focus,
+
+    input[type="text"]::placeholder,
+    textarea::placeholder { color: var(--text-3); }
+
+    input[type="text"]:focus,
     textarea:focus,
     select:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+      box-shadow: 0 0 0 4px var(--primary-glow);
+      background: #fff;
     }
-    
-    textarea {
-      min-height: 140px;
-      resize: vertical;
-      line-height: 1.6;
-    }
-    
+
+    textarea { min-height: 130px; resize: vertical; line-height: 1.65; }
+
     select {
       cursor: pointer;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235a7c6c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237aab90' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
-      background-position: right 16px center;
-      padding-right: 40px;
+      background-position: right 14px center;
+      padding-right: 38px;
     }
-    
-    /* Checkboxes */
-    .checkbox-group {
+
+    .slug-readonly {
+      padding: 12px 16px;
+      border-radius: var(--radius-xs);
+      border: 1.5px solid var(--border-2);
+      background: var(--surface-2);
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text-2);
+      letter-spacing: 0.02em;
+    }
+
+    /* ── Checkbox Group ── */
+    .checkbox-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 12px;
-      margin-top: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 10px;
     }
-    
+
     .checkbox-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px;
-      border-radius: var(--radius-sm);
+      display: flex; align-items: center; gap: 11px;
+      padding: 13px 16px;
+      border-radius: var(--radius-xs);
       border: 1.5px solid var(--border);
-      background: #ffffff;
-      transition: var(--transition);
+      background: var(--surface-2);
       cursor: pointer;
+      transition: all 0.18s var(--ease);
+      user-select: none;
     }
-    
+
     .checkbox-item:hover {
       border-color: var(--primary);
-      background: var(--primary-light);
+      background: var(--primary-xl);
     }
-    
+
     .checkbox-item input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
+      width: 17px; height: 17px;
       accent-color: var(--primary);
       cursor: pointer;
+      flex-shrink: 0;
     }
-    
-    /* File Upload */
-    .file-upload {
+
+    .checkbox-item span {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-2);
+    }
+
+    /* ── File Upload ── */
+    .file-drop {
       position: relative;
       border: 2px dashed var(--border);
       border-radius: var(--radius-sm);
-      padding: 24px;
+      padding: 28px 24px;
       text-align: center;
-      background: #fafefc;
-      transition: var(--transition);
-    }
-    
-    .file-upload:hover {
-      border-color: var(--primary);
-      background: var(--primary-light);
-    }
-    
-    .file-input {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      top: 0;
-      left: 0;
-      opacity: 0;
+      background: var(--surface-2);
+      transition: all 0.2s var(--ease);
       cursor: pointer;
     }
-    
-    .file-label {
-      font-weight: 600;
-      color: var(--primary);
-      margin-bottom: 8px;
-      display: block;
+
+    .file-drop:hover {
+      border-color: var(--primary);
+      background: var(--primary-xl);
     }
-    
-    .file-hint {
-      font-size: 13px;
-      color: var(--muted);
+
+    .file-drop.dragover {
+      border-color: var(--primary);
+      background: var(--primary-xl);
+      box-shadow: 0 0 0 4px var(--primary-glow);
     }
-    
-    /* Media Preview */
-    .media-preview {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-      margin-top: 24px;
+
+    .file-input {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer; width: 100%; height: 100%;
     }
-    
-    .preview-card {
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      overflow: hidden;
-      background: #ffffff;
+
+    .file-drop-icon {
+      width: 40px; height: 40px;
+      margin: 0 auto 12px;
+      background: var(--primary-xl);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
     }
-    
-    .preview-header {
-      padding: 16px;
-      background: #f0fdf9;
-      border-bottom: 1px solid var(--border);
-      font-weight: 600;
-      font-size: 14px;
+
+    .file-drop-icon svg { width: 20px; height: 20px; color: var(--primary); }
+
+    .file-drop-label {
+      font-size: 14px; font-weight: 600;
       color: var(--text);
+      margin-bottom: 4px;
     }
-    
-    .preview-body {
-      padding: 16px;
-    }
-    
-    .preview-image {
-      width: 100%;
-      height: 160px;
-      object-fit: cover;
-      border-radius: 8px;
-      background: #f1f5f9;
-      display: block;
-    }
-    
-    .preview-video {
-      width: 100%;
-      height: 160px;
-      border-radius: 8px;
-      background: #f1f5f9;
-      display: block;
-    }
-    
-    .no-media {
-      text-align: center;
-      padding: 30px;
-      color: var(--muted);
-      font-size: 14px;
-      background: #f8fafc;
-      border-radius: 8px;
-    }
-    
-    /* Remove Option */
+
+    .file-drop-label em { color: var(--primary); font-style: normal; }
+
+    .file-drop-hint { font-size: 12px; color: var(--text-3); }
+    .file-chosen { font-size: 13px; color: var(--primary-dk); font-weight: 500; margin-top: 6px; }
+
+    /* ── Remove Option ── */
     .remove-option {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 16px;
+      display: flex; align-items: center; gap: 10px;
+      margin-top: 12px;
+      padding: 11px 14px;
+      background: var(--danger-bg);
+      border-radius: var(--radius-xs);
+      border: 1.5px solid var(--danger-border);
+    }
+
+    .remove-option input[type="checkbox"] { accent-color: var(--danger); flex-shrink: 0; }
+    .remove-option label { font-size: 13px; font-weight: 500; color: #991b1b; cursor: pointer; }
+
+    /* ── Media Preview Grid ── */
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 28px;
+    }
+
+    .media-card {
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border-2);
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    .media-card-head {
       padding: 12px 16px;
-      background: #fef2f2;
-      border-radius: var(--radius-sm);
-      border: 1.5px solid #fecaca;
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border-2);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-2);
     }
-    
-    .remove-option input[type="checkbox"] {
-      accent-color: var(--danger);
-    }
-    
-    .remove-option span {
-      color: #991b1b;
-      font-weight: 500;
-      font-size: 14px;
-    }
-    
-    /* Section Dividers */
-    .section {
-      margin-top: 32px;
-      padding-top: 32px;
-      border-top: 1.5px solid var(--border);
-    }
-    
-    .section-title {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 20px;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    
-    .section-title::before {
-      content: '';
+
+    .media-card-body { padding: 16px; }
+
+    .media-card-body img,
+    .media-card-body video {
+      width: 100%; height: 150px;
+      object-fit: cover;
+      border-radius: var(--radius-xs);
+      background: var(--surface-2);
       display: block;
-      width: 4px;
-      height: 20px;
-      background: var(--primary);
-      border-radius: 2px;
     }
-    
-    /* Flash Messages */
-    .flashes {
-      list-style: none;
-      padding: 0;
-      margin: 0 0 24px 0;
+
+    .no-media {
+      height: 100px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; color: var(--text-3);
+      background: var(--surface-2);
+      border-radius: var(--radius-xs);
+      border: 1.5px dashed var(--border);
     }
-    
-    .flash {
-      padding: 16px 20px;
-      border-radius: var(--radius-sm);
-      margin-bottom: 12px;
-      font-weight: 500;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      border: 1.5px solid transparent;
-    }
-    
-    .flash::before {
-      content: '';
-      display: block;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-    }
-    
-    .flash.success {
-      background: #f0fdf4;
-      border-color: #bbf7d0;
-      color: #166534;
-    }
-    
-    .flash.success::before {
-      background: #16a34a;
-    }
-    
-    .flash.danger {
-      background: #fef2f2;
-      border-color: #fecaca;
-      color: #991b1b;
-    }
-    
-    .flash.danger::before {
-      background: #ef4444;
-    }
-    
-    .flash.warning {
-      background: #fffbeb;
-      border-color: #fde68a;
-      color: #92400e;
-    }
-    
-    .flash.warning::before {
-      background: #f59e0b;
-    }
-    
-    .flash.info {
-      background: #eff6ff;
-      border-color: #bfdbfe;
-      color: #1e40af;
-    }
-    
-    .flash.info::before {
-      background: #3b82f6;
-    }
-    
-    /* Form Actions */
+
+    /* ── Form Actions ── */
     .form-actions {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 16px;
       padding-top: 32px;
       margin-top: 32px;
-      border-top: 1.5px solid var(--border);
+      border-top: 1.5px solid var(--border-2);
       flex-wrap: wrap;
-      gap: 16px;
     }
-    
-    @media (max-width: 576px) {
-      .form-actions {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      
-      .form-actions .btn {
-        width: 100%;
-      }
+
+    @media (max-width: 500px) {
+      .form-actions { flex-direction: column; align-items: stretch; }
+      .form-actions .btn { width: 100%; justify-content: center; }
     }
-    
-    /* Store Slug */
-    .slug-display {
-      padding: 14px 16px;
-      background: #f8fafc;
-      border-radius: var(--radius-sm);
+
+    /* ── Tom Select Overrides ── */
+    .ts-wrapper.single .ts-control {
       border: 1.5px solid var(--border);
-      font-family: 'SF Mono', Monaco, 'Courier New', monospace;
-      font-size: 14px;
-      color: var(--muted);
+      border-radius: var(--radius-xs);
+      padding: 11px 16px;
+      background: var(--surface-2);
+      min-height: 48px;
+      font-size: 14.5px;
+      font-family: var(--font);
+      box-shadow: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    
-    /* Icons (using emoji for simplicity) */
-    .icon {
-      font-size: 18px;
-      line-height: 1;
+
+    .ts-wrapper.single .ts-control:focus-within,
+    .ts-wrapper.focus .ts-control {
+      border-color: var(--primary) !important;
+      box-shadow: 0 0 0 4px var(--primary-glow) !important;
+      background: #fff !important;
+    }
+
+    .ts-wrapper .ts-control input { caret-color: var(--primary); }
+
+    .ts-wrapper .ts-dropdown {
+      border-radius: var(--radius-xs);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+      margin-top: 6px;
+      font-size: 14px;
+      font-family: var(--font);
+      border: 1.5px solid var(--border-2);
+    }
+
+    .ts-wrapper .option { padding: 10px 14px; color: var(--text-2); }
+    .ts-wrapper .option:hover,
+    .ts-wrapper .option.active { background: var(--primary-xl); color: var(--primary-dk); }
+
+    .ts-wrapper .option.create { color: var(--primary); font-weight: 600; }
+
+    .ts-wrapper .clear-button {
+      color: var(--text-3) !important;
     }
   </style>
-  
-  <!-- Inter Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
-  <div class="container">
+  <div class="page-wrapper">
+
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <ul class="flashes">
           {% for category, message in messages %}
-            <li class="flash {{ category }}">{{ message }}</li>
+            <li class="flash {{ category }}">
+              <span class="flash-dot"></span>
+              {{ message }}
+            </li>
           {% endfor %}
         </ul>
       {% endif %}
     {% endwith %}
 
-    <!-- Header -->
-    <div class="header">
-      <div class="header-main">
-        <div class="header-title">
-          <h1>Edit Store</h1>
-          <p class="header-subtitle">Update your store details, branding, and delivery options</p>
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="page-eyebrow">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Store Settings
         </div>
-        
-        <div class="header-actions">
-          <a class="btn btn-outline" href="{{ url_for('store_home', store_id=store.store_id) }}">
-            <span class="icon">👁️</span> View Store
-          </a>
-
-        </div>
-      </div>
-      
-      <div class="store-info">
-        <div class="slug-display">
-          Store URL: <strong>{{ store.slug }}</strong>
+        <h1 class="page-title">Edit Store</h1>
+        <p class="page-subtitle">Update your store details, branding, and delivery options</p>
+        <div class="slug-pill">
+          <span>URL:</span>
+          <strong>{{ store.slug }}</strong>
         </div>
       </div>
     </div>
 
-    <!-- Main Form -->
+    <!-- Main Form Card -->
     <div class="card">
       <div class="card-header">
-        <h2>{{ store.name }}</h2>
-        <p class="card-subtitle">Make changes to your store configuration</p>
+        <div class="card-header-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div class="card-header-text">
+          <h2>{{ store.name }}</h2>
+          <p>Make changes to your store configuration below</p>
+        </div>
       </div>
-      
+
       <div class="card-body">
         <form method="POST" enctype="multipart/form-data">
-          <!-- Basic Information -->
+
+          <!-- ── Basic Information ── -->
           <div class="section">
-            <div class="section-title">Basic Information</div>
+            <div class="section-label">Basic Information</div>
             <div class="form-grid">
+
               <div class="form-group">
-                <label for="name">Store Name *</label>
-                <input id="name" name="name" type="text" value="{{ store.name }}" required>
-                <div class="form-hint">Display name for your store</div>
+                <label for="name">Store Name <span class="required-star">*</span></label>
+                <input id="name" name="name" type="text" value="{{ store.name }}" required placeholder="Your store name">
+                <span class="form-hint">Display name shown to customers</span>
               </div>
-              
+
               <div class="form-group">
                 <label>Store Slug</label>
-                <div class="slug-display">{{ store.slug }}</div>
-                <div class="form-hint">Your store's unique URL identifier (cannot be changed)</div>
+                <div class="slug-readonly">{{ store.slug }}</div>
+                <span class="form-hint">Your unique URL identifier — cannot be changed</span>
               </div>
-              
+
               <div class="form-group">
                 <label for="location">Location</label>
                 <input id="location" name="location" type="text" value="{{ store.location or '' }}" placeholder="e.g. Accra, East Legon">
-                <div class="form-hint">Where your store is located</div>
+                <span class="form-hint">Where your store is based</span>
               </div>
-              
+
               <div class="form-group">
                 <label for="contact">Contact Information</label>
                 <input id="contact" name="contact" type="text" value="{{ store.contact or '' }}" placeholder="Phone, WhatsApp, or Email">
-                <div class="form-hint">How customers can reach you</div>
+                <span class="form-hint">How customers can reach you</span>
               </div>
-              
-<!-- ========== STORE TYPE FIELD ========== -->
-<div class="form-group full-width">
-  <label for="store_type">Store Type *</label>
-  <select id="store_type" name="store_type" placeholder="Search or type your own..." required>
-    <option value="">Select a store type</option>
 
-    {% set types = [
-      "Grocery", "Fashion", "Electronics", "Phones & Accessories", "Beauty & Cosmetics",
-      "Restaurant / Food", "Pharmacy", "Hardware", "Home & Living", "Books & Stationery",
-      "Auto Parts", "Services", "Agric/Agribusiness",
-      "Baby & Kids", "Pet Supplies", "Sports & Fitness", "Toys & Games", "Jewelry & Watches",
-      "Art & Crafts", "Office Supplies", "Furniture", "Appliances", "Tools & DIY",
-      "Health & Wellness", "Medical Supplies", "Veterinary", "Bakery", "Butchery",
-      "Fishmonger", "Fresh Produce", "Organic Foods", "Beverages", "Wine & Spirits",
-      "Coffee & Tea", "Confectionery", "Ice Cream Parlor", "Food Truck", "Catering",
-      "Computers & IT", "Gaming", "Camera & Photography", "Music Instruments", "Home Theater",
-      "Printing & Stationery", "Gift Shop", "Flower Shop", "Party Supplies", "Wedding Services",
-      "Photography Services", "Videography", "Event Planning", "Catering Services",
-      "Cleaning Services", "Laundry Services", "Tailoring & Alterations", "Shoe Repair",
-      "Watch Repair", "Phone Repair", "Computer Repair", "Electronics Repair", "Appliance Repair",
-      "Auto Repair", "Car Wash", "Tire Services", "Auto Detailing", "Motorcycle Parts & Repair",
-      "Bicycle Shop", "Marine & Boating", "RV & Camping", "Travel Agency", "Tour Operator",
-      "Real Estate", "Property Management", "Construction", "Renovation Services", "Plumbing",
-      "Electrical Services", "HVAC", "Roofing", "Painting", "Landscaping", "Pest Control",
-      "Moving Services", "Storage Units", "Packaging & Shipping", "Courier Services",
-      "Logistics & Freight", "Warehousing", "Import/Export", "Wholesale Distributor",
-      "Manufacturing", "Industrial Supplies", "Safety Equipment", "Janitorial Supplies",
-      "Hotel / Accommodation", "Bed & Breakfast", "Guest House", "Hostel", "Short-term Rentals",
-      "Salon", "Barbershop", "Nail Salon", "Spa & Massage", "Fitness Center", "Yoga Studio",
-      "Martial Arts", "Dance Studio", "Personal Training", "Nutrition & Supplements",
-      "Daycare / Preschool", "Tutoring", "Music Lessons", "Art Classes", "Language School",
-      "Vocational Training", "Driving School", "Legal Services", "Accounting & Tax", "Financial Services",
-      "Insurance Agency", "Real Estate Agency", "Marketing Agency", "Advertising Services",
-      "Graphic Design", "Web Design", "Software Development", "Digital Marketing", "SEO Services",
-      "Social Media Management", "Content Creation", "Photography Studio", "Recording Studio",
-      "Print Shop", "Sign Shop", "Embroidery & Printing", "Promotional Products",
-      "Non-Profit Organization", "Charity Shop", "Thrift Store", "Consignment Shop",
-      "Vintage & Antiques", "Collectibles", "Second-hand Store", "Pawn Shop",
-      "Convenience Store", "Mini-Mart", "Supermarket", "Hypermarket", "Wholesale Club",
-      "Specialty Food Store", "Health Food Store", "Vitamin & Supplement Store", "Ethnic Grocery",
-      "Halal Market", "Kosher Market", "Seafood Market", "Meat Market", "Cheese Shop",
-      "Wine Shop", "Brewery", "Distillery", "Microbrewery", "Cider House",
-      "Cannabis Dispensary", "CBD Store", "Vape Shop", "Tobacco Shop",
-      "Sporting Goods Store", "Outdoor Gear", "Camping Store", "Fishing Tackle", "Hunting Supplies",
-      "Equestrian Supplies", "Farm & Ranch", "Feed Store", "Tractor & Equipment", "Garden Center",
-      "Nursery & Greenhouse", "Hydroponics", "Landscaping Supply", "Pool & Spa", "Fireplace & Stove",
-      "Mattress Store", "Flooring Store", "Window & Door", "Cabinet & Countertop", "Tile & Stone",
-      "Lighting Store", "Electrical Supply", "Plumbing Supply", "Lumber & Building Materials",
-      "Paint & Wallpaper", "Glass & Mirrors", "Security Systems", "Locksmith", "Safe & Vault",
-      "Religious & Spiritual", "Bookstore (Religious)", "Gifts (Religious)", "Meditation Supplies",
-      "Yoga & Wellness", "Alternative Medicine", "Herbal Shop", "Holistic Health", "Acupuncture",
-      "Chiropractic", "Dental Clinic", "Optical Shop", "Hearing Aids", "Mobility Equipment",
-      "Home Healthcare", "Assisted Living", "Senior Services", "Disability Services",
-      "Veterinary Clinic", "Pet Grooming", "Pet Boarding", "Pet Training", "Animal Shelter",
-      "Zoo & Aquarium", "Wildlife Conservation", "Environmental Services", "Recycling Center",
-      "Waste Management", "Sanitation Services", "Utility Services", "Telecommunications",
-      "Internet Service Provider", "Mobile Network Operator", "Cable & Satellite", "Security Services",
-      "Private Investigation", "Background Checks", "Bail Bonds", "Process Serving",
-      "Employment Agency", "Staffing Agency", "HR Consulting", "Payroll Services", "Benefits Administration",
-      "Business Consulting", "Management Consulting", "Strategy Consulting", "Market Research",
-      "Public Relations", "Corporate Events", "Team Building", "Executive Coaching",
-      "Life Coaching", "Career Counseling", "Mental Health Services", "Therapy & Counseling",
-      "Support Groups", "Crisis Intervention", "Addiction Treatment", "Rehabilitation Services",
-      "Physical Therapy", "Occupational Therapy", "Speech Therapy", "Massage Therapy",
-      "Alternative Healing", "Reiki", "Energy Healing", "Hypnotherapy", "Pastoral Counseling"
-    ] %}
+              <!-- Store Type — full width -->
+              <div class="form-group full-width">
+                <label for="store_type">Store Type <span class="required-star">*</span></label>
+                <select id="store_type" name="store_type" required>
+                  <option value="">Select a store type</option>
 
-    {% for t in types|sort %}
-      <option value="{{ t }}" {% if store and store.store_type == t %}selected{% endif %}>{{ t }}</option>
-    {% endfor %}
-  </select>
-  <div class="form-hint">Search or type your own – suggestions appear as you type.</div>
-</div>
+                  {% set types = [
+                    "Grocery", "Fashion", "Electronics", "Phones & Accessories", "Beauty & Cosmetics",
+                    "Restaurant / Food", "Pharmacy", "Hardware", "Home & Living", "Books & Stationery",
+                    "Auto Parts", "Services", "Agric/Agribusiness",
+                    "Baby & Kids", "Pet Supplies", "Sports & Fitness", "Toys & Games", "Jewelry & Watches",
+                    "Art & Crafts", "Office Supplies", "Furniture", "Appliances", "Tools & DIY",
+                    "Health & Wellness", "Medical Supplies", "Veterinary", "Bakery", "Butchery",
+                    "Fishmonger", "Fresh Produce", "Organic Foods", "Beverages", "Wine & Spirits",
+                    "Coffee & Tea", "Confectionery", "Ice Cream Parlor", "Food Truck", "Catering",
+                    "Computers & IT", "Gaming", "Camera & Photography", "Music Instruments", "Home Theater",
+                    "Printing & Stationery", "Gift Shop", "Flower Shop", "Party Supplies", "Wedding Services",
+                    "Photography Services", "Videography", "Event Planning", "Catering Services",
+                    "Cleaning Services", "Laundry Services", "Tailoring & Alterations", "Shoe Repair",
+                    "Watch Repair", "Phone Repair", "Computer Repair", "Electronics Repair", "Appliance Repair",
+                    "Auto Repair", "Car Wash", "Tire Services", "Auto Detailing", "Motorcycle Parts & Repair",
+                    "Bicycle Shop", "Marine & Boating", "RV & Camping", "Travel Agency", "Tour Operator",
+                    "Real Estate", "Property Management", "Construction", "Renovation Services", "Plumbing",
+                    "Electrical Services", "HVAC", "Roofing", "Painting", "Landscaping", "Pest Control",
+                    "Moving Services", "Storage Units", "Packaging & Shipping", "Courier Services",
+                    "Logistics & Freight", "Warehousing", "Import/Export", "Wholesale Distributor",
+                    "Manufacturing", "Industrial Supplies", "Safety Equipment", "Janitorial Supplies",
+                    "Hotel / Accommodation", "Bed & Breakfast", "Guest House", "Hostel", "Short-term Rentals",
+                    "Salon", "Barbershop", "Nail Salon", "Spa & Massage", "Fitness Center", "Yoga Studio",
+                    "Martial Arts", "Dance Studio", "Personal Training", "Nutrition & Supplements",
+                    "Daycare / Preschool", "Tutoring", "Music Lessons", "Art Classes", "Language School",
+                    "Vocational Training", "Driving School", "Legal Services", "Accounting & Tax", "Financial Services",
+                    "Insurance Agency", "Real Estate Agency", "Marketing Agency", "Advertising Services",
+                    "Graphic Design", "Web Design", "Software Development", "Digital Marketing", "SEO Services",
+                    "Social Media Management", "Content Creation", "Photography Studio", "Recording Studio",
+                    "Print Shop", "Sign Shop", "Embroidery & Printing", "Promotional Products",
+                    "Non-Profit Organization", "Charity Shop", "Thrift Store", "Consignment Shop",
+                    "Vintage & Antiques", "Collectibles", "Second-hand Store", "Pawn Shop",
+                    "Convenience Store", "Mini-Mart", "Supermarket", "Hypermarket", "Wholesale Club",
+                    "Specialty Food Store", "Health Food Store", "Vitamin & Supplement Store", "Ethnic Grocery",
+                    "Halal Market", "Kosher Market", "Seafood Market", "Meat Market", "Cheese Shop",
+                    "Wine Shop", "Brewery", "Distillery", "Microbrewery", "Cider House",
+                    "Cannabis Dispensary", "CBD Store", "Vape Shop", "Tobacco Shop",
+                    "Sporting Goods Store", "Outdoor Gear", "Camping Store", "Fishing Tackle", "Hunting Supplies",
+                    "Equestrian Supplies", "Farm & Ranch", "Feed Store", "Tractor & Equipment", "Garden Center",
+                    "Nursery & Greenhouse", "Hydroponics", "Landscaping Supply", "Pool & Spa", "Fireplace & Stove",
+                    "Mattress Store", "Flooring Store", "Window & Door", "Cabinet & Countertop", "Tile & Stone",
+                    "Lighting Store", "Electrical Supply", "Plumbing Supply", "Lumber & Building Materials",
+                    "Paint & Wallpaper", "Glass & Mirrors", "Security Systems", "Locksmith", "Safe & Vault",
+                    "Religious & Spiritual", "Bookstore (Religious)", "Gifts (Religious)", "Meditation Supplies",
+                    "Yoga & Wellness", "Alternative Medicine", "Herbal Shop", "Holistic Health", "Acupuncture",
+                    "Chiropractic", "Dental Clinic", "Optical Shop", "Hearing Aids", "Mobility Equipment",
+                    "Home Healthcare", "Assisted Living", "Senior Services", "Disability Services",
+                    "Veterinary Clinic", "Pet Grooming", "Pet Boarding", "Pet Training", "Animal Shelter",
+                    "Zoo & Aquarium", "Wildlife Conservation", "Environmental Services", "Recycling Center",
+                    "Waste Management", "Sanitation Services", "Utility Services", "Telecommunications",
+                    "Internet Service Provider", "Mobile Network Operator", "Cable & Satellite", "Security Services",
+                    "Private Investigation", "Background Checks", "Bail Bonds", "Process Serving",
+                    "Employment Agency", "Staffing Agency", "HR Consulting", "Payroll Services", "Benefits Administration",
+                    "Business Consulting", "Management Consulting", "Strategy Consulting", "Market Research",
+                    "Public Relations", "Corporate Events", "Team Building", "Executive Coaching",
+                    "Life Coaching", "Career Counseling", "Mental Health Services", "Therapy & Counseling",
+                    "Support Groups", "Crisis Intervention", "Addiction Treatment", "Rehabilitation Services",
+                    "Physical Therapy", "Occupational Therapy", "Speech Therapy", "Massage Therapy",
+                    "Alternative Healing", "Reiki", "Energy Healing", "Hypnotherapy", "Pastoral Counseling"
+                  ] %}
 
-<!-- Tom Select CSS (you can move this to your main stylesheet) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css">
+                  {% for t in types|sort %}
+                    <option value="{{ t }}" {% if store and store.store_type == t %}selected{% endif %}>{{ t }}</option>
+                  {% endfor %}
+                </select>
+                <span class="form-hint">Search or type your own — suggestions appear as you type</span>
+              </div>
 
-<!-- Custom styling -->
-<style>
-  .form-group.full-width {
-    width: 100%;
-  }
-
-  .form-hint {
-    font-size: 0.85rem;
-    color: #6b7280;
-    margin-top: 0.35rem;
-  }
-
-  /* Make it feel more like a search bar */
-  .ts-wrapper.single .ts-control {
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    padding: 0.5rem 0.75rem;
-    background: white;
-    min-height: 44px;
-    font-size: 1rem;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
-  }
-
-  .ts-wrapper .ts-control input {
-    caret-color: #10b981;          /* or your brand color */
-  }
-
-  .ts-wrapper .ts-dropdown {
-    border-radius: 6px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.14);
-    margin-top: 4px;
-    font-size: 0.95rem;
-  }
-
-  .ts-wrapper .option {
-    padding: 10px 12px;
-  }
-
-  .ts-wrapper .option.create {
-    color: #059669;
-    font-weight: 500;
-  }
-
-  .ts-wrapper.single .ts-control input::placeholder {
-    color: #9ca3af;
-    opacity: 1;
-  }
-</style>
-
-<!-- Tom Select JS (place before </body> or in your scripts bundle) -->
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    new TomSelect('#store_type', {
-      maxOptions: 200,
-      searchField: ['text'],
-      sortField: 'text',
-      placeholder: 'Search or type your own...',
-      plugins: ['clear_button'],
-      create: true,
-      createOnBlur: true,
-      createFilter: null,
-      openOnFocus: true,
-      hidePlaceholderOnSearch: false,
-
-      render: {
-        option_create: function(data, escape) {
-          return '<div class="create">+ Add <strong>' + escape(data.input) + '</strong></div>';
-        },
-        option: function(data, escape) {
-          return '<div>' + escape(data.text) + '</div>';
-        },
-        item: function(data, escape) {
-          return '<div>' + escape(data.text) + '</div>';
-        }
-      }
-    });
-  });
-</script>
-              
               <div class="form-group full-width">
                 <label for="description">Store Description</label>
-                <textarea id="description" name="description" placeholder="Tell customers about your store, products, and what makes you special...">{{ store.description or '' }}</textarea>
-                <div class="form-hint">This will be displayed on your store's homepage</div>
+                <textarea id="description" name="description" placeholder="Tell customers about your store, products, and what makes you special…">{{ store.description or '' }}</textarea>
+                <span class="form-hint">Shown on your store's homepage</span>
               </div>
+
             </div>
           </div>
-          
-          <!-- Delivery Options -->
+
+          <!-- ── Media & Branding ── -->
           <div class="section">
-            <div class="section-title">Delivery & Service Options</div>
-            <div class="checkbox-group">
-              {% set options = ['Delivery Available', 'Pickup Available', 'Nationwide Delivery', 'Same-day Delivery', 'Cash on Delivery', 'In-store Shopping'] %}
-              {% for opt in options %}
-                <label class="checkbox-item">
-                  <input
-                    type="checkbox"
-                    name="delivery_options"
-                    value="{{ opt }}"
-                    {% if opt in current_delivery %}checked{% endif %}
-                  >
-                  <span>{{ opt }}</span>
-                </label>
-              {% endfor %}
-            </div>
-            <div class="form-hint">Select all delivery and service options you offer to customers</div>
-          </div>
-          
-          <!-- Media & Branding -->
-          <div class="section">
-            <div class="section-title">Media & Branding</div>
-            
-            <!-- Logo -->
-            <div class="form-group">
-              <label>Store Logo</label>
-              <div class="file-upload">
-                <input id="logo" name="logo" type="file" accept="image/*" class="file-input">
-                <div class="file-label">Upload New Logo</div>
-                <div class="file-hint">Click to upload or drag and drop (JPG, PNG, WEBP)</div>
-              </div>
-              
-              {% if store.logo %}
-                <div class="remove-option">
-                  <input type="checkbox" name="remove_logo" value="1" id="remove_logo">
-                  <label for="remove_logo">
-                    <span>Remove current logo</span>
-                  </label>
+            <div class="section-label">Media &amp; Branding</div>
+
+            <div class="form-grid">
+
+              <!-- Logo Upload -->
+              <div class="form-group">
+                <label>Store Logo</label>
+                <div class="file-drop" id="logo-drop">
+                  <input id="logo" name="logo" type="file" accept="image/*" class="file-input">
+                  <div class="file-drop-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  </div>
+                  <div class="file-drop-label"><em>Click to upload</em> or drag &amp; drop</div>
+                  <div class="file-drop-hint">JPG, PNG, WEBP</div>
+                  <div class="file-chosen" id="logo-chosen"></div>
                 </div>
-              {% endif %}
-            </div>
-            
-            <!-- Banner -->
-            <div class="form-group">
-              <label>Store Banner</label>
-              <div class="file-upload">
-                <input id="banner" name="banner" type="file" accept="image/*" class="file-input">
-                <div class="file-label">Upload New Banner</div>
-                <div class="file-hint">Recommended: 1200×400px wide image (JPG, PNG, WEBP)</div>
+                {% if store.logo %}
+                  <div class="remove-option">
+                    <input type="checkbox" name="remove_logo" value="1" id="remove_logo">
+                    <label for="remove_logo">Remove current logo</label>
+                  </div>
+                {% endif %}
               </div>
-              
-              {% if store.banner %}
-                <div class="remove-option">
-                  <input type="checkbox" name="remove_banner" value="1" id="remove_banner">
-                  <label for="remove_banner">
-                    <span>Remove current banner</span>
-                  </label>
+
+              <!-- Banner Upload -->
+              <div class="form-group">
+                <label>Store Banner</label>
+                <div class="file-drop" id="banner-drop">
+                  <input id="banner" name="banner" type="file" accept="image/*" class="file-input">
+                  <div class="file-drop-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  </div>
+                  <div class="file-drop-label"><em>Click to upload</em> or drag &amp; drop</div>
+                  <div class="file-drop-hint">Recommended 1200×400px · JPG, PNG, WEBP</div>
+                  <div class="file-chosen" id="banner-chosen"></div>
                 </div>
-              {% endif %}
-            </div>
-            
-            <!-- Tour Video -->
-            <div class="form-group">
-              <label>Store Tour Video</label>
-              <div class="file-upload">
-                <input id="tour_video" name="tour_video" type="file" accept="video/*" class="file-input">
-                <div class="file-label">Upload New Video</div>
-                <div class="file-hint">MP4 recommended, max 50MB</div>
+                {% if store.banner %}
+                  <div class="remove-option">
+                    <input type="checkbox" name="remove_banner" value="1" id="remove_banner">
+                    <label for="remove_banner">Remove current banner</label>
+                  </div>
+                {% endif %}
               </div>
-              
-              {% if store.tour_video %}
-                <div class="remove-option">
-                  <input type="checkbox" name="remove_tour_video" value="1" id="remove_tour_video">
-                  <label for="remove_tour_video">
-                    <span>Remove current tour video</span>
-                  </label>
+
+              <!-- Tour Video Upload -->
+              <div class="form-group">
+                <label>Store Tour Video</label>
+                <div class="file-drop" id="video-drop">
+                  <input id="tour_video" name="tour_video" type="file" accept="video/*" class="file-input">
+                  <div class="file-drop-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                  </div>
+                  <div class="file-drop-label"><em>Click to upload</em> or drag &amp; drop</div>
+                  <div class="file-drop-hint">MP4 recommended · Max 50MB</div>
+                  <div class="file-chosen" id="video-chosen"></div>
                 </div>
-              {% endif %}
+                {% if store.tour_video %}
+                  <div class="remove-option">
+                    <input type="checkbox" name="remove_tour_video" value="1" id="remove_tour_video">
+                    <label for="remove_tour_video">Remove current tour video</label>
+                  </div>
+                {% endif %}
+              </div>
+
             </div>
-            
-            <!-- Current Media Preview -->
-            <div class="media-preview">
-              <div class="preview-card">
-                <div class="preview-header">Current Logo</div>
-                <div class="preview-body">
+
+            <!-- Current Media Previews -->
+            <div class="media-grid">
+              <div class="media-card">
+                <div class="media-card-head">Current Logo</div>
+                <div class="media-card-body">
                   {% if store.logo %}
-                    <img class="preview-image" src="{{ store.logo }}" alt="Store logo">
-                    <div class="form-hint" style="margin-top: 12px;">Will be replaced if you upload a new logo</div>
+                    <img src="{{ store.logo }}" alt="Store logo">
                   {% else %}
                     <div class="no-media">No logo uploaded</div>
                   {% endif %}
                 </div>
               </div>
-              
-              <div class="preview-card">
-                <div class="preview-header">Current Banner</div>
-                <div class="preview-body">
+
+              <div class="media-card">
+                <div class="media-card-head">Current Banner</div>
+                <div class="media-card-body">
                   {% if store.banner %}
-                    <img class="preview-image" src="{{ store.banner }}" alt="Store banner">
-                    <div class="form-hint" style="margin-top: 12px;">Will be replaced if you upload a new banner</div>
+                    <img src="{{ store.banner }}" alt="Store banner">
                   {% else %}
                     <div class="no-media">No banner uploaded</div>
                   {% endif %}
                 </div>
               </div>
-              
-              <div class="preview-card">
-                <div class="preview-header">Current Tour Video</div>
-                <div class="preview-body">
+
+              <div class="media-card">
+                <div class="media-card-head">Current Tour Video</div>
+                <div class="media-card-body">
                   {% if store.tour_video %}
-                    <video class="preview-video" controls>
+                    <video controls>
                       <source src="{{ store.tour_video }}">
                       Your browser does not support the video tag.
                     </video>
-                    <div class="form-hint" style="margin-top: 12px;">Will be replaced if you upload a new video</div>
                   {% else %}
                     <div class="no-media">No tour video uploaded</div>
                   {% endif %}
@@ -891,64 +800,77 @@
               </div>
             </div>
           </div>
-          
-          <!-- Form Actions -->
+
+          <!-- ── Form Actions ── -->
           <div class="form-actions">
-            <a class="btn btn-outline" href="{{ url_for('store_home', store_id=store.store_id) }}">
+            <a class="btn btn-ghost" href="{{ url_for('store_home', store_id=store.store_id) }}">
               Cancel
             </a>
             <button class="btn btn-primary" type="submit">
-              <span class="icon">💾</span> Save Changes
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save Changes
             </button>
           </div>
+
         </form>
       </div>
     </div>
   </div>
 
+  <!-- Tom Select JS -->
+  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
   <script>
-    // File upload hover effects
-    document.querySelectorAll('.file-upload').forEach(upload => {
-      const fileInput = upload.querySelector('.file-input');
-      const fileLabel = upload.querySelector('.file-label');
-      
-      fileInput.addEventListener('change', function(e) {
+    // ── Tom Select ──
+    document.addEventListener('DOMContentLoaded', function () {
+      new TomSelect('#store_type', {
+        maxOptions: 200,
+        searchField: ['text'],
+        sortField: 'text',
+        placeholder: 'Search or type your own…',
+        plugins: ['clear_button'],
+        create: true,
+        createOnBlur: true,
+        createFilter: null,
+        openOnFocus: true,
+        render: {
+          option_create: function (data, escape) {
+            return '<div class="create">+ Add <strong>' + escape(data.input) + '</strong></div>';
+          },
+          option: function (data, escape) { return '<div>' + escape(data.text) + '</div>'; },
+          item:   function (data, escape) { return '<div>' + escape(data.text) + '</div>'; }
+        }
+      });
+    });
+
+    // ── File Uploads ──
+    function setupFileDrop(dropId, inputId, chosenId) {
+      const drop   = document.getElementById(dropId);
+      const input  = document.getElementById(inputId);
+      const chosen = document.getElementById(chosenId);
+      if (!drop || !input) return;
+
+      input.addEventListener('change', function () {
         if (this.files && this.files[0]) {
-          fileLabel.textContent = this.files[0].name;
+          chosen.textContent = '✓ ' + this.files[0].name;
         }
       });
-      
-      upload.addEventListener('dragover', (e) => {
+
+      drop.addEventListener('dragover',  e => { e.preventDefault(); drop.classList.add('dragover'); });
+      drop.addEventListener('dragleave', ()  => drop.classList.remove('dragover'));
+      drop.addEventListener('drop', e => {
         e.preventDefault();
-        upload.style.borderColor = 'var(--primary)';
-        upload.style.background = 'var(--primary-light)';
-      });
-      
-      upload.addEventListener('dragleave', () => {
-        upload.style.borderColor = '';
-        upload.style.background = '';
-      });
-      
-      upload.addEventListener('drop', (e) => {
-        e.preventDefault();
-        upload.style.borderColor = '';
-        upload.style.background = '';
+        drop.classList.remove('dragover');
         if (e.dataTransfer.files.length) {
-          fileInput.files = e.dataTransfer.files;
-          fileLabel.textContent = e.dataTransfer.files[0].name;
+          input.files = e.dataTransfer.files;
+          chosen.textContent = '✓ ' + e.dataTransfer.files[0].name;
         }
       });
-    });
-    
-    // Auto-slug generation (if needed in future)
-    document.addEventListener('DOMContentLoaded', function() {
-      const nameInput = document.getElementById('name');
-      if (nameInput) {
-        nameInput.addEventListener('input', function() {
-          // Could add slug generation logic here if needed
-        });
-      }
-    });
+    }
+
+    setupFileDrop('logo-drop',   'logo',       'logo-chosen');
+    setupFileDrop('banner-drop', 'banner',     'banner-chosen');
+    setupFileDrop('video-drop',  'tour_video', 'video-chosen');
   </script>
 </body>
 </html>
