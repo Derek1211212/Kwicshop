@@ -14,7 +14,6 @@ from datetime import datetime, timedelta, date
 from decimal import Decimal, InvalidOperation
 from functools import wraps
 from email.message import EmailMessage
-
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, session, redirect, url_for, flash, jsonify, abort, Response, current_app
 from flask_bcrypt import Bcrypt
