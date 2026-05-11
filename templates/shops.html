@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="keywords" content="Sellkwic, Sell Kwic, Sell quick, Sellquick, Sellquic, online marketplace, buy and sell" />
   <title>SellKwic — Launch your e‑commerce store, zero code</title>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -713,5 +714,28 @@
     window.addEventListener('scroll', () => { if(window.innerWidth <= 800) document.getElementById('filterForm')?.classList.remove('open'); });
     document.addEventListener('click', (e) => { if(window.innerWidth <= 800 && document.getElementById('filterForm')?.classList.contains('open') && !document.querySelector('.filter-wrap')?.contains(e.target)) document.getElementById('filterForm')?.classList.remove('open'); });
   </script>
+
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Sellkwic",
+  "alternateName": "Sell Kwic",
+  "url": "https://sellkwic.com",
+  "logo": "https://sellkwic.com/static/images/logo_icon.png",
+
+  // "sameAs": [
+  // "https://www.facebook.com/sellkwic",
+  // "https://twitter.com/sellkwic"
+  // ], 
+
+  "description": "Sellkwic (Sell Kwic) is an online marketplace to buy and sell new and used items including electronics, automobiles, clothing, and more.",
+  "brand": {
+    "@type": "Brand",
+    "name": "Sellkwic"
+  }
+}
+</script>
 </body>
 </html>
