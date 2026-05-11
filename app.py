@@ -31,6 +31,7 @@ import cloudinary.uploader
 import atexit
 from notifications import send_push_notification_to_store_followers
 from notifications import VAPID_PUBLIC_KEY
+from decimal import Decimal, ROUND_HALF_UP
 
 load_dotenv()
 
@@ -1193,11 +1194,29 @@ def store_add_item():
     title = request.form.get('title', '').strip()
     description = request.form.get('description', '').strip()
     category = request.form.get('category', '').strip()
-    condition = request.form.get('condition', '').strip()   # <--- NEW: read condition field
+    condition = request.form.get('condition', '').strip()
     location = request.form.get('location', '').strip()
     contact = request.form.get('contact', '').strip()
-    price = request.form.get('price')
+    price_str = request.form.get('price', '').strip()          # <-- get as string
     plan = request.form.get('plan', 'Free')
+    
+    # ================== FIX: Decimal price ==================
+    price = None
+    if deal_type == 'Outright Sales':
+        if not price_str:
+            cur.close()
+            conn.close()
+            return jsonify({"success": False, "message": "Price is required"}), 400
+        try:
+            # Convert directly from string to Decimal, round to 2 decimals
+            price = Decimal(price_str).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            if price <= 0:
+                raise ValueError
+        except:
+            cur.close()
+            conn.close()
+            return jsonify({"success": False, "message": "Invalid price. Must be a positive number."}), 400
+    # ========================================================
     
     # Validation
     if not title or not description or not category or not location or not contact:
@@ -1229,7 +1248,7 @@ def store_add_item():
         conn.close()
         return jsonify({"success": False, "message": "At least one image required"}), 400
     
-    # Insert listing with condition column
+    # Insert listing with condition column and Decimal price
     padded = (images + [None]*5)[:5]
     cur.execute("""
         INSERT INTO listings (user_id, store_id, title, description, category, `condition`, location, contact,
