@@ -1852,6 +1852,7 @@ def home():
         query += " AND store_type = %s"
         params.append(store_type)
 
+    # ⬇️ LIMIT 4 – only 4 stores on main page
     query += " ORDER BY Plan_priority DESC, trust_score DESC, created_at DESC LIMIT 4"
 
     cur.execute(query, params)
@@ -1892,6 +1893,46 @@ def home():
         store_type=store_type,
         is_logged_in='user_id' in session
     )
+
+
+# NEW ENDPOINT: returns ALL active stores matching filters (no limit)
+@app.route('/api/stores/all')
+def api_stores_all():
+    search = request.args.get('search', '').strip()
+    location = request.args.get('location', '').strip()
+    store_type = request.args.get('store_type', '').strip()
+    
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    
+    # Added store_type to SELECT
+    query = """
+        SELECT store_id, name, location, slug, store_type
+        FROM stores
+        WHERE is_active = 1
+    """
+    params = []
+    
+    if search:
+        query += " AND name LIKE %s"
+        params.append(f"%{search}%")
+    
+    if location:
+        query += " AND location LIKE %s"
+        params.append(f"%{location}%")
+    
+    if store_type:
+        query += " AND store_type = %s"
+        params.append(store_type)
+    
+    query += " ORDER BY Plan_priority DESC, trust_score DESC, created_at DESC"
+    
+    cur.execute(query, params)
+    stores = cur.fetchall()
+    cur.close()
+    conn.close()
+    
+    return {"stores": stores}
 
 
 

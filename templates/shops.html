@@ -8,7 +8,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    /* === same enhanced CSS as before, including improved star arrangement === */
     :root {
       --green-50:  #f0faf2;
       --green-100: #dcf1e4;
@@ -154,7 +153,7 @@
       box-shadow: 0 6px 18px rgba(22,163,74,0.3);
     }
 
-    /* ── HERO (unchanged) ─────────────────────── */
+    /* ── HERO ─────────────────────────────────── */
     .hero { max-width: 1280px; margin: 0 auto; padding: 3rem 2rem 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
     .hero-badge { display: inline-flex; align-items: center; gap: 7px; background: white; border: 1px solid var(--green-200); padding: 0.35rem 0.9rem; border-radius: var(--radius-xl); font-size: 0.7rem; font-weight: 700; color: var(--green-700); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 1.6rem; box-shadow: 0 2px 8px rgba(22,163,74,0.1); }
     .hero-badge-dot { width: 6px; height: 6px; background: var(--green-500); border-radius: 50%; animation: pulse 2s infinite; }
@@ -191,7 +190,7 @@
     .trust-logos { display: flex; gap: 2rem; align-items: center; flex-wrap: wrap; justify-content: center; }
     .trust-logo { font-size: 0.78rem; font-weight: 700; color: var(--ink-muted); opacity: 0.5; }
 
-    /* ── STORES SECTION (dynamic backend) ───── */
+    /* ── STORES SECTION ─────────────────────── */
     .stores-section { max-width: 1280px; margin: 0 auto; padding: 4rem 2rem; }
     .section-eyebrow { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--green-600); margin-bottom: 0.6rem; }
     .section-title { font-family: 'Sora', sans-serif; font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 800; color: var(--ink); letter-spacing: -0.04em; margin-bottom: 0.5rem; }
@@ -223,7 +222,7 @@
     .results-count { font-size: 0.78rem; font-weight: 700; color: var(--ink-muted); }
     .results-count span { color: var(--green-600); font-size: 0.92rem; }
 
-    /* STORE GRID – ENHANCED STAR ARRANGEMENT (dynamic) */
+    /* STORE GRID */
     .stores-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 1.25rem; }
     .store-card { background: var(--card-bg); border-radius: var(--radius-lg); overflow: hidden; transition: transform 0.3s cubic-bezier(0.2,0.9,0.4,1.1), box-shadow 0.3s ease; box-shadow: 0 1px 4px rgba(0,0,0,0.05), 0 0 0 1px var(--border); text-decoration: none; color: inherit; display: flex; flex-direction: column; }
     .store-card:hover { transform: translateY(-6px); box-shadow: 0 20px 48px rgba(0,0,0,0.12), 0 0 0 1px var(--green-300); }
@@ -234,109 +233,21 @@
     .store-card:hover .card-img-overlay { opacity: 1; }
     .card-badges { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; }
     .verified-stamp { background: rgba(255,255,255,0.95); backdrop-filter: blur(6px); padding: 0.22rem 0.65rem; border-radius: 40px; font-size: 0.63rem; font-weight: 700; color: var(--green-700); display: flex; align-items: center; gap: 4px; }
-    .card-info {
-  padding: 1.1rem 1.2rem 1.2rem;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-}
+    .card-info { padding: 1.1rem 1.2rem 1.2rem; flex: 1; display: flex; flex-direction: column; gap: 0.65rem; }
     .card-top-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 0.65rem; }
-    .store-name {
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-  line-height: 1.25;
-}
-
-.store-category-wrapper {
-  margin-top: -0.1rem;
-}
-    .store-category {
-  display: inline-block;
-  font-size: 0.6rem;
-  background: var(--green-50);
-  border: 1px solid var(--green-200);
-  padding: 0.2rem 0.55rem;
-  border-radius: 50px;
-  font-weight: 700;
-  color: var(--green-700);
-  text-transform: uppercase;
-}
-
-.rating-wrapper {
-  margin: 0.15rem 0;
-}
-    /* Improved rating container */
+    .store-name { font-size: 1rem; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); line-height: 1.25; }
+    .store-category-wrapper { margin-top: -0.1rem; }
+    .store-category { display: inline-block; font-size: 0.6rem; background: var(--green-50); border: 1px solid var(--green-200); padding: 0.2rem 0.55rem; border-radius: 50px; font-weight: 700; color: var(--green-700); text-transform: uppercase; }
+    .rating-wrapper { margin: 0.15rem 0; }
     .card-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem 0.9rem; margin-bottom: 0.85rem; }
- .rating {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  background: var(--green-50);
-  padding: 0.2rem 0.7rem 0.2rem 0.55rem;
-  border-radius: 60px;
-}
-.stars {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  color: var(--star-gold);
-  font-size: 0.7rem;
-}
-    .stars i {
-  font-size: 0.72rem;
-  width: 0.85em;
-  text-align: center;
-}
-    .store-card:hover .stars i { transform: scale(1.02); }
-  .rating-value {
-  font-weight: 700;
-  font-size: 0.8rem;
-  color: var(--ink-soft);
-  background: white;
-  padding: 0.1rem 0.35rem;
-  border-radius: 30px;
-  line-height: 1.3;
-  box-shadow: inset 0 0 0 1px var(--border);
-}
-    .card-location {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.7rem;
-  color: var(--ink-muted);
-  font-weight: 500;
-  background: var(--surface);
-  padding: 0.2rem 0.6rem;
-  border-radius: 60px;
-}
-   .card-location i {
-  font-size: 0.65rem;
-  color: var(--green-500);
-}
-    .visit-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: 10px;
-  padding: 0.55rem;
-  font-weight: 700;
-  font-size: 0.78rem;
-  text-decoration: none;
-  color: var(--ink-soft);
-  transition: all 0.2s;
-  margin-top: 0.25rem;
-}
-   .visit-btn:hover {
-  background: var(--ink);
-  color: white;
-  border-color: var(--ink);
-}
+    .rating { display: inline-flex; align-items: center; gap: 0.6rem; background: var(--green-50); padding: 0.2rem 0.7rem 0.2rem 0.55rem; border-radius: 60px; }
+    .stars { display: inline-flex; align-items: center; gap: 2px; color: var(--star-gold); font-size: 0.7rem; }
+    .stars i { font-size: 0.72rem; width: 0.85em; text-align: center; }
+    .rating-value { font-weight: 700; font-size: 0.8rem; color: var(--ink-soft); background: white; padding: 0.1rem 0.35rem; border-radius: 30px; line-height: 1.3; box-shadow: inset 0 0 0 1px var(--border); }
+    .card-location { display: inline-flex; align-items: center; gap: 5px; font-size: 0.7rem; color: var(--ink-muted); font-weight: 500; background: var(--surface); padding: 0.2rem 0.6rem; border-radius: 60px; }
+    .card-location i { font-size: 0.65rem; color: var(--green-500); }
+    .visit-btn { display: flex; align-items: center; justify-content: center; gap: 6px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; padding: 0.55rem; font-weight: 700; font-size: 0.78rem; text-decoration: none; color: var(--ink-soft); transition: all 0.2s; margin-top: 0.25rem; }
+    .visit-btn:hover { background: var(--ink); color: white; border-color: var(--ink); }
 
     .empty-state { grid-column: 1 / -1; text-align: center; padding: 5rem 2rem; background: white; border-radius: var(--radius-lg); border: 1.5px dashed var(--border); }
     .empty-icon { width: 72px; height: 72px; background: var(--green-50); border-radius: 50%; display: grid; place-items: center; margin: 0 auto 1.2rem; }
@@ -354,7 +265,7 @@
     .cta-banner h3 em { font-family: 'Lora', serif; font-style: italic; font-weight: 600; color: var(--green-400); }
     .cta-banner p { font-size: 0.92rem; color: rgba(255,255,255,0.6); line-height: 1.6; max-width: 400px; }
     .cta-right { position: relative; z-index: 1; flex-shrink: 0; display: flex; flex-direction: column; gap: 1rem; align-items: flex-start; }
-    .cta-btn { background: var(--green-500); padding: 0.9rem 1.5rem; border-radius: var(--radius-xl); text-decoration: none; font-family: 'Sora', sans-serif; font-weight: 700; font-size: 0.9rem; color: white; display: inline-flex; align-items: center; gap: 9px; transition: all 0.25s; box-shadow: 0 6px 20px rgba(34,197,94,0.3); white-space: normal;  word-break: break-word;  text-align: center;   line-height: 1.3; }
+    .cta-btn { background: var(--green-500); padding: 0.9rem 1.5rem; border-radius: var(--radius-xl); text-decoration: none; font-family: 'Sora', sans-serif; font-weight: 700; font-size: 0.9rem; color: white; display: inline-flex; align-items: center; gap: 9px; transition: all 0.25s; box-shadow: 0 6px 20px rgba(34,197,94,0.3); white-space: normal; word-break: break-word; text-align: center; line-height: 1.3; }
     .cta-btn:hover { background: var(--green-400); transform: translateY(-2px); }
     .cta-note { font-size: 0.72rem; color: rgba(255,255,255,0.4); display: flex; align-items: center; gap: 6px; }
     .footer { background: white; border-top: 1px solid var(--border); }
@@ -368,127 +279,158 @@
 
     @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     .hero-badge, .hero h1, .hero-sub, .hero-cta, .hero-stats, .hero-right { animation: fadeUp 0.5s ease both; }
-    @media (max-width: 900px) { .hero { grid-template-columns: 1fr; gap: 2.5rem; } .hero-right { display: none; } .cta-banner { grid-template-columns: 1fr; text-align: center; } .cta-eyebrow { justify-content: center; } .cta-banner p { margin: 0 auto; } 
-      .cta-right {
-  min-width: 0;                 /* allows flex/grid child to shrink */
-  max-width: 100%;
-}
-
-
+    @media (max-width: 900px) { .hero { grid-template-columns: 1fr; gap: 2.5rem; } .hero-right { display: none; } .cta-banner { grid-template-columns: 1fr; text-align: center; } .cta-eyebrow { justify-content: center; } .cta-banner p { margin: 0 auto; } .cta-right { min-width: 0; max-width: 100%; } }
     @media (max-width: 640px) { .stores-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .card-img { height: 120px; } .card-info { padding: 0.85rem; } .store-name { font-size: 0.85rem; } .rating { gap: 0.35rem; padding: 0.1rem 0.5rem; } .stars i { font-size: 0.65rem; } .rating-value { font-size: 0.7rem; } }
     @media (max-width: 800px) { .nav-inner { padding: 0 1.2rem; } .mobile-filter-toggle { display: flex; } .filter-form { display: none; flex-direction: column; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); } .filter-form.open { display: flex; } .filter-field { width: 100%; min-width: unset; } .filter-actions { width: 100%; } }
     @media (max-width: 600px) { .nav-links, .btn-nav-ghost { display: none; } .trust-strip { display: none; } }
+    @media (max-width: 640px) { .cta-btn { font-size: 0.85rem; padding: 0.75rem 1.2rem; } .cta-banner { padding: 2.5rem 1.5rem; } }
+    .btn-marketplace { background: var(--green-50); border: 1.5px solid var(--green-200); padding: 0.45rem 1rem; border-radius: var(--radius-xl); font-family: 'Sora', sans-serif; font-size: 0.83rem; font-weight: 600; color: var(--green-700); text-decoration: none; display: inline-flex; align-items: center; gap: 7px; transition: all 0.2s; }
+    .btn-marketplace:hover { background: var(--green-100); border-color: var(--green-400); transform: translateY(-1px); }
+    @media (max-width: 600px) { .btn-marketplace { display: inline-flex; } }
+    .hero-cta { display: flex; flex-direction: column; gap: 0.75rem; align-items: flex-start; }
+    .hero-cta .btn-primary { width: 100%; justify-content: center; }
+    .hero-cta-secondary { display: flex; gap: 0.6rem; width: 100%; }
+    .hero-cta-secondary .btn-outline { flex: 1; justify-content: center; font-size: 0.82rem; padding: 0.75rem 1rem; background: white; color: var(--ink-soft); border-color: var(--border); }
+    .hero-cta-secondary .btn-outline:hover { border-color: var(--green-400); color: var(--green-700); background: var(--green-50); }
+    .btn-outline--market { background: var(--green-50) !important; border-color: var(--green-200) !important; color: var(--green-700) !important; }
+    .btn-outline--market:hover { background: var(--green-100) !important; border-color: var(--green-400) !important; }
+    @media (min-width: 640px) { .hero-cta { flex-direction: row; align-items: center; flex-wrap: wrap; } .hero-cta .btn-primary { width: auto; } .hero-cta-secondary { width: auto; flex: none; } .hero-cta-secondary .btn-outline { flex: none; white-space: nowrap; } }
 
-    @media (max-width: 640px) {
-  .cta-btn {
-    font-size: 0.85rem;
-    padding: 0.75rem 1.2rem;
-  }
-  .cta-banner {
-    padding: 2.5rem 1.5rem;     /* ensure inner spacing doesn't cause overflow */
-  }
-}
-
-
-/* Marketplace button - always visible on all devices */
-.btn-marketplace {
-  background: var(--green-50);
-  border: 1.5px solid var(--green-200);
-  padding: 0.45rem 1rem;
-  border-radius: var(--radius-xl);
-  font-family: 'Sora', sans-serif;
-  font-size: 0.83rem;
-  font-weight: 600;
-  color: var(--green-700);
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  transition: all 0.2s;
-}
-
-.btn-marketplace:hover {
-  background: var(--green-100);
-  border-color: var(--green-400);
-  transform: translateY(-1px);
-}
-
-/* Ensure it stays visible even on mobile (the hide rule only targets .btn-nav-ghost) */
-@media (max-width: 600px) {
-  .btn-marketplace {
-    display: inline-flex;  /* overrides any potential hidden */
-  }
-}
-
-/* ── HERO CTA LAYOUT ─────────────────────── */
-.hero-cta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  align-items: flex-start;
-}
-
-.hero-cta .btn-primary {
-  width: 100%;
-  justify-content: center;
-}
-
-.hero-cta-secondary {
-  display: flex;
-  gap: 0.6rem;
-  width: 100%;
-}
-
-.hero-cta-secondary .btn-outline {
-  flex: 1;
-  justify-content: center;
-  font-size: 0.82rem;
-  padding: 0.75rem 1rem;
-  background: white;
-  color: var(--ink-soft);
-  border-color: var(--border);
-}
-
-.hero-cta-secondary .btn-outline:hover {
-  border-color: var(--green-400);
-  color: var(--green-700);
-  background: var(--green-50);
-}
-
-/* Marketplace gets a subtle green tint to distinguish it */
-.btn-outline--market {
-  background: var(--green-50) !important;
-  border-color: var(--green-200) !important;
-  color: var(--green-700) !important;
-}
-
-.btn-outline--market:hover {
-  background: var(--green-100) !important;
-  border-color: var(--green-400) !important;
-}
-
-/* Desktop: all three in a row */
-@media (min-width: 640px) {
-  .hero-cta {
-    flex-direction: row;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-
-  .hero-cta .btn-primary {
-    width: auto;
-  }
-
-  .hero-cta-secondary {
-    width: auto;
-    flex: none;
-  }
-
-  .hero-cta-secondary .btn-outline {
-    flex: none;
-    white-space: nowrap;
-  }
-}
+    /* MODAL STYLES (new) */
+    .modal-all-stores {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+    .modal-all-stores.active {
+      display: flex;
+    }
+    .modal-all-container {
+      background: white;
+      max-width: 700px;
+      width: 90%;
+      max-height: 85vh;
+      border-radius: 28px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-family: 'Sora', sans-serif;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 1.8rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-header h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0;
+    }
+    .modal-header .close-modal {
+      background: none;
+      border: none;
+      font-size: 1.8rem;
+      cursor: pointer;
+      color: var(--ink-muted);
+      transition: 0.2s;
+    }
+    .modal-header .close-modal:hover {
+      color: var(--ink);
+    }
+    .modal-filters {
+      padding: 1.2rem 1.8rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+    }
+    .modal-filters input, .modal-filters select {
+      flex: 1;
+      min-width: 140px;
+      padding: 0.6rem 0.9rem;
+      border-radius: 40px;
+      border: 1px solid var(--border);
+      font-family: 'Sora', sans-serif;
+      font-size: 0.85rem;
+    }
+    .modal-filters button {
+      background: var(--green-600);
+      color: white;
+      border: none;
+      border-radius: 40px;
+      padding: 0.6rem 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .modal-filters button:hover {
+      background: var(--green-700);
+    }
+    .store-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem 1.8rem;
+    }
+    .store-list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .store-list-item:last-child {
+      border-bottom: none;
+    }
+    .store-name {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--ink);
+    }
+    .store-location {
+      font-size: 0.8rem;
+      color: var(--ink-muted);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .store-location i {
+      font-size: 0.7rem;
+      color: var(--green-600);
+    }
+    .empty-modal-state {
+      text-align: center;
+      padding: 2rem;
+      color: var(--ink-muted);
+    }
+    .show-all-btn {
+      display: block;
+      width: fit-content;
+      margin: 2rem auto 0;
+      background: transparent;
+      border: 2px solid var(--green-600);
+      color: var(--green-700);
+      padding: 0.7rem 1.8rem;
+      border-radius: 40px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .show-all-btn:hover {
+      background: var(--green-50);
+      transform: translateY(-2px);
+    }
   </style>
 </head>
 <body>
@@ -496,14 +438,14 @@
     <div class="nav-inner">
       <a href="/" class="logo"><span class="logo-mark">K</span><span class="logo-text">SellKwic</span></a>
       <nav class="nav-links">
-  <a href="#">Discover</a>
-  <a href="#">How it works</a>
-  <a href="#">Community</a>
-</nav>
-<div class="nav-actions">
-  <a href="#stores" class="btn-nav-ghost">Browse shops</a>
-  <a href="/my-store" class="btn-nav-primary"><i class="fas fa-store"></i><span>{% if is_logged_in %}My Store{% else %}Get a Shop!{% endif %}</span></a>
-</div>
+        <a href="#">Discover</a>
+        <a href="#">How it works</a>
+        <a href="#">Community</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="#stores" class="btn-nav-ghost">Browse shops</a>
+        <a href="/my-store" class="btn-nav-primary"><i class="fas fa-store"></i><span>{% if is_logged_in %}My Store{% else %}Get a Shop!{% endif %}</span></a>
+      </div>
     </div>
   </header>
 
@@ -513,20 +455,20 @@
         <div class="hero-badge"><span class="hero-badge-dot"></span>Zero coding · Instant setup</div>
         <h1>Your shop online<br>in <span class="accent">3 minutes</span></h1>
         <p class="hero-sub">Everything you need to sell — beautiful storefronts, smart analytics, zero code. Start for free today.</p>
-<div class="hero-cta">
-  <a href="/my-store" class="btn-outline">
-    <i class="fas fa-{% if is_logged_in %}store{% else %}rocket{% endif %}"></i>
-    {% if is_logged_in %}Go to my store{% else %}Start my free shop{% endif %}
-  </a>
-  <div class="hero-cta-secondary">
-    <a href="/marketplace" class="btn-outline btn-outline--market">
-      <i class="fas fa-store"></i> Marketplace
-    </a>
-    <a href="#stores" class="btn-outline">
-      <i class="fas fa-compass"></i> Browse stores
-    </a>
-  </div>
-</div>
+        <div class="hero-cta">
+          <a href="/my-store" class="btn-outline">
+            <i class="fas fa-{% if is_logged_in %}store{% else %}rocket{% endif %}"></i>
+            {% if is_logged_in %}Go to my store{% else %}Start my free shop{% endif %}
+          </a>
+          <div class="hero-cta-secondary">
+            <a href="/marketplace" class="btn-outline btn-outline--market">
+              <i class="fas fa-store"></i> Marketplace
+            </a>
+            <a href="#stores" class="btn-outline">
+              <i class="fas fa-compass"></i> Browse stores
+            </a>
+          </div>
+        </div>
         <div class="hero-stats">
           <div class="stat-item"><span class="stat-num">15k+</span><span class="stat-label">Stores created</span></div>
           <div class="stat-item"><span class="stat-num">3 min</span><span class="stat-label">Avg. setup</span></div>
@@ -534,7 +476,7 @@
           <div class="stat-item"><span class="stat-num">180+</span><span class="stat-label">Countries</span></div>
         </div>
       </div>
-      <div class="hero-right"><!-- same hero visual as before (static design mockup, not store data) -->
+      <div class="hero-right">
         <div class="hero-visual"><div class="hero-visual-bar"><div class="win-dot"></div><div class="win-dot"></div><div class="win-dot"></div><div class="win-url">SellKwic.com/mystore</div></div><div class="hero-preview-grid"><div class="preview-cell"><div class="preview-thumb"><img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt=""></div><div class="preview-name">Luxe Threads</div><div class="preview-tag">Fashion</div><div class="preview-stars">★★★★★</div></div><div class="preview-cell"><div class="preview-thumb"><img src="https://images.unsplash.com/photo-1491553895911-0055eca6402d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt=""></div><div class="preview-name">SoleKing</div><div class="preview-tag">Footwear</div><div class="preview-stars">★★★★☆</div></div><div class="preview-cell"><div class="preview-thumb"><img src="https://images.unsplash.com/photo-1585386959984-a4155224a1ad?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt=""></div><div class="preview-name">GlowUp Beauty</div><div class="preview-tag">Beauty</div><div class="preview-stars">★★★★★</div></div><div class="preview-cell"><div class="preview-thumb"><img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" alt=""></div><div class="preview-name">TimeKeeper</div><div class="preview-tag">Accessories</div><div class="preview-stars">★★★★☆</div></div></div></div><div class="hero-floating-badge"><i class="fas fa-bolt"></i><span>New store every <strong>4 minutes</strong></span></div>
       </div>
     </section>
@@ -547,7 +489,7 @@
       </div>
     </div>
 
-    <!-- STORES SECTION (FULL BACKEND INTEGRATION) -->
+    <!-- STORES SECTION -->
     <div class="stores-section" id="stores">
       <div class="section-head-row">
         <div>
@@ -593,45 +535,44 @@
         {% for store in stores %}
           <a href="{{ url_for('store_detail', slug=store.slug) if store.slug else '#' }}" class="store-card" data-store-id="{{ store.store_id }}">
             <div class="card-img">
-              <!-- Dynamic logo: uses backend store.logo, fallback to subtle inline SVG (no external image) -->
               <img src="{{ store.logo if store.logo else 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 40 40\'%3E%3Crect width=\'40\' height=\'40\' fill=\'%23dcf1e4\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%2315803d\' font-size=\'14\'%3E🛍%3C/text%3E%3C/svg%3E' }}" alt="{{ store.name }}" loading="lazy">
               <div class="card-img-overlay"></div>
               <div class="card-badges">
                 {% if store.verified %}<div class="verified-stamp"><i class="fas fa-check-circle"></i> Verified</div>{% else %}<div></div>{% endif %}
               </div>
             </div>
- <div class="card-info">
-  <div class="store-name">{{ store.name }}</div>
-  <div class="store-category-wrapper">
-    <span class="store-category">{{ store.store_type or 'Shop' }}</span>
-  </div>
-  <div class="rating-wrapper">
-    <div class="rating">
-      <span class="stars">
-        {% set rating = store.rating_avg|float or 0 %}
-        {% set full = rating|int %}
-        {% set half = (rating - full) >= 0.5 %}
-        {% for i in range(5) %}
-          {% if i < full %}
-            <i class="fas fa-star"></i>
-          {% elif half and i == full %}
-            <i class="fas fa-star-half-alt"></i>
-          {% else %}
-            <i class="far fa-star"></i>
-          {% endif %}
-        {% endfor %}
-      </span>
-      <span class="rating-value">{{ "%.1f"|format(rating) }}</span>
-    </div>
-  </div>
-  <div class="location-wrapper">
-    <div class="card-location">
-      <i class="fas fa-map-marker-alt"></i>
-      <span>{{ store.location or 'Online' }}</span>
-    </div>
-  </div>
-  <div class="visit-btn">Visit store <i class="fas fa-arrow-right"></i></div>
-</div>
+            <div class="card-info">
+              <div class="store-name">{{ store.name }}</div>
+              <div class="store-category-wrapper">
+                <span class="store-category">{{ store.store_type or 'Shop' }}</span>
+              </div>
+              <div class="rating-wrapper">
+                <div class="rating">
+                  <span class="stars">
+                    {% set rating = store.rating_avg|float or 0 %}
+                    {% set full = rating|int %}
+                    {% set half = (rating - full) >= 0.5 %}
+                    {% for i in range(5) %}
+                      {% if i < full %}
+                        <i class="fas fa-star"></i>
+                      {% elif half and i == full %}
+                        <i class="fas fa-star-half-alt"></i>
+                      {% else %}
+                        <i class="far fa-star"></i>
+                      {% endif %}
+                    {% endfor %}
+                  </span>
+                  <span class="rating-value">{{ "%.1f"|format(rating) }}</span>
+                </div>
+              </div>
+              <div class="location-wrapper">
+                <div class="card-location">
+                  <i class="fas fa-map-marker-alt"></i>
+                  <span>{{ store.location or 'Online' }}</span>
+                </div>
+              </div>
+              <div class="visit-btn">Visit store <i class="fas fa-arrow-right"></i></div>
+            </div>
           </a>
         {% else %}
           <div class="empty-state">
@@ -641,6 +582,37 @@
             <button class="btn-filter" style="margin-top:1.5rem;border-radius:10px" onclick="resetFilters()"><i class="fas fa-times"></i> Clear filters</button>
           </div>
         {% endfor %}
+      </div>
+
+      <!-- "Show all stores" button – only visible when there is at least one store -->
+      {% if stores|length > 0 %}
+      <button class="show-all-btn" id="showAllBtn">
+        <i class="fas fa-store"></i> Show all stores
+      </button>
+      {% endif %}
+    </div>
+
+    <!-- MODAL POPUP (only name + location) -->
+    <div id="allStoresModal" class="modal-all-stores">
+      <div class="modal-all-container">
+        <div class="modal-header">
+          <h3>All stores</h3>
+          <button class="close-modal" id="closeModalBtn">&times;</button>
+        </div>
+        <div class="modal-filters">
+          <input type="text" id="modalSearchInput" placeholder="Store name" autocomplete="off">
+          <input type="text" id="modalLocationInput" placeholder="Location">
+          <select id="modalTypeSelect">
+            <option value="">All categories</option>
+            {% for type in store_types %}
+              <option value="{{ type.store_type }}">{{ type.store_type }}</option>
+            {% endfor %}
+          </select>
+          <button id="applyModalFiltersBtn">Apply</button>
+        </div>
+        <div class="store-list" id="modalStoreList">
+          <div class="empty-modal-state">Loading...</div>
+        </div>
       </div>
     </div>
 
@@ -657,7 +629,7 @@
   </footer>
 
   <script>
-    /* Backend metrics & suggestions — dynamic using {{ stores|tojson }} */
+    // --- Existing metrics and suggestions logic (fully preserved) ---
     function postMetric(url, payload) {
       try {
         const data = JSON.stringify(payload);
@@ -713,29 +685,134 @@
     function resetFilters() { const form = document.getElementById('filterForm'); form.querySelectorAll('input[type="text"]').forEach(el => el.value = ''); form.querySelectorAll('select').forEach(el => el.selectedIndex = 0); form.submit(); }
     window.addEventListener('scroll', () => { if(window.innerWidth <= 800) document.getElementById('filterForm')?.classList.remove('open'); });
     document.addEventListener('click', (e) => { if(window.innerWidth <= 800 && document.getElementById('filterForm')?.classList.contains('open') && !document.querySelector('.filter-wrap')?.contains(e.target)) document.getElementById('filterForm')?.classList.remove('open'); });
-  </script>
 
+// --- Show all stores modal logic (fully clickable) ---
+// --- Show all stores modal logic (name + category, clickable) ---
+const modal = document.getElementById('allStoresModal');
+const showAllBtn = document.getElementById('showAllBtn');
+const closeModalBtn = document.getElementById('closeModalBtn');
+const modalStoreList = document.getElementById('modalStoreList');
+const modalSearch = document.getElementById('modalSearchInput');
+const modalLocation = document.getElementById('modalLocationInput');
+const modalType = document.getElementById('modalTypeSelect');
+const applyBtn = document.getElementById('applyModalFiltersBtn');
 
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "Sellkwic",
-  "alternateName": "Sell Kwic",
-  "url": "https://sellkwic.com",
-  "logo": "https://sellkwic.com/static/images/logo_icon.png",
+function getCurrentMainFilters() {
+  const urlParams = new URLSearchParams(window.location.search);
+  return {
+    search: urlParams.get('search') || '',
+    location: urlParams.get('location') || '',
+    store_type: urlParams.get('store_type') || ''
+  };
+}
 
-  // "sameAs": [
-  // "https://www.facebook.com/sellkwic",
-  // "https://twitter.com/sellkwic"
-  // ], 
-
-  "description": "Sellkwic (Sell Kwic) is an online marketplace to buy and sell new and used items including electronics, automobiles, clothing, and more.",
-  "brand": {
-    "@type": "Brand",
-    "name": "Sellkwic"
+async function fetchAllStores(search, location, storeType) {
+  const params = new URLSearchParams();
+  if (search) params.append('search', search);
+  if (location) params.append('location', location);
+  if (storeType) params.append('store_type', storeType);
+  const url = `/api/stores/all?${params.toString()}`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    return data.stores || [];
+  } catch (err) {
+    console.error('Failed to fetch stores', err);
+    return [];
   }
 }
-</script>
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
+  });
+}
+
+// Show store name + category (instead of location)
+function renderStoreList(stores) {
+  if (!stores.length) {
+    modalStoreList.innerHTML = '<div class="empty-modal-state">No stores match your filters.</div>';
+    return;
+  }
+  const html = stores.map(store => {
+    const storeUrl = store.slug ? `/store/${store.slug}` : '#';
+    const category = store.store_type || 'General';
+    return `
+      <div class="store-list-item">
+        <a href="${storeUrl}" class="store-name" style="text-decoration: none; color: inherit; font-weight: 700;">
+          ${escapeHtml(store.name)}
+        </a>
+        <span class="store-location">
+          <i class="fas fa-tag"></i> ${escapeHtml(category)}
+        </span>
+      </div>
+    `;
+  }).join('');
+  modalStoreList.innerHTML = html;
+}
+
+async function refreshModalList() {
+  modalStoreList.innerHTML = '<div class="empty-modal-state">Loading...</div>';
+  const stores = await fetchAllStores(modalSearch.value, modalLocation.value, modalType.value);
+  renderStoreList(stores);
+}
+
+function openModal() {
+  const mainFilters = getCurrentMainFilters();
+  modalSearch.value = mainFilters.search;
+  modalLocation.value = mainFilters.location;
+  modalType.value = mainFilters.store_type;
+  refreshModalList();
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  modal.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+if (showAllBtn) {
+  showAllBtn.addEventListener('click', openModal);
+}
+closeModalBtn.addEventListener('click', closeModal);
+modal.addEventListener('click', (e) => {
+  if (e.target === modal) closeModal();
+});
+applyBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  refreshModalList();
+});
+
+const modalInputs = [modalSearch, modalLocation];
+modalInputs.forEach(inp => {
+  inp.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      refreshModalList();
+    }
+  });
+});
+  </script>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Sellkwic",
+      "alternateName": "Sell Kwic",
+      "url": "https://sellkwic.com",
+      "logo": "https://sellkwic.com/static/images/logo_icon.png",
+      "description": "Sellkwic (Sell Kwic) is an online marketplace to buy and sell new and used items including electronics, automobiles, clothing, and more.",
+      "brand": {
+        "@type": "Brand",
+        "name": "Sellkwic"
+      }
+    }
+  </script>
 </body>
 </html>

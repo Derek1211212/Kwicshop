@@ -1922,6 +1922,20 @@ if (qrDiv && storeAbsoluteUrl) {
 
 
 
+// ========== SAVE PROMOTION SETTINGS WITH LOADING ANIMATION (standard submit) ==========
+const promoForm = document.getElementById('promoForm');
+const savePromoBtn = document.getElementById('savePromoBtn');
+
+if (promoForm && savePromoBtn) {
+    promoForm.addEventListener('submit', function(e) {
+        // Show loading state immediately
+        savePromoBtn.disabled = true;
+        savePromoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+        // Let the form submit normally (page will reload)
+        // No e.preventDefault() – the form will submit naturally
+    });
+}
 
 
 </script>
