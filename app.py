@@ -32,6 +32,7 @@ import atexit
 from notifications import send_push_notification_to_store_followers
 from notifications import VAPID_PUBLIC_KEY
 from decimal import Decimal, ROUND_HALF_UP
+from apscheduler.schedulers.background import BackgroundScheduler
 
 load_dotenv()
 
@@ -90,6 +91,40 @@ pool = pooling.MySQLConnectionPool(pool_name="shop_pool", pool_size=10, **dbconf
 
 def get_db_connection():
     return pool.get_connection()
+
+
+
+# ──────────────── BACKGROUND SCHEDULER (cleanup old user sessions) ────────────────
+def cleanup_old_sessions():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM user_sessions_new WHERE last_activity < DATE_SUB(NOW(), INTERVAL 1 HOUR)")
+    deleted = cursor.rowcount
+    conn.commit()
+    cursor.close()
+    conn.close()
+    if deleted:
+        print(f"[Cleanup] Removed {deleted} expired user sessions from user_sessions_new")
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(
+    func=cleanup_old_sessions,
+    trigger="interval",
+    hours=1,
+    id="session_cleanup",
+    max_instances=1,      # prevent overlapping runs in the same process
+    coalesce=True,        # merge missed runs into one
+    misfire_grace_time=300 # wait up to 5 minutes if scheduler was down
+)
+scheduler.start()
+
+# Optional: shutdown scheduler on app exit gracefully
+import atexit
+atexit.register(lambda: scheduler.shutdown())
+
+
+
+
 
 # ------------------------------
 # Helpers
@@ -292,6 +327,19 @@ def admin_dashboard():
         LIMIT 10
     """)
     top_products = cursor.fetchall()
+
+
+    # Get active users (last 5 minutes)
+    cursor.execute("""
+        SELECT COUNT(*) as active_count
+        FROM user_sessions_new
+        WHERE last_activity > DATE_SUB(NOW(), INTERVAL 5 MINUTE)
+    """)
+    active_result = cursor.fetchone()
+    active_users = active_result['active_count'] if active_result else 0
+
+
+
     
     cursor.close()
     conn.close()
@@ -303,6 +351,7 @@ def admin_dashboard():
                          total_impressions=total_impressions,
                          total_clicks=total_clicks,
                          top_stores=top_stores,
+                         active_users=active_users,
                          recent_metrics=recent_metrics,
                          top_products=top_products)
 
@@ -310,6 +359,59 @@ def admin_dashboard():
 # ------------------------------
 # Admin Stores List with Monitoring
 # ------------------------------
+
+
+
+@app.before_request
+def update_user_activity():
+    if not request.endpoint or request.endpoint == 'static':
+        return
+    if 'user_id' not in session:
+        return
+    
+    user_id = session['user_id']
+    session_id = request.cookies.get('session', '') or session.get('_id', '')
+    ip = request.remote_addr
+    user_agent = request.headers.get('User-Agent', '')[:500]
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO user_sessions_new (user_id, session_id, last_activity, ip_address, user_agent)
+        VALUES (%s, %s, NOW(), %s, %s)
+        ON DUPLICATE KEY UPDATE
+            session_id = VALUES(session_id),
+            last_activity = NOW(),
+            ip_address = VALUES(ip_address),
+            user_agent = VALUES(user_agent)
+    """, (user_id, session_id, ip, user_agent))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+
+
+@app.route('/admin/api/active-users')
+@admin_required
+def api_active_users():
+    minutes = request.args.get('minutes', 5, type=int)
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT COUNT(*) as active_count
+        FROM user_sessions_new
+        WHERE last_activity > DATE_SUB(NOW(), INTERVAL %s MINUTE)
+    """, (minutes,))
+    result = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return {'active_users': result['active_count'] if result else 0}
+
+
+
+
+
 @app.route('/admin/stores')
 @admin_required
 def admin_stores():

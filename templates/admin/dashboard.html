@@ -493,6 +493,11 @@
             <div class="stat-label">Total Clicks</div>
             <div class="stat-value">{{ total_clicks|format_number }}</div>
         </div>
+        <div class="stat-card c5">
+            <div class="stat-label">Active Now</div>
+            <div class="stat-value">{{ active_users }}</div>
+            <small>last 5 minutes</small>
+        </div>
     </div>
 
     <!-- Lists -->
@@ -537,7 +542,7 @@
                         <div class="item-avatar">{{ loop.index }}</div>
                         <div class="item-body">
                             <div class="item-name">{{ product.title[:45] }}{% if product.title|length > 45 %}…{% endif %}</div>
-                            <div class="item-meta">₦{{ "%.2f"|format(product.price) }}</div>
+                            <div class="item-meta">₵{{ "%.2f"|format(product.price) }}</div>
                         </div>
                         <div class="item-badges">
                             <span class="badge badge-views">👁 {{ product.impressions|format_number }}</span>
@@ -643,6 +648,22 @@
             }
         }
     });
+
+
+
+
+    function refreshActiveUsers() {
+    fetch('/admin/api/active-users')
+        .then(res => res.json())
+        .then(data => {
+            const card = document.querySelector('.card-stats:first-child .stat-value, .card-stats .card-body h2');
+            if (card && data.active_users !== undefined) {
+                card.innerText = data.active_users;
+            }
+        })
+        .catch(err => console.warn('Failed to fetch active users:', err));
+}
+setInterval(refreshActiveUsers, 30000);
 </script>
 </body>
 </html>

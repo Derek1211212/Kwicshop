@@ -27,3 +27,5 @@ pywebpush==1.14.0
 
 cryptography==41.0.7
 
+APScheduler>=3.10.0
+
