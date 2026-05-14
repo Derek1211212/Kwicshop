@@ -166,6 +166,31 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated
 
+
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please login first', 'warning')
+            return redirect(url_for('login'))
+        # Check if user has admin role
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT role FROM users WHERE id = %s", (session['user_id'],))
+        user = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        if not user or user['role'] != 'admin':
+            flash('Admin access required', 'danger')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+
+
+
 def _inc_store_metric(store_id, field, amount=1):
     if field not in {"views","clicks","chats","swaps","sales"}:
         return False
@@ -192,16 +217,390 @@ def _inc_store_metric(store_id, field, amount=1):
 
 @app.template_filter('format_number')
 def format_number(value):
-    """Convert large numbers to K/M format (e.g., 1500 → 1.5K)."""
+    if value is None:
+        return '0'
     try:
-        value = int(value)
-        if value >= 1_000_000:
-            return f"{value/1_000_000:.1f}M"
-        elif value >= 1_000:
-            return f"{value/1_000:.1f}K"
+        num = int(value)
+        if num >= 1_000_000:
+            return f'{num/1_000_000:.1f}M'
+        elif num >= 1_000:
+            return f'{num/1_000:.1f}K'
+        return str(num)
+    except (ValueError, TypeError):
         return str(value)
-    except (TypeError, ValueError):
-        return str(value)
+
+
+
+# ------------------------------
+# Admin Dashboard
+# ------------------------------
+@app.route('/admin')
+@app.route('/admin/dashboard')
+@admin_required
+def admin_dashboard():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Overview counts
+    cursor.execute("SELECT COUNT(*) as total FROM stores")
+    total_stores = cursor.fetchone()['total']
+    
+    cursor.execute("SELECT COUNT(*) as total FROM listings")
+    total_products = cursor.fetchone()['total']
+    
+    cursor.execute("SELECT COUNT(*) as total FROM users")
+    total_users = cursor.fetchone()['total']
+    
+    # Aggregate listing metrics (impressions & clicks)
+    cursor.execute("""
+        SELECT COALESCE(SUM(impressions), 0) as total_impressions,
+               COALESCE(SUM(clicks), 0) as total_clicks
+        FROM listing_metrics
+    """)
+    metrics = cursor.fetchone()
+    total_impressions = metrics['total_impressions']
+    total_clicks = metrics['total_clicks']
+    
+    # Top 10 highest rated stores
+    cursor.execute("""
+        SELECT store_id, name, location, rating_avg, rating_count
+        FROM stores
+        WHERE rating_avg IS NOT NULL
+        ORDER BY rating_avg DESC
+        LIMIT 10
+    """)
+    top_stores = cursor.fetchall()
+    
+    # Last 7 days store metrics (views & clicks)
+    cursor.execute("""
+        SELECT dt, SUM(views) as total_views, SUM(clicks) as total_clicks
+        FROM store_metrics
+        WHERE dt >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+        GROUP BY dt
+        ORDER BY dt
+    """)
+    recent_metrics = cursor.fetchall()
+    
+    # Top 10 products by clicks
+    cursor.execute("""
+        SELECT l.listing_id, l.title, l.price, 
+               COALESCE(lm.impressions, 0) as impressions,
+               COALESCE(lm.clicks, 0) as clicks
+        FROM listings l
+        LEFT JOIN listing_metrics lm ON l.listing_id = lm.listing_id
+        ORDER BY COALESCE(lm.clicks, 0) DESC
+        LIMIT 10
+    """)
+    top_products = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('admin/dashboard.html',
+                         total_stores=total_stores,
+                         total_products=total_products,
+                         total_users=total_users,
+                         total_impressions=total_impressions,
+                         total_clicks=total_clicks,
+                         top_stores=top_stores,
+                         recent_metrics=recent_metrics,
+                         top_products=top_products)
+
+
+# ------------------------------
+# Admin Stores List with Monitoring
+# ------------------------------
+@app.route('/admin/stores')
+@admin_required
+def admin_stores():
+    sort_by = request.args.get('sort', 'rating')
+    search = request.args.get('search', '')
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Base query for stores (with optional search)
+    sql = "SELECT * FROM stores WHERE 1=1"
+    params = []
+    if search:
+        sql += " AND (name LIKE %s OR location LIKE %s)"
+        search_param = f"%{search}%"
+        params.extend([search_param, search_param])
+    
+    cursor.execute(sql, params)
+    stores = cursor.fetchall()
+    
+    stores_with_metrics = []
+    for store in stores:
+        # Sum product impressions & clicks via listing_metrics
+        cursor.execute("""
+            SELECT COALESCE(SUM(lm.impressions), 0) as product_impressions,
+                   COALESCE(SUM(lm.clicks), 0) as product_clicks
+            FROM listings l
+            LEFT JOIN listing_metrics lm ON l.listing_id = lm.listing_id
+            WHERE l.store_id = %s
+        """, (store['store_id'],))
+        prod_metrics = cursor.fetchone()
+        
+        # Sum store metrics (views, clicks) from store_metrics
+        cursor.execute("""
+            SELECT COALESCE(SUM(views), 0) as store_views,
+                   COALESCE(SUM(clicks), 0) as store_clicks
+            FROM store_metrics
+            WHERE store_id = %s
+        """, (store['store_id'],))
+        store_metrics = cursor.fetchone()
+        
+        # Count products in store
+        cursor.execute("SELECT COUNT(*) as total FROM listings WHERE store_id = %s", (store['store_id'],))
+        product_count = cursor.fetchone()['total']
+        
+        stores_with_metrics.append({
+            'store': store,
+            'product_impressions': prod_metrics['product_impressions'],
+            'product_clicks': prod_metrics['product_clicks'],
+            'store_views': store_metrics['store_views'],
+            'store_clicks': store_metrics['store_clicks'],
+            'total_products': product_count
+        })
+    
+    cursor.close()
+    conn.close()
+    
+    # Sorting
+    if sort_by == 'rating':
+        stores_with_metrics.sort(key=lambda x: x['store']['rating_avg'] or 0, reverse=True)
+    elif sort_by == 'clicks':
+        stores_with_metrics.sort(key=lambda x: x['product_clicks'], reverse=True)
+    elif sort_by == 'views':
+        stores_with_metrics.sort(key=lambda x: x['store_views'], reverse=True)
+    elif sort_by == 'products':
+        stores_with_metrics.sort(key=lambda x: x['total_products'], reverse=True)
+    
+    return render_template('admin/stores.html',
+                         stores=stores_with_metrics,
+                         sort_by=sort_by,
+                         search=search)
+
+
+# ------------------------------
+# Admin Store Detail (Complete Monitoring)
+# ------------------------------
+@app.route('/admin/store/<int:store_id>')
+@admin_required
+def admin_store_detail(store_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Get store info
+    cursor.execute("SELECT * FROM stores WHERE store_id = %s", (store_id,))
+    store = cursor.fetchone()
+    if not store:
+        abort(404)
+    
+    # Store metrics aggregation
+    cursor.execute("""
+        SELECT COALESCE(SUM(views), 0) as total_views,
+               COALESCE(SUM(clicks), 0) as total_clicks,
+               COALESCE(SUM(chats), 0) as total_chats,
+               COALESCE(SUM(swaps), 0) as total_swaps,
+               COALESCE(SUM(sales), 0) as total_sales
+        FROM store_metrics
+        WHERE store_id = %s
+    """, (store_id,))
+    store_metrics_agg = cursor.fetchone()
+    
+    # Product level metrics for this store
+    cursor.execute("""
+        SELECT COALESCE(SUM(lm.impressions), 0) as total_impressions,
+               COALESCE(SUM(lm.clicks), 0) as total_clicks,
+               COALESCE(SUM(lm.carousel_impressions), 0) as total_carousel
+        FROM listings l
+        LEFT JOIN listing_metrics lm ON l.listing_id = lm.listing_id
+        WHERE l.store_id = %s
+    """, (store_id,))
+    product_metrics = cursor.fetchone()
+    
+    # Store ratings & comments
+    cursor.execute("""
+        SELECT sr.*, u.username
+        FROM store_ratings sr
+        LEFT JOIN users u ON sr.user_id = u.id
+        WHERE sr.store_id = %s
+        ORDER BY sr.created_at DESC
+    """, (store_id,))
+    store_ratings = cursor.fetchall()
+    
+    # Calculate average rating if not stored
+    avg_rating = store['rating_avg']
+    if not avg_rating and store_ratings:
+        avg_rating = sum(r['rating'] for r in store_ratings) / len(store_ratings)
+    
+    # Get all products in store with their metrics & ratings
+    cursor.execute("""
+        SELECT l.*
+        FROM listings l
+        WHERE l.store_id = %s
+    """, (store_id,))
+    listings = cursor.fetchall()
+    
+    products = []
+    for listing in listings:
+        # Listing metrics
+        cursor.execute("""
+            SELECT impressions, clicks, carousel_impressions
+            FROM listing_metrics
+            WHERE listing_id = %s
+        """, (listing['listing_id'],))
+        metric = cursor.fetchone()
+        
+        # Listing ratings
+        cursor.execute("""
+            SELECT AVG(rating_value) as avg_rating, COUNT(*) as rating_count
+            FROM ratings
+            WHERE listing_id = %s
+        """, (listing['listing_id'],))
+        rating_info = cursor.fetchone()
+        
+        # Listing reviews count
+        cursor.execute("SELECT COUNT(*) as review_count FROM reviews WHERE listing_id = %s", (listing['listing_id'],))
+        review_count = cursor.fetchone()['review_count']
+        
+        products.append({
+            'listing': listing,
+            'impressions': metric['impressions'] if metric else 0,
+            'clicks': metric['clicks'] if metric else 0,
+            'carousel_impressions': metric['carousel_impressions'] if metric else 0,
+            'rating_avg': float(rating_info['avg_rating']) if rating_info['avg_rating'] else None,
+            'ratings_count': rating_info['rating_count'] if rating_info else 0,
+            'reviews_count': review_count
+        })
+    
+    # Sort products by clicks (most popular first)
+    products.sort(key=lambda x: x['clicks'], reverse=True)
+    
+    # Daily metrics for last 30 days
+    cursor.execute("""
+        SELECT dt, views, clicks, chats, sales
+        FROM store_metrics
+        WHERE store_id = %s AND dt >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        ORDER BY dt
+    """, (store_id,))
+    daily_metrics = cursor.fetchall()
+    
+    # Follower count
+    cursor.execute("SELECT COUNT(*) as follower_count FROM follows WHERE store_id = %s", (store_id,))
+    follower_count = cursor.fetchone()['follower_count']
+
+
+    cursor.execute("""
+        SELECT s.*, u.username as admin_name
+        FROM store_sanctions s
+        LEFT JOIN users u ON s.admin_id = u.id
+        WHERE s.store_id = %s
+        ORDER BY s.created_at DESC
+    """, (store_id,))
+    sanctions = cursor.fetchall()    
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('admin/store_detail.html',
+                         store=store,
+                         store_metrics=store_metrics_agg,
+                         product_metrics=product_metrics,
+                         store_ratings=store_ratings,
+                         avg_rating=avg_rating,
+                         products=products,
+                         daily_metrics=daily_metrics,
+                         sanctions=sanctions,
+                         follower_count=follower_count)
+
+
+# ------------------------------
+# Admin Product Detail
+# ------------------------------
+@app.route('/admin/product/<int:listing_id>')
+@admin_required
+def admin_product_detail(listing_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Get listing info
+    cursor.execute("SELECT * FROM listings WHERE listing_id = %s", (listing_id,))
+    listing = cursor.fetchone()
+    if not listing:
+        abort(404)
+    
+    # Get listing metrics
+    cursor.execute("SELECT * FROM listing_metrics WHERE listing_id = %s", (listing_id,))
+    metric = cursor.fetchone()
+    
+    # Get ratings
+    cursor.execute("""
+        SELECT r.*, u.username
+        FROM ratings r
+        LEFT JOIN users u ON r.user_id = u.id
+        WHERE r.listing_id = %s
+        ORDER BY r.created_at DESC
+    """, (listing_id,))
+    ratings = cursor.fetchall()
+    
+    # Calculate avg rating
+    avg_rating = None
+    if ratings:
+        avg_rating = sum(float(r['rating_value']) for r in ratings) / len(ratings)
+    
+    # Get reviews
+    cursor.execute("""
+        SELECT rev.*, u.username
+        FROM reviews rev
+        LEFT JOIN users u ON rev.user_id = u.id
+        WHERE rev.listing_id = %s
+        ORDER BY rev.created_at DESC
+    """, (listing_id,))
+    reviews = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('admin/product_detail.html',
+                         listing=listing,
+                         metric=metric,
+                         ratings=ratings,
+                         reviews=reviews,
+                         avg_rating=avg_rating)
+
+
+# ------------------------------
+# Optional: API endpoint for store metrics (JSON)
+# ------------------------------
+@app.route('/admin/api/store/<int:store_id>/metrics')
+@admin_required
+def api_store_metrics(store_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT dt, views, clicks, chats, sales
+        FROM store_metrics
+        WHERE store_id = %s AND dt >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+        ORDER BY dt
+    """, (store_id,))
+    metrics = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    
+    return {
+        'dates': [m['dt'].strftime('%Y-%m-%d') for m in metrics],
+        'views': [m['views'] for m in metrics],
+        'clicks': [m['clicks'] for m in metrics],
+        'chats': [m['chats'] for m in metrics],
+        'sales': [m['sales'] for m in metrics]
+    }
+
+
+
+
 
 
 
@@ -699,6 +1098,24 @@ def store_home(store_id):
     # Build absolute store URL (e.g., https://kwicshop.com/store/haven-apple-store)
     store_absolute_url = url_for('store_detail', slug=store['slug'], _external=True)
 
+    # After: store = cur.fetchone()
+    if not store:
+        flash("Store not found or you don't have permission.", "danger")
+        return redirect(url_for('home'))
+
+    # --- CHECK STORE STATUS & GET DISABLE REASON ---
+    disable_reason = None
+    if store.get('is_active') == 0:
+        cur.execute("""
+            SELECT reason FROM store_sanctions
+            WHERE store_id = %s AND action = 'disable'
+            ORDER BY created_at DESC LIMIT 1
+        """, (store_id,))
+        row = cur.fetchone()
+        if row:
+            disable_reason = row['reason']
+
+
     # 2. Promo
     cur.execute("SELECT * FROM store_promos WHERE store_id = %s AND active = 1", (store_id,))
     promo = cur.fetchone() or {}
@@ -763,6 +1180,7 @@ def store_home(store_id):
                           top_by_impressions=top_by_impressions,
                           top_by_clicks=top_by_clicks,
                           now=datetime.utcnow(),
+                          disable_reason=disable_reason,
                           store_absolute_url=store_absolute_url)   # <-- ADD THIS
 
 
@@ -2507,7 +2925,8 @@ def metric_store_click():
 def my_store_redirect():
     conn = get_db_connection()
     cur = conn.cursor(dictionary=True)
-    cur.execute("SELECT store_id FROM stores WHERE user_id = %s AND is_active = 1 LIMIT 1", (session['user_id'],))
+    # Fetch any store (active or inactive) for this user
+    cur.execute("SELECT store_id FROM stores WHERE user_id = %s LIMIT 1", (session['user_id'],))
     store = cur.fetchone()
     cur.close()
     conn.close()
@@ -2645,6 +3064,73 @@ def api_marketplace_products():
     })
 
 
+
+
+
+# ------------------------------
+# Admin: Toggle Store Status (Enable/Disable with reason)
+# ------------------------------
+@app.route('/admin/store/<int:store_id>/toggle-status', methods=['POST'])
+@admin_required
+def admin_toggle_store_status(store_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Check if store exists
+    cursor.execute("SELECT is_active FROM stores WHERE store_id = %s", (store_id,))
+    store = cursor.fetchone()
+    if not store:
+        cursor.close()
+        conn.close()
+        flash('Store not found', 'danger')
+        return redirect(url_for('admin_stores'))
+    
+    new_status = not store['is_active']
+    reason = request.form.get('reason', '').strip()
+    
+    if new_status == 0 and not reason:
+        flash('Please provide a reason for disabling the store', 'warning')
+        cursor.close()
+        conn.close()
+        return redirect(url_for('admin_store_detail', store_id=store_id))
+    
+    # Update store active status
+    cursor.execute("UPDATE stores SET is_active = %s WHERE store_id = %s", (new_status, store_id))
+    
+    # Log the sanction
+    action = 'disable' if new_status == 0 else 'enable'
+    cursor.execute("""
+        INSERT INTO store_sanctions (store_id, admin_id, action, reason)
+        VALUES (%s, %s, %s, %s)
+    """, (store_id, session['user_id'], action, reason if action == 'disable' else None))
+    
+    conn.commit()
+    cursor.close()
+    conn.close()
+    
+    flash(f'Store has been {"disabled" if new_status == 0 else "enabled"} successfully.', 'success')
+    return redirect(url_for('admin_store_detail', store_id=store_id))
+
+
+# ------------------------------
+# Admin: Get Sanction History (for AJAX or direct)
+# ------------------------------
+@app.route('/admin/store/<int:store_id>/sanctions')
+@admin_required
+def admin_store_sanctions(store_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT s.*, u.username as admin_name
+        FROM store_sanctions s
+        LEFT JOIN users u ON s.admin_id = u.id
+        WHERE s.store_id = %s
+        ORDER BY s.created_at DESC
+    """, (store_id,))
+    sanctions = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return {'sanctions': sanctions}
 
 
 

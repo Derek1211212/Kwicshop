@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Monitoring - sellkwic</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green-50: #f0fdf4;
+            --green-100: #dcfce7;
+            --green-200: #bbf7d0;
+            --green-300: #86efac;
+            --green-400: #4ade80;
+            --green-500: #22c55e;
+            --green-600: #16a34a;
+            --green-700: #15803d;
+            --accent: #10b981;
+            --accent-light: #d1fae5;
+            --white: #ffffff;
+            --gray-50: #f8faf9;
+            --gray-100: #f1f5f2;
+            --gray-200: #e4ede7;
+            --gray-400: #94a3a0;
+            --gray-600: #4b5e55;
+            --gray-800: #1e2d26;
+            --shadow-sm: 0 1px 3px rgba(16,185,129,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 16px rgba(16,185,129,0.10), 0 2px 6px rgba(0,0,0,0.05);
+            --shadow-lg: 0 12px 40px rgba(16,185,129,0.13), 0 4px 12px rgba(0,0,0,0.06);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--green-50);
+            font-family: 'DM Sans', sans-serif;
+            color: var(--gray-800);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(34,197,94,0.08) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 40% at 80% 80%, rgba(16,185,129,0.05) 0%, transparent 60%);
+        }
+
+        /* ── NAV ── */
+        nav {
+            background: var(--white);
+            border-bottom: 1px solid var(--green-100);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1.25rem;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .nav-brand {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--green-700);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-brand .brand-icon {
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(135deg, var(--green-500), var(--accent));
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            box-shadow: 0 2px 8px rgba(34,197,94,0.3);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-sm);
+            transition: all 0.15s ease;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background: var(--green-50);
+            color: var(--green-700);
+        }
+
+        .nav-links a.active {
+            background: var(--green-100);
+            color: var(--green-700);
+            font-weight: 600;
+        }
+
+        .nav-logout a {
+            background: var(--green-600);
+            color: var(--white) !important;
+            font-weight: 600;
+        }
+
+        .nav-logout a:hover {
+            background: var(--green-700) !important;
+            color: var(--white) !important;
+        }
+
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: 1.5px solid var(--green-200);
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+            color: var(--green-700);
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 680px) {
+            .nav-toggle { display: flex; align-items: center; }
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 65px; left: 0; right: 0;
+                background: var(--white);
+                flex-direction: column;
+                padding: 1rem;
+                border-bottom: 1px solid var(--green-100);
+                box-shadow: var(--shadow-md);
+                gap: 0.25rem;
+            }
+            .nav-links.open { display: flex; }
+            .nav-links a { width: 100%; padding: 0.75rem 1rem; }
+        }
+
+        /* ── MAIN ── */
+        main {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem 1.25rem 3rem;
+        }
+
+        /* ── PAGE HEADER ── */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+            flex-wrap: wrap;
+        }
+
+        .page-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.4rem, 3vw, 2rem);
+            font-weight: 800;
+            color: var(--gray-800);
+            letter-spacing: -0.03em;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--green-600);
+            text-decoration: none;
+            padding: 0.45rem 0.9rem;
+            border-radius: 8px;
+            border: 1px solid var(--green-200);
+            background: var(--white);
+            transition: all 0.15s ease;
+        }
+
+        .back-btn:hover {
+            background: var(--green-50);
+            border-color: var(--green-400);
+            color: var(--green-700);
+        }
+
+        /* ── FILTER CARD ── */
+        .filter-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            border: 1px solid var(--green-100);
+            box-shadow: var(--shadow-md);
+            padding: 1.25rem 1.4rem;
+            margin-bottom: 1.25rem;
+            animation: fadeUp 0.4s ease 0.05s both;
+        }
+
+        .filter-form {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        @media (max-width: 640px) {
+            .filter-form { grid-template-columns: 1fr; }
+        }
+
+        .filter-input,
+        .filter-select {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--gray-800);
+            background: var(--gray-50);
+            border: 1.5px solid var(--green-200);
+            border-radius: var(--radius-sm);
+            padding: 0.6rem 0.95rem;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            width: 100%;
+        }
+
+        .filter-input::placeholder { color: var(--gray-400); }
+
+        .filter-input:focus,
+        .filter-select:focus {
+            border-color: var(--green-400);
+            box-shadow: 0 0 0 3px rgba(34,197,94,0.12);
+            background: var(--white);
+        }
+
+        .filter-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3a0' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.85rem center; padding-right: 2.2rem; cursor: pointer; }
+
+        .filter-btn {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--white);
+            background: linear-gradient(135deg, var(--green-500), var(--accent));
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 0.65rem 1.4rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+            box-shadow: 0 2px 8px rgba(34,197,94,0.25);
+        }
+
+        .filter-btn:hover {
+            background: linear-gradient(135deg, var(--green-600), var(--green-700));
+            box-shadow: 0 4px 14px rgba(34,197,94,0.35);
+            transform: translateY(-1px);
+        }
+
+        /* ── TABLE CARD ── */
+        .table-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            border: 1px solid var(--green-100);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            animation: fadeUp 0.4s ease 0.12s both;
+        }
+
+        .table-header {
+            padding: 1.1rem 1.4rem;
+            border-bottom: 1px solid var(--green-100);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .table-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--gray-800);
+        }
+
+        .store-count {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            background: var(--green-100);
+            color: var(--green-700);
+        }
+
+        .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.845rem;
+        }
+
+        thead tr {
+            background: var(--green-50);
+            border-bottom: 2px solid var(--green-100);
+        }
+
+        thead th {
+            padding: 0.85rem 1rem;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--gray-400);
+            white-space: nowrap;
+            text-align: left;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--green-100);
+            transition: background 0.12s ease;
+        }
+
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: var(--green-50); }
+
+        td {
+            padding: 0.95rem 1rem;
+            color: var(--gray-800);
+            vertical-align: middle;
+        }
+
+        /* Store name cell */
+        .store-name {
+            font-weight: 700;
+            color: var(--gray-800);
+            display: block;
+            white-space: nowrap;
+        }
+
+        .store-since {
+            font-size: 0.71rem;
+            color: var(--gray-400);
+            margin-top: 2px;
+            display: block;
+        }
+
+        /* Location */
+        .td-location {
+            color: var(--gray-600);
+            font-size: 0.825rem;
+            white-space: nowrap;
+        }
+
+        /* Rating */
+        .rating-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+            background: #fef9c3;
+            color: #a16207;
+        }
+
+        .rating-count-sm {
+            font-size: 0.7rem;
+            color: var(--gray-400);
+            margin-top: 2px;
+            display: block;
+        }
+
+        .no-rating {
+            font-size: 0.75rem;
+            color: var(--gray-400);
+        }
+
+        /* Numbers */
+        .td-num {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--gray-800);
+            white-space: nowrap;
+        }
+
+        .td-num.muted {
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--gray-600);
+        }
+
+        /* View btn */
+        .view-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.38rem 0.85rem;
+            border-radius: 8px;
+            border: 1px solid var(--green-200);
+            color: var(--green-700);
+            background: var(--green-50);
+            text-decoration: none;
+            white-space: nowrap;
+            transition: all 0.14s ease;
+        }
+
+        .view-btn:hover {
+            background: var(--green-100);
+            border-color: var(--green-400);
+            color: var(--green-800);
+        }
+
+        /* Empty row */
+        .empty-row td {
+            text-align: center;
+            color: var(--gray-400);
+            padding: 3rem;
+            font-size: 0.875rem;
+        }
+
+        .empty-icon {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: 0.5rem;
+            opacity: 0.4;
+        }
+
+        /* ── MOBILE CARD VIEW ── */
+        /* On very small screens, transform each row into a card */
+        @media (max-width: 720px) {
+            .table-wrap { overflow-x: auto; }
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--gray-400);
+            padding: 2rem 1.25rem 1.5rem;
+            border-top: 1px solid var(--green-100);
+            margin-top: 0.5rem;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+    <div class="nav-inner">
+        <a class="nav-brand" href="/admin/dashboard">
+            <div class="brand-icon">📊</div>
+            sellkwic
+        </a>
+        <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu">
+            ☰
+        </button>
+        <ul class="nav-links">
+            <li><a href="/admin/dashboard">Dashboard</a></li>
+            <li><a href="/admin/stores" class="active">Store Monitoring</a></li>
+            <li class="nav-logout"><a href="/logout">Logout</a></li>
+        </ul>
+    </div>
+</nav>
+
+<!-- ── MAIN ── */
+<main>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">🏪 Store Monitoring</h1>
+        <a class="back-btn" href="/admin/dashboard">← Back to Dashboard</a>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <form method="GET" class="filter-form">
+            <input
+                class="filter-input"
+                type="text"
+                name="search"
+                placeholder="🔍  Search by store name or location…"
+                value="{{ search }}"
+            >
+            <select class="filter-select" name="sort">
+                <option value="rating"   {% if sort_by == 'rating' %}selected{% endif %}>Sort by Rating</option>
+                <option value="clicks"   {% if sort_by == 'clicks' %}selected{% endif %}>Sort by Product Clicks</option>
+                <option value="views"    {% if sort_by == 'views' %}selected{% endif %}>Sort by Store Views</option>
+                <option value="products" {% if sort_by == 'products' %}selected{% endif %}>Sort by Product Count</option>
+            </select>
+            <button class="filter-btn" type="submit">Apply Filters</button>
+        </form>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+        <div class="table-header">
+            <span class="table-title">All Stores</span>
+            <span class="store-count">{{ stores|length }} store{{ 's' if stores|length != 1 else '' }}</span>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Store</th>
+                        <th>Location</th>
+                        <th>Rating</th>
+                        <th>Products</th>
+                        <th>Store Views</th>
+                        <th>Store Clicks</th>
+                        <th>Prod. Impressions</th>
+                        <th>Prod. Clicks</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for store_data in stores %}
+                    <tr>
+                        <td>
+                            <span class="store-name">{{ store_data.store.name }}</span>
+                            <span class="store-since">Since {{ store_data.store.created_at.strftime('%b %Y') if store_data.store.created_at else 'N/A' }}</span>
+                        </td>
+                        <td>
+                            <span class="td-location">{{ store_data.store.location or '—' }}</span>
+                        </td>
+                        <td>
+                            {% if store_data.store.rating_avg %}
+                                <span class="rating-chip">⭐ {{ "%.1f"|format(store_data.store.rating_avg) }}</span>
+                                <span class="rating-count-sm">{{ store_data.store.rating_count }} review{{ 's' if store_data.store.rating_count != 1 else '' }}</span>
+                            {% else %}
+                                <span class="no-rating">No ratings</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="td-num">{{ store_data.total_products }}</span></td>
+                        <td><span class="td-num">{{ store_data.store_views|format_number }}</span></td>
+                        <td><span class="td-num">{{ store_data.store_clicks|format_number }}</span></td>
+                        <td><span class="td-num muted">{{ store_data.product_impressions|format_number }}</span></td>
+                        <td><span class="td-num muted">{{ store_data.product_clicks|format_number }}</span></td>
+                        <td>
+                            <a href="/admin/store/{{ store_data.store.store_id }}" class="view-btn">
+                                View →
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr class="empty-row">
+                        <td colspan="9">
+                            <span class="empty-icon">🔍</span>
+                            No stores found matching your search.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<footer>
+    &copy; 2025 sellkwic Admin Panel &nbsp;·&nbsp; All rights reserved.
+</footer>
+
+</body>
+</html>

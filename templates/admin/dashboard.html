@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - sellkwic</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --green-50: #f0fdf4;
+            --green-100: #dcfce7;
+            --green-200: #bbf7d0;
+            --green-300: #86efac;
+            --green-400: #4ade80;
+            --green-500: #22c55e;
+            --green-600: #16a34a;
+            --green-700: #15803d;
+            --green-800: #166534;
+            --accent: #10b981;
+            --accent-light: #d1fae5;
+            --white: #ffffff;
+            --gray-50: #f8faf9;
+            --gray-100: #f1f5f2;
+            --gray-200: #e4ede7;
+            --gray-400: #94a3a0;
+            --gray-600: #4b5e55;
+            --gray-800: #1e2d26;
+            --shadow-sm: 0 1px 3px rgba(16,185,129,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 16px rgba(16,185,129,0.10), 0 2px 6px rgba(0,0,0,0.05);
+            --shadow-lg: 0 12px 40px rgba(16,185,129,0.13), 0 4px 12px rgba(0,0,0,0.06);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--green-50);
+            font-family: 'DM Sans', sans-serif;
+            color: var(--gray-800);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(34,197,94,0.08) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 40% at 80% 80%, rgba(16,185,129,0.05) 0%, transparent 60%);
+        }
+
+        /* ── NAV ── */
+        nav {
+            background: var(--white);
+            border-bottom: 1px solid var(--green-100);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1.25rem;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .nav-brand {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--green-700);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-brand .brand-icon {
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(135deg, var(--green-500), var(--accent));
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            box-shadow: 0 2px 8px rgba(34,197,94,0.3);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-sm);
+            transition: all 0.15s ease;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background: var(--green-50);
+            color: var(--green-700);
+        }
+
+        .nav-links a.active {
+            background: var(--green-100);
+            color: var(--green-700);
+            font-weight: 600;
+        }
+
+        .nav-logout a {
+            background: var(--green-600);
+            color: var(--white) !important;
+            font-weight: 600;
+        }
+
+        .nav-logout a:hover {
+            background: var(--green-700) !important;
+            color: var(--white) !important;
+        }
+
+        /* Hamburger */
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: 1.5px solid var(--green-200);
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+            color: var(--green-700);
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 680px) {
+            .nav-toggle { display: flex; align-items: center; }
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 65px;
+                left: 0; right: 0;
+                background: var(--white);
+                flex-direction: column;
+                padding: 1rem;
+                border-bottom: 1px solid var(--green-100);
+                box-shadow: var(--shadow-md);
+                gap: 0.25rem;
+            }
+            .nav-links.open { display: flex; }
+            .nav-links a { width: 100%; padding: 0.75rem 1rem; }
+        }
+
+        /* ── MAIN ── */
+        main {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem 1.25rem 3rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            font-weight: 800;
+            color: var(--gray-800);
+            letter-spacing: -0.03em;
+        }
+
+        .page-subtitle {
+            font-size: 0.875rem;
+            color: var(--gray-400);
+            margin-top: 0.25rem;
+        }
+
+        /* ── STAT CARDS ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+        }
+
+        @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--green-100);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card.c1::before { background: linear-gradient(90deg, #22c55e, #10b981); }
+        .stat-card.c2::before { background: linear-gradient(90deg, #10b981, #06b6d4); }
+        .stat-card.c3::before { background: linear-gradient(90deg, #06b6d4, #6366f1); }
+        .stat-card.c4::before { background: linear-gradient(90deg, #f59e0b, #f97316); }
+
+        .stat-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card.c1 .stat-icon { background: var(--green-100); }
+        .stat-card.c2 .stat-icon { background: #d1fae5; }
+        .stat-card.c3 .stat-icon { background: #e0f2fe; }
+        .stat-card.c4 .stat-icon { background: #fef3c7; }
+
+        .stat-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--gray-400);
+            margin-bottom: 0.35rem;
+        }
+
+        .stat-value {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.75rem, 3vw, 2.25rem);
+            font-weight: 700;
+            color: var(--gray-800);
+            letter-spacing: -0.03em;
+            line-height: 1;
+        }
+
+        /* ── CONTENT GRID ── */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        @media (max-width: 768px) { .content-grid { grid-template-columns: 1fr; } }
+
+        /* ── CARDS ── */
+        .card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--green-100);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1.1rem 1.4rem;
+            border-bottom: 1px solid var(--green-100);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--gray-800);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-body { padding: 1.25rem; }
+
+        /* ── LIST ITEMS ── */
+        .store-list, .product-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.85rem 1rem;
+            border-radius: var(--radius-sm);
+            background: var(--gray-50);
+            border: 1px solid var(--green-100);
+            text-decoration: none;
+            color: var(--gray-800);
+            transition: all 0.15s ease;
+            gap: 0.75rem;
+        }
+
+        .list-item:hover {
+            background: var(--green-50);
+            border-color: var(--green-300);
+            transform: translateX(3px);
+        }
+
+        .item-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--green-400), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            color: white;
+            font-weight: 700;
+            font-family: 'Syne', sans-serif;
+        }
+
+        .item-body { flex: 1; min-width: 0; }
+
+        .item-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--gray-800);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-meta {
+            font-size: 0.75rem;
+            color: var(--gray-400);
+            margin-top: 2px;
+        }
+
+        .item-badges {
+            display: flex;
+            gap: 0.35rem;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.25rem 0.55rem;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            white-space: nowrap;
+        }
+
+        .badge-star { background: #fef9c3; color: #a16207; }
+        .badge-review { background: var(--green-100); color: var(--green-700); }
+        .badge-views { background: #e0f2fe; color: #0369a1; }
+        .badge-clicks { background: var(--accent-light); color: var(--green-700); }
+
+        .view-all {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--green-600);
+            text-decoration: none;
+            padding: 0.5rem 0.9rem;
+            border-radius: 8px;
+            border: 1px solid var(--green-200);
+            transition: all 0.15s ease;
+        }
+
+        .view-all:hover {
+            background: var(--green-50);
+            border-color: var(--green-400);
+            color: var(--green-700);
+        }
+
+        /* ── CHART ── */
+        .chart-card { margin-bottom: 0; }
+
+        .chart-wrap {
+            position: relative;
+            padding: 0.25rem 0;
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--gray-400);
+            padding: 2rem 1.25rem 1.5rem;
+            border-top: 1px solid var(--green-100);
+            margin-top: 1rem;
+        }
+
+        /* ── EMPTY STATE ── */
+        .empty {
+            text-align: center;
+            color: var(--gray-400);
+            font-size: 0.875rem;
+            padding: 1.5rem;
+        }
+
+        /* Animate cards in */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .stat-card { animation: fadeUp 0.4s ease both; }
+        .stat-card:nth-child(1) { animation-delay: 0.05s; }
+        .stat-card:nth-child(2) { animation-delay: 0.10s; }
+        .stat-card:nth-child(3) { animation-delay: 0.15s; }
+        .stat-card:nth-child(4) { animation-delay: 0.20s; }
+
+        .card { animation: fadeUp 0.4s ease 0.25s both; }
+        .chart-card { animation-delay: 0.35s; }
+    </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+    <div class="nav-inner">
+        <a class="nav-brand" href="/admin/dashboard">
+            <div class="brand-icon">📊</div>
+            sellkwic
+        </a>
+        <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu">
+            ☰
+        </button>
+        <ul class="nav-links">
+            <li><a href="/admin/dashboard" class="active">Dashboard</a></li>
+            <li><a href="/admin/stores">Store Monitoring</a></li>
+            <li class="nav-logout"><a href="/logout">Logout</a></li>
+        </ul>
+    </div>
+</nav>
+
+<!-- ── MAIN ── -->
+<main>
+    <div class="page-header">
+        <h1 class="page-title">Admin Dashboard</h1>
+        <p class="page-subtitle">Welcome back — here's what's happening on your platform.</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card c1">
+            <div class="stat-icon">🏪</div>
+            <div class="stat-label">Total Stores</div>
+            <div class="stat-value">{{ total_stores }}</div>
+        </div>
+        <div class="stat-card c2">
+            <div class="stat-icon">📦</div>
+            <div class="stat-label">Total Products</div>
+            <div class="stat-value">{{ total_products }}</div>
+        </div>
+        <div class="stat-card c3">
+            <div class="stat-icon">👥</div>
+            <div class="stat-label">Total Users</div>
+            <div class="stat-value">{{ total_users }}</div>
+        </div>
+        <div class="stat-card c4">
+            <div class="stat-icon">🖱️</div>
+            <div class="stat-label">Total Clicks</div>
+            <div class="stat-value">{{ total_clicks|format_number }}</div>
+        </div>
+    </div>
+
+    <!-- Lists -->
+    <div class="content-grid">
+
+        <!-- Top Stores -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">🌟 Highest Rated Stores</span>
+            </div>
+            <div class="card-body">
+                <div class="store-list">
+                    {% for store in top_stores[:5] %}
+                    <a href="/admin/store/{{ store.store_id }}" class="list-item">
+                        <div class="item-avatar">{{ store.name[0]|upper }}</div>
+                        <div class="item-body">
+                            <div class="item-name">{{ store.name }}</div>
+                            <div class="item-meta">{{ store.location or 'Location N/A' }}</div>
+                        </div>
+                        <div class="item-badges">
+                            <span class="badge badge-star">⭐ {{ "%.1f"|format(store.rating_avg) }}</span>
+                            <span class="badge badge-review">{{ store.rating_count }} reviews</span>
+                        </div>
+                    </a>
+                    {% else %}
+                    <p class="empty">No stores with ratings yet.</p>
+                    {% endfor %}
+                </div>
+                <a href="/admin/stores" class="view-all">View All Stores →</a>
+            </div>
+        </div>
+
+        <!-- Top Products -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">🔥 Top Performing Products</span>
+            </div>
+            <div class="card-body">
+                <div class="product-list">
+                    {% for product in top_products[:5] %}
+                    <a href="/admin/product/{{ product.listing_id }}" class="list-item">
+                        <div class="item-avatar">{{ loop.index }}</div>
+                        <div class="item-body">
+                            <div class="item-name">{{ product.title[:45] }}{% if product.title|length > 45 %}…{% endif %}</div>
+                            <div class="item-meta">₦{{ "%.2f"|format(product.price) }}</div>
+                        </div>
+                        <div class="item-badges">
+                            <span class="badge badge-views">👁 {{ product.impressions|format_number }}</span>
+                            <span class="badge badge-clicks">🖱 {{ product.clicks|format_number }}</span>
+                        </div>
+                    </a>
+                    {% else %}
+                    <p class="empty">No product metrics available.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card chart-card">
+        <div class="card-header">
+            <span class="card-title">📈 Platform Activity — Last 7 Days</span>
+        </div>
+        <div class="card-body">
+            <div class="chart-wrap">
+                <canvas id="activityChart" height="90"></canvas>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer>
+    &copy; 2025 sellkwic Admin Panel &nbsp;·&nbsp; All rights reserved.
+</footer>
+
+<script>
+    const ctx = document.getElementById('activityChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [{% for metric in recent_metrics %}'{{ metric.dt.strftime("%b %d") }}'{% if not loop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                label: 'Store Views',
+                data: [{% for metric in recent_metrics %}{{ metric.total_views|default(0) }}{% if not loop.last %},{% endif %}{% endfor %}],
+                borderColor: '#22c55e',
+                backgroundColor: 'rgba(34,197,94,0.08)',
+                borderWidth: 2.5,
+                pointBackgroundColor: '#22c55e',
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Store Clicks',
+                data: [{% for metric in recent_metrics %}{{ metric.total_clicks|default(0) }}{% if not loop.last %},{% endif %}{% endfor %}],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16,185,129,0.06)',
+                borderWidth: 2.5,
+                pointBackgroundColor: '#10b981',
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        font: { family: 'DM Sans', size: 12, weight: '600' },
+                        color: '#4b5e55',
+                        boxWidth: 12,
+                        boxHeight: 12,
+                        borderRadius: 4,
+                        useBorderRadius: true,
+                        padding: 16
+                    }
+                },
+                tooltip: {
+                    backgroundColor: '#fff',
+                    titleColor: '#1e2d26',
+                    bodyColor: '#4b5e55',
+                    borderColor: '#bbf7d0',
+                    borderWidth: 1,
+                    padding: 12,
+                    titleFont: { family: 'Syne', size: 13, weight: '700' },
+                    bodyFont: { family: 'DM Sans', size: 12 },
+                    boxShadow: '0 4px 16px rgba(16,185,129,0.15)',
+                    cornerRadius: 10
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { family: 'DM Sans', size: 11 }, color: '#94a3a0' },
+                    border: { display: false }
+                },
+                y: {
+                    grid: { color: 'rgba(34,197,94,0.07)', drawBorder: false },
+                    ticks: { font: { family: 'DM Sans', size: 11 }, color: '#94a3a0', padding: 8 },
+                    border: { display: false, dash: [4, 4] }
+                }
+            }
+        }
+    });
+</script>
+</body>
+</html>
