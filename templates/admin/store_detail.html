@@ -553,6 +553,31 @@
                 <span class="meta-chip">📍 {{ store.location }}</span>
                 <span class="meta-chip">👥 {{ follower_count }} followers</span>
             </div>
+<div class="owner-info" style="margin-top: 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+    {% if store_owner %}
+        {% if store_owner.avatar %}
+            <img src="{{ store_owner.avatar }}" alt="Owner avatar" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+        {% else %}
+            <div class="owner-avatar-placeholder" style="width: 40px; height: 40px; border-radius: 50%; background: var(--green-100); display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--green-700);">
+                {{ store_owner.username[0]|upper if store_owner.username else '?' }}
+            </div>
+        {% endif %}
+        <div>
+            <div style="font-size: 0.85rem; font-weight: 600; color: var(--gray-600);">Store Owner</div>
+            <div style="font-weight: 700; color: var(--gray-800);">{{ store_owner.name or store_owner.username }}</div>
+            <div style="font-size: 0.75rem; color: var(--gray-400);">
+                {{ store_owner.email }} 
+                {% if store_owner.contact %} · {{ store_owner.contact }}{% endif %}
+            </div>
+            <!-- NEW: Store contact (public) -->
+            <div style="font-size: 0.75rem; color: var(--gray-500); margin-top: 4px;">
+                📞 Store contact: {{ store.contact or 'Not provided' }}
+            </div>
+        </div>
+    {% else %}
+        <div style="font-size: 0.8rem; color: var(--gray-400);">Owner information not available</div>
+    {% endif %}
+</div>
         </div>
         <div class="header-actions">
             <span class="status-badge {{ 'active' if store.is_active else 'inactive' }}">

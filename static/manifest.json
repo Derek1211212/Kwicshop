@@ -1,18 +1,20 @@
 {
-  "name": "Swap Sphere",
-  "short_name": "SwapSphere",
+  "name": "SellKwic",
+  "short_name": "SellKwic",
+  "description": "SellKwic is Ghana's online marketplace and no-code store builder.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#2ECC71",
+  "theme_color": "#16a34a",
   "icons": [
     {
-      "src": "https://swap-chief-rs2t.onrender.com/static/icons/ss.png",
+      "src": "/static/icons/ss.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://swap-chief-rs2t.onrender.com/static/icons/ss.png",
+      "src": "/static/icons/ss.png",
       "sizes": "512x512",
       "type": "image/png"
     }

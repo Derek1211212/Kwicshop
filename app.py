@@ -499,6 +499,17 @@ def admin_store_detail(store_id):
     store = cursor.fetchone()
     if not store:
         abort(404)
+
+
+    cursor.execute("""
+        SELECT id, username, email, contact, name, avatar, account_status
+        FROM users
+        WHERE id = %s
+    """, (store['user_id'],))
+    store_owner = cursor.fetchone()
+
+
+
     
     # Store metrics aggregation
     cursor.execute("""
@@ -609,6 +620,7 @@ def admin_store_detail(store_id):
     
     return render_template('admin/store_detail.html',
                          store=store,
+                         store_owner=store_owner,          # NEW
                          store_metrics=store_metrics_agg,
                          product_metrics=product_metrics,
                          store_ratings=store_ratings,
@@ -617,6 +629,8 @@ def admin_store_detail(store_id):
                          daily_metrics=daily_metrics,
                          sanctions=sanctions,
                          follower_count=follower_count)
+
+
 
 
 # ------------------------------
@@ -3249,9 +3263,19 @@ def google_verification():
     return render_template('googlefbaf22f94e24fef4.html')    
 
 
+@app.route('/robots.txt')
+def robots_txt():
+    robots = """User-agent: *
+Allow: /
+
+Sitemap: https://sellkwic.com/sitemap.xml
+"""
+    return Response(robots, mimetype='text/plain')
+
+
 @app.route('/sitemap.xml')
 def sitemap():
-    return render_template('sitemap.xml')
+    return Response(render_template('sitemap.xml'), mimetype='application/xml')
 
 
 
