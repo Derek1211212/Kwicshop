@@ -720,6 +720,50 @@
         .step.completed { background: var(--success); color: white; }
         .step-connector.completed { background: var(--success); }
 
+        .product-batch-summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.85rem 1rem;
+            margin: -0.75rem 0 1.4rem;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg-2);
+        }
+        .batch-count-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.35rem 0.7rem;
+            border-radius: 999px;
+            background: var(--primary-muted);
+            color: var(--primary-dark);
+            font-family: var(--font-display);
+            font-size: 0.8rem;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+        .batch-product-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            justify-content: flex-end;
+            min-width: 0;
+        }
+        .batch-product-chip {
+            max-width: 170px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 0.35rem 0.6rem;
+            border-radius: 999px;
+            background: var(--surface);
+            border: 1px solid var(--border-2);
+            color: var(--text-2);
+            font-size: 0.76rem;
+            font-weight: 800;
+        }
         .modal-actions { display: flex; justify-content: space-between; margin-top: 2rem; }
 
         /* INFO BOX */
@@ -757,6 +801,9 @@
             .footer-links { justify-content: center; }
             .modal-body { padding: 1rem; }
             .modal-header h2 { font-size: 1.2rem; }
+            .product-batch-summary { align-items: flex-start; flex-direction: column; gap: 0.65rem; }
+            .batch-product-list { justify-content: flex-start; width: 100%; }
+            .batch-product-chip { max-width: 100%; }
             .modal-actions { flex-direction: column; gap: 0.75rem; }
             .modal-actions .btn { width: 100%; }
             .action-buttons .btn { flex: 1; }
@@ -1267,6 +1314,15 @@
                 <div class="step-connector"></div>
                 <div class="step" data-step="2">2</div>
             </div>
+            <div class="product-batch-summary">
+                <div class="batch-count-pill">
+                    <i class="fas fa-box"></i>
+                    <span id="queuedProductCount">0 products ready</span>
+                </div>
+                <div class="batch-product-list" id="queuedProductList">
+                    <span class="batch-product-chip">No products added yet</span>
+                </div>
+            </div>
             <form id="addItemFormModal" action="/store/add-item" method="POST" enctype="multipart/form-data">
                 <!-- Hardcoded deal type and plan -->
                 <input type="hidden" name="deal_type" value="Outright Sales">
@@ -1294,6 +1350,10 @@
                             </div>
                         </div>
                         <div class="form-group"><label class="form-label">Price (₵) *</label><input type="number" step="0.01" name="price" class="form-input" required placeholder="0.00"></div>
+                        <label style="display:flex;align-items:center;gap:.55rem;margin:-.25rem 0 .15rem;font-weight:800;color:var(--text-2);font-size:.9rem">
+                            <input type="checkbox" name="contact_for_price" value="1" id="modal-contact-for-price" style="width:18px;height:18px;accent-color:var(--primary)">
+                            Contact for price
+                        </label>
                         <div class="form-group"><label class="form-label">Condition *</label><select name="condition" class="form-select" required><option value="">Select condition</option><option>New</option><option>Slightly Used</option><option>Used but in Good Condition</option><option>Used and needs repairs</option></select></div>
                         <div class="form-group">
                             <label class="form-label">Images (1-4) *</label>
@@ -1326,7 +1386,8 @@
                     </div>
                     <div class="modal-actions" style="display:flex; justify-content:space-between; margin-top:2rem;">
                         <button type="button" class="btn btn-outline prev-step"><i class="fas fa-arrow-left"></i> Back</button>
-                        <button type="button" class="btn btn-primary" id="submitItemBtn"><i class="fas fa-paper-plane"></i> Submit</button>
+                        <button type="button" class="btn btn-outline" id="addAnotherProductBtn"><i class="fas fa-plus"></i> Save & Add Another</button>
+                        <button type="button" class="btn btn-primary" id="submitItemBtn"><i class="fas fa-paper-plane"></i> Submit All</button>
                     </div>
                 </div>
             </form>
@@ -1859,10 +1920,28 @@ initTourButton();
     const openBtns = [document.getElementById('openAddItemModal'), document.getElementById('openAddItemModalFull'), document.getElementById('fabAddItem'), document.getElementById('openAddItemModalFull2')];
     const closeBtn = document.getElementById('closeModal');
     function openModal(e) { if (e) e.preventDefault(); modal.classList.add('show'); document.body.style.overflow='hidden'; resetModal(); }
-    function closeModal(e) { if (e) e.preventDefault(); modal.classList.remove('show'); document.body.style.overflow=''; }
+    let isSubmittingBatch = false;
+    function hasUnsavedProductData() {
+        return productQueue.length > 0 || hasCurrentProductDraft();
+    }
+    function confirmDiscardProducts() {
+        if (isSubmittingBatch || !hasUnsavedProductData()) return true;
+        return window.confirm('Cancelling will cause you to lose the product data you have added but not submitted. Do you still want to close this form?');
+    }
+    function closeModal(e, forceClose = false) {
+        if (e) e.preventDefault();
+        if (!forceClose && !confirmDiscardProducts()) return;
+        modal.classList.remove('show');
+        document.body.style.overflow='';
+    }
     openBtns.forEach(b => b?.addEventListener('click', openModal));
     closeBtn?.addEventListener('click', closeModal);
     modal.addEventListener('click', e => { if (e.target === modal) closeModal(e); });
+    window.addEventListener('beforeunload', function(e) {
+        if (!modal.classList.contains('show') || isSubmittingBatch || !hasUnsavedProductData()) return;
+        e.preventDefault();
+        e.returnValue = '';
+    });
 
     const stepContents = document.querySelectorAll('.modal-step-content');
     const stepCircles = document.querySelectorAll('.step[data-step]');
@@ -1880,7 +1959,9 @@ initTourButton();
         const title = step1.querySelector('input[name="title"]')?.value.trim();
         const description = step1.querySelector('textarea[name="description"]')?.value.trim();
         const category = step1.querySelector('input[name="category"]')?.value.trim();
-        const price = step1.querySelector('input[name="price"]')?.value.trim();
+        const priceInput = step1.querySelector('input[name="price"]');
+        const price = priceInput?.value.trim();
+        const contactForPrice = step1.querySelector('input[name="contact_for_price"]')?.checked;
         const condition = step1.querySelector('select[name="condition"]')?.value;
         const fileInput = document.getElementById('sale-images');
         const files = fileInput ? fileInput.files : [];
@@ -1888,12 +1969,147 @@ initTourButton();
         if (!title) { showToast('❌ Please enter the item name.'); return false; }
         if (!description) { showToast('❌ Please enter the listing description.'); return false; }
         if (!category) { showToast('❌ Please enter a category for the product.'); return false; }
-        if (!price || parseFloat(price) <= 0) { showToast('❌ Please enter a valid price greater than 0.'); return false; }
+        if (!contactForPrice && (!price || parseFloat(price) <= 0)) { showToast('❌ Please enter a valid price greater than 0, or choose Contact for price.'); return false; }
         if (!condition) { showToast('❌ Please select the product condition.'); return false; }
         if (files.length === 0) { showToast('❌ Please upload at least one product image.'); return false; }
 
         return true;
     }
+
+    function validateStep2() {
+        const countrySelect = document.getElementById('country-code');
+        const localInput = document.getElementById('local-number');
+        const hiddenContact = document.getElementById('contact-hidden');
+        const locationInput = document.querySelector('.modal-step-content[data-step="2"] input[name="location"]');
+        if (!locationInput?.value.trim()) { showToast('Please enter the product location.'); return false; }
+        if (countrySelect && localInput && hiddenContact) {
+            if (!countrySelect.value) { showToast('Please select a country code.'); return false; }
+            const rawLocal = localInput.value.trim();
+            if (!rawLocal) { showToast('Please enter a local number.'); return false; }
+            let digits = rawLocal.replace(/\D/g, '');
+            const ccDigits = countrySelect.value.replace(/\D/g, '');
+            if (digits.startsWith(ccDigits)) digits = digits.slice(ccDigits.length);
+            digits = digits.replace(/^0+/, '');
+            if (digits.length === 0) { showToast('Please enter a valid local phone number.'); return false; }
+            hiddenContact.value = countrySelect.value + digits;
+        }
+        return true;
+    }
+
+    const modalContactForPrice = document.getElementById('modal-contact-for-price');
+    const modalPriceInput = document.querySelector('.modal-step-content[data-step="1"] input[name="price"]');
+    function syncModalPriceMode() {
+        if (!modalContactForPrice || !modalPriceInput) return;
+        if (modalContactForPrice.checked) {
+            modalPriceInput.value = '';
+            modalPriceInput.required = false;
+            modalPriceInput.disabled = true;
+            modalPriceInput.placeholder = 'Contact for price';
+        } else {
+            modalPriceInput.disabled = false;
+            modalPriceInput.required = true;
+            modalPriceInput.placeholder = '0.00';
+        }
+    }
+    modalContactForPrice?.addEventListener('change', syncModalPriceMode);
+    syncModalPriceMode();
+
+    const productQueue = [];
+    const queuedProductCount = document.getElementById('queuedProductCount');
+    const queuedProductList = document.getElementById('queuedProductList');
+    const addAnotherProductBtn = document.getElementById('addAnotherProductBtn');
+
+    function updateBatchSummary() {
+        const count = productQueue.length;
+        if (queuedProductCount) {
+            queuedProductCount.textContent = `${count} product${count === 1 ? '' : 's'} ready`;
+        }
+        if (!queuedProductList) return;
+        if (!count) {
+            queuedProductList.innerHTML = '<span class="batch-product-chip">No products added yet</span>';
+            return;
+        }
+        queuedProductList.innerHTML = productQueue
+            .map((product, index) => `<span class="batch-product-chip">${index + 1}. ${escapeHtml(product.title)}</span>`)
+            .join('');
+    }
+
+    function hasCurrentProductDraft() {
+        const step1 = document.querySelector('.modal-step-content[data-step="1"]');
+        const step2 = document.querySelector('.modal-step-content[data-step="2"]');
+        const fileInput = document.getElementById('sale-images');
+        if (!step1) return false;
+        return Boolean(
+            step1.querySelector('input[name="title"]')?.value.trim() ||
+            step1.querySelector('textarea[name="description"]')?.value.trim() ||
+            step1.querySelector('input[name="category"]')?.value.trim() ||
+            step1.querySelector('input[name="price"]')?.value.trim() ||
+            step1.querySelector('select[name="condition"]')?.value ||
+            step1.querySelector('input[name="contact_for_price"]')?.checked ||
+            step2?.querySelector('input[name="location"]')?.value.trim() ||
+            document.getElementById('local-number')?.value.trim() ||
+            document.getElementById('country-code')?.value ||
+            (fileInput?.files?.length || 0) > 0
+        );
+    }
+
+    function collectCurrentProduct() {
+        const step1 = document.querySelector('.modal-step-content[data-step="1"]');
+        const step2 = document.querySelector('.modal-step-content[data-step="2"]');
+        const fileInput = document.getElementById('sale-images');
+        return {
+            deal_type: 'Outright Sales',
+            plan: 'Free',
+            title: step1.querySelector('input[name="title"]')?.value.trim() || '',
+            description: step1.querySelector('textarea[name="description"]')?.value.trim() || '',
+            category: step1.querySelector('input[name="category"]')?.value.trim() || '',
+            condition: step1.querySelector('select[name="condition"]')?.value || '',
+            price: step1.querySelector('input[name="price"]')?.value.trim() || '',
+            contact_for_price: step1.querySelector('input[name="contact_for_price"]')?.checked || false,
+            location: step2.querySelector('input[name="location"]')?.value.trim() || '',
+            contact: document.getElementById('contact-hidden')?.value || '',
+            images: Array.from(fileInput?.files || [])
+        };
+    }
+
+    function queueCurrentProduct() {
+        if (!validateStep1()) {
+            goToStep(1);
+            return false;
+        }
+        if (!validateStep2()) {
+            goToStep(2);
+            return false;
+        }
+        const product = collectCurrentProduct();
+        productQueue.push(product);
+        updateBatchSummary();
+        return true;
+    }
+
+    function resetProductFieldsForNext() {
+        const step1 = document.querySelector('.modal-step-content[data-step="1"]');
+        step1.querySelector('input[name="title"]').value = '';
+        step1.querySelector('textarea[name="description"]').value = '';
+        step1.querySelector('input[name="category"]').value = '';
+        step1.querySelector('input[name="price"]').value = '';
+        step1.querySelector('select[name="condition"]').value = '';
+        const contactForPrice = step1.querySelector('input[name="contact_for_price"]');
+        if (contactForPrice) contactForPrice.checked = false;
+        const imagesInput = document.getElementById('sale-images');
+        if (imagesInput) imagesInput.value = '';
+        if (previewContainer) { previewContainer.innerHTML = ''; previewContainer.style.display = 'none'; }
+        syncModalPriceMode();
+        attachCategoryAutocomplete(modal);
+    }
+
+    addAnotherProductBtn?.addEventListener('click', () => {
+        if (!queueCurrentProduct()) return;
+        showToast(`${productQueue.length} product${productQueue.length === 1 ? '' : 's'} ready. Add the next one.`);
+        resetProductFieldsForNext();
+        goToStep(1);
+        document.querySelector('.modal-step-content[data-step="1"] input[name="title"]')?.focus();
+    });
 
     document.querySelectorAll('.next-step').forEach(b => b.addEventListener('click', () => {
         const currentStepElem = b.closest('.modal-step-content');
@@ -2040,9 +2256,12 @@ initTourButton();
     function resetModal() {
         goToStep(1);
         const form = document.getElementById('addItemFormModal'); if (form) form.reset();
+        productQueue.length = 0;
+        updateBatchSummary();
         if (previewContainer) { previewContainer.innerHTML = ''; previewContainer.style.display = 'none'; }
         document.querySelectorAll('.category-input').forEach(inp => inp.value = '');
         const conditionSelect = document.querySelector('select[name="condition"]'); if (conditionSelect) conditionSelect.value = '';
+        syncModalPriceMode();
         attachCategoryAutocomplete(modal);
     }
 
@@ -2052,39 +2271,67 @@ initTourButton();
     if (submitBtn && addItemForm) {
         submitBtn.addEventListener('click', async function(e) {
             e.preventDefault(); if (submitBtn.disabled) return;
-            if (!addItemForm.checkValidity()) { addItemForm.reportValidity(); return; }
-            const countrySelect = document.getElementById('country-code'); const localInput = document.getElementById('local-number'); const hiddenContact = document.getElementById('contact-hidden');
-            if (countrySelect && localInput && hiddenContact) {
-                if (!countrySelect.value) { alert('Please select a country code.'); return; }
-                const rawLocal = localInput.value.trim(); if (!rawLocal) { alert('Please enter a local number.'); return; }
-                let digits = rawLocal.replace(/\D/g, ''); const ccDigits = countrySelect.value.replace(/\D/g, '');
-                if (digits.startsWith(ccDigits)) digits = digits.slice(ccDigits.length);
-                digits = digits.replace(/^0+/, ''); if (digits.length === 0) { alert('Please enter a valid local phone number.'); return; }
-                hiddenContact.value = countrySelect.value + digits;
+            let queuedDraftNow = false;
+            if (hasCurrentProductDraft() || productQueue.length === 0) {
+                if (!queueCurrentProduct()) return;
+                queuedDraftNow = true;
             }
+            if (queuedDraftNow) resetProductFieldsForNext();
             const originalText = submitBtn.innerHTML;
+            const originalAddAnotherText = addAnotherProductBtn?.innerHTML;
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting…';
-            const fd = new FormData(addItemForm);
+            isSubmittingBatch = true;
+            if (addAnotherProductBtn) addAnotherProductBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting all...';
+            const fd = new FormData();
+            const payload = productQueue.map((product, index) => {
+                product.images.forEach(file => fd.append(`product_images_${index}[]`, file));
+                return {
+                    deal_type: product.deal_type,
+                    plan: product.plan,
+                    title: product.title,
+                    description: product.description,
+                    category: product.category,
+                    condition: product.condition,
+                    price: product.price,
+                    contact_for_price: product.contact_for_price,
+                    location: product.location,
+                    contact: product.contact,
+                    image_field: `product_images_${index}[]`
+                };
+            });
+            fd.append('products_json', JSON.stringify(payload));
             try {
                 const res = await fetch(addItemForm.action, { method:'POST', body:fd, credentials:'include' });
                 const data = await res.json();
                 if (data.success && data.redirect) {
-                    showToast('Item added! Redirecting...');
+                    showToast(data.message || 'Products added! Redirecting...');
                     window.location.href = data.redirect;
                 } else if (data.success) {
-                    showToast('Item added successfully!');
-                    closeModal();
+                    showToast(data.message || 'Products added successfully!');
+                    productQueue.length = 0;
+                    updateBatchSummary();
+                    closeModal(null, true);
                     setTimeout(() => location.reload(), 1500);
                 } else {
                     showToast(data.message || 'Something went wrong');
+                    isSubmittingBatch = false;
                     submitBtn.disabled = false;
+                    if (addAnotherProductBtn) {
+                        addAnotherProductBtn.disabled = false;
+                        addAnotherProductBtn.innerHTML = originalAddAnotherText;
+                    }
                     submitBtn.innerHTML = originalText;
                 }
             } catch (err) {
                 console.error(err);
-                showToast('Network error – please try again');
+                showToast('Network error - please try again');
+                isSubmittingBatch = false;
                 submitBtn.disabled = false;
+                if (addAnotherProductBtn) {
+                    addAnotherProductBtn.disabled = false;
+                    addAnotherProductBtn.innerHTML = originalAddAnotherText;
+                }
                 submitBtn.innerHTML = originalText;
             }
         });

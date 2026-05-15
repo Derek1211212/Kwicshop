@@ -848,8 +848,8 @@
         return s.replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
     }
 
-    function formatPrice(price, dealType) {
-        if (!price) return '<span class="currency">Contact for price</span>';
+    function formatPrice(price, dealType, contactForPrice) {
+        if (contactForPrice || !price) return '<span class="currency">Contact for price</span>';
         const n = new Intl.NumberFormat('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(price);
         const suffix = dealType === 'Swap Deal' ? ' <span class="currency">+ Swap</span>' : '';
         return `<span class="currency">GH₵</span> ${n}${suffix}`;
@@ -891,7 +891,7 @@
                 <div class="card-body">
                     <span class="card-category">${esc(p.category || 'Other')}</span>
                     <h3 class="card-title">${esc(p.title)}</h3>
-                    <div class="card-price">${formatPrice(p.price, p.deal_type)}</div>
+                    <div class="card-price">${formatPrice(p.price, p.deal_type, p.contact_for_price)}</div>
                     <div class="card-store">
                         <div class="store-ava">${storeInitials(p.store_name)}</div>
                         <span class="store-name" onclick="event.stopPropagation(); goToStore(${p.store_id})">${esc(p.store_name || 'Unknown Store')}</span>

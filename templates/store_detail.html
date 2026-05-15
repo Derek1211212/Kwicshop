@@ -1055,7 +1055,7 @@ footer {
                                     </div>
                                 {% else %}
                                     <h3 class="product-title">{{ listing.title }}</h3>
-                                    <div class="product-price">{% if listing.price_float > 0 %}₵{{ "{:,.2f}".format(listing.price_float) }}{% else %}Contact for price{% endif %}</div>
+                                    <div class="product-price">{% if listing.price_float > 0 and not listing.contact_for_price %}₵{{ "{:,.2f}".format(listing.price_float) }}{% else %}Contact for price{% endif %}</div>
                                 {% endif %}
                                 <div class="product-footer">
                                     {% if listing.condition %}

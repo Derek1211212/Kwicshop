@@ -1614,7 +1614,7 @@ def edit_inventory(slug, listing_id):
     cur.execute("""
         SELECT listing_id, user_id, store_id, title, description, category, 
                `condition` as item_condition, location, contact, price, status, deal_type,
-               image_url, image1, image2, image3, image4, created_at
+               contact_for_price, image_url, image1, image2, image3, image4, created_at
         FROM listings
         WHERE listing_id = %s AND store_id = %s
     """, (listing_id, store['store_id']))
@@ -1660,6 +1660,9 @@ def edit_inventory(slug, listing_id):
             val = request.form.get(k)
             if val is not None:
                 update_fields[k] = val
+        update_fields['contact_for_price'] = 1 if request.form.get('contact_for_price') == '1' else 0
+        if update_fields['contact_for_price']:
+            update_fields['price'] = None
 
         # Handle main listing images
         for key in ['image_url', 'image1', 'image2', 'image3', 'image4']:
@@ -1798,7 +1801,7 @@ def store_add_item():
     cur = conn.cursor(dictionary=True)
     
     # Get store details
-    cur.execute("SELECT store_id, name FROM stores WHERE user_id = %s LIMIT 1", (user_id,))
+    cur.execute("SELECT store_id, name, slug FROM stores WHERE user_id = %s LIMIT 1", (user_id,))
     store = cur.fetchone()
     if not store:
         cur.close()
@@ -1807,97 +1810,146 @@ def store_add_item():
     
     store_id = store['store_id']
     store_name = store['name']
-    
-    # Get form data
-    deal_type = request.form.get('deal_type')
-    title = request.form.get('title', '').strip()
-    description = request.form.get('description', '').strip()
-    category = request.form.get('category', '').strip()
-    condition = request.form.get('condition', '').strip()
-    location = request.form.get('location', '').strip()
-    contact = request.form.get('contact', '').strip()
-    price_str = request.form.get('price', '').strip()          # <-- get as string
-    plan = request.form.get('plan', 'Free')
-    
-    # ================== FIX: Decimal price ==================
-    price = None
-    if deal_type == 'Outright Sales':
+    store_slug = store.get('slug')
+
+    def parse_price(deal_type, price_str, contact_for_price):
+        if deal_type != 'Outright Sales':
+            return None, None
+        if contact_for_price:
+            return None, None
         if not price_str:
-            cur.close()
-            conn.close()
-            return jsonify({"success": False, "message": "Price is required"}), 400
+            return None, "Price is required"
         try:
-            # Convert directly from string to Decimal, round to 2 decimals
             price = Decimal(price_str).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
             if price <= 0:
                 raise ValueError
-        except:
+            return price, None
+        except Exception:
+            return None, "Invalid price. Must be a positive number."
+
+    def upload_listing_images(files):
+        images = []
+        for f in files:
+            if f and allowed_file(f.filename):
+                result = upload_to_cloudinary(f, 'listings')
+                if result:
+                    if isinstance(result, dict):
+                        url = result.get('url') or result.get('secure_url')
+                    else:
+                        url = result
+                    if url:
+                        images.append(url)
+        return images[:5]
+
+    products_payload = request.form.get('products_json')
+    if products_payload:
+        try:
+            products = json.loads(products_payload)
+        except json.JSONDecodeError:
             cur.close()
             conn.close()
-            return jsonify({"success": False, "message": "Invalid price. Must be a positive number."}), 400
-    # ========================================================
-    
-    # Validation
-    if not title or not description or not category or not location or not contact:
+            return jsonify({"success": False, "message": "Invalid product batch data"}), 400
+    else:
+        products = [{
+            "deal_type": request.form.get('deal_type'),
+            "title": request.form.get('title', ''),
+            "description": request.form.get('description', ''),
+            "category": request.form.get('category', ''),
+            "condition": request.form.get('condition', ''),
+            "location": request.form.get('location', ''),
+            "contact": request.form.get('contact', ''),
+            "price": request.form.get('price', ''),
+            "contact_for_price": request.form.get('contact_for_price') == '1',
+            "plan": request.form.get('plan', 'Free'),
+            "image_field": "images[]"
+        }]
+
+    if not isinstance(products, list) or not products:
         cur.close()
         conn.close()
-        return jsonify({"success": False, "message": "Missing required fields"}), 400
-    
-    # Condition is required for Outright Sales
-    if deal_type == 'Outright Sales' and not condition:
+        return jsonify({"success": False, "message": "Add at least one product before submitting."}), 400
+
+    inserted_listing_ids = []
+    inserted_titles = []
+    try:
+        for idx, product in enumerate(products):
+            deal_type = (product.get('deal_type') or 'Outright Sales').strip()
+            title = (product.get('title') or '').strip()
+            description = (product.get('description') or '').strip()
+            category = (product.get('category') or '').strip()
+            condition = (product.get('condition') or '').strip()
+            location = (product.get('location') or '').strip()
+            contact = (product.get('contact') or '').strip()
+            price_str = str(product.get('price') or '').strip()
+            raw_contact_for_price = product.get('contact_for_price')
+            contact_for_price = raw_contact_for_price is True or str(raw_contact_for_price).lower() in ('1', 'true', 'on', 'yes')
+            plan = (product.get('plan') or 'Free').strip()
+
+            if not title or not description or not category or not location or not contact:
+                raise ValueError(f"Product {idx + 1}: missing required fields")
+            if deal_type == 'Outright Sales' and not condition:
+                raise ValueError(f"Product {idx + 1}: please select a condition")
+
+            price, price_error = parse_price(deal_type, price_str, contact_for_price)
+            if price_error:
+                raise ValueError(f"Product {idx + 1}: {price_error}")
+
+            image_field = product.get('image_field') or f'product_images_{idx}[]'
+            images = upload_listing_images(request.files.getlist(image_field))
+            if deal_type == 'Outright Sales' and not images:
+                raise ValueError(f"Product {idx + 1}: at least one image required")
+
+            padded = (images + [None] * 5)[:5]
+            cur.execute("""
+                INSERT INTO listings (user_id, store_id, title, description, category, `condition`, location, contact,
+                                      price, contact_for_price, deal_type, Plan, image_url, image1, image2, image3, image4)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (user_id, store_id, title, description, category, condition, location, contact,
+                  price, 1 if contact_for_price else 0, deal_type, plan,
+                  padded[0], padded[1], padded[2], padded[3], padded[4]))
+            inserted_listing_ids.append(cur.lastrowid)
+            inserted_titles.append(title)
+
+        conn.commit()
+    except ValueError as e:
+        conn.rollback()
         cur.close()
         conn.close()
-        return jsonify({"success": False, "message": "Please select a condition for the product"}), 400
-    
-    # Handle images (up to 5)
-    images = []
-    for f in request.files.getlist('images[]'):
-        if f and allowed_file(f.filename):
-            result = upload_to_cloudinary(f, 'listings')
-            if result:
-                if isinstance(result, dict):
-                    url = result.get('url') or result.get('secure_url')
-                else:
-                    url = result
-                if url:
-                    images.append(url)
-    
-    if deal_type == 'Outright Sales' and not images:
+        return jsonify({"success": False, "message": str(e)}), 400
+    except Exception as e:
+        conn.rollback()
+        app.logger.error("Add item batch error: %s", e, exc_info=True)
         cur.close()
         conn.close()
-        return jsonify({"success": False, "message": "At least one image required"}), 400
-    
-    # Insert listing with condition column and Decimal price
-    padded = (images + [None]*5)[:5]
-    cur.execute("""
-        INSERT INTO listings (user_id, store_id, title, description, category, `condition`, location, contact,
-                              price, deal_type, Plan, image_url, image1, image2, image3, image4)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """, (user_id, store_id, title, description, category, condition, location, contact,
-          price, deal_type, plan, padded[0], padded[1], padded[2], padded[3], padded[4]))
-    listing_id = cur.lastrowid
-    conn.commit()
+        return jsonify({"success": False, "message": "Could not add products right now. Please try again."}), 500
+
     cur.close()
     conn.close()
-    
+
     # Send push notification
     try:
         from notifications import send_push_notification_to_store_followers
+        listing_count = len(inserted_listing_ids)
+        notification_title = f"{listing_count} new items from {store_name}!" if listing_count > 1 else f"New item from {store_name}!"
+        notification_body = f"{inserted_titles[0]} and {listing_count - 1} more" if listing_count > 1 else inserted_titles[0][:120]
+        notification_url = url_for('store_detail', slug=store_slug, _external=True) if listing_count > 1 and store_slug else url_for('listing_details', listing_id=inserted_listing_ids[0], _external=True)
         send_push_notification_to_store_followers(
             store_id=store_id,
-            title=f"New item from {store_name}!",
-            body=title[:120],
-            url=url_for('listing_details', listing_id=listing_id, _external=True)
+            title=notification_title,
+            body=notification_body,
+            url=notification_url
         )
     except Exception as e:
         print(f"Push notification error (non-critical): {e}")
-    
-    flash(f"Item '{title}' added successfully!", "success")
+
+    item_word = "item" if len(inserted_listing_ids) == 1 else "items"
+    flash(f"{len(inserted_listing_ids)} {item_word} added successfully!", "success")
     
     return jsonify({
         "success": True,
         "redirect": url_for('store_home', store_id=store_id),
-        "message": "Item added successfully!"
+        "count": len(inserted_listing_ids),
+        "message": f"{len(inserted_listing_ids)} {item_word} added successfully!"
     })
 
 
@@ -2448,11 +2500,12 @@ def paystack_verify():
         padded = (images + [None]*5)[:5]
         cur.execute("""
             INSERT INTO listings (user_id, store_id, title, description, category, location, contact,
-                                  price, deal_type, Plan, image_url, image1, image2, image3, image4)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                  price, contact_for_price, deal_type, Plan, image_url, image1, image2, image3, image4)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (pending['user_id'], pending['store_id'], pending['title'], pending['description'],
               pending['category'], pending['location'], pending['contact'], pending['price'],
-              pending['deal_type'], plan, padded[0], padded[1], padded[2], padded[3], padded[4]))
+              1 if pending.get('contact_for_price') else 0, pending['deal_type'], plan,
+              padded[0], padded[1], padded[2], padded[3], padded[4]))
         conn.commit()
         cur.close()
         conn.close()
@@ -2829,7 +2882,7 @@ def listing_details(listing_id):
         cursor.execute("""
             SELECT l.listing_id, l.title, l.description, l.category,
                    l.image_url, l.image1, l.image2, l.image3, l.image4,
-                   l.price, l.deal_type, l.condition, l.location,
+                   l.price, l.contact_for_price, l.deal_type, l.condition, l.location,
                    COALESCE(avg_r.avg_rating, 0) AS avg_rating,
                    COALESCE(avg_r.rating_count, 0) AS rating_count
             FROM listings AS l
@@ -3345,7 +3398,7 @@ def api_marketplace_products():
     # Main data query
     query = f"""
         SELECT l.listing_id, l.title, l.image_url, l.image1, l.category, 
-               l.price, l.deal_type, l.condition, l.is_featured, l.store_id,
+               l.price, l.contact_for_price, l.deal_type, l.condition, l.is_featured, l.store_id,
                s.name as store_name, s.trust_score,
                COALESCE(lm.impressions, 0) as impressions,
                COALESCE(lm.clicks, 0) as clicks

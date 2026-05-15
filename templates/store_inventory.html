@@ -509,7 +509,7 @@ body::before {
                 </div>
 
                 {% if item.deal_type != 'Swap Deal' %}
-                    <div class="price-tag">₵{{ item.price }}</div>
+                    <div class="price-tag">{% if item.contact_for_price %}Contact for price{% else %}₵{{ item.price }}{% endif %}</div>
                 {% else %}
                     <div class="swap-wants">
                         Wants: <span>{{ item.desired_swap or '—' }}</span>

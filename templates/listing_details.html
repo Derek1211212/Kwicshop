@@ -149,6 +149,7 @@
     .price-card { background: var(--white); border: 1px solid var(--cream-dark); border-radius: var(--radius-md); padding: 1.3rem 1.5rem; box-shadow: var(--shadow-sm); }
     .price-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 0.25rem; }
     .price-value { font-family: var(--font-display); font-size: 2.3rem; color: var(--red); line-height: 1; letter-spacing: -0.02em; }
+    .price-value.contact-price { font-size: 1.8rem; color: var(--green); text-transform: capitalize; }
 
     .info-card { background: var(--white); border: 1px solid var(--cream-dark); border-radius: var(--radius-md); padding: 1.3rem 1.5rem; box-shadow: var(--shadow-sm); }
     .info-card.swap-style { background: var(--green-pale); border-color: var(--green-border); }
@@ -411,7 +412,11 @@
       {% if listing.deal_type == 'Outright Sales' %}
         <div class="price-card">
           <div class="price-label">Asking Price</div>
-          <div class="price-value">GHS {{ "{:,.2f}".format(listing.price|float) if listing.price is not none else '—' }}</div>
+          {% if listing.contact_for_price %}
+            <div class="price-value contact-price">Contact for price</div>
+          {% else %}
+            <div class="price-value">GHS {{ "{:,.2f}".format(listing.price|float) if listing.price is not none else '—' }}</div>
+          {% endif %}
         </div>
       {% else %}
         <div class="info-card swap-style">
@@ -595,7 +600,7 @@
                 <div class="sim-loc"><i class="fas fa-map-marker-alt"></i> {{ item.location }}</div>
               {% endif %}
               <div style="margin-top:auto;padding-top:.35rem">
-                {% if item.deal_type == 'Outright Sales' and item.price %}
+                {% if item.deal_type == 'Outright Sales' and item.price and not item.contact_for_price %}
                   <div class="sim-price">GHS {{ "{:,.0f}".format(item.price|float) }}</div>
                 {% elif item.deal_type == 'Swap Deal' %}
                   <span class="sim-swap-pill"><i class="fas fa-exchange-alt"></i> Swap</span>

@@ -817,8 +817,12 @@ input[type="file"]:hover {
                     <label>Asking Price</label>
                     <div class="price-wrap">
                         <span class="currency">₵</span>
-                        <input type="text" name="price" value="{{ listing.price }}" placeholder="0.00">
+                        <input type="text" name="price" value="{{ listing.price if not listing.contact_for_price else '' }}" placeholder="0.00" id="edit-price-input">
                     </div>
+                    <label style="display:flex;align-items:center;gap:.5rem;margin-top:.75rem;font-weight:700">
+                        <input type="checkbox" name="contact_for_price" value="1" id="edit-contact-for-price" {% if listing.contact_for_price %}checked{% endif %}>
+                        Contact for price
+                    </label>
                 </div>
             </div>
         </div>
@@ -976,6 +980,21 @@ input[type="file"]:hover {
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const editContactForPrice = document.getElementById('edit-contact-for-price');
+    const editPriceInput = document.getElementById('edit-price-input');
+    function syncEditPriceMode() {
+        if (!editContactForPrice || !editPriceInput) return;
+        if (editContactForPrice.checked) {
+            editPriceInput.value = '';
+            editPriceInput.disabled = true;
+            editPriceInput.placeholder = 'Contact for price';
+        } else {
+            editPriceInput.disabled = false;
+            editPriceInput.placeholder = '0.00';
+        }
+    }
+    editContactForPrice?.addEventListener('change', syncEditPriceMode);
+    syncEditPriceMode();
 
     // ── Category TomSelect ──
     const categoryValue = "{{ listing.category or '' }}";
