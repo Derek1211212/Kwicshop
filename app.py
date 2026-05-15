@@ -7,6 +7,7 @@ import time
 import threading
 import logging
 import smtplib
+import hashlib
 import requests
 import random
 import string
@@ -328,6 +329,31 @@ def admin_dashboard():
     """)
     top_products = cursor.fetchall()
 
+    # Top 5 reported stores
+    cursor.execute("""
+        SELECT s.store_id, s.name, s.location, COUNT(sr.report_id) AS report_count
+        FROM store_reports sr
+        JOIN stores s ON sr.store_id = s.store_id
+        GROUP BY s.store_id, s.name, s.location
+        ORDER BY report_count DESC, MAX(sr.created_at) DESC
+        LIMIT 5
+    """)
+    top_reported_stores = cursor.fetchall()
+
+    # Stores with less than 15 visits in the last 30 days
+    cursor.execute("""
+        SELECT s.store_id, s.name, s.location, COALESCE(SUM(sm.views), 0) AS monthly_views
+        FROM stores s
+        LEFT JOIN store_metrics sm
+            ON sm.store_id = s.store_id
+           AND sm.dt >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        GROUP BY s.store_id, s.name, s.location
+        HAVING monthly_views < 15
+        ORDER BY monthly_views ASC, s.name ASC
+        LIMIT 10
+    """)
+    inactive_stores = cursor.fetchall()
+
 
     # Get active users (last 5 minutes)
     cursor.execute("""
@@ -353,7 +379,9 @@ def admin_dashboard():
                          top_stores=top_stores,
                          active_users=active_users,
                          recent_metrics=recent_metrics,
-                         top_products=top_products)
+                         top_products=top_products,
+                         top_reported_stores=top_reported_stores,
+                         inactive_stores=inactive_stores)
 
 
 # ------------------------------
@@ -614,6 +642,22 @@ def admin_store_detail(store_id):
         ORDER BY s.created_at DESC
     """, (store_id,))
     sanctions = cursor.fetchall()    
+
+    cursor.execute("""
+        SELECT COUNT(*) AS report_count
+        FROM store_reports
+        WHERE store_id = %s
+    """, (store_id,))
+    report_summary = cursor.fetchone() or {'report_count': 0}
+
+    cursor.execute("""
+        SELECT sr.*, u.username
+        FROM store_reports sr
+        LEFT JOIN users u ON sr.reporter_user_id = u.id
+        WHERE sr.store_id = %s
+        ORDER BY sr.created_at DESC
+    """, (store_id,))
+    store_reports = cursor.fetchall()
     
     cursor.close()
     conn.close()
@@ -628,6 +672,8 @@ def admin_store_detail(store_id):
                          products=products,
                          daily_metrics=daily_metrics,
                          sanctions=sanctions,
+                         report_summary=report_summary,
+                         store_reports=store_reports,
                          follower_count=follower_count)
 
 
@@ -2647,6 +2693,71 @@ def store_detail(slug):
         is_owner=is_owner,
         vapid_public_key=VAPID_PUBLIC_KEY
     )
+
+
+@app.route('/store/<slug>/report', methods=['POST'])
+def report_store(slug):
+    reason = (request.form.get('reason') or '').strip()
+    if len(reason) < 10:
+        flash('Please add a clear reason for reporting this store.', 'warning')
+        return redirect(url_for('store_detail', slug=slug))
+
+    reporter_user_id = session.get('user_id')
+    raw_fingerprint = f"{request.remote_addr or ''}|{request.headers.get('User-Agent', '')[:250]}"
+    reporter_fingerprint = hashlib.sha256(raw_fingerprint.encode('utf-8')).hexdigest()
+
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    try:
+        cur.execute("SELECT store_id FROM stores WHERE slug = %s", (slug,))
+        store = cur.fetchone()
+        if not store:
+            abort(404)
+
+        store_id = store['store_id']
+        cur.execute("""
+            SELECT report_id
+            FROM store_reports
+            WHERE store_id = %s
+              AND (
+                    (reporter_user_id IS NOT NULL AND reporter_user_id = %s)
+                    OR (reporter_user_id IS NULL AND reporter_fingerprint = %s)
+                  )
+            LIMIT 1
+        """, (store_id, reporter_user_id, reporter_fingerprint))
+        if cur.fetchone():
+            flash('You have already reported this store. Thank you for helping us review it.', 'info')
+            return redirect(url_for('store_detail', slug=slug))
+
+        cur.execute("""
+            INSERT INTO store_reports
+                (store_id, reporter_user_id, reporter_fingerprint, reason, ip_address, user_agent)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (
+            store_id,
+            reporter_user_id,
+            reporter_fingerprint,
+            reason,
+            request.remote_addr,
+            request.headers.get('User-Agent', '')[:500]
+        ))
+
+        cur.execute("SELECT COUNT(*) AS report_count FROM store_reports WHERE store_id = %s", (store_id,))
+        report_count = cur.fetchone()['report_count']
+        if report_count > 5:
+            cur.execute("UPDATE stores SET is_flagged = 1 WHERE store_id = %s", (store_id,))
+
+        conn.commit()
+        flash('Thank you. This store report has been submitted for review.', 'success')
+    except mysql.connector.Error as e:
+        conn.rollback()
+        app.logger.error("Store report error: %s", e)
+        flash('Could not submit the report right now. Please try again.', 'danger')
+    finally:
+        cur.close()
+        conn.close()
+
+    return redirect(url_for('store_detail', slug=slug))
 
 
 

@@ -557,6 +557,56 @@
         </div>
     </div>
 
+    <div class="content-grid">
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">🚩 Top Reported Stores</span>
+            </div>
+            <div class="card-body">
+                <div class="store-list">
+                    {% for store in top_reported_stores %}
+                    <a href="/admin/store/{{ store.store_id }}" class="list-item">
+                        <div class="item-avatar">{{ store.name[0]|upper }}</div>
+                        <div class="item-body">
+                            <div class="item-name">{{ store.name }}</div>
+                            <div class="item-meta">{{ store.location or 'Location N/A' }}</div>
+                        </div>
+                        <div class="item-badges">
+                            <span class="badge badge-clicks">{{ store.report_count }} reports</span>
+                        </div>
+                    </a>
+                    {% else %}
+                    <p class="empty">No store reports yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">🕒 Inactive Stores</span>
+            </div>
+            <div class="card-body">
+                <div class="store-list">
+                    {% for store in inactive_stores %}
+                    <a href="/admin/store/{{ store.store_id }}" class="list-item">
+                        <div class="item-avatar">{{ store.name[0]|upper }}</div>
+                        <div class="item-body">
+                            <div class="item-name">{{ store.name }}</div>
+                            <div class="item-meta">{{ store.location or 'Location N/A' }}</div>
+                        </div>
+                        <div class="item-badges">
+                            <span class="badge badge-views">{{ store.monthly_views|format_number }} visits</span>
+                        </div>
+                    </a>
+                    {% else %}
+                    <p class="empty">No inactive stores under 15 visits this month.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Chart -->
     <div class="card chart-card">
         <div class="card-header">

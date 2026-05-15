@@ -552,6 +552,9 @@
             <div class="page-meta">
                 <span class="meta-chip">📍 {{ store.location }}</span>
                 <span class="meta-chip">👥 {{ follower_count }} followers</span>
+                {% if store.get('is_flagged') %}
+                <span class="meta-chip" style="background:var(--red-100);color:var(--red-600);">🚩 Flagged for review</span>
+                {% endif %}
             </div>
 <div class="owner-info" style="margin-top: 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
     {% if store_owner %}
@@ -614,6 +617,11 @@
             <div class="stat-icon">🛒</div>
             <div class="stat-label">Product Clicks</div>
             <div class="stat-value">{{ product_metrics.total_clicks|default(0)|format_number }}</div>
+        </div>
+        <div class="stat-card c4">
+            <div class="stat-icon">🚩</div>
+            <div class="stat-label">Store Reports</div>
+            <div class="stat-value">{{ report_summary.report_count|default(0)|format_number }}</div>
         </div>
     </div>
 
@@ -708,6 +716,43 @@
             </div>
             {% else %}
             <div class="empty"><span class="empty-icon">💭</span>No reviews yet for this store.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Store Reports -->
+    <div class="card">
+        <div class="card-header"><span class="card-title">🚩 Store Reports</span></div>
+        <div class="card-body" style="padding:0;">
+            {% if store_reports %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Reporter</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in store_reports %}
+                        <tr>
+                            <td><span class="sanction-date">{{ report.created_at.strftime('%b %d, %Y · %H:%M') }}</span></td>
+                            <td><span class="sanction-admin">{{ report.username or 'Guest / anonymous' }}</span></td>
+                            <td><span class="sanction-reason">{{ report.reason }}</span></td>
+                            <td>
+                                <span class="sanction-action {{ 'disable' if report.status == 'pending' else 'enable' }}">
+                                    {{ report.status|upper }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty"><span class="empty-icon">🚩</span>No reports for this store.</div>
             {% endif %}
         </div>
     </div>

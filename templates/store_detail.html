@@ -186,6 +186,30 @@ body { font-family:var(--font-body); background:var(--bg); color:var(--text); li
 }
 .hero-meta-pill i { font-size: 0.7rem; }
 .hero-meta-pill .star-i { color: var(--gold); }
+.hero-report-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 11px;
+    border-radius: 100px;
+    border: 1px solid rgba(255,255,255,0.24);
+    background: rgba(255,255,255,0.14);
+    color: white;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 800;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: transform 0.18s var(--ease-smooth), background 0.18s var(--ease-smooth), border-color 0.18s var(--ease-smooth);
+}
+.hero-report-btn:hover {
+    background: rgba(220,38,38,0.88);
+    border-color: rgba(255,255,255,0.42);
+    transform: translateY(-1px);
+}
+.hero-report-btn i {
+    font-size: 0.68rem;
+}
 .hero-badge-wrap {
     display: flex;
     align-items: flex-end;
@@ -196,6 +220,11 @@ body { font-family:var(--font-body); background:var(--bg); color:var(--text); li
     .hero-avatar { width: 56px; height: 56px; border-radius: 14px; }
     .hero-store-name { font-size: 1.3rem; }
     .hero-store-info { gap: 12px; }
+    .hero-meta { gap: 7px; }
+    .hero-report-btn {
+        padding: 5px 10px;
+        font-size: 0.72rem;
+    }
 }
 
 /* ── STICKY NAV ── */
@@ -725,6 +754,100 @@ footer {
 .store-profile-card { animation:fadeUp 0.4s 0.08s ease both; }
 .products-section { animation:fadeUp 0.4s 0.14s ease both; }
 .rating-section { animation:fadeUp 0.4s 0.2s ease both; }
+.store-alerts { margin-bottom: 16px; display: grid; gap: 8px; }
+.store-alert {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    color: var(--text-2);
+    font-weight: 700;
+    font-size: 0.84rem;
+}
+.report-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(15, 23, 42, 0.58);
+    backdrop-filter: blur(6px);
+}
+.report-modal.active { display: flex; }
+.report-modal-card {
+    width: min(480px, 100%);
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 24px 70px rgba(0,0,0,0.28);
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+.report-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+}
+.report-modal-title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 1.05rem;
+}
+.report-modal-close {
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--bg-2);
+    color: var(--text-2);
+    cursor: pointer;
+}
+.report-modal-body { padding: 18px 20px 20px; }
+.report-modal-body p {
+    color: var(--text-3);
+    font-size: 0.86rem;
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+.report-modal-body textarea {
+    width: 100%;
+    min-height: 118px;
+    resize: vertical;
+    border: 1.5px solid var(--border-2);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    padding: 11px 12px;
+    outline: none;
+}
+.report-modal-body textarea:focus {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+.report-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 14px;
+}
+.report-cancel,
+.report-submit {
+    border: 0;
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    cursor: pointer;
+}
+.report-cancel { background: var(--bg-2); color: var(--text-2); }
+.report-submit { background: #dc2626; color: #fff; }
 
 /* Scroll-reveal for cards */
 .product-card {
@@ -779,6 +902,10 @@ footer {
                         <i class="fas fa-check-circle"></i> Verified
                     </span>
                     {% endif %}
+                    <button type="button" class="hero-report-btn" id="openReportStore" aria-label="Report {{ store.name }}">
+                        <i class="fas fa-flag"></i>
+                        <span>Report</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -788,6 +915,15 @@ footer {
 <!-- ── MAIN ── -->
 <main class="main-content">
     <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="store-alerts">
+                {% for category, message in messages %}
+                <div class="store-alert">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% endwith %}
 
         <!-- STORE PROFILE CARD -->
         <div class="store-profile-card">
@@ -1026,6 +1162,27 @@ footer {
 </main>
 
 <!-- ── FOOTER ── -->
+<div class="report-modal" id="reportStoreModal" aria-hidden="true">
+    <div class="report-modal-card" role="dialog" aria-modal="true" aria-labelledby="reportStoreTitle">
+        <div class="report-modal-head">
+            <div class="report-modal-title" id="reportStoreTitle">Report {{ store.name }}</div>
+            <button type="button" class="report-modal-close" id="closeReportStore" aria-label="Close report form">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form method="POST" action="{{ url_for('report_store', slug=store.slug) }}">
+            <div class="report-modal-body">
+                <p>Tell us what looks wrong. Reports are reviewed by the SellKwic team and help keep buyers safer.</p>
+                <textarea name="reason" required minlength="10" maxlength="1000" placeholder="Example: fake products, suspicious contact details, misleading listings, abuse, or other safety concern."></textarea>
+                <div class="report-modal-actions">
+                    <button type="button" class="report-cancel" id="cancelReportStore">Cancel</button>
+                    <button type="submit" class="report-submit"><i class="fas fa-flag"></i> Submit report</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <footer>
     <div class="container">
         <div class="footer-content">
@@ -1189,6 +1346,32 @@ document.addEventListener("DOMContentLoaded", function () {
     var cardLinks = document.querySelectorAll(".product-card-link"),
         cardDivs  = document.querySelectorAll(".product-card"),
         filterTargets = cardLinks.length ? cardLinks : cardDivs;
+    var reportModal = document.getElementById("reportStoreModal"),
+        openReportBtn = document.getElementById("openReportStore"),
+        closeReportBtn = document.getElementById("closeReportStore"),
+        cancelReportBtn = document.getElementById("cancelReportStore");
+
+    function openReportModal() {
+        if (!reportModal) return;
+        reportModal.classList.add("active");
+        reportModal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+        var textarea = reportModal.querySelector("textarea");
+        if (textarea) setTimeout(function () { textarea.focus(); }, 80);
+    }
+
+    function closeReportModal() {
+        if (!reportModal) return;
+        reportModal.classList.remove("active");
+        reportModal.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+    }
+
+    if (openReportBtn) openReportBtn.addEventListener("click", openReportModal);
+    if (closeReportBtn) closeReportBtn.addEventListener("click", closeReportModal);
+    if (cancelReportBtn) cancelReportBtn.addEventListener("click", closeReportModal);
+    if (reportModal) reportModal.addEventListener("click", function (e) { if (e.target === reportModal) closeReportModal(); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeReportModal(); });
 
     function filterProducts() {
         var term = (searchInput ? searchInput.value : "").toLowerCase().trim();
