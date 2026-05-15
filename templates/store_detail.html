@@ -433,6 +433,52 @@ body { font-family:var(--font-body); background:var(--bg); color:var(--text); li
     transition: transform 0.55s var(--ease-smooth);
 }
 .product-card-link:hover .product-image img { transform: scale(1.07); }
+.product-slide {
+    opacity: 0;
+    animation: productSlideShow var(--slide-duration, 8s) infinite;
+}
+.product-slide:first-child { opacity: 1; }
+.product-image.has-slideshow::before {
+    content: '';
+    position: absolute;
+    top: -35%;
+    bottom: -35%;
+    left: -55%;
+    width: 42%;
+    z-index: 2;
+    background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.08) 28%, rgba(255,255,255,0.68) 50%, rgba(255,255,255,0.1) 72%, transparent 100%);
+    transform: skewX(-18deg);
+    filter: blur(0.2px);
+    mix-blend-mode: screen;
+    pointer-events: none;
+    animation: productShineSweep var(--slide-duration, 8s) infinite;
+}
+.product-image.has-slideshow::after {
+    z-index: 1;
+    pointer-events: none;
+}
+.product-card-link:hover .product-image.has-slideshow::before {
+    animation-duration: calc(var(--slide-duration, 8s) * 0.72);
+}
+@keyframes productSlideShow {
+    0%, 24% { opacity: 1; transform: scale(1); }
+    30%, 94% { opacity: 0; transform: scale(1.035); }
+    100% { opacity: 1; transform: scale(1); }
+}
+@keyframes productShineSweep {
+    0%, 18% { left: -58%; opacity: 0; }
+    21% { opacity: 0.95; }
+    31% { left: 118%; opacity: 0; }
+    100% { left: 118%; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .product-slide,
+    .product-image.has-slideshow::before {
+        animation: none !important;
+    }
+    .product-slide:first-child { opacity: 1; }
+    .product-slide:not(:first-child) { opacity: 0; }
+}
 
 /* Image overlay shimmer on hover */
 .product-image::after {
@@ -847,11 +893,18 @@ footer {
                                         {% endif %}
                                     </div>
                                 {% else %}
-                                    <div class="product-image">
-                                        <img src="{{ listing.main_image }}"
-                                             alt="{{ listing.title }}"
-                                             loading="lazy"
-                                             onerror="this.style.display='none'">
+                                    {% set product_images = listing.images or [listing.main_image] %}
+                                    {% set slide_count = product_images|length %}
+                                    <div class="product-image {% if slide_count > 1 %}has-slideshow{% endif %}"
+                                         {% if slide_count > 1 %}style="--slide-duration: {{ slide_count * 3 }}s"{% endif %}>
+                                        {% for image in product_images %}
+                                            <img src="{{ image }}"
+                                                 alt="{{ listing.title }}{% if slide_count > 1 %} photo {{ loop.index }}{% endif %}"
+                                                 loading="lazy"
+                                                 class="{% if slide_count > 1 %}product-slide{% endif %}"
+                                                 {% if slide_count > 1 %}style="animation-delay: {{ (loop.index0 * 3) - (slide_count * 3) }}s"{% endif %}
+                                                 onerror="this.style.display='none'">
+                                        {% endfor %}
                                     </div>
                                 {% endif %}
                             </div>

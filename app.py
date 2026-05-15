@@ -2578,11 +2578,25 @@ def store_detail(slug):
         except (TypeError, ValueError):
             listing['price_float'] = 0.0
         
-        # Determine main image
-        main_image = listing.get('image_url') or listing.get('image1')
+        # Determine main image and slideshow image set
+        image_candidates = [
+            listing.get('image_url'),
+            listing.get('image1'),
+            listing.get('image2'),
+            listing.get('image3'),
+            listing.get('image4')
+        ]
+        listing_images = []
+        for image in image_candidates:
+            if image and image not in listing_images:
+                listing_images.append(image)
+
+        main_image = listing_images[0] if listing_images else None
         if not main_image:
             main_image = url_for('static', filename='images/placeholder.jpg')
+            listing_images = [main_image]
         listing['main_image'] = main_image
+        listing['images'] = listing_images
         
         # Convert numeric fields for swap deals
         try:
