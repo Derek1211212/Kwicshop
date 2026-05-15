@@ -1198,6 +1198,59 @@ def create_store():
 
 
 
+def _get_store_performance_metrics(cur, store_id, period='30'):
+    period = str(period)
+    if period == 'all':
+        date_filter = "1 = 1"
+    elif period == 'today':
+        date_filter = "dt = CURDATE()"
+    elif period == '7':
+        date_filter = "dt >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)"
+    else:
+        period = '30'
+        date_filter = "dt >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)"
+
+    cur.execute(f"""
+        SELECT
+            COALESCE(SUM(views), 0) as views,
+            COALESCE(SUM(clicks), 0) as clicks,
+            COALESCE(SUM(chats), 0) as whatsapp_redirects,
+            COALESCE(SUM(chats), 0) as chats,
+            COALESCE(SUM(swaps), 0) as swaps,
+            COALESCE(SUM(sales), 0) as sales
+        FROM store_metrics
+        WHERE store_id = %s AND {date_filter}
+    """, (store_id,))
+    row = cur.fetchone() or {}
+
+    return {
+        'period': period,
+        'views': {'current': row.get('views') or 0, 'change': 0},
+        'clicks': {'current': row.get('clicks') or 0, 'change': 0},
+        'whatsapp_redirects': {'current': row.get('whatsapp_redirects') or 0, 'change': 0},
+        'chats': {'current': row.get('chats') or 0, 'change': 0},
+        'swaps': {'current': row.get('swaps') or 0, 'change': 0},
+        'sales': {'current': row.get('sales') or 0, 'change': 0},
+    }
+
+
+@app.route('/store/<int:store_id>/performance-metrics')
+@login_required
+def store_performance_metrics(store_id):
+    period = request.args.get('period', '30')
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    try:
+        cur.execute("SELECT store_id FROM stores WHERE store_id = %s AND user_id = %s", (store_id, session['user_id']))
+        if not cur.fetchone():
+            return jsonify({'success': False, 'message': 'Store not found'}), 404
+
+        return jsonify({'success': True, 'metrics': _get_store_performance_metrics(cur, store_id, period)})
+    finally:
+        cur.close()
+        conn.close()
+
+
 @app.route('/store/<int:store_id>')
 @login_required
 def store_home(store_id):
@@ -1237,21 +1290,7 @@ def store_home(store_id):
     promo = cur.fetchone() or {}
 
     # 3. Metrics
-    cur.execute("""
-        SELECT SUM(views) as views, SUM(clicks) as clicks,
-               SUM(chats) as chats, SUM(swaps) as swaps, SUM(sales) as sales
-        FROM store_metrics
-        WHERE store_id = %s AND dt >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-    """, (store_id,))
-    row = cur.fetchone() or {'views':0,'clicks':0,'chats':0,'swaps':0,'sales':0}
-
-    metrics = {
-        'views':   {'current': row['views'] or 0, 'change': 0},
-        'clicks':  {'current': row['clicks'] or 0, 'change': 0},
-        'chats':   {'current': row['chats'] or 0, 'change': 0},
-        'swaps':   {'current': row['swaps'] or 0, 'change': 0},
-        'sales':   {'current': row['sales'] or 0, 'change': 0},
-    }
+    metrics = _get_store_performance_metrics(cur, store_id, '30')
 
     # 4. Top products
     cur.execute("""
@@ -2795,6 +2834,49 @@ def track_listing_click():
 
 
 
+
+
+@app.route('/metrics/listing/whatsapp-click', methods=['POST'])
+def track_listing_whatsapp_click():
+    """
+    Increment WhatsApp button clicks for a listing.
+    Expects JSON: { "listing_id": 123 }
+    """
+    data = request.get_json()
+    if not data or 'listing_id' not in data:
+        return jsonify({'error': 'Missing listing_id'}), 400
+
+    listing_id = data['listing_id']
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT store_id FROM listings WHERE listing_id = %s", (listing_id,))
+        listing_row = cur.fetchone()
+        store_id = listing_row[0] if listing_row else None
+
+        cur.execute("""
+            INSERT INTO listing_metrics (listing_id, impressions, clicks, whatsapp_clicks, updated_at)
+            VALUES (%s, 0, 0, 1, NOW())
+            ON DUPLICATE KEY UPDATE
+                whatsapp_clicks = COALESCE(whatsapp_clicks, 0) + 1,
+                updated_at = NOW()
+        """, (listing_id,))
+
+        if store_id:
+            cur.execute("""
+                INSERT INTO store_metrics (store_id, dt, chats)
+                VALUES (%s, CURDATE(), 1)
+                ON DUPLICATE KEY UPDATE chats = COALESCE(chats, 0) + 1
+            """, (store_id,))
+
+        conn.commit()
+        return jsonify({'success': True}), 200
+    except mysql.connector.Error as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.route('/create_proposal/<int:listing_id>', methods=['GET', 'POST'])

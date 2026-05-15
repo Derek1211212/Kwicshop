@@ -324,13 +324,26 @@
         .stat-info { flex: 1; }
         .stat-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); margin-bottom: 3px; }
         .stat-value { font-family: var(--font-display); font-size: 2rem; font-weight: 900; color: var(--text); letter-spacing: -0.03em; line-height: 1; }
+        .stat-value.updating {
+            opacity: 0.45;
+            transform: translateY(1px);
+            transition: opacity 0.12s ease, transform 0.12s ease;
+        }
+        .stat-cell.loading .stat-icon-wrap {
+            animation: statPulse 0.75s ease infinite alternate;
+        }
+        @keyframes statPulse {
+            from { opacity: 0.55; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
         .period-toggle {
             display: flex; align-items: center; gap: 4px;
             background: var(--bg-2); padding: 4px; border-radius: 10px; border: 1px solid var(--border-2);
             margin-left: auto;
         }
-        .period-btn { padding: 5px 14px; border: none; background: transparent; border-radius: 7px; cursor: pointer; font-weight: 700; color: var(--text-3); transition: all 0.2s; font-family: var(--font-display); font-size: 0.78rem; }
+        .period-btn { padding: 5px 14px; border: none; background: transparent; border-radius: 7px; cursor: pointer; font-weight: 700; color: var(--text-3); transition: all 0.12s; font-family: var(--font-display); font-size: 0.78rem; }
         .period-btn.active { background: var(--primary); color: white; }
+        .period-btn:disabled { cursor: wait; opacity: 0.75; }
 
         /* SECTION HEADER */
         .section-header {
@@ -919,9 +932,10 @@
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.85rem">
             <div class="section-title"><div class="section-title-dot"></div> Store Performance</div>
             <div class="period-toggle">
-                <button class="period-btn active">30 Days</button>
-                <button class="period-btn">7 Days</button>
-                <button class="period-btn">Today</button>
+                <button type="button" class="period-btn" data-period="all">All</button>
+                <button type="button" class="period-btn active" data-period="30">30 Days</button>
+                <button type="button" class="period-btn" data-period="7">7 Days</button>
+                <button type="button" class="period-btn" data-period="today">Today</button>
             </div>
         </div>
         <div class="stats-strip">
@@ -929,8 +943,8 @@
                 <div class="stat-icon-wrap"><i class="fas fa-eye"></i></div>
                 <div class="stat-info">
                     <div class="stat-label">Views</div>
-                    <div class="stat-value">{{ metrics.views.current|format_number }}</div>
-                    <div class="stat-change {{ 'positive' if metrics.views.change >= 0 else 'negative' }}">
+                    <div class="stat-value" data-metric-value="views">{{ metrics.views.current|format_number }}</div>
+                    <div class="stat-change {{ 'positive' if metrics.views.change >= 0 else 'negative' }}" data-metric-change="views">
                         <i class="fas fa-arrow-{{ 'up' if metrics.views.change >= 0 else 'down' }}"></i>
                         {{ metrics.views.change|abs }}%
                     </div>
@@ -940,10 +954,21 @@
                 <div class="stat-icon-wrap"><i class="fas fa-mouse-pointer"></i></div>
                 <div class="stat-info">
                     <div class="stat-label">Clicks</div>
-                    <div class="stat-value">{{ metrics.clicks.current|format_number }}</div>
-                    <div class="stat-change {{ 'positive' if metrics.clicks.change >= 0 else 'negative' }}">
+                    <div class="stat-value" data-metric-value="clicks">{{ metrics.clicks.current|format_number }}</div>
+                    <div class="stat-change {{ 'positive' if metrics.clicks.change >= 0 else 'negative' }}" data-metric-change="clicks">
                         <i class="fas fa-arrow-{{ 'up' if metrics.clicks.change >= 0 else 'down' }}"></i>
                         {{ metrics.clicks.change|abs }}%
+                    </div>
+                </div>
+            </div>
+            <div class="stat-cell">
+                <div class="stat-icon-wrap"><i class="fab fa-whatsapp"></i></div>
+                <div class="stat-info">
+                    <div class="stat-label">WhatsApp Redirects</div>
+                    <div class="stat-value" data-metric-value="whatsapp_redirects">{{ metrics.whatsapp_redirects.current|format_number }}</div>
+                    <div class="stat-change {{ 'positive' if metrics.whatsapp_redirects.change >= 0 else 'negative' }}" data-metric-change="whatsapp_redirects">
+                        <i class="fas fa-arrow-{{ 'up' if metrics.whatsapp_redirects.change >= 0 else 'down' }}"></i>
+                        {{ metrics.whatsapp_redirects.change|abs }}%
                     </div>
                 </div>
             </div>
@@ -1501,10 +1526,109 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', async () => { try { await navigator.clipboard.writeText(btn.getAttribute('data-copy-link')); showToast('Store link copied!'); } catch(e) { showToast('Failed to copy link'); } });
     });
 
-    // --- Period buttons (UI only) ---
+    function formatMetricNumber(value) {
+        const num = Number(value || 0);
+        if (num >= 1000000) return `${(num / 1000000).toFixed(1).replace(/\.0$/, '')}M`;
+        if (num >= 1000) return `${(num / 1000).toFixed(1).replace(/\.0$/, '')}K`;
+        return String(num);
+    }
+
+    function updateMetricChange(metric, change) {
+        const el = document.querySelector(`[data-metric-change="${metric}"]`);
+        if (!el) return;
+        const value = Number(change || 0);
+        const isPositive = value >= 0;
+        el.classList.toggle('positive', isPositive);
+        el.classList.toggle('negative', !isPositive);
+        el.innerHTML = `<i class="fas fa-arrow-${isPositive ? 'up' : 'down'}"></i> ${Math.abs(value)}%`;
+    }
+
+    const metricKeys = ['views', 'clicks', 'whatsapp_redirects'];
+    const performanceCache = {
+        '30': {
+            views: { current: {{ metrics.views.current|tojson }}, change: {{ metrics.views.change|tojson }} },
+            clicks: { current: {{ metrics.clicks.current|tojson }}, change: {{ metrics.clicks.change|tojson }} },
+            whatsapp_redirects: { current: {{ metrics.whatsapp_redirects.current|tojson }}, change: {{ metrics.whatsapp_redirects.change|tojson }} }
+        }
+    };
+    const inflightPeriods = {};
+
+    function renderPerformanceMetrics(metrics) {
+        metricKeys.forEach(metric => {
+            const metricData = metrics?.[metric] || { current: 0, change: 0 };
+            const valueEl = document.querySelector(`[data-metric-value="${metric}"]`);
+            if (valueEl) {
+                valueEl.textContent = formatMetricNumber(metricData.current);
+                valueEl.classList.remove('updating');
+                valueEl.closest('.stat-cell')?.classList.remove('loading');
+            }
+            updateMetricChange(metric, metricData.change);
+        });
+    }
+
+    function setMetricsLoading(isLoading) {
+        metricKeys.forEach(metric => {
+            const valueEl = document.querySelector(`[data-metric-value="${metric}"]`);
+            valueEl?.classList.toggle('updating', isLoading);
+            valueEl?.closest('.stat-cell')?.classList.toggle('loading', isLoading);
+        });
+    }
+
+    async function fetchPerformanceMetrics(period) {
+        if (performanceCache[period]) return performanceCache[period];
+        if (inflightPeriods[period]) return inflightPeriods[period];
+
+        inflightPeriods[period] = fetch(`/store/{{ store.store_id }}/performance-metrics?period=${encodeURIComponent(period)}`, {
+            headers: { 'Accept': 'application/json' },
+            credentials: 'include'
+        })
+            .then(async res => {
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.message || 'Unable to load metrics');
+                performanceCache[period] = data.metrics;
+                return data.metrics;
+            })
+            .finally(() => { delete inflightPeriods[period]; });
+
+        return inflightPeriods[period];
+    }
+
+    function prefetchPerformanceMetrics() {
+        ['all', '7', 'today'].forEach(period => {
+            fetchPerformanceMetrics(period).catch(() => {});
+        });
+    }
+
+    async function loadPerformanceMetrics(period) {
+        if (performanceCache[period]) {
+            renderPerformanceMetrics(performanceCache[period]);
+            return;
+        }
+
+        setMetricsLoading(true);
+        const metrics = await fetchPerformanceMetrics(period);
+        renderPerformanceMetrics(metrics);
+    }
+
+    // --- Period buttons ---
     document.querySelectorAll('.period-btn').forEach(btn => {
-        btn.addEventListener('click', function() { document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active')); this.classList.add('active'); });
+        btn.addEventListener('click', async function() {
+            const previous = document.querySelector('.period-btn.active');
+            document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            this.disabled = true;
+            try {
+                await loadPerformanceMetrics(this.dataset.period || '30');
+            } catch (error) {
+                if (previous) previous.classList.add('active');
+                this.classList.remove('active');
+                showToast('Could not load performance metrics');
+            } finally {
+                this.disabled = false;
+            }
+        });
     });
+    setTimeout(prefetchPerformanceMetrics, 250);
 
     // --- FAB and Add Item buttons ---
     const fabBtn = document.getElementById('fabAddItem');

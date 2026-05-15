@@ -684,9 +684,26 @@ document.addEventListener('DOMContentLoaded', function () {
   const vendorWhatsAppRaw = "{{ listing.contact|default('', true) }}";
   const ownerName         = {{ listing.username|tojson }};
   const listingTitle      = {{ listing.title|tojson }};
+  const listingId         = {{ listing.listing_id|tojson }};
   const currentUrl        = "{{ url_for('listing_details', listing_id=listing_id, _external=True) }}";
 
   function normalizePhone(r) { return r ? r.replace(/\D/g,'') : ''; }
+
+  function trackWhatsAppClick() {
+    try {
+      const payload = JSON.stringify({ listing_id: listingId });
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('/metrics/listing/whatsapp-click', new Blob([payload], { type: 'application/json' }));
+      } else {
+        fetch('/metrics/listing/whatsapp-click', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload,
+          keepalive: true
+        }).catch(() => {});
+      }
+    } catch (_) {}
+  }
 
   const waBtn = document.getElementById('whatsappQuickLink');
   if (waBtn) {
@@ -695,6 +712,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const ph = normalizePhone(vendorWhatsAppRaw);
       if (!ph) { alert('Seller WhatsApp number is missing.'); return; }
       const msg = `Hi ${ownerName||'there'},\n\nI'm interested in your listing "${listingTitle}" on SellKwic.\nListing: ${currentUrl}`;
+      trackWhatsAppClick();
       window.open(`https://wa.me/${ph}?text=${encodeURIComponent(msg)}`, '_blank');
     });
   }
