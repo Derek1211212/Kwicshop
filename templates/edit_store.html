@@ -677,9 +677,13 @@
                     "Alternative Healing", "Reiki", "Energy Healing", "Hypnotherapy", "Pastoral Counseling"
                   ] %}
 
+                  {% set current_store_type = (store.store_type or '')|trim %}
                   {% for t in types|sort %}
-                    <option value="{{ t }}" {% if store and store.store_type == t %}selected{% endif %}>{{ t }}</option>
+                    <option value="{{ t }}" {% if current_store_type|lower == t|lower %}selected{% endif %}>{{ t }}</option>
                   {% endfor %}
+                  {% if current_store_type and current_store_type|lower not in types|map('lower')|list %}
+                    <option value="{{ current_store_type }}" selected>{{ current_store_type }}</option>
+                  {% endif %}
                 </select>
                 <span class="form-hint">Search or type your own — suggestions appear as you type</span>
               </div>
@@ -823,7 +827,8 @@
   <script>
     // ── Tom Select ──
     document.addEventListener('DOMContentLoaded', function () {
-      new TomSelect('#store_type', {
+      const currentStoreType = {{ (store.store_type or '')|trim|tojson }};
+      const storeTypeSelect = new TomSelect('#store_type', {
         maxOptions: 200,
         searchField: ['text'],
         sortField: 'text',
@@ -841,6 +846,12 @@
           item:   function (data, escape) { return '<div>' + escape(data.text) + '</div>'; }
         }
       });
+      if (currentStoreType) {
+        if (!storeTypeSelect.options[currentStoreType]) {
+          storeTypeSelect.addOption({ value: currentStoreType, text: currentStoreType });
+        }
+        storeTypeSelect.setValue(currentStoreType, true);
+      }
     });
 
     // ── File Uploads ──

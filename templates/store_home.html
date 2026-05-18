@@ -248,7 +248,34 @@
         .hero-badge .dot { width: 6px; height: 6px; background: var(--primary); border-radius: 50%; animation: pulse 2s infinite; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-        .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        .hero-actions {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(120px, auto)) auto;
+            gap: 0.55rem;
+            align-items: center;
+        }
+        .hero-actions .btn {
+            padding: 0.48rem 0.78rem;
+            font-size: 0.78rem;
+            min-height: 36px;
+            justify-content: center;
+            white-space: nowrap;
+            border-radius: 10px;
+        }
+        .hero-delete-form {
+            display: inline-flex;
+            margin: 0;
+            align-self: stretch;
+        }
+        .hero-delete-form .btn {
+            min-width: 44px;
+            width: 44px;
+            padding: 0;
+            border-radius: 10px;
+        }
+        .hero-delete-form .delete-label {
+            display: none;
+        }
         .hero-store-links {
             display: flex;
             flex-direction: column;
@@ -603,6 +630,23 @@
         }
         .theme-card-title { font-family: var(--font-display); font-size: 1rem; font-weight: 800; margin-bottom: 2px; }
         .theme-card-desc { font-size: 0.82rem; color: var(--text-2); }
+        .danger-card {
+            border-color: color-mix(in srgb, #dc2626 35%, var(--border));
+            background: color-mix(in srgb, #dc2626 4%, var(--surface));
+        }
+        .danger-card .theme-card-icon {
+            background: color-mix(in srgb, #dc2626 12%, white);
+            color: #b91c1c;
+        }
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #b91c1c;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(220, 38, 38, 0.28);
+        }
         .theme-grid {
             display: flex;
             flex-wrap: wrap;
@@ -675,6 +719,66 @@
             font-size: 0.88rem; max-width: 300px; font-family: var(--font-display); font-weight: 700;
         }
         .success-message.show { transform: translateX(0); }
+
+        .welcome-pop-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 5000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.25rem;
+            background: rgba(15, 23, 42, 0.44);
+            backdrop-filter: blur(5px);
+        }
+        .welcome-pop-overlay.show { display: flex; }
+        .welcome-pop-card {
+            width: min(430px, 100%);
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow-lg);
+            padding: 1.5rem;
+            text-align: center;
+            animation: welcomeBounce 0.72s cubic-bezier(.18,.89,.32,1.28) both;
+        }
+        .welcome-pop-icon {
+            width: 62px;
+            height: 62px;
+            margin: 0 auto 0.9rem;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-muted);
+            color: var(--primary);
+            font-size: 1.6rem;
+        }
+        .welcome-pop-card h3 {
+            font-family: var(--font-display);
+            font-size: 1.35rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+        .welcome-pop-card p {
+            color: var(--text-2);
+            font-size: 0.92rem;
+            line-height: 1.55;
+            margin-bottom: 1.2rem;
+        }
+        .welcome-pop-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        @keyframes welcomeBounce {
+            0% { opacity: 0; transform: translateY(22px) scale(0.82); }
+            55% { opacity: 1; transform: translateY(-8px) scale(1.04); }
+            78% { transform: translateY(3px) scale(0.98); }
+            100% { transform: translateY(0) scale(1); }
+        }
 
         /* FOOTER */
         .footer {
@@ -782,7 +886,11 @@
             .promo-body { grid-template-columns: 1fr; }
             .promo-preview-pane { border-right: none; border-bottom: 1px solid var(--border); min-height: auto; }
             .dashboard-hero { padding: 1.5rem; }
-            .hero-actions .btn { flex: 1 0 auto; justify-content: center; }
+            .hero-actions {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .hero-delete-form .btn { width: 100%; }
+            .hero-delete-form .delete-label { display: inline; }
             .hero-store-links { flex-direction: row; align-items: center; }
         }
         @media (max-width: 768px) {
@@ -791,6 +899,24 @@
             .mobile-menu-toggle { display: block; }
             .page-wrapper { padding: 1rem; }
             .dashboard-hero { grid-template-columns: 1fr; gap: 1rem; }
+            .hero-actions { gap: 0.5rem; }
+            .hero-actions .btn {
+                padding: 0.5rem 0.55rem;
+                font-size: 0.76rem;
+                min-height: 36px;
+            }
+            .hero-delete-form {
+                grid-column: 1;
+            }
+            .hero-delete-form .btn {
+                background: color-mix(in srgb, #dc2626 8%, var(--surface));
+                color: #b91c1c;
+                border: 1.5px solid color-mix(in srgb, #dc2626 40%, var(--border));
+            }
+            .hero-delete-form .btn:hover {
+                background: #dc2626;
+                color: white;
+            }
             .hero-store-links { align-items: flex-start; flex-direction: row; flex-wrap: wrap; }
             .stats-strip { grid-template-columns: 1fr 1fr; }
             .main-grid { grid-template-columns: 1fr; }
@@ -970,6 +1096,9 @@
                 <a href="{{ url_for('store_inventory', slug=store.slug) }}" class="btn btn-outline"><i class="fas fa-boxes"></i> Inventory</a>
                 {% set store_url = store.store_link if store.store_link else '/store/' + store.slug %}
                 <a href="{{ store_url }}" target="_blank" rel="noopener" class="btn btn-primary" style="white-space: nowrap;"><i class="fas fa-store"></i> View Store</a>
+                <form method="POST" action="{{ url_for('delete_store', store_id=store.store_id) }}" class="hero-delete-form delete-store-form">
+                    <button type="submit" class="btn btn-danger" aria-label="Delete store" title="Delete store"><i class="fas fa-trash"></i><span class="delete-label">Delete Store</span></button>
+                </form>
             </div>
         </div>
     </div>
@@ -1098,7 +1227,8 @@
             </div>
         </div>
     </div>
-</div>
+
+
 
 
 
@@ -1297,6 +1427,20 @@
 <!-- TOASTS -->
 <div class="toast" id="toast"></div>
 <div class="success-message" id="successMessage"><i class="fas fa-check-circle"></i><span id="successMessageText">Action completed successfully!</span></div>
+
+{% if show_store_welcome %}
+<div class="welcome-pop-overlay show" id="storeWelcomePop" role="dialog" aria-modal="true" aria-labelledby="storeWelcomeTitle">
+    <div class="welcome-pop-card">
+        <div class="welcome-pop-icon"><i class="fas fa-store"></i></div>
+        <h3 id="storeWelcomeTitle">Welcome to your vendor dashboard</h3>
+        <p>Your store is live. If you want a quick walkthrough, use the quick page tour button at the top of this dashboard.</p>
+        <div class="welcome-pop-actions">
+            <button type="button" class="btn btn-primary" id="startWelcomeTourBtn"><i class="fas fa-route"></i> Start Quick Tour</button>
+            <button type="button" class="btn btn-outline" id="closeWelcomePopBtn">Maybe Later</button>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- ========== ADD ITEM MODAL (SIMPLIFIED – ONLY OUTRIGHT SALE, NO PLAN) ========== -->
 <div class="modal" id="addItemModal">
@@ -1796,6 +1940,7 @@ function startTour() {
 
 function initAutoTour() {
     const TOUR_KEY = 'kwicshop_tour_completed';
+    if (document.getElementById('storeWelcomePop')) return;
 
     if (!localStorage.getItem(TOUR_KEY)) {
         window.addEventListener('load', () => {
@@ -1818,11 +1963,31 @@ function initTourButton() {
     }
 }
 
+function initStoreWelcomePop() {
+    const pop = document.getElementById('storeWelcomePop');
+    if (!pop) return;
+
+    const closeBtn = document.getElementById('closeWelcomePopBtn');
+    const tourBtn = document.getElementById('startWelcomeTourBtn');
+    const closePop = () => pop.classList.remove('show');
+
+    closeBtn?.addEventListener('click', closePop);
+    pop.addEventListener('click', e => { if (e.target === pop) closePop(); });
+    tourBtn?.addEventListener('click', () => {
+        closePop();
+        setTimeout(() => {
+            document.getElementById('startTourBtn')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            document.getElementById('startTourBtn')?.click();
+        }, 180);
+    });
+}
+
 
 // ===================== INIT =====================
 
 initAutoTour();
 initTourButton();
+initStoreWelcomePop();
 
 
 
@@ -2336,6 +2501,22 @@ initTourButton();
             }
         });
     }
+
+    // --- Save Social Media Links ---
+    document.querySelectorAll('.delete-store-form').forEach(deleteStoreForm => {
+        deleteStoreForm.addEventListener('submit', function(e) {
+            const firstConfirm = confirm('Delete this store permanently? This will remove the store, all products, metrics, reports, ratings, followers, and related records.');
+            if (!firstConfirm) {
+                e.preventDefault();
+                return;
+            }
+            const typed = prompt('This cannot be undone. Type DELETE to confirm.');
+            if (typed !== 'DELETE') {
+                e.preventDefault();
+                showToast('Store deletion cancelled.');
+            }
+        });
+    });
 
     // --- Save Social Media Links ---
     const saveSocialsBtn = document.getElementById('saveSocialsBtn');

@@ -247,26 +247,26 @@
         <!-- NEW: Security Question -->
 <div class="form-group">
   <label for="security_question">
-    Security Question (for password recovery)
+    Account Recovery Question
     <i class="fas fa-circle-info tooltip-icon"
-       title="Choose a question and provide an answer you'll remember. Used to recover your account if you forget your password."></i>
+       title="Choose a business-related question your team can remember. Used to recover your account if you forget your password."></i>
   </label>
 
   <select id="security_question" name="security_question" required>
-    <option value="">Select a question</option>
-    <option value="What is your mother's first name?">What is your mother's first name?</option>
-    <option value="Which city were you born in?">Which city were you born in?</option>
-    <option value="What is your pet's name?">What is your pet's name?</option>
-    <option value="What is your favorite food?">What is your favorite food?</option>
-    <option value="What primary school did you attend?">What primary school did you attend?</option>
-    <option value="What is your best friend's name?">What is your best friend's name?</option>
+    <option value="">Select a business recovery question</option>
+    <option value="What was the first product or service your business sold?">What was the first product or service your business sold?</option>
+    <option value="What city or town did your business first operate from?">What city or town did your business first operate from?</option>
+    <option value="What is the nickname or short name your team uses for the business?">What is the nickname or short name your team uses for the business?</option>
+    <option value="What was the name of your first supplier or business partner?">What was the name of your first supplier or business partner?</option>
+    <option value="What month did your business start operating?">What month did your business start operating?</option>
+    <option value="What landmark is closest to your first business location?">What landmark is closest to your first business location?</option>
   </select>
 </div>
 
 <div class="form-group">
-  <label for="security_answer">Your Answer</label>
-  <input type="text" id="security_answer" name="security_answer" required placeholder="e.g., Fluffy" autocomplete="off">
-  <span class="help-text">Case-insensitive, but keep it memorable.</span>
+  <label for="security_answer">Recovery Answer</label>
+  <input type="text" id="security_answer" name="security_answer" required placeholder="Keep it memorable to your business/team" autocomplete="off">
+  <span class="help-text">Case-insensitive. Choose an answer that is not easy for outsiders to guess.</span>
 </div>
 
         <button type="submit" class="submit-btn">Sign Up</button>

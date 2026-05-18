@@ -17,7 +17,7 @@ from functools import wraps
 from email.message import EmailMessage
 from xml.sax.saxutils import escape as xml_escape
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, session, redirect, url_for, flash, jsonify, abort, Response, current_app
+from flask import Flask, render_template, request, session, redirect, url_for, flash, jsonify, abort, Response, current_app, get_flashed_messages
 from flask_bcrypt import Bcrypt
 from flask_caching import Cache
 from werkzeug.utils import secure_filename
@@ -1171,10 +1171,12 @@ def create_store():
         description = request.form.get('description', '').strip()
         location = request.form.get('location', '').strip()
         contact = request.form.get('contact', '').strip()
+        email = request.form.get('email', '').strip()
         store_type = request.form.get('store_type', '').strip()
         
-        if not name or not store_type or not location or not contact:
-            msg = "All fields except description are required"
+        logo_file = request.files.get('logo')
+        if not name or not store_type or not description or not location or not contact or not email or not (logo_file and logo_file.filename):
+            msg = "All fields except store banner are required"
             if wants_json:
                 return jsonify({"success": False, "message": msg}), 400
             flash(msg, "danger")
@@ -1193,7 +1195,6 @@ def create_store():
         logo = None
         banner = None
         
-        logo_file = request.files.get('logo')
         if logo_file and logo_file.filename:
             logo_upload = upload_to_cloudinary(logo_file, 'stores/logos')
             logo = get_url(logo_upload)
@@ -1216,6 +1217,7 @@ def create_store():
             """, (session['user_id'], name, slug, logo, banner, description, location, contact, store_type))
             conn.commit()
             store_id = cur.lastrowid
+            session['show_store_welcome'] = store_id
             
             if wants_json:
                 return jsonify({
@@ -1374,6 +1376,7 @@ def store_home(store_id):
 
     cur.close()
     conn.close()
+    show_store_welcome = session.pop('show_store_welcome', None) == store_id
 
     return render_template('store_home.html',
                           store=store,
@@ -1383,6 +1386,7 @@ def store_home(store_id):
                           top_by_clicks=top_by_clicks,
                           now=datetime.utcnow(),
                           disable_reason=disable_reason,
+                          show_store_welcome=show_store_welcome,
                           store_absolute_url=store_absolute_url)   # <-- ADD THIS
 
 
@@ -1944,7 +1948,6 @@ def store_add_item():
         print(f"Push notification error (non-critical): {e}")
 
     item_word = "item" if len(inserted_listing_ids) == 1 else "items"
-    flash(f"{len(inserted_listing_ids)} {item_word} added successfully!", "success")
     
     return jsonify({
         "success": True,
@@ -1971,6 +1974,87 @@ def delete_store_listing(slug, listing_id):
     conn.close()
     flash("Listing deleted", "success")
     return redirect(url_for('store_inventory', slug=slug))
+
+
+@app.route('/store/<int:store_id>/delete', methods=['POST'])
+@login_required
+def delete_store(store_id):
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+
+    try:
+        cur.execute(
+            "SELECT store_id, name FROM stores WHERE store_id = %s AND user_id = %s",
+            (store_id, session['user_id'])
+        )
+        store = cur.fetchone()
+        if not store:
+            flash("Store not found or you do not have permission to delete it.", "danger")
+            return redirect(url_for('home'))
+
+        cur.execute("SELECT listing_id FROM listings WHERE store_id = %s", (store_id,))
+        listing_ids = [row['listing_id'] for row in cur.fetchall()]
+
+        def has_column(table, column):
+            cur.execute("""
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_schema = DATABASE()
+                  AND table_name = %s
+                  AND column_name = %s
+                LIMIT 1
+            """, (table, column))
+            return cur.fetchone() is not None
+
+        def delete_by_column(table, column, values):
+            if not values or not has_column(table, column):
+                return
+            placeholders = ", ".join(["%s"] * len(values))
+            cur.execute(f"DELETE FROM `{table}` WHERE `{column}` IN ({placeholders})", tuple(values))
+
+        listing_linked_tables = [
+            'offered_items',
+            'listing_metrics',
+            'ratings',
+            'reviews',
+            'proposals',
+            'wishlist',
+            'wishlists',
+            'wishlist_items',
+            'notifications',
+            'notification_log',
+        ]
+        for table in listing_linked_tables:
+            delete_by_column(table, 'listing_id', listing_ids)
+
+        store_linked_tables = [
+            'store_metrics',
+            'store_ratings',
+            'store_reports',
+            'store_sanctions',
+            'store_promos',
+            'follows',
+            'push_subscriptions',
+            'notifications',
+            'notification_log',
+        ]
+        for table in store_linked_tables:
+            delete_by_column(table, 'store_id', [store_id])
+
+        cur.execute("DELETE FROM listings WHERE store_id = %s", (store_id,))
+        cur.execute("DELETE FROM stores WHERE store_id = %s AND user_id = %s", (store_id, session['user_id']))
+        conn.commit()
+
+        session['store_delete_message'] = f"Store '{store['name']}' and all related products/data have been deleted."
+        return redirect(url_for('home'))
+    except Exception as e:
+        conn.rollback()
+        app.logger.error("Store deletion failed for store_id=%s: %s", store_id, e, exc_info=True)
+        flash("Could not delete the store right now. Please try again.", "danger")
+        return redirect(url_for('store_home', store_id=store_id))
+    finally:
+        cur.close()
+        conn.close()
 
 # ------------------------------
 # Follow / Unfollow
@@ -2522,6 +2606,8 @@ def paystack_verify():
 
 @app.route('/')
 def home():
+    get_flashed_messages()
+    store_delete_message = session.pop('store_delete_message', None)
     search = request.args.get('search', '').strip()
     location = request.args.get('location', '').strip()
     store_type = request.args.get('store_type', '').strip()
@@ -2583,7 +2669,8 @@ def home():
         search=search,
         location=location,
         store_type=store_type,
-        is_logged_in='user_id' in session
+        is_logged_in='user_id' in session,
+        store_delete_message=store_delete_message
     )
 
 

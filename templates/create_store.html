@@ -754,8 +754,8 @@
 </script>
 
                     <div class="form-group">
-                        <label class="form-label">Description (Optional)</label>
-                        <textarea class="form-input" name="description" placeholder="Tell us about what you sell..." rows="3"></textarea>
+                        <label class="form-label">Description *</label>
+                        <textarea class="form-input" name="description" placeholder="Tell us about what you sell..." rows="3" required></textarea>
                     </div>
 
                     <div class="form-footer">
@@ -769,14 +769,14 @@
                 <!-- Step 2 -->
                 <div class="form-step" id="step2">
                     <div class="form-group">
-                        <label class="form-label">Store Logo (Optional)</label>
+                        <label class="form-label">Store Logo *</label>
                         <div class="upload-area" id="logoUploadArea">
                             <i class="fas fa-cloud-upload-alt"></i>
                             <p><strong>Drag & drop or click to upload</strong></p>
                             <p>Square image recommended (400×400px)</p>
                             <img id="logoPreview" class="preview-img" alt="Logo preview">
                         </div>
-                        <input type="file" name="logo" id="logoInput" accept="image/*" style="display:none;">
+                        <input type="file" name="logo" id="logoInput" accept="image/*" required style="display:none;">
                     </div>
 
                     <div class="form-group">
@@ -813,8 +813,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Email (Optional)</label>
-                        <input type="email" class="form-input" name="email" placeholder="you@example.com">
+                        <label class="form-label">Email *</label>
+                        <input type="email" class="form-input" name="email" placeholder="you@example.com" required>
                     </div>
 
                     <div class="form-footer">
@@ -885,6 +885,8 @@ const gifInterval = setInterval(() => {
 document.querySelectorAll('.next-step').forEach(btn => {
     btn.addEventListener('click', () => {
         const next = parseInt(btn.dataset.next, 10);
+        const currentPanel = btn.closest('.form-step');
+        if (currentPanel && !validateStepFields(currentPanel)) return;
         if (!isNaN(next)) navigateToStep(next);
     });
 });
@@ -907,6 +909,39 @@ function navigateToStep(step) {
     if (window.innerWidth <= 768) {
         document.querySelector('.form-panel')?.scrollIntoView({ behavior: 'smooth' });
     }
+}
+
+function showValidationMessage(message) {
+    const existing = document.querySelector('.step-validation-message');
+    if (existing) existing.remove();
+    const flashDiv = document.createElement('div');
+    flashDiv.className = 'alert alert-danger step-validation-message';
+    flashDiv.style.cssText = 'padding: 12px 20px; margin-bottom: 20px; border-radius: 12px; background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;';
+    flashDiv.innerHTML = `<strong>Required:</strong> ${message}`;
+    const formHeader = document.querySelector('.form-header');
+    if (formHeader) formHeader.parentNode.insertBefore(flashDiv, formHeader.nextSibling);
+    setTimeout(() => flashDiv.remove(), 5000);
+}
+
+function validateStepFields(stepPanel) {
+    const invalidField = Array.from(stepPanel.querySelectorAll('[required]')).find(field => {
+        if (field.type === 'file') return !field.files || field.files.length === 0;
+        return !field.value || !field.value.trim();
+    });
+    if (!invalidField) return true;
+
+    let label = stepPanel.querySelector(`label[for="${invalidField.id}"]`)?.textContent?.replace('*', '').trim();
+    if (!label && invalidField.name === 'logo') label = 'Store Logo';
+    if (!label && invalidField.name === 'store_type') label = 'Store Type';
+    if (!label) label = invalidField.name || 'This field';
+
+    showValidationMessage(`${label} is required.`);
+    if (invalidField.type === 'file') {
+        document.getElementById(`${invalidField.name}UploadArea`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+        invalidField.focus();
+    }
+    return false;
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -966,6 +1001,13 @@ const form = document.getElementById('storeForm');
 if (form) {
 form.addEventListener('submit', async function(e) {
     e.preventDefault();
+
+    const firstInvalidStep = Array.from(steps).find(step => !validateStepFields(step));
+    if (firstInvalidStep) {
+        const stepNumber = Array.from(steps).indexOf(firstInvalidStep) + 1;
+        navigateToStep(stepNumber);
+        return;
+    }
 
     const submitBtn = this.querySelector('button[type="submit"]');
     const originalHTML = submitBtn.innerHTML;

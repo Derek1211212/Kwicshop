@@ -864,7 +864,7 @@ footer {
 <div class="hero-section">
     <div class="hero-video-wrap">
         {% if store.tour_video %}
-            <video controls autoplay muted loop playsinline>
+            <video class="store-tour-video" controls autoplay muted loop playsinline preload="auto" poster="{{ store.banner or store.logo or '' }}">
                 <source src="{{ store.tour_video }}" type="video/mp4">
             </video>
         {% else %}
@@ -919,7 +919,9 @@ footer {
             {% if messages %}
             <div class="store-alerts">
                 {% for category, message in messages %}
+                {% if 'report' in message|lower %}
                 <div class="store-alert">{{ message }}</div>
+                {% endif %}
                 {% endfor %}
             </div>
             {% endif %}
@@ -1339,7 +1341,34 @@ footer {
 {% endif %}
 
 <script>
+function initStoreTourAutoplay() {
+    var video = document.querySelector('.store-tour-video');
+    if (!video) return;
+
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+    video.autoplay = true;
+
+    function tryPlay() {
+        var playPromise = video.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch(function () {
+                video.controls = true;
+            });
+        }
+    }
+
+    if (video.readyState >= 2) {
+        tryPlay();
+    } else {
+        video.addEventListener('loadeddata', tryPlay, { once: true });
+    }
+    window.addEventListener('pageshow', tryPlay);
+}
+
 document.addEventListener("DOMContentLoaded", function () {
+    initStoreTourAutoplay();
     var searchInput = document.getElementById("searchInput"),
         chips = document.querySelectorAll(".chip"),
         productCount = document.getElementById("productCount");
