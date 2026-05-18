@@ -15,6 +15,7 @@ from datetime import datetime, timedelta, date
 from decimal import Decimal, InvalidOperation
 from functools import wraps
 from email.message import EmailMessage
+from xml.sax.saxutils import escape as xml_escape
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, session, redirect, url_for, flash, jsonify, abort, Response, current_app
 from flask_bcrypt import Bcrypt
@@ -3535,7 +3536,55 @@ Sitemap: https://sellkwic.com/sitemap.xml
 
 @app.route('/sitemap.xml')
 def sitemap():
-    return Response(render_template('sitemap.xml'), mimetype='application/xml')
+    today = date.today().isoformat()
+    urls = [
+        ("https://sellkwic.com/", today, "1.00"),
+        ("https://sellkwic.com/marketplace", today, "0.85"),
+        ("https://sellkwic.com/create-store", today, "0.80"),
+        ("https://sellkwic.com/info", today, "0.70"),
+    ]
+
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(dictionary=True)
+
+        cur.execute("""
+            SELECT slug, COALESCE(DATE(created_at), CURDATE()) AS lastmod
+            FROM stores
+            WHERE is_active = 1 AND slug IS NOT NULL AND slug != ''
+            ORDER BY Plan_priority DESC, trust_score DESC, created_at DESC
+        """)
+        for store in cur.fetchall():
+            urls.append((f"https://sellkwic.com/store/{store['slug']}", str(store['lastmod']), "0.80"))
+
+        cur.execute("""
+            SELECT listing_id, COALESCE(DATE(created_at), CURDATE()) AS lastmod
+            FROM listings
+            WHERE status IS NULL OR status NOT IN ('deleted', 'sold')
+            ORDER BY created_at DESC
+        """)
+        for listing in cur.fetchall():
+            urls.append((f"https://sellkwic.com/listing/{listing['listing_id']}", str(listing['lastmod']), "0.64"))
+    except Exception as e:
+        app.logger.error("Sitemap generation error: %s", e, exc_info=True)
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+    xml_parts = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+    ]
+    for loc, lastmod, priority in urls:
+        xml_parts.append(
+            f"<url><loc>{xml_escape(loc)}</loc><lastmod>{lastmod}</lastmod><priority>{priority}</priority></url>"
+        )
+    xml_parts.append('</urlset>')
+    return Response("\n".join(xml_parts), mimetype='application/xml')
 
 
 
