@@ -1901,8 +1901,8 @@ def store_add_item():
 
             image_field = product.get('image_field') or f'product_images_{idx}[]'
             images = upload_listing_images(request.files.getlist(image_field))
-            if deal_type == 'Outright Sales' and not images:
-                raise ValueError(f"Product {idx + 1}: at least one image required")
+            if deal_type == 'Outright Sales' and len(images) < 2:
+                raise ValueError(f"Product {idx + 1}: at least 2 images required")
 
             padded = (images + [None] * 5)[:5]
             cur.execute("""
@@ -2631,7 +2631,7 @@ def home():
         params.append(store_type)
 
     # ⬇️ LIMIT 4 – only 4 stores on main page
-    query += " ORDER BY Plan_priority DESC, trust_score DESC, created_at DESC LIMIT 4"
+    query += " ORDER BY Plan_priority DESC, trust_score DESC, created_at DESC LIMIT 6"
 
     cur.execute(query, params)
     stores = cur.fetchall()

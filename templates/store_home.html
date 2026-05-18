@@ -1500,8 +1500,9 @@
                         </label>
                         <div class="form-group"><label class="form-label">Condition *</label><select name="condition" class="form-select" required><option value="">Select condition</option><option>New</option><option>Slightly Used</option><option>Used but in Good Condition</option><option>Used and needs repairs</option></select></div>
                         <div class="form-group">
-                            <label class="form-label">Images (1-4) *</label>
+                            <label class="form-label">Images (2-4) *</label>
                             <label for="sale-images" class="upload-area" style="padding:1.25rem; cursor:pointer;"><span class="upload-icon" style="font-size:2rem">📷</span><p style="font-weight:700;font-family:var(--font-display)">Click to upload</p><p style="font-size:0.75rem;color:var(--text-3)">JPG, PNG, WebP · max 10MB each</p></label>
+                            <p class="form-hint">Upload at least 2 clear product images.</p>
                             <input type="file" id="sale-images" name="images[]" multiple accept="image/*" required style="display:none">
                             <div class="image-preview" style="display:none"></div>
                         </div>
@@ -2136,7 +2137,7 @@ initStoreWelcomePop();
         if (!category) { showToast('❌ Please enter a category for the product.'); return false; }
         if (!contactForPrice && (!price || parseFloat(price) <= 0)) { showToast('❌ Please enter a valid price greater than 0, or choose Contact for price.'); return false; }
         if (!condition) { showToast('❌ Please select the product condition.'); return false; }
-        if (files.length === 0) { showToast('❌ Please upload at least one product image.'); return false; }
+        if (files.length < 2) { showToast('❌ Please upload at least 2 product images.'); return false; }
 
         return true;
     }

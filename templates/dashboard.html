@@ -666,7 +666,7 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
                             <i class="fas fa-images"></i> Listing Images
                         </h5>
                         <div class="mb-3">
-                            <label class="form-label required-field">Upload Images (up to 5)</label>
+                            <label class="form-label required-field">Upload Images (at least 2, up to 5)</label>
                             <div class="file-upload-area" id="main-images-upload">
                                 <i class="fas fa-cloud-upload-alt"></i>
                                 <p>Click to upload or drag and drop</p>
@@ -674,7 +674,7 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
                                 <input type="file" name="images[]" id="main-images-input" class="d-none" multiple accept="image/*" required>
                                 <div class="file-preview mt-3"></div>
                             </div>
-                            <p class="help-text">Upload images of the item you're selling. At least one image is required.</p>
+                            <p class="help-text">Upload at least 2 images of the item you're selling.</p>
                         </div>
                     </div>
                         <!-- Swap Section -->
@@ -908,6 +908,14 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
                                         if (!form) return;
 
                                         form.addEventListener('submit', function(e) {
+                                            const imagesInput = document.getElementById('main-images-input');
+                                            if (imagesInput && !imagesInput.disabled && imagesInput.files.length < 2) {
+                                                alert('Please upload at least 2 product images.');
+                                                imagesInput.closest('.file-upload-area')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                e.preventDefault();
+                                                return false;
+                                            }
+
                                             const countrySelect = document.getElementById('country-code');
                                             const localInput = document.getElementById('local-number');
                                             const hiddenContact = document.getElementById('contact-hidden');
