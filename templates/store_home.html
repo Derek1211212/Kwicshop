@@ -1493,7 +1493,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="form-group"><label class="form-label">Price (₵) *</label><input type="number" step="0.01" name="price" class="form-input" required placeholder="0.00"></div>
+                        <div class="form-group"><label class="form-label">Price (₵) *</label><input type="text" inputmode="decimal" name="price" class="form-input price-input" required placeholder="0.00" autocomplete="off"></div>
                         <label style="display:flex;align-items:center;gap:.55rem;margin:-.25rem 0 .15rem;font-weight:800;color:var(--text-2);font-size:.9rem">
                             <input type="checkbox" name="contact_for_price" value="1" id="modal-contact-for-price" style="width:18px;height:18px;accent-color:var(--primary)">
                             Contact for price
@@ -2135,7 +2135,7 @@ initStoreWelcomePop();
         if (!title) { showToast('❌ Please enter the item name.'); return false; }
         if (!description) { showToast('❌ Please enter the listing description.'); return false; }
         if (!category) { showToast('❌ Please enter a category for the product.'); return false; }
-        if (!contactForPrice && (!price || parseFloat(price) <= 0)) { showToast('❌ Please enter a valid price greater than 0, or choose Contact for price.'); return false; }
+        if (!contactForPrice && (!/^\d+(\.\d{1,2})?$/.test(price.replace(/,/g, '')) || parseFloat(price.replace(/,/g, '')) <= 0)) { showToast('❌ Please enter a valid price greater than 0, with up to 2 decimal places.'); return false; }
         if (!condition) { showToast('❌ Please select the product condition.'); return false; }
         if (files.length < 2) { showToast('❌ Please upload at least 2 product images.'); return false; }
 

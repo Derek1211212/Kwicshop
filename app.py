@@ -33,7 +33,6 @@ import cloudinary.uploader
 import atexit
 from notifications import send_push_notification_to_store_followers
 from notifications import VAPID_PUBLIC_KEY
-from decimal import Decimal, ROUND_HALF_UP
 from apscheduler.schedulers.background import BackgroundScheduler
 
 load_dotenv()
@@ -1825,9 +1824,13 @@ def store_add_item():
         if not price_str:
             return None, "Price is required"
         try:
-            price = Decimal(price_str).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            normalized_price = price_str.replace(',', '').strip()
+            if not re.fullmatch(r'\d+(\.\d{1,2})?', normalized_price):
+                return None, "Invalid price. Use numbers only, with up to 2 decimal places."
+            price = Decimal(normalized_price)
             if price <= 0:
                 raise ValueError
+            price = price.quantize(Decimal('0.01'))
             return price, None
         except Exception:
             return None, "Invalid price. Must be a positive number."
