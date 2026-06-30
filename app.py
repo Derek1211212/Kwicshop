@@ -3459,7 +3459,7 @@ def api_marketplace_products():
     cur = conn.cursor(dictionary=True)
     
     # Build WHERE clause dynamically
-    where_parts = ["l.status = 'active'"]
+    where_parts = ["l.status = 'Active'"]
     params = []
     
     if search:
