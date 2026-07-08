@@ -933,36 +933,8 @@ footer {
             {% endif %}
         {% endwith %}
 
-        <!-- STORE PROFILE CARD -->
+        {% if is_logged_in and not is_owner %}
         <div class="store-profile-card">
-            <div class="store-stats-grid">
-                <div class="stat-cell">
-                    <div class="stat-icon"><i class="fas fa-user"></i></div>
-                    <div>
-                        <div class="stat-label">Seller</div>
-                        <div class="stat-value">{{ store.name }}</div>
-                    </div>
-                </div>
-                <div class="stat-cell">
-                    <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
-                    <div>
-                        <div class="stat-label">Member Since</div>
-                        <div class="stat-value">{{ store.created_at }}</div>
-                    </div>
-                </div>
-                <div class="stat-cell">
-                    <div class="stat-icon"><i class="fas fa-star"></i></div>
-                    <div>
-                        <div class="stat-label">Rating</div>
-                        <div class="stat-value">
-                            {{ store.rating_avg|round(1) or '0.0' }}
-                            <small>({{ store.rating_count or 0 }})</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-{% if is_logged_in and not is_owner %}
 <div class="follow-row">
     <div class="follow-desc">
         Stay updated with <strong>{{ store.name }}</strong>'s latest listings
@@ -973,8 +945,8 @@ footer {
    <span class="following-text" style="display: none;">Following</span>
 </button>
 </div>
-{% endif %}
         </div>
+        {% endif %}
 
         <!-- SEARCH & FILTER -->
         <div class="search-filter-block">

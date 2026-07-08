@@ -730,6 +730,22 @@
         .theme-preview { display: flex; gap: 4px; }
         .theme-color { width: 20px; height: 20px; border-radius: 5px; border: 1px solid rgba(0,0,0,0.08); }
         .theme-name { font-family: var(--font-display); font-weight: 700; font-size: 0.76rem; color: var(--text); white-space: nowrap; }
+        .theme-preview-modal .modal-content { max-width: 620px; overflow: hidden; }
+        .theme-preview-modal .modal-header { background: linear-gradient(135deg, var(--preview-primary), var(--preview-dark)); }
+        .storefront-preview { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; background: var(--bg-2); }
+        .storefront-preview-hero { padding: 1.4rem; background: linear-gradient(135deg, var(--preview-primary), var(--preview-dark)); color: white; }
+        .storefront-preview-brand { display: flex; align-items: center; gap: 0.75rem; font-family: var(--font-display); font-size: 1.05rem; font-weight: 900; }
+        .storefront-preview-logo { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; background: rgba(255,255,255,0.2); }
+        .storefront-preview-nav { display: flex; gap: 0.45rem; padding: 0.75rem; background: var(--surface); border-bottom: 1px solid var(--border); }
+        .storefront-preview-chip { width: 64px; height: 10px; border-radius: 999px; background: var(--preview-muted); }
+        .storefront-preview-chip:first-child { background: var(--preview-primary); }
+        .storefront-preview-products { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.65rem; padding: 0.85rem; }
+        .storefront-preview-product { min-width: 0; overflow: hidden; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); }
+        .storefront-preview-image { aspect-ratio: 4 / 3; background: linear-gradient(145deg, var(--preview-muted), var(--bg-3)); }
+        .storefront-preview-copy { padding: 0.55rem; }
+        .storefront-preview-line { height: 7px; margin-bottom: 0.4rem; border-radius: 999px; background: var(--bg-3); }
+        .storefront-preview-price { width: 55%; height: 8px; border-radius: 999px; background: var(--preview-primary); }
+        .theme-preview-actions { display: flex; justify-content: flex-end; gap: 0.65rem; margin-top: 1rem; }
 
         /* CATEGORY AUTOCOMPLETE */
         .category-input-wrapper { position: relative; }
@@ -1468,9 +1484,8 @@
             <div class="theme-card-icon"><i class="fas fa-palette"></i></div>
             <div>
                 <div class="theme-card-title">Store Color Theme</div>
-                <div class="theme-card-desc">Choose a colour style for your store page. Changes apply instantly.</div>
+                <div class="theme-card-desc">Choose a colour style and preview where it will appear before saving.</div>
             </div>
-            <button id="saveThemeBtn" class="btn btn-primary btn-sm" style="margin-left:auto"><i class="fas fa-check"></i> Save Theme</button>
         </div>
         <div class="theme-grid">
             {% set themes = [
@@ -1494,7 +1509,7 @@
                 {'id':'burgundy-wine','name':'Burgundy Wine','primary':'#880E4F','dark':'#4A148C'}
             ] %}
             {% for theme in themes %}
-            <label class="theme-option {% if store.color_theme == theme.id %}active{% endif %}" data-theme="{{ theme.id }}">
+            <label class="theme-option {% if store.color_theme == theme.id %}active{% endif %}" data-theme="{{ theme.id }}" data-name="{{ theme.name }}" data-primary="{{ theme.primary }}" data-dark="{{ theme.dark }}">
                 <input type="radio" name="color_theme" value="{{ theme.id }}" {% if store.color_theme == theme.id %}checked{% endif %} style="display:none">
                 <div class="theme-preview"><div class="theme-color" style="background:{{ theme.primary }}"></div><div class="theme-color" style="background:{{ theme.dark }}"></div></div>
                 <div class="theme-name">{{ theme.name }}</div>
@@ -1523,6 +1538,35 @@
 <!-- TOASTS -->
 <div class="toast" id="toast"></div>
 <div class="success-message" id="successMessage"><i class="fas fa-check-circle"></i><span id="successMessageText">Action completed successfully!</span></div>
+
+<div class="modal theme-preview-modal" id="themePreviewModal" style="--preview-primary:#4CAF50;--preview-dark:#2E7D32;--preview-muted:#dcfce7">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="themePreviewTitle">
+        <div class="modal-header">
+            <div>
+                <h2 id="themePreviewTitle">Theme Preview</h2>
+                <p id="themePreviewName">See where your selected colors will appear.</p>
+            </div>
+            <button type="button" class="modal-close" id="closeThemePreview" aria-label="Close theme preview"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="storefront-preview" aria-label="Storefront color preview">
+                <div class="storefront-preview-hero">
+                    <div class="storefront-preview-brand"><span class="storefront-preview-logo"><i class="fas fa-store"></i></span>{{ store.name }}</div>
+                </div>
+                <div class="storefront-preview-nav"><span class="storefront-preview-chip"></span><span class="storefront-preview-chip"></span><span class="storefront-preview-chip"></span></div>
+                <div class="storefront-preview-products">
+                    {% for _ in range(3) %}
+                    <div class="storefront-preview-product"><div class="storefront-preview-image"></div><div class="storefront-preview-copy"><div class="storefront-preview-line"></div><div class="storefront-preview-price"></div></div></div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="theme-preview-actions">
+                <button type="button" class="btn btn-outline" id="cancelThemePreview">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveThemeBtn"><i class="fas fa-check"></i> Save Theme</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% if show_store_welcome %}
 <div class="welcome-pop-overlay show" id="storeWelcomePop" role="dialog" aria-modal="true" aria-labelledby="storeWelcomeTitle">
@@ -2151,14 +2195,31 @@ initStoreWelcomePop();
     // --- Theme Save ---
     (function() {
         const saveBtn = document.getElementById('saveThemeBtn');
-        document.querySelectorAll('input[name="color_theme"]').forEach(r => r.addEventListener('change', () => { if (saveBtn) saveBtn.disabled = false; }));
+        const previewModal = document.getElementById('themePreviewModal');
+        const previewName = document.getElementById('themePreviewName');
+        const closePreview = () => { previewModal?.classList.remove('show'); document.body.style.overflow = ''; };
+        document.querySelectorAll('input[name="color_theme"]').forEach(r => r.addEventListener('change', () => {
+            const option = r.closest('.theme-option');
+            document.querySelectorAll('.theme-option').forEach(item => item.classList.toggle('active', item === option));
+            if (!option || !previewModal) return;
+            previewModal.style.setProperty('--preview-primary', option.dataset.primary);
+            previewModal.style.setProperty('--preview-dark', option.dataset.dark);
+            previewModal.style.setProperty('--preview-muted', `color-mix(in srgb, ${option.dataset.primary} 18%, white)`);
+            if (previewName) previewName.textContent = `${option.dataset.name} on your storefront`;
+            if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fas fa-check"></i> Save Theme'; }
+            previewModal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }));
+        document.getElementById('closeThemePreview')?.addEventListener('click', closePreview);
+        document.getElementById('cancelThemePreview')?.addEventListener('click', closePreview);
+        previewModal?.addEventListener('click', e => { if (e.target === previewModal) closePreview(); });
         saveBtn?.addEventListener('click', async () => {
             const sel = document.querySelector('input[name="color_theme"]:checked'); if (!sel) return;
             saveBtn.disabled = true; saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
             try {
                 const res = await fetch('/store/{{ store.slug }}/update-theme', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({color_theme:sel.value}), credentials:'include' });
                 const data = await res.json();
-                if (data.success) { showToast('Theme updated!'); saveBtn.innerHTML = '<i class="fas fa-check"></i> Save Theme'; saveBtn.disabled = true; }
+                if (data.success) { showToast('Theme updated!'); saveBtn.innerHTML = '<i class="fas fa-check"></i> Save Theme'; saveBtn.disabled = true; closePreview(); }
                 else { showToast(data.message || 'Failed'); saveBtn.innerHTML = '<i class="fas fa-check"></i> Save Theme'; saveBtn.disabled = false; }
             } catch { showToast('Network error'); saveBtn.innerHTML = '<i class="fas fa-check"></i> Save Theme'; saveBtn.disabled = false; }
         });
