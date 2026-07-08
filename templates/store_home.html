@@ -201,10 +201,18 @@
             padding: 14px 22px; text-decoration: none; color: var(--text);
             transition: background 0.2s; font-size: 0.95rem; font-weight: 600;
             font-family: var(--font-display);
+            width: 100%;
+            border: none;
+            background: transparent;
+            text-align: left;
+            cursor: pointer;
         }
         .mobile-menu-item i { width: 20px; color: var(--text-3); }
         .mobile-menu-item:hover { background: var(--bg); }
         .mobile-menu-item.active { background: var(--primary-muted); color: var(--primary-dark); border-left: 3px solid var(--primary); }
+        .mobile-menu-delete-form { margin: 0; }
+        .mobile-menu-item.danger { color: var(--danger); }
+        .mobile-menu-item.danger i { color: var(--danger); }
 
         /* LAYOUT */
         .page-wrapper { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
@@ -992,6 +1000,7 @@
             .page-wrapper { padding: 1rem; }
             .dashboard-hero { grid-template-columns: 1fr; gap: 1.25rem; padding: 1.25rem; }
             .hero-store-name { font-size: 1.6rem; }
+            .dashboard-hero .hero-actions { display: none; }
             .hero-actions .btn {
                 padding: 0.5rem 0.65rem;
                 font-size: 0.76rem;
@@ -1039,11 +1048,14 @@
             .tour-btn-text { display: none; }
         }
         @media (max-width: 480px) {
-            .stats-strip { grid-template-columns: 1fr; }
+            .stats-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .hero-store-name { font-size: 1.4rem; }
             .schedule-grid { grid-template-columns: 1fr; }
-            .stat-cell { padding: 1.25rem 1rem; }
-            .stat-value { font-size: 1.6rem; }
+            .stat-cell { padding: 1rem 0.75rem; gap: 0.7rem; align-items: flex-start; }
+            .stat-icon-wrap { width: 38px; height: 38px; border-radius: 11px; font-size: 1rem; }
+            .stat-label { font-size: 0.64rem; line-height: 1.2; }
+            .stat-value { font-size: 1.35rem; }
+            .stat-change { font-size: 0.68rem; padding: 2px 6px; }
             .period-toggle { margin-left: 0; width: 100%; justify-content: center; margin-top: 0.75rem; }
             .section-header { flex-direction: column; align-items: flex-start; }
             .hero-actions .btn { flex: 1 1 100%; }
@@ -1170,9 +1182,14 @@
     </div>
     <div class="mobile-menu-items">
         <a href="/store/{{ store.slug }}" class="mobile-menu-item active"><i class="fas fa-home"></i> Dashboard</a>
-        <a href="{{ store.store_link }}" class="mobile-menu-item" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> View Store</a>
-        <a href="/store/{{ store.slug }}/edit" class="mobile-menu-item"><i class="fas fa-edit"></i> Edit Store Info</a>
-        <a href="/store/{{ store.slug }}/inventory" class="mobile-menu-item"><i class="fas fa-boxes"></i> View/Edit Inventory</a>
+        <button type="button" class="mobile-menu-item" id="openAddItemModalMenu"><i class="fas fa-plus"></i> Add New Item</button>
+        <a href="/store/{{ store.slug }}/edit" class="mobile-menu-item"><i class="fas fa-cog"></i> Settings</a>
+        <a href="/store/{{ store.slug }}/inventory" class="mobile-menu-item"><i class="fas fa-boxes"></i> Inventory</a>
+        {% set store_url = store.store_link if store.store_link else '/store/' + store.slug %}
+        <a href="{{ store_url }}" class="mobile-menu-item" target="_blank" rel="noopener"><i class="fas fa-store"></i> View Store</a>
+        <form method="POST" action="{{ url_for('delete_store', store_id=store.store_id) }}" class="mobile-menu-delete-form delete-store-form">
+            <button type="submit" class="mobile-menu-item danger"><i class="fas fa-trash"></i> Delete Store</button>
+        </form>
     </div>
 </div>
 
@@ -2150,7 +2167,7 @@ initStoreWelcomePop();
     // ========== ADD ITEM MODAL ==========
     const modal = document.getElementById('addItemModal');
     if (!modal) return;
-    const openBtns = [document.getElementById('openAddItemModal'), document.getElementById('openAddItemModalFull'), document.getElementById('fabAddItem'), document.getElementById('openAddItemModalFull2')];
+    const openBtns = [document.getElementById('openAddItemModal'), document.getElementById('openAddItemModalFull'), document.getElementById('openAddItemModalMenu'), document.getElementById('fabAddItem'), document.getElementById('openAddItemModalFull2')];
     const closeBtn = document.getElementById('closeModal');
     function openModal(e) { if (e) e.preventDefault(); modal.classList.add('show'); document.body.style.overflow='hidden'; resetModal(); }
     let isSubmittingBatch = false;
