@@ -684,6 +684,20 @@
     margin-top: 0.35rem;
   }
 
+  .phone-guidance {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    margin-top: 8px;
+    color: #3d6b55;
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+  .phone-guidance i { color: #10b981; margin-top: 2px; }
+  .phone-status { display: none; margin-top: 5px; font-size: 0.76rem; font-weight: 600; }
+  .phone-status.valid { display: block; color: #047857; }
+  .phone-status.invalid { display: block; color: #b45309; }
+
   /* Make it feel more like a search bar */
   .ts-wrapper.single .ts-control {
     border: 1px solid #d1d5db;
@@ -808,8 +822,31 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Phone / WhatsApp</label>
-                        <input type="tel" class="form-input" name="contact" placeholder="+233 24 000 0000" required>
+                        <label class="form-label" for="storeCountryCode">Country / Region</label>
+                        <select class="form-select" name="country_code" id="storeCountryCode" required>
+                            <option value="+233" selected>+233 (Ghana)</option>
+                            <option value="+1">+1 (USA / Canada)</option>
+                            <option value="+44">+44 (United Kingdom)</option>
+                            <option value="+234">+234 (Nigeria)</option>
+                            <option value="+27">+27 (South Africa)</option>
+                            <option value="+254">+254 (Kenya)</option>
+                            <option value="+91">+91 (India)</option>
+                            <option value="+971">+971 (UAE)</option>
+                            <option value="+61">+61 (Australia)</option>
+                            <option value="+81">+81 (Japan)</option>
+                            <option value="+49">+49 (Germany)</option>
+                            <option value="+33">+33 (France)</option>
+                            <option value="+31">+31 (Netherlands)</option>
+                            <option value="+39">+39 (Italy)</option>
+                            <option value="+34">+34 (Spain)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="storeContact">Phone / WhatsApp</label>
+                        <input type="tel" class="form-input" name="contact" id="storeContact" inputmode="numeric" autocomplete="tel-national" placeholder="0501308957" required>
+                        <div class="phone-guidance"><i class="fas fa-shield-alt" aria-hidden="true"></i><span>Choose your country, then enter the local number without its country code. We verify and save it in international format.</span></div>
+                        <div class="phone-status" id="storeContactStatus" aria-live="polite"></div>
                     </div>
 
                     <div class="form-group">
@@ -998,9 +1035,72 @@ function validateStepFields(stepPanel) {
 //  FORM SUBMISSION – improved error handling & feedback
 // ──────────────────────────────────────────────────────────────────────────────
 const form = document.getElementById('storeForm');
+const storeContactInput = document.getElementById('storeContact');
+const storeContactStatus = document.getElementById('storeContactStatus');
+const storeCountryCode = document.getElementById('storeCountryCode');
+const storePhoneRules = {
+    '+1': [10, 10], '+44': [9, 10], '+233': [9, 9], '+234': [10, 10],
+    '+27': [9, 9], '+254': [9, 9], '+91': [10, 10], '+971': [9, 9],
+    '+61': [9, 9], '+81': [9, 10], '+49': [7, 11], '+33': [9, 9],
+    '+31': [9, 9], '+39': [6, 10], '+34': [9, 9]
+};
+
+function validateStoreContact(showMessage = true) {
+    if (!storeContactInput) return true;
+
+    const countryCode = storeCountryCode?.value || '';
+    const compact = storeContactInput.value.replace(/\D/g, '');
+    if (!compact) {
+        storeContactInput.setCustomValidity('');
+        if (storeContactStatus) storeContactStatus.className = 'phone-status';
+        return true;
+    }
+    const countryDigits = countryCode.replace('+', '');
+    const isInternationalInput = storeContactInput.value.trim().startsWith('+');
+    let nationalNumber = compact;
+    let isValid = Boolean(storePhoneRules[countryCode]);
+
+    if (isInternationalInput || compact.startsWith(countryDigits)) {
+        isValid = isValid && compact.startsWith(countryDigits);
+        nationalNumber = compact.slice(countryDigits.length);
+    } else if (countryCode !== '+39') {
+        nationalNumber = compact.replace(/^0+/, '');
+    }
+
+    const [minLength, maxLength] = storePhoneRules[countryCode] || [];
+    isValid = isValid && /^\d+$/.test(nationalNumber) && nationalNumber.length >= minLength && nationalNumber.length <= maxLength;
+    const savedNumber = `${countryCode}${nationalNumber}`;
+    storeContactInput.setCustomValidity(!isValid ? 'Enter a valid phone number for the selected country.' : '');
+
+    if (storeContactStatus && showMessage) {
+        storeContactStatus.className = `phone-status ${isValid ? 'valid' : 'invalid'}`;
+        storeContactStatus.textContent = isValid
+            ? `Looks good — it will be saved as ${savedNumber}.`
+            : 'Check the selected country code and enter a valid local number.';
+    }
+
+    return isValid;
+}
+
+storeContactInput?.addEventListener('input', () => {
+    if (!storeContactInput.value.trim()) {
+        storeContactInput.setCustomValidity('');
+        storeContactStatus?.classList.remove('valid', 'invalid');
+        return;
+    }
+    validateStoreContact();
+});
+storeCountryCode?.addEventListener('change', () => validateStoreContact(Boolean(storeContactInput?.value.trim())));
+
 if (form) {
 form.addEventListener('submit', async function(e) {
     e.preventDefault();
+
+    if (!validateStoreContact()) {
+        navigateToStep(3);
+        storeContactInput?.focus();
+        return;
+    }
 
     const firstInvalidStep = Array.from(steps).find(step => !validateStepFields(step));
     if (firstInvalidStep) {

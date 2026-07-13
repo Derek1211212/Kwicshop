@@ -1158,6 +1158,41 @@ def google_callback():
 # ------------------------------
 # Shop Core Routes
 # ------------------------------
+STORE_PHONE_RULES = {
+    '+1': (10, 10), '+44': (9, 10), '+233': (9, 9), '+234': (10, 10),
+    '+27': (9, 9), '+254': (9, 9), '+91': (10, 10), '+971': (9, 9),
+    '+61': (9, 9), '+81': (9, 10), '+49': (7, 11), '+33': (9, 9),
+    '+31': (9, 9), '+39': (6, 10), '+34': (9, 9),
+}
+
+
+def normalize_store_contact(country_code, value):
+    """Validate and save supported store contacts in international E.164 form."""
+    country_code = (country_code or '').strip()
+    raw_contact = (value or '').strip()
+    if country_code not in STORE_PHONE_RULES or not raw_contact:
+        return None
+
+    digits = re.sub(r'\D', '', raw_contact)
+    country_digits = country_code[1:]
+    if raw_contact.startswith('+'):
+        # A manually supplied international number must match the selected code.
+        if not digits.startswith(country_digits):
+            return None
+        national_number = digits[len(country_digits):]
+    elif digits.startswith(country_digits):
+        national_number = digits[len(country_digits):]
+    else:
+        # Most national formats include one trunk zero; Italy retains it in E.164.
+        national_number = digits if country_code == '+39' or not digits.startswith('0') else digits[1:]
+
+    min_length, max_length = STORE_PHONE_RULES[country_code]
+    if not national_number.isdigit() or not min_length <= len(national_number) <= max_length:
+        return None
+
+    return f'{country_code}{national_number}'
+
+
 @app.route('/create-store', methods=['GET','POST'])
 @login_required
 def create_store():
@@ -1169,13 +1204,22 @@ def create_store():
         name = request.form.get('name', '').strip()
         description = request.form.get('description', '').strip()
         location = request.form.get('location', '').strip()
-        contact = request.form.get('contact', '').strip()
+        country_code = request.form.get('country_code', '').strip()
+        contact_input = request.form.get('contact', '').strip()
+        contact = normalize_store_contact(country_code, contact_input)
         email = request.form.get('email', '').strip()
         store_type = request.form.get('store_type', '').strip()
         
         logo_file = request.files.get('logo')
-        if not name or not store_type or not description or not location or not contact or not email or not (logo_file and logo_file.filename):
+        if not name or not store_type or not description or not location or not contact_input or not email or not (logo_file and logo_file.filename):
             msg = "All fields except store banner are required"
+            if wants_json:
+                return jsonify({"success": False, "message": msg}), 400
+            flash(msg, "danger")
+            return redirect(url_for('create_store'))
+
+        if not contact:
+            msg = "Enter a valid phone number for the selected country code."
             if wants_json:
                 return jsonify({"success": False, "message": msg}), 400
             flash(msg, "danger")
