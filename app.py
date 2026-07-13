@@ -2736,10 +2736,10 @@ def store_detail(slug):
             promo_media_type, promo_media_url, promo_description,
             promo_button_text, promo_button_link, promo_frequency,
             promo_active, promo_start_date, promo_end_date, Plan_priority,
-            Facebook AS facebook_url,
-            `X ( formerly Twitter)` AS twitter_url,
-            Instagram AS instagram_url,
-            TikTok AS tiktok_url
+            COALESCE(`Facebook`, '') AS facebook_url,
+            COALESCE(`X ( formerly Twitter)`, '') AS twitter_url,
+            COALESCE(`Instagram`, '') AS instagram_url,
+            COALESCE(`TikTok`, '') AS tiktok_url
         FROM stores 
         WHERE slug = %s AND is_active = 1
     """, (slug,))

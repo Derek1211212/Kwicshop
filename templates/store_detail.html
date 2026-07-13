@@ -48,8 +48,9 @@
 }
 
 *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
-html { font-size:14px; scroll-behavior:smooth; }
-body { font-family:var(--font-body); background:var(--bg); color:var(--text); line-height:1.6; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+html { min-height:100%; font-size:14px; scroll-behavior:smooth; }
+body { min-height:100vh; display:flex; flex-direction:column; font-family:var(--font-body); background:var(--bg); color:var(--text); line-height:1.6; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+main.main-content { flex:1 0 auto; }
 
 .container { max-width:100%; margin:0 auto; padding:0 18px; }
 @media(min-width:640px)  { .container { max-width:640px;  padding:0 24px; } }
@@ -734,6 +735,7 @@ footer {
     padding: 52px 0 32px;
     border-top: 1px solid var(--border-2);
     margin-top: 64px;
+    flex-shrink: 0;
 }
 .footer-content { display:grid; grid-template-columns:1fr; gap:32px; }
 @media(min-width:768px) { .footer-content { grid-template-columns:1.5fr 1fr 1fr 1fr; gap:24px; } }
@@ -746,10 +748,93 @@ footer {
 .footer-links a i { font-size:0.72rem; color:var(--text-3); transition:color 0.2s; }
 .footer-links a:hover { color:var(--primary); }
 .footer-links a:hover i { color:var(--primary); }
-.social-links { display:flex; gap:8px; margin-top:4px; }
-.social-links a { width:36px; height:36px; border-radius:10px; background:var(--bg-2); color:var(--text-2); display:flex; align-items:center; justify-content:center; text-decoration:none; transition:all 0.22s var(--ease-smooth); font-size:0.85rem; border:1px solid var(--border-2); }
-.social-links a:hover { background:var(--primary); color:#fff; border-color:var(--primary); transform:translateY(-2px); }
 .copyright { text-align:center; color:var(--text-3); font-size:0.77rem; padding-top:24px; margin-top:28px; border-top:1px solid var(--border); grid-column:1/-1; }
+
+/* Mobile social dock: appears as a dot, then expands into a bottom bar. */
+.mobile-social-dock { display: none; }
+@media (max-width: 767px) {
+    main.main-content { padding-bottom: 88px; }
+    .mobile-social-dock {
+        position: fixed;
+        left: 50%;
+        bottom: max(12px, env(safe-area-inset-bottom));
+        z-index: 1100;
+        width: 18px;
+        height: 18px;
+        padding: 0;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255,255,255,0.15);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 50%;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.22);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateX(-50%) scale(0.35);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+    .mobile-social-dock.is-visible { visibility: visible; pointer-events: auto; animation: socialDockPop 0.28s var(--ease) forwards, socialDockExpand 0.52s 0.25s var(--ease-smooth) forwards; }
+    .mobile-social-dock.is-hiding { pointer-events: none; animation: socialDockFade 0.18s ease forwards, socialDockCollapse 0.4s 0.18s var(--ease-smooth) forwards; }
+    .mobile-dock-logo,
+    .mobile-dock-message,
+    .mobile-dock-links { opacity: 0; }
+    .mobile-social-dock.is-visible .mobile-dock-logo,
+    .mobile-social-dock.is-visible .mobile-dock-message,
+    .mobile-social-dock.is-visible .mobile-dock-links { animation: socialDockContent 0.25s 0.63s ease forwards; }
+    .mobile-dock-logo {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        overflow: hidden;
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.16);
+        color: white;
+        margin-left: 10px;
+    }
+    .mobile-dock-logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .mobile-dock-message { color: #000; font-family: var(--font-display); font-size: 0.7rem; font-weight: 800; line-height: 1.1; white-space: nowrap; }
+    .mobile-dock-links { display: flex; align-items: center; justify-content: flex-end; gap: 4px; min-width: 0; flex: 1; padding-right: 8px; }
+    .mobile-dock-links a,
+    .mobile-dock-links .dock-unavailable {
+        width: 32px;
+        height: 32px;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        color: white;
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.2);
+        text-decoration: none;
+        font-size: 1rem;
+    }
+    .mobile-dock-links a:active { transform: scale(0.92); }
+    .mobile-dock-links .dock-whatsapp { color: #fff; background: #25D366; border-color: #25D366; }
+    .mobile-dock-links .dock-facebook { color: #1877f2; }
+    .mobile-dock-links .dock-x { color: var(--text); }
+    .mobile-dock-links .dock-instagram { color: #d62976; }
+    .mobile-dock-links .dock-tiktok { color: var(--text); }
+    .mobile-dock-links .dock-unavailable { opacity: 0.42; }
+    @keyframes socialDockPop {
+        to { opacity: 1; width: 58px; height: 58px; transform: translateX(-50%) scale(1); }
+    }
+    @keyframes socialDockExpand {
+        to { width: calc(100vw - 24px); border-radius: 30px; }
+    }
+    @keyframes socialDockContent { to { opacity: 1; } }
+    @keyframes socialDockFade { to { opacity: 0; } }
+    @keyframes socialDockCollapse {
+        to { width: 18px; height: 18px; border-radius: 50%; transform: translateX(-50%) scale(0.35); }
+    }
+}
 
 /* ── ANIMATIONS ── */
 @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
@@ -1169,29 +1254,82 @@ footer {
             <div class="footer-section">
                 <span class="footer-logo">{{ store.name }}</span>
                 <p>{{ store.description }}</p>
-                <div class="social-links">
-                    {% if store.facebook_url and store.facebook_url.strip() %}
-                    <a href="{{ store.facebook_url }}" target="_blank" rel="noopener noreferrer"><i class="fab fa-facebook-f"></i></a>
-                    {% endif %}
-                    {% if store.twitter_url and store.twitter_url.strip() %}
-                    <a href="{{ store.twitter_url }}" target="_blank" rel="noopener noreferrer"><i class="fab fa-twitter"></i></a>
-                    {% endif %}
-                    {% if store.instagram_url and store.instagram_url.strip() %}
-                    <a href="{{ store.instagram_url }}" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>
-                    {% endif %}
-                    {% if store.tiktok_url and store.tiktok_url.strip() %}
-                    <a href="{{ store.tiktok_url }}" target="_blank" rel="noopener noreferrer"><i class="fab fa-tiktok"></i></a>
-                    {% endif %}
-                    {% if store.contact %}
-                    <a href="https://wa.me/{{ store.contact|replace('+', '')|replace('(', '')|replace(')', '')|replace(' ', '')|replace('-', '') }}" target="_blank"><i class="fab fa-whatsapp"></i></a>
-                    {% endif %}
-                </div>
             </div>
 
             <div class="copyright">© 2026 SellKwic. All rights reserved. • Accra, Ghana</div>
         </div>
     </div>
 </footer>
+
+<!-- Mobile social dock -->
+<nav class="mobile-social-dock" aria-label="{{ store.name }} social links">
+    <div class="mobile-dock-logo" aria-label="{{ store.name }}">
+        {% if store.logo %}
+        <img src="{{ store.logo }}" alt="{{ store.name }} logo">
+        {% else %}
+        <i class="fas fa-store" aria-hidden="true"></i>
+        {% endif %}
+    </div>
+    <span class="mobile-dock-message">Reach out to us</span>
+    <div class="mobile-dock-links">
+        {% if store.facebook_url and store.facebook_url.strip() %}
+        <a class="dock-facebook" href="{{ store.facebook_url }}" target="_blank" rel="noopener noreferrer" aria-label="Visit us on Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i></a>
+        {% else %}
+        <span class="dock-unavailable dock-facebook" aria-label="Facebook link unavailable"><i class="fab fa-facebook-f" aria-hidden="true"></i></span>
+        {% endif %}
+        {% if store.twitter_url and store.twitter_url.strip() %}
+        <a class="dock-x" href="{{ store.twitter_url }}" target="_blank" rel="noopener noreferrer" aria-label="Visit us on X"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+        {% else %}
+        <span class="dock-unavailable dock-x" aria-label="X link unavailable"><i class="fab fa-twitter" aria-hidden="true"></i></span>
+        {% endif %}
+        {% if store.instagram_url and store.instagram_url.strip() %}
+        <a class="dock-instagram" href="{{ store.instagram_url }}" target="_blank" rel="noopener noreferrer" aria-label="Visit us on Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a>
+        {% else %}
+        <span class="dock-unavailable dock-instagram" aria-label="Instagram link unavailable"><i class="fab fa-instagram" aria-hidden="true"></i></span>
+        {% endif %}
+        {% if store.tiktok_url and store.tiktok_url.strip() %}
+        <a class="dock-tiktok" href="{{ store.tiktok_url }}" target="_blank" rel="noopener noreferrer" aria-label="Visit us on TikTok"><i class="fab fa-tiktok" aria-hidden="true"></i></a>
+        {% else %}
+        <span class="dock-unavailable dock-tiktok" aria-label="TikTok link unavailable"><i class="fab fa-tiktok" aria-hidden="true"></i></span>
+        {% endif %}
+        {% if store.contact %}
+        <a class="dock-whatsapp" href="https://wa.me/{{ store.contact|replace('+', '')|replace('(', '')|replace(')', '')|replace(' ', '')|replace('-', '') }}" target="_blank" rel="noopener noreferrer" aria-label="Chat with us on WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>
+        {% else %}
+        <span class="dock-unavailable" aria-label="WhatsApp link unavailable"><i class="fab fa-whatsapp" aria-hidden="true"></i></span>
+        {% endif %}
+    </div>
+</nav>
+
+<script>
+(() => {
+    const startMobileSocialDock = () => {
+        const dock = document.querySelector('.mobile-social-dock');
+        if (!dock || !window.matchMedia('(max-width: 767px)').matches) return;
+
+        const showDock = () => {
+            dock.classList.remove('is-hiding', 'is-visible');
+            void dock.offsetWidth; // Restart the dot-to-bar animation without blocking rendering.
+            dock.classList.add('is-visible');
+
+            window.setTimeout(() => {
+                dock.classList.add('is-hiding');
+                window.setTimeout(() => dock.classList.remove('is-hiding', 'is-visible'), 600);
+            }, 8000);
+        };
+
+        window.setTimeout(showDock, 600);
+        window.setInterval(showDock, 10000);
+    };
+
+    window.addEventListener('load', () => {
+        if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(startMobileSocialDock, { timeout: 1200 });
+        } else {
+            window.setTimeout(startMobileSocialDock, 0);
+        }
+    }, { once: true });
+})();
+</script>
 
 
 <!-- Floating WhatsApp Button with "Reach Us" label -->
@@ -1238,6 +1376,9 @@ footer {
         transform: scale(1.08);
         background-color: #128C7E;
         box-shadow: 0 10px 28px rgba(37, 211, 102, 0.5);
+    }
+    @media (max-width: 767px) {
+        .whatsapp-float { display: none; }
     }
     @media (max-width: 640px) {
         .whatsapp-icon {

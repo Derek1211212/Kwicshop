@@ -1968,6 +1968,51 @@ document.addEventListener('DOMContentLoaded', function() {
 // ===================== GUIDED TOUR (INTRO.JS) =====================
 
 function getTourSteps() {
+    if (window.matchMedia('(max-width: 768px)').matches) {
+        return [
+            {
+                selector: '#mobileMenuBtn',
+                title: 'Menu',
+                intro: 'Your store tools are in this menu on smaller screens.'
+            },
+            {
+                selector: '#mobileMenuBtn',
+                title: 'Add New Item',
+                intro: 'In this menu, choose Add New Item to create a product with photos, pricing, and condition.'
+            },
+            {
+                selector: '#mobileMenuBtn',
+                title: 'Inventory',
+                intro: 'The menu Inventory option lets you manage listings, edit products, and track performance.'
+            },
+            {
+                selector: '#mobileMenuBtn',
+                title: 'Store Settings',
+                intro: 'The menu Settings option lets you update your store name, branding, delivery options, and more.'
+            },
+            {
+                selector: '#mobileMenuBtn',
+                title: 'View Store',
+                intro: 'The menu View Store option previews your live store exactly as customers see it.'
+            },
+            {
+                selector: '.shop-video-card .upload-area, .shop-video-card .video-container',
+                title: 'Shop Tour Video',
+                intro: 'Upload a short video showcasing your shop. It plays automatically on your store page.'
+            },
+            {
+                selector: '.promo-wrapper',
+                title: 'Promo Banner',
+                intro: 'Create eye-catching promotions using images or videos.'
+            },
+            {
+                selector: '#socialMediaCard',
+                title: 'Social Media Links',
+                intro: 'Connect your social accounts to grow your brand.'
+            }
+        ];
+    }
+
     return [
         {
             selector: '#openAddItemModalFull',
@@ -2020,7 +2065,9 @@ function buildValidSteps() {
     return getTourSteps()
         .map(step => {
             const element = document.querySelector(step.selector);
-            return element ? { ...step, element } : null;
+            return element && (element.offsetWidth || element.offsetHeight || element.getClientRects().length)
+                ? { ...step, element }
+                : null;
         })
         .filter(Boolean);
 }
