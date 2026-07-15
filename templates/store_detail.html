@@ -401,9 +401,13 @@ main.main-content { flex:1 0 auto; }
     .follow-btn:not(.following) { animation: none; }
 }
 @media(max-width:480px) {
-    .follow-row { flex-direction: column; align-items: stretch; }
-    .follow-btn { width: 100%; justify-content: center; }
+    .follow-row { align-items: center; }
+    .follow-desc { flex: 1 1 100%; }
+    .follow-btn { padding: 7px 14px; font-size: 0.76rem; }
 }
+.follow-actions { display: inline-flex; align-items: center; gap: 10px; }
+.follower-count { font-size: 0.76rem; font-weight: 700; color: var(--text-2); white-space: nowrap; }
+.follower-count i { color: var(--primary); margin-right: 4px; }
 
 /* ── PRODUCTS SECTION ── */
 .products-section { margin-top: 8px; }
@@ -1097,11 +1101,14 @@ footer {
     <div class="follow-desc">
         Stay updated with <strong>{{ store.name }}</strong>'s latest listings
     </div>
-<button id="followBtn" class="follow-btn" data-store-id="{{ store.store_id }}" data-store-name="{{ store.name }}">
-   <i class="far fa-heart heart-icon"></i>
-   <span class="follow-text">Follow Store</span>
-   <span class="following-text" style="display: none;">Following</span>
-</button>
+    <div class="follow-actions">
+        <button id="followBtn" class="follow-btn{% if is_following %} following{% endif %}" data-store-id="{{ store.store_id }}" data-store-name="{{ store.name }}" aria-pressed="{{ 'true' if is_following else 'false' }}">
+           <i class="{% if is_following %}fas{% else %}far{% endif %} fa-heart heart-icon"></i>
+           <span class="follow-text"{% if is_following %} style="display: none;"{% endif %}>Follow Store</span>
+           <span class="following-text"{% if not is_following %} style="display: none;"{% endif %}>Following</span>
+        </button>
+        <span id="followerCount" class="follower-count" aria-live="polite"><i class="fas fa-users"></i><span>{{ follower_count }}</span> follower{% if follower_count != 1 %}s{% endif %}</span>
+    </div>
 </div>
         </div>
         {% endif %}
@@ -1738,27 +1745,27 @@ if (followBtn) {
             heartIcon.classList.add('far');
             heartIcon.classList.remove('fas');
         }
+        followBtn.setAttribute('aria-pressed', String(isFollowing));
     }
 
-    // Fetch initial follow status
-    fetch(`/store/${storeId}/follow-status`, { credentials: 'same-origin' })
-        .then(res => res.json())
-        .then(data => {
-            if (data && typeof data.followed === 'boolean') {
-                setFollowingState(data.followed);
-            } else {
-                setFollowingState(false);
-            }
-        })
-        .catch(err => console.warn('Could not fetch follow status:', err));
+    const followerCount = document.getElementById('followerCount');
+    function setFollowerCount(count) {
+        if (!followerCount || typeof count !== 'number') return;
+        followerCount.innerHTML = `<i class="fas fa-users"></i><span>${count}</span> follower${count === 1 ? '' : 's'}`;
+    }
 
     // Handle follow/unfollow click
 followBtn.addEventListener('click', async function(e) {
     e.preventDefault();
+    if (this.disabled) return;
     const isCurrentlyFollowing = this.classList.contains('following');
     const storeId = this.dataset.storeId;
     const storeName = this.dataset.storeName;  // get store name from attribute
     const url = isCurrentlyFollowing ? `/store/${storeId}/unfollow` : `/store/${storeId}/follow`;
+
+    // Give immediate feedback while the follow request and notification setup finish.
+    setFollowingState(!isCurrentlyFollowing);
+    this.disabled = true;
     
     // If trying to follow, check notification permission
     if (!isCurrentlyFollowing && 'Notification' in window) {
@@ -1767,12 +1774,10 @@ followBtn.addEventListener('click', async function(e) {
             if (permission !== 'granted') {
                 // User denied or dismissed – show guide banner
                 showNotificationGuide(storeName);
-                return;  // Stop follow action
             }
         } else if (Notification.permission === 'denied') {
-            // Already blocked – show guide and do not follow
+            // Already blocked – show the guide while keeping the follow action available.
             showNotificationGuide(storeName);
-            return;
         }
     }
     
@@ -1781,7 +1786,7 @@ followBtn.addEventListener('click', async function(e) {
         const res = await fetch(url, { method: 'POST', credentials: 'same-origin' });
         const data = await res.json();
         if (data.success) {
-            setFollowingState(!isCurrentlyFollowing);
+            setFollowerCount(data.follower_count);
             
             // If just followed and permission granted, subscribe to push
             if (!isCurrentlyFollowing && Notification.permission === 'granted') {
@@ -1793,11 +1798,15 @@ followBtn.addEventListener('click', async function(e) {
                 }
             }
         } else {
+            setFollowingState(isCurrentlyFollowing);
             alert(data.message || 'Something went wrong.');
         }
     } catch (err) {
+        setFollowingState(isCurrentlyFollowing);
         console.error('Follow error:', err);
         alert('Network error – please try again.');
+    } finally {
+        this.disabled = false;
     }
 });
 }

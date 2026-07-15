@@ -2115,7 +2115,9 @@ def follow_store(store_id):
     try:
         cur.execute("INSERT INTO follows (user_id, store_id) VALUES (%s, %s)", (user_id, store_id))
         conn.commit()
-        return jsonify({"success": True})
+        cur.execute("SELECT COUNT(*) AS follower_count FROM follows WHERE store_id = %s", (store_id,))
+        follower_count = cur.fetchone()[0]
+        return jsonify({"success": True, "follower_count": follower_count})
     except Exception:
         conn.rollback()
         return jsonify({"success": False, "message": "Already following or error"}), 400
@@ -2129,11 +2131,15 @@ def unfollow_store(store_id):
     user_id = session['user_id']
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("DELETE FROM follows WHERE user_id = %s AND store_id = %s", (user_id, store_id))
-    conn.commit()
-    cur.close()
-    conn.close()
-    return jsonify({"success": True})
+    try:
+        cur.execute("DELETE FROM follows WHERE user_id = %s AND store_id = %s", (user_id, store_id))
+        conn.commit()
+        cur.execute("SELECT COUNT(*) AS follower_count FROM follows WHERE store_id = %s", (store_id,))
+        follower_count = cur.fetchone()[0]
+        return jsonify({"success": True, "follower_count": follower_count})
+    finally:
+        cur.close()
+        conn.close()
 
 
 
@@ -2768,6 +2774,7 @@ def api_stores_all():
 # ------------------------------
 @app.route('/store/<slug>')
 def store_detail(slug):
+    user_id = session.get('user_id')
     conn = get_db_connection()
     cur = conn.cursor(dictionary=True)
     
@@ -2862,11 +2869,21 @@ def store_detail(slug):
           AND (end_date IS NULL OR end_date >= CURDATE())
     """, (store['store_id'],))
     promo = cur.fetchone()
+
+    cur.execute("SELECT COUNT(*) AS follower_count FROM follows WHERE store_id = %s", (store['store_id'],))
+    follower_count = cur.fetchone()['follower_count']
+
+    is_following = False
+    if user_id is not None:
+        cur.execute(
+            "SELECT 1 FROM follows WHERE user_id = %s AND store_id = %s",
+            (user_id, store['store_id'])
+        )
+        is_following = cur.fetchone() is not None
     
     cur.close()
     conn.close()
 
-    user_id = session.get('user_id')  # or whatever you use
     is_logged_in = user_id is not None
     is_owner = user_id == store.get('user_id')  # adjust to your column
 
@@ -2879,6 +2896,8 @@ def store_detail(slug):
         categories=categories, 
         is_logged_in=is_logged_in,
         is_owner=is_owner,
+        is_following=is_following,
+        follower_count=follower_count,
         vapid_public_key=VAPID_PUBLIC_KEY
     )
 
