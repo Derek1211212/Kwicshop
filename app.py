@@ -2683,8 +2683,11 @@ def home():
         query += " AND store_type = %s"
         params.append(store_type)
 
-    # ⬇️ LIMIT 4 – only 4 stores on main page
-    query += " ORDER BY Plan_priority DESC, trust_score DESC, created_at DESC LIMIT 6"
+    # Homepage grid: show a rotating selection of six stores.
+    # Pick a fresh, fair selection on every page load. Applying the limit after
+    # a random order gives every active store matching the current filters a
+    # chance to appear in the homepage grid.
+    query += " ORDER BY RAND() LIMIT 6"
 
     cur.execute(query, params)
     stores = cur.fetchall()
