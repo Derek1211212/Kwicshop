@@ -765,18 +765,30 @@
         }
         .remove-image:hover { transform: scale(1.1); }
 
-        /* FAB */
-        .fab {
-            position: fixed; bottom: 22px; right: 22px; width: 56px; height: 56px;
-            background: var(--primary); color: white; border-radius: 50%;
-            box-shadow: 0 6px 20px color-mix(in srgb, var(--primary) 45%, transparent);
-            display: none; align-items: center; justify-content: center;
-            font-size: 1.6rem; z-index: 100; border: none; cursor: pointer;
-            transition: all 0.22s var(--ease-s);
+        /* Floating support button */
+        .support-fab {
+            position: fixed; right: 18px; bottom: 18px; min-height: 46px; padding: 0 14px;
+            background: #25D366; color: #fff; border-radius: 999px;
+            box-shadow: 0 8px 22px rgba(37, 211, 102, 0.35);
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+            font-size: 0.82rem; font-weight: 800; z-index: 100; border: none; cursor: pointer;
+            text-decoration: none; letter-spacing: 0.01em; white-space: nowrap;
+            transition: transform 0.22s var(--ease-s), background 0.22s var(--ease-s), box-shadow 0.22s var(--ease-s);
             touch-action: manipulation;
+            isolation: isolate;
         }
-        .fab:hover { background: var(--primary-dark); transform: scale(1.08); }
-        .fab:active { transform: scale(0.95); }
+        .support-fab::before {
+            content: ''; position: absolute; inset: -6px; border: 2px solid rgba(37, 211, 102, 0.55);
+            border-radius: inherit; animation: supportPulse 2.1s ease-out infinite; z-index: -1;
+        }
+        .support-fab i { font-size: 1.15rem; }
+        .support-fab:hover { background: #1ebe5b; color: #fff; transform: translateY(-3px); box-shadow: 0 12px 28px rgba(37, 211, 102, 0.45); }
+        .support-fab:hover i { animation: supportWave 0.55s ease-in-out; }
+        .support-fab:active { transform: translateY(0) scale(0.97); }
+        .support-fab:focus-visible { outline: 3px solid color-mix(in srgb, #25D366 35%, #fff); outline-offset: 3px; }
+        @keyframes supportPulse { 0%, 30% { opacity: 0; transform: scale(0.88); } 45% { opacity: 0.8; } 100% { opacity: 0; transform: scale(1.16); } }
+        @keyframes supportWave { 25% { transform: rotate(-14deg); } 50% { transform: rotate(12deg); } 75% { transform: rotate(-7deg); } }
+        @media (prefers-reduced-motion: reduce) { .support-fab::before, .support-fab:hover i { animation: none; } }
 
         /* TOAST / SUCCESS */
         .toast {
@@ -1028,7 +1040,6 @@
             .action-row { grid-template-columns: 1fr; }
             .theme-grid { gap: 0.5rem; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 0.5rem; justify-content: flex-start; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
             .theme-grid::-webkit-scrollbar { display: none; }
-            .fab { display: flex; }
             .footer-content { flex-direction: column; text-align: center; }
             .footer-links { justify-content: center; }
             .modal-body { padding: 1rem; }
@@ -1076,7 +1087,6 @@
             .modal.show { align-items: flex-end; }
             .modal-header { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
         }
-        @media (min-width: 769px) { .fab { display: none !important; } }
 
         /* ANIMATIONS */
         @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
@@ -1525,8 +1535,10 @@
     </div>
 </footer>
 
-<!-- FAB -->
-<button class="fab" id="fabAddItem" type="button" aria-label="Add New Item"><i class="fas fa-plus"></i></button>
+<!-- Floating WhatsApp support -->
+<a class="support-fab" href="https://wa.me/233544156292" aria-label="Contact Support on WhatsApp">
+    <i class="fab fa-whatsapp" aria-hidden="true"></i><span>Support</span>
+</a>
 
 <!-- TOASTS -->
 <div class="toast" id="toast"></div>
@@ -1957,9 +1969,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     setTimeout(prefetchPerformanceMetrics, 250);
 
-    // --- FAB and Add Item buttons ---
-    const fabBtn = document.getElementById('fabAddItem');
-    if (fabBtn) fabBtn.addEventListener('click', () => document.getElementById('openAddItemModalFull')?.click());
+    // --- Add Item buttons ---
     document.getElementById('openAddItemModalFull2')?.addEventListener('click', () => document.getElementById('openAddItemModalFull')?.click());
 
 
@@ -2268,7 +2278,7 @@ initStoreWelcomePop();
     // ========== ADD ITEM MODAL ==========
     const modal = document.getElementById('addItemModal');
     if (!modal) return;
-    const openBtns = [document.getElementById('openAddItemModal'), document.getElementById('openAddItemModalFull'), document.getElementById('openAddItemModalMenu'), document.getElementById('fabAddItem'), document.getElementById('openAddItemModalFull2')];
+    const openBtns = [document.getElementById('openAddItemModal'), document.getElementById('openAddItemModalFull'), document.getElementById('openAddItemModalMenu'), document.getElementById('openAddItemModalFull2')];
     const closeBtn = document.getElementById('closeModal');
     function openModal(e) { if (e) e.preventDefault(); modal.classList.add('show'); document.body.style.overflow='hidden'; resetModal(); }
     let isSubmittingBatch = false;
