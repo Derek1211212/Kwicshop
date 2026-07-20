@@ -1032,7 +1032,7 @@ footer {
 <div class="hero-section">
     <div class="hero-video-wrap">
         {% if store.tour_video %}
-            <video class="store-tour-video" controls autoplay muted loop playsinline preload="auto" poster="{{ store.banner or store.logo or '' }}">
+            <video class="store-tour-video" controls muted loop playsinline preload="none" poster="{{ store.banner or store.logo or '' }}">
                 <source src="{{ store.tour_video }}" type="video/mp4">
             </video>
         {% else %}
@@ -1497,8 +1497,8 @@ footer {
             <div class="modal-body" style="padding:0;background:white">
                 <button type="button" class="btn-close" onclick="closePromoModal()" aria-label="Close"><i class="fas fa-times"></i></button>
                 <div class="modal-media">
-                    {% if promo.media_type == 'video' %}<video autoplay muted loop playsinline><source src="{{ promo.media_url }}" type="video/mp4"></video>
-                    {% else %}<img src="{{ promo.media_url }}" alt="Promotion">{% endif %}
+                    {% if promo.media_type == 'video' %}<video muted loop playsinline preload="none"><source src="{{ promo.media_url }}" type="video/mp4"></video>
+                    {% else %}<img src="{{ promo.media_url }}" alt="Promotion" loading="lazy">{% endif %}
                 </div>
                 <div class="promo-content">
                     <p class="promo-description">{{ promo.description }}</p>
