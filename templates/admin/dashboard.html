@@ -542,7 +542,13 @@
                         <div class="item-avatar">{{ loop.index }}</div>
                         <div class="item-body">
                             <div class="item-name">{{ product.title[:45] }}{% if product.title|length > 45 %}…{% endif %}</div>
-                            <div class="item-meta">₵{{ "%.2f"|format(product.price) }}</div>
+                            <div class="item-meta">
+                                {% if product.price is not none %}
+                                    ₵{{ "%.2f"|format(product.price) }}
+                                {% else %}
+                                    Contact for price
+                                {% endif %}
+                            </div>
                         </div>
                         <div class="item-badges">
                             <span class="badge badge-views">👁 {{ product.impressions|format_number }}</span>

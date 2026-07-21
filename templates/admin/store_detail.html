@@ -668,7 +668,15 @@
                                 <span class="td-product-name">{{ product.listing.title[:60] }}</span>
                                 <span class="td-category">{{ product.listing.category }}</span>
                             </td>
-                            <td><span class="td-price">₦{{ "%.2f"|format(product.listing.price) }}</span></td>
+                            <td>
+                                <span class="td-price">
+                                    {% if product.listing.price is not none %}
+                                        ₦{{ "%.2f"|format(product.listing.price) }}
+                                    {% else %}
+                                        Contact for price
+                                    {% endif %}
+                                </span>
+                            </td>
                             <td>{{ product.impressions|format_number }}</td>
                             <td>{{ product.clicks|format_number }}</td>
                             <td>

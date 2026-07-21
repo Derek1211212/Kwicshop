@@ -276,7 +276,7 @@ def format_number(value):
 # ------------------------------
 # Admin Dashboard
 # ------------------------------
-@app.route('/admin')
+
 @app.route('/admin/dashboard')
 @admin_required
 def admin_dashboard():
