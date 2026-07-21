@@ -16,12 +16,14 @@ from decimal import Decimal, InvalidOperation
 from functools import wraps
 from email.message import EmailMessage
 from xml.sax.saxutils import escape as xml_escape
+from urllib.parse import urlparse
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, session, redirect, url_for, flash, jsonify, abort, Response, current_app, get_flashed_messages
 from flask_bcrypt import Bcrypt
 from flask_caching import Cache
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.middleware.proxy_fix import ProxyFix
 from itsdangerous import URLSafeTimedSerializer
 from slugify import slugify
 from authlib.integrations.flask_client import OAuth
@@ -41,6 +43,9 @@ load_dotenv()
 # App & Config
 # ------------------------------
 app = Flask(__name__)
+# Render terminates HTTPS before forwarding requests to Gunicorn. Trust its
+# single proxy so generated external URLs retain the browser's HTTPS host.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key-change-in-production')
 app.config['FROM_EMAIL'] = os.getenv('FROM_EMAIL', 'noreply@kwicshop.com')
 bcrypt = Bcrypt(app)
@@ -66,6 +71,7 @@ twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) if TWILIO_ACCOUNT_
 
 # Google OAuth
 oauth = OAuth(app)
+GOOGLE_REDIRECT_URI = os.getenv('GOOGLE_REDIRECT_URI', '').strip()
 google = oauth.register(
     name='google',
     client_id=os.getenv('GOOGLE_CLIENT_ID'),
@@ -1124,36 +1130,84 @@ def signup():
 # Google OAuth
 @app.route('/login/google')
 def google_login():
-    redirect_uri = url_for('google_callback', _external=True)
+    # The OAuth provider returns to a fixed callback URL, so retain the page
+    # the visitor originally requested in the server-side session.
+    session['google_login_next'] = request.args.get('next', '')
+    # Keep the callback on the same host that initiated login. Redirecting from
+    # the Render hostname to the custom domain (or the reverse) drops Flask's
+    # host-only session cookie and causes Authlib's state/CSRF check to fail.
+    generated_redirect_uri = url_for('google_callback', _external=True)
+    configured_redirect = urlparse(GOOGLE_REDIRECT_URI)
+    redirect_uri = (
+        GOOGLE_REDIRECT_URI
+        if configured_redirect.netloc and configured_redirect.netloc == request.host
+        else generated_redirect_uri
+    )
     return google.authorize_redirect(redirect_uri)
+
+
+def _google_username(cursor, display_name, email):
+    """Return a unique username for a first-time Google account."""
+    seed = display_name or (email or '').split('@')[0] or 'google_user'
+    base = re.sub(r'[^A-Za-z0-9_.-]+', '_', seed).strip('_.-') or 'google_user'
+    base = base[:50]
+    candidate = base
+    suffix = 2
+
+    while True:
+        cursor.execute("SELECT 1 FROM users WHERE username = %s", (candidate,))
+        if not cursor.fetchone():
+            return candidate
+        suffix_text = str(suffix)
+        candidate = f"{base[:50 - len(suffix_text)]}{suffix_text}"
+        suffix += 1
+
 
 @app.route('/login/google/callback')
 def google_callback():
-    token = google.authorize_access_token()
-    resp = google.get('userinfo')
-    userinfo = resp.json()
-    email = userinfo.get('email')
-    name = userinfo.get('name')
-    if not email:
-        flash("Google login failed", "danger")
+    try:
+        google.authorize_access_token()
+        resp = google.get('userinfo')
+        resp.raise_for_status()
+        userinfo = resp.json()
+        email = (userinfo.get('email') or '').strip().lower()
+        name = (userinfo.get('name') or '').strip()
+        google_id = userinfo.get('id') or userinfo.get('sub')
+        if not email:
+            raise ValueError('Google did not return an email address')
+
+        conn = get_db_connection()
+        cur = conn.cursor(dictionary=True)
+        try:
+            cur.execute("SELECT id FROM users WHERE email = %s", (email,))
+            user = cur.fetchone()
+            if not user:
+                username = _google_username(cur, name, email)
+                cur.execute(
+                    "INSERT INTO users (username, email, password, google_id, name) VALUES (%s, %s, '', %s, %s)",
+                    (username, email, google_id, name or None)
+                )
+                conn.commit()
+                user_id = cur.lastrowid
+            else:
+                user_id = user['id']
+        finally:
+            cur.close()
+            conn.close()
+    except Exception:
+        app.logger.exception('Google OAuth callback failed')
+        flash('Google sign-in could not be completed. Please try again.', 'danger')
         return redirect(url_for('login'))
-    conn = get_db_connection()
-    cur = conn.cursor(dictionary=True)
-    cur.execute("SELECT id FROM users WHERE email = %s", (email,))
-    user = cur.fetchone()
-    if not user:
-        # create new user
-        cur.execute("INSERT INTO users (username, email, password) VALUES (%s, %s, '')",
-                    (name or email.split('@')[0], email))
-        conn.commit()
-        user_id = cur.lastrowid
-    else:
-        user_id = user['id']
-    cur.close()
-    conn.close()
+
     session['user_id'] = user_id
     flash("Logged in with Google", "success")
-    return redirect(url_for('all_shops'))
+    next_url = session.pop('google_login_next', '')
+    parsed_next = urlparse(next_url)
+    if parsed_next.netloc and parsed_next.netloc == request.host:
+        next_url = parsed_next.path + (f'?{parsed_next.query}' if parsed_next.query else '')
+    elif parsed_next.scheme or parsed_next.netloc or not next_url.startswith('/') or next_url.startswith('//'):
+        next_url = url_for('my_store_redirect')
+    return redirect(next_url)
 
 # ------------------------------
 # Shop Core Routes
@@ -2728,6 +2782,10 @@ def home():
         is_logged_in='user_id' in session,
         store_delete_message=store_delete_message
     )
+
+# Older flows still refer to the former all_shops endpoint. Keep that endpoint
+# as an alias for the current public shop page while those flows are migrated.
+app.add_url_rule('/', endpoint='all_shops', view_func=home)
 
 
 # NEW ENDPOINT: returns ALL active stores matching filters (no limit)
