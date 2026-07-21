@@ -298,22 +298,178 @@
       .modal-box { padding: 1.4rem; margin: 2vh auto; }
       @media (max-width: 420px) { .main-img-box { aspect-ratio: 1; } }
     }
+
+    /* Storefront composition */
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 10% 3%, rgba(166, 212, 194, 0.5), transparent 27rem),
+        radial-gradient(circle at 94% 16%, rgba(238, 223, 170, 0.45), transparent 25rem),
+        linear-gradient(135deg, #d9e6e2 0%, #f8f5e9 53%, #dcebe8 100%);
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.34;
+      background-image: linear-gradient(118deg, transparent 0 48%, rgba(255,255,255,0.82) 48.05% 48.16%, transparent 48.2% 100%);
+      background-size: 780px 520px;
+    }
+
+    .navbar {
+      width: min(1280px, calc(100% - 2.5rem));
+      height: 72px;
+      margin: 1.15rem auto 0;
+      padding: 0 1.15rem 0 1.45rem;
+      border: 1px solid rgba(255,255,255,0.78);
+      border-radius: 24px;
+      background: rgba(255,255,255,0.64);
+      box-shadow: 0 14px 36px rgba(55, 79, 72, 0.11);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      top: 0.75rem;
+    }
+    .brand { font-family: var(--font-body); font-size: 1.3rem; font-weight: 800; letter-spacing: -0.07em; color: #101917; }
+    .brand-dot { color: #78d49c; }
+    .nav-links { gap: 0.3rem; }
+    .nav-links a { border-radius: 999px; padding: 0.5rem 0.85rem; }
+    .nav-links .btn-signup { box-shadow: 0 5px 12px rgba(26,107,69,0.19); }
+
+    .page-wrap {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 1.15rem 1.25rem 4.5rem;
+    }
+    .breadcrumb { margin: 0.35rem 0 0.8rem 0.45rem; }
+    .deal-pill { margin: 0 0 0.95rem 0.45rem; background: rgba(255,255,255,0.58); backdrop-filter: blur(8px); }
+    .product-grid {
+      grid-template-columns: minmax(0, 1.5fr) minmax(315px, 0.82fr);
+      gap: 1rem;
+      padding: 1rem;
+      border: 1px solid rgba(255,255,255,0.86);
+      border-radius: 30px;
+      background: rgba(248, 251, 248, 0.52);
+      box-shadow: 0 24px 58px rgba(51, 75, 67, 0.14);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .gallery-col { top: 97px; }
+    .gallery-showcase {
+      display: grid;
+      grid-template-columns: minmax(220px, 0.83fr) minmax(300px, 1.17fr);
+      min-height: 425px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.9);
+      border-radius: 24px;
+      background: rgba(255,255,255,0.78);
+      box-shadow: 0 10px 28px rgba(51,75,67,0.08);
+    }
+    .listing-heading {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      padding: clamp(1.5rem, 3vw, 3.25rem);
+    }
+    .item-eyebrow { color: var(--green); }
+    .item-heading { max-width: 12ch; font-family: var(--font-body); font-size: clamp(2rem, 3.7vw, 3.65rem); font-weight: 700; letter-spacing: -0.065em; line-height: 0.98; margin: 0.45rem 0 0.95rem; }
+    .item-desc { max-width: 31ch; margin: 0.15rem 0 0; color: var(--ink-soft); }
+    .gallery-showcase .main-img-box {
+      align-self: stretch;
+      min-height: 0;
+      margin: 0.75rem 0.75rem 0.75rem 0;
+      border: 1px solid rgba(255,255,255,0.92);
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 50% 36%, rgba(255,255,255,0.96) 0 8%, transparent 8.5%),
+        linear-gradient(145deg, #e2f0eb, #edf2e6);
+      box-shadow: inset 0 0 40px rgba(255,255,255,0.75);
+    }
+    .gallery-showcase .main-img { padding: 1rem; }
+    .thumb-row { padding: 0.35rem 0.25rem 0.15rem; margin-top: 0.65rem; }
+    .thumb { width: 58px; height: 58px; border-radius: 13px; background: rgba(255,255,255,0.72); }
+    .image-price-card {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      z-index: 4;
+      min-width: 145px;
+      padding: 0.7rem 0.85rem 0.78rem;
+      border: 1px solid rgba(255,255,255,0.92);
+      border-radius: 15px;
+      background: rgba(255,255,255,0.94);
+      box-shadow: 0 8px 20px rgba(28,36,33,0.13);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .image-price-card .price-label { margin-bottom: 0.13rem; color: var(--ink-soft); font-size: 0.58rem; }
+    .image-price-card .price-value { color: var(--ink); font-family: var(--font-body); font-size: 1.22rem; font-weight: 800; letter-spacing: -0.05em; line-height: 1.1; }
+    .image-price-card .price-value.contact-price { color: var(--green); font-size: 0.98rem; letter-spacing: -0.025em; }
+    .gallery-details-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin-top: 0.85rem; }
+    .gallery-details-grid .info-card { min-width: 0; }
+
+    .info-col { gap: 0.75rem; padding: 0.15rem; }
+    .info-card {
+      border: 1px solid rgba(255,255,255,0.88);
+      border-radius: 20px;
+      background: rgba(255,255,255,0.78);
+      box-shadow: 0 8px 20px rgba(51,75,67,0.07);
+    }
+    .info-card { padding: 1.15rem 1.25rem; }
+    .info-card.swap-style { background: linear-gradient(135deg, rgba(233,247,238,0.93), rgba(255,255,255,0.76)); }
+    .card-heading { margin-bottom: 0.55rem; }
+    .info-row { padding: 0.48rem 0; }
+    .info-ico { width: 28px; height: 28px; border-radius: 10px; }
+    .info-key { font-size: 0.62rem; }
+    .info-val { font-size: 0.82rem; }
+    .info-col .swap-style { order: -3; }
+    .info-col .cta { order: -2; }
+    .cta { min-height: 56px; border-radius: 18px; }
+    .cta-wa { box-shadow: 0 9px 20px rgba(37,211,102,0.25); }
+
+    .section-panel {
+      border-color: rgba(255,255,255,0.85);
+      border-radius: 25px;
+      background: rgba(255,255,255,0.7);
+      box-shadow: 0 14px 34px rgba(51,75,67,0.09);
+      backdrop-filter: blur(12px);
+    }
+    .similar-section { padding: 1.7rem; border: 1px solid rgba(255,255,255,0.85); border-radius: 25px; background: rgba(255,255,255,0.48); box-shadow: 0 14px 34px rgba(51,75,67,0.08); }
+    .similar-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .sim-link { border: 1px solid rgba(255,255,255,0.86); border-radius: 18px; background: rgba(255,255,255,0.78); }
+    .sim-img { aspect-ratio: 1.25; }
+
+    @media (max-width: 980px) {
+      .product-grid { grid-template-columns: minmax(0, 1fr) 315px; }
+      .gallery-showcase { grid-template-columns: minmax(210px, .8fr) minmax(260px, 1.2fr); }
+    }
+    @media (max-width: 880px) {
+      .product-grid { grid-template-columns: 1fr; }
+      .gallery-col { position: static; }
+      .info-col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+      .info-col .swap-style, .info-col .cta { grid-column: 1 / -1; }
+    }
+    @media (max-width: 650px) {
+      .navbar { width: calc(100% - 1.25rem); height: 64px; margin-top: 0.6rem; padding: 0 0.9rem 0 1.1rem; border-radius: 19px; }
+      .page-wrap { padding: 0.9rem 0.65rem 3rem; }
+      .breadcrumb { margin-left: 0.25rem; overflow: hidden; white-space: nowrap; }
+      .deal-pill { margin-left: 0.25rem; }
+      .product-grid { padding: 0.6rem; border-radius: 22px; }
+      .gallery-showcase { grid-template-columns: 1fr; min-height: 0; border-radius: 18px; }
+      .listing-heading { padding: 1.45rem 1.3rem 1.1rem; }
+      .item-heading { max-width: 16ch; font-size: clamp(2rem, 10vw, 3.05rem); }
+      .gallery-showcase .main-img-box { min-height: 270px; aspect-ratio: 1 / .84; margin: 0 0.55rem 0.55rem; border-radius: 14px; }
+      .image-price-card { top: 0.7rem; left: 0.7rem; min-width: 0; padding: 0.55rem 0.65rem; }
+      .image-price-card .price-value { font-size: 1.05rem; }
+      .gallery-details-grid { grid-template-columns: 1fr; }
+      .info-col { grid-template-columns: 1fr; padding: 0; }
+      .section-panel, .similar-section { padding: 1.3rem; border-radius: 20px; }
+      .similar-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
   </style>
 </head>
 <body>
-
-<nav class="navbar">
-  <a href="/" class="brand">Sell<span class="brand-dot">.</span>Kwic</a>
-  <button class="mobile-menu" id="mobileMenuBtn" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
-  <div class="nav-links" id="navLinks">
-    {% if 'user_id' in session %}
-      <a href="/logout"><i class="fas fa-sign-out-alt" style="margin-right:.3rem"></i>Logout</a>
-    {% else %}
-      <a href="/login">Log in</a>
-      <a href="/signup" class="btn-signup">Sign up</a>
-    {% endif %}
-  </div>
-</nav>
 
 {% with messages = get_flashed_messages(with_categories=True) %}
   {% if messages %}
@@ -343,17 +499,29 @@
     <!-- ── LEFT: Gallery ── -->
     <div class="gallery-col">
       {% if listing.deal_type == 'Outright Sales' %}
-        <div style="margin-bottom:1rem">
+        <div class="gallery-showcase">
+          <div class="listing-heading">
           <div class="item-eyebrow">{{ listing.category }}</div>
           <h1 class="item-heading">{{ listing.title }}</h1>
-          <span class="cond-pill cond-{{ listing.condition|lower|replace(' ','_') }}"><i class="fas fa-circle" style="font-size:.42rem"></i> {{ listing.condition }}</span>
+          {% if listing.condition %}
+            <span class="cond-pill cond-{{ listing.condition|lower|replace(' ','_') }}"><i class="fas fa-circle" style="font-size:.42rem"></i> {{ listing.condition }}</span>
+          {% endif %}
           <p class="item-desc">{{ listing.description }}</p>
-        </div>
+          </div>
         {% set sale_imgs = [listing.image_url, listing.image1, listing.image2, listing.image3, listing.image4] | reject("none") | reject("equalto","") | list %}
         <div class="main-img-box">
           <img id="mainImage-sale" class="main-img" src="{% if sale_imgs %}{{ sale_imgs[0] }}{% else %}{{ url_for('static', filename='images/placeholder.jpg') }}{% endif %}" alt="{{ listing.title }}">
+          <div class="image-price-card">
+            <div class="price-label">Asking Price</div>
+            {% if listing.contact_for_price %}
+              <div class="price-value contact-price">Contact for price</div>
+            {% else %}
+              <div class="price-value">GHS {{ "{:,.2f}".format(listing.price|float) if listing.price is not none else '—' }}</div>
+            {% endif %}
+          </div>
           <div class="img-counter"><i class="fas fa-images"></i><span id="image-counter-sale">1 of {{ sale_imgs|length }}</span></div>
           <button class="zoom-fab" onclick="toggleZoom('mainImage-sale')"><i class="fas fa-search-plus"></i></button>
+        </div>
         </div>
         <div class="thumb-row" id="thumbnailContainer-sale">
           {% for img in sale_imgs %}
@@ -366,17 +534,21 @@
           {% for item in listing.offered_items %}
             {% set idx = loop.index0 %}
             {% if not loop.first %}<hr class="item-divider">{% endif %}
-            <div style="margin-bottom:1rem">
+            <div class="gallery-showcase">
+              <div class="listing-heading">
               <div class="item-eyebrow">Item {{ loop.index }}</div>
               <h2 class="item-heading">{{ item.title }}</h2>
-              <span class="cond-pill cond-{{ item.condition|lower|replace(' ','_') }}"><i class="fas fa-circle" style="font-size:.42rem"></i> {{ item.condition }}</span>
+              {% if item.condition %}
+                <span class="cond-pill cond-{{ item.condition|lower|replace(' ','_') }}"><i class="fas fa-circle" style="font-size:.42rem"></i> {{ item.condition }}</span>
+              {% endif %}
               <p class="item-desc">{{ item.description }}</p>
-            </div>
+              </div>
             {% set imgs = [item.image1, item.image2, item.image3, item.image4] | reject("none") | reject("equalto","") | list %}
             <div class="main-img-box">
               <img id="mainImage-{{ idx }}" class="main-img" src="{% if imgs %}{{ imgs[0] }}{% else %}{{ url_for('static', filename='images/placeholder.jpg') }}{% endif %}" alt="{{ item.title }}">
               <div class="img-counter"><i class="fas fa-images"></i><span id="image-counter-{{ idx }}">1 of {{ imgs|length }}</span></div>
               <button class="zoom-fab" onclick="toggleZoom('mainImage-{{ idx }}')"><i class="fas fa-search-plus"></i></button>
+            </div>
             </div>
             <div class="thumb-row" id="thumbnailContainer-{{ idx }}">
               {% for img in imgs %}
@@ -385,17 +557,21 @@
             </div>
           {% endfor %}
         {% else %}
-          <div style="margin-bottom:1rem">
+          <div class="gallery-showcase">
+            <div class="listing-heading">
             <div class="item-eyebrow">{{ listing.category }}</div>
             <h1 class="item-heading">{{ listing.title }}</h1>
-            <span class="cond-pill cond-{{ listing.condition|lower|replace(' ','_') }}"><i class="fas fa-circle" style="font-size:.42rem"></i> {{ listing.condition }}</span>
+            {% if listing.condition %}
+              <span class="cond-pill cond-{{ listing.condition|lower|replace(' ','_') }}"><i class="fas fa-circle" style="font-size:.42rem"></i> {{ listing.condition }}</span>
+            {% endif %}
             <p class="item-desc">{{ listing.description }}</p>
-          </div>
+            </div>
           {% set imgs = [listing.image_url, listing.image1, listing.image2, listing.image3, listing.image4] | reject("none") | reject("equalto","") | list %}
           <div class="main-img-box">
             <img id="mainImage-swap" class="main-img" src="{% if imgs %}{{ imgs[0] }}{% else %}{{ url_for('static', filename='images/placeholder.jpg') }}{% endif %}" alt="{{ listing.title }}">
             <div class="img-counter"><i class="fas fa-images"></i><span id="image-counter-swap">1 of {{ imgs|length }}</span></div>
             <button class="zoom-fab" onclick="toggleZoom('mainImage-swap')"><i class="fas fa-search-plus"></i></button>
+          </div>
           </div>
           <div class="thumb-row" id="thumbnailContainer-swap">
             {% for img in imgs %}
@@ -404,21 +580,50 @@
           </div>
         {% endif %}
       {% endif %}
+
+      <div class="gallery-details-grid">
+        <div class="info-card">
+          <div class="card-heading"><i class="fas fa-user"></i> Seller</div>
+          <div class="info-row">
+            <div class="info-ico"><i class="fas fa-user"></i></div>
+            <div><div class="info-key">Username</div><div class="info-val">{{ listing.username }}</div></div>
+          </div>
+          {% if listing.contact %}
+            <div class="info-row">
+              <div class="info-ico"><i class="fas fa-phone"></i></div>
+              <div><div class="info-key">Phone</div><div class="info-val">{{ listing.contact }}</div></div>
+            </div>
+          {% endif %}
+          {% if listing.email %}
+            <div class="info-row">
+              <div class="info-ico"><i class="fas fa-envelope"></i></div>
+              <div><div class="info-key">Email</div><div class="info-val">{{ listing.email }}</div></div>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="info-card">
+          <div class="card-heading"><i class="fas fa-info-circle"></i> Details</div>
+          <div class="info-row">
+            <div class="info-ico"><i class="fas fa-tag"></i></div>
+            <div><div class="info-key">Category</div><div class="info-val">{{ listing.category }}</div></div>
+          </div>
+          <div class="info-row">
+            <div class="info-ico"><i class="fas fa-map-marker-alt"></i></div>
+            <div><div class="info-key">Location</div><div class="info-val">{{ listing.location or 'Not specified' }}</div></div>
+          </div>
+          <div class="info-row">
+            <div class="info-ico"><i class="fas fa-calendar"></i></div>
+            <div><div class="info-key">Listed</div><div class="info-val">{{ listing.created_at.strftime('%d %b %Y') if listing.created_at else '—' }}</div></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ── RIGHT: Info ── -->
     <div class="info-col">
 
-      {% if listing.deal_type == 'Outright Sales' %}
-        <div class="price-card">
-          <div class="price-label">Asking Price</div>
-          {% if listing.contact_for_price %}
-            <div class="price-value contact-price">Contact for price</div>
-          {% else %}
-            <div class="price-value">GHS {{ "{:,.2f}".format(listing.price|float) if listing.price is not none else '—' }}</div>
-          {% endif %}
-        </div>
-      {% else %}
+      {% if listing.deal_type != 'Outright Sales' %}
         <div class="info-card swap-style">
           <div class="card-heading"><i class="fas fa-exchange-alt"></i> Swap Requirements</div>
           <div class="info-row">
@@ -443,42 +648,6 @@
           {% endif %}
         </div>
       {% endif %}
-
-      <div class="info-card">
-        <div class="card-heading"><i class="fas fa-user"></i> Seller</div>
-        <div class="info-row">
-          <div class="info-ico"><i class="fas fa-user"></i></div>
-          <div><div class="info-key">Username</div><div class="info-val">{{ listing.username }}</div></div>
-        </div>
-        {% if listing.contact %}
-          <div class="info-row">
-            <div class="info-ico"><i class="fas fa-phone"></i></div>
-            <div><div class="info-key">Phone</div><div class="info-val">{{ listing.contact }}</div></div>
-          </div>
-        {% endif %}
-        {% if listing.email %}
-          <div class="info-row">
-            <div class="info-ico"><i class="fas fa-envelope"></i></div>
-            <div><div class="info-key">Email</div><div class="info-val">{{ listing.email }}</div></div>
-          </div>
-        {% endif %}
-      </div>
-
-      <div class="info-card">
-        <div class="card-heading"><i class="fas fa-info-circle"></i> Details</div>
-        <div class="info-row">
-          <div class="info-ico"><i class="fas fa-tag"></i></div>
-          <div><div class="info-key">Category</div><div class="info-val">{{ listing.category }}</div></div>
-        </div>
-        <div class="info-row">
-          <div class="info-ico"><i class="fas fa-map-marker-alt"></i></div>
-          <div><div class="info-key">Location</div><div class="info-val">{{ listing.location or 'Not specified' }}</div></div>
-        </div>
-        <div class="info-row">
-          <div class="info-ico"><i class="fas fa-calendar"></i></div>
-          <div><div class="info-key">Listed</div><div class="info-val">{{ listing.created_at.strftime('%d %b %Y') if listing.created_at else '—' }}</div></div>
-        </div>
-      </div>
 
       <!-- ========== VERIFICATION & DISCLAIMER CARD (added) ========== -->
       <div class="info-card">

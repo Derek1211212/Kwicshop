@@ -484,12 +484,420 @@
             from { opacity: 0; transform: translateY(14px); }
             to   { opacity: 1; transform: translateY(0); }
         }
+
+        /* Storefront-inspired admin layout */
+        body {
+            padding: clamp(0.75rem, 2vw, 2.4rem);
+            background:
+                radial-gradient(circle at 8% 10%, rgba(218, 239, 228, 0.85), transparent 30%),
+                radial-gradient(circle at 90% 16%, rgba(186, 215, 224, 0.78), transparent 32%),
+                linear-gradient(135deg, #74858a 0%, #a8bdc0 45%, #789b99 100%);
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            width: 52vw;
+            height: 52vw;
+            min-width: 460px;
+            min-height: 460px;
+            border: 1px solid rgba(255,255,255,0.24);
+            border-radius: 50%;
+            right: -17vw;
+            top: -23vw;
+            pointer-events: none;
+        }
+
+        .admin-shell {
+            position: relative;
+            z-index: 1;
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: clamp(0.75rem, 2vw, 1.65rem);
+            background: rgba(239, 245, 239, 0.84);
+            border: 1px solid rgba(255,255,255,0.62);
+            border-radius: 34px;
+            box-shadow: 0 28px 70px rgba(17, 40, 42, 0.24), inset 0 1px rgba(255,255,255,0.58);
+            backdrop-filter: blur(18px);
+        }
+
+        .admin-shell nav.top-nav {
+            position: static;
+            height: auto;
+            background: rgba(255,255,255,0.72);
+            border: 1px solid rgba(255,255,255,0.8);
+            border-radius: 22px;
+            box-shadow: 0 8px 22px rgba(58, 84, 75, 0.08);
+        }
+
+        .top-nav .nav-inner {
+            max-width: none;
+            min-height: 66px;
+            height: auto;
+            padding: 0.7rem 0.95rem 0.7rem 1.1rem;
+        }
+
+        .top-nav .nav-brand { color: #10251e; font-size: 1.15rem; }
+        .top-nav .nav-brand .brand-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            background: #10251e;
+            box-shadow: none;
+        }
+        .top-nav .nav-links { gap: 0.35rem; }
+        .top-nav .nav-links a { color: #4c6258; padding: 0.55rem 0.8rem; }
+        .top-nav .nav-links a:hover { color: #10251e; background: #e7f0e8; }
+        .top-nav .nav-logout a { background: #10251e; color: white !important; }
+        .top-nav .nav-logout a:hover { background: #214738 !important; }
+
+        .admin-shell main {
+            max-width: none;
+            padding: 1.25rem 0 0;
+        }
+
+        /* Replaced by the storefront-style overview below. */
+        .admin-shell main > .page-header,
+        .admin-shell main > .stats-grid,
+        .admin-shell main > .mid-grid,
+        .admin-shell main > .card { display: none; }
+
+        .overview-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin: 0 0 1rem;
+        }
+
+        .overview-toolbar .back-btn {
+            margin: 0;
+            border: 0;
+            color: #53665d;
+            background: transparent;
+            padding: 0.35rem 0;
+        }
+        .overview-toolbar .back-btn:hover { color: #10251e; background: transparent; }
+
+        .section-pills { display: flex; align-items: center; gap: 0.4rem; }
+        .section-pills a {
+            color: #687970;
+            text-decoration: none;
+            font-size: 0.73rem;
+            font-weight: 700;
+            padding: 0.42rem 0.72rem;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.56);
+            border: 1px solid rgba(224,235,226,0.95);
+        }
+        .section-pills a:hover { color: #10251e; background: white; }
+
+        .store-hero-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 292px;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .store-hero-card,
+        .rail-card,
+        .metric-card,
+        .panel-card {
+            background: rgba(255,255,255,0.82);
+            border: 1px solid rgba(255,255,255,0.92);
+            box-shadow: 0 10px 26px rgba(57, 84, 72, 0.09);
+        }
+
+        .store-hero-card {
+            position: relative;
+            min-height: 388px;
+            overflow: hidden;
+            border-radius: 26px;
+            display: grid;
+            grid-template-columns: minmax(240px, 0.93fr) minmax(300px, 1.07fr);
+            isolation: isolate;
+        }
+
+        .store-hero-card::after {
+            content: '';
+            position: absolute;
+            width: 410px;
+            height: 410px;
+            right: -130px;
+            top: -170px;
+            border: 1px solid rgba(255,255,255,0.65);
+            border-radius: 50%;
+            z-index: -1;
+        }
+
+        .hero-copy {
+            position: relative;
+            z-index: 2;
+            padding: clamp(1.5rem, 3vw, 2.5rem);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .hero-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.72rem;
+            color: #50635a;
+            background: rgba(248,252,248,0.86);
+            border: 1px solid #e0ece1;
+            border-radius: 999px;
+            padding: 0.35rem 0.65rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero-title {
+            max-width: 560px;
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 4.2vw, 4rem);
+            line-height: 0.98;
+            letter-spacing: -0.065em;
+            color: #10251e;
+        }
+
+        .hero-description {
+            max-width: 440px;
+            margin: 1rem 0 1.35rem;
+            color: #5f7168;
+            font-size: 0.88rem;
+            line-height: 1.65;
+        }
+
+        .hero-tags { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+        .hero-tag {
+            font-size: 0.7rem;
+            color: #3e6051;
+            background: #e7f1e8;
+            border-radius: 999px;
+            padding: 0.35rem 0.6rem;
+            font-weight: 700;
+        }
+
+        .hero-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-top: auto;
+            padding-top: 1.4rem;
+            flex-wrap: wrap;
+        }
+
+        .hero-actions .status-badge { background: white; }
+        .hero-actions .toggle-btn {
+            background: #c8fb45;
+            color: #10251e;
+            border: 0;
+            border-radius: 999px;
+            box-shadow: none;
+        }
+        .hero-actions .toggle-btn:hover { background: #b3e93a; color: #10251e; }
+        .hero-actions .toggle-btn.disable { background: #fff0ca; color: #8a5a00; }
+        .hero-actions .toggle-btn.disable:hover { background: #ffc85c; color: #563b00; }
+
+        .owner-strip {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-top: 1.1rem;
+            color: #607269;
+            font-size: 0.75rem;
+        }
+        .owner-strip img,
+        .owner-initial {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #dcecdf;
+            color: #24513b;
+            display: grid;
+            place-items: center;
+            font-size: 0.7rem;
+            font-weight: 800;
+        }
+        .owner-strip strong { color: #284237; }
+
+        .hero-media {
+            position: relative;
+            min-height: 300px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #dcefe0, #b8d8df);
+        }
+        .hero-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .hero-media::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(246,251,247,0.72), transparent 48%), linear-gradient(0deg, rgba(16,37,30,0.25), transparent 52%);
+            pointer-events: none;
+        }
+        .hero-media-fallback {
+            width: 100%; height: 100%; min-height: 300px;
+            display: grid; place-items: center;
+            font-family: 'Syne', sans-serif; font-size: clamp(4rem, 10vw, 8rem);
+            font-weight: 800; color: rgba(16,37,30,0.82);
+            background: radial-gradient(circle at 35% 30%, #f6ffe3, transparent 22%), linear-gradient(135deg, #9fc9b7, #dbe7d4 55%, #8db7c9);
+        }
+        .hero-stat-float {
+            position: absolute;
+            z-index: 2;
+            right: 1rem;
+            bottom: 1rem;
+            min-width: 128px;
+            padding: 0.7rem 0.8rem;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.88);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 8px 18px rgba(20,42,35,0.14);
+        }
+        .hero-stat-float b { display: block; color: #17372c; font-size: 1.05rem; font-family: 'Syne', sans-serif; }
+        .hero-stat-float span { font-size: 0.68rem; color: #64776d; }
+
+        .store-rail { display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 1rem; }
+        .rail-card { border-radius: 22px; overflow: hidden; }
+        .store-identity { padding: 1rem; display: flex; align-items: center; gap: 0.8rem; }
+        .store-logo,
+        .store-logo-fallback {
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+            object-fit: cover;
+            background: #103a2d;
+            color: white;
+            display: grid;
+            place-items: center;
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.2rem;
+            flex: 0 0 auto;
+        }
+        .store-identity small,
+        .rail-label { display: block; font-size: 0.67rem; color: #77877e; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+        .store-identity strong { display: block; color: #17372c; font-size: 0.88rem; margin-top: 0.15rem; }
+
+        .signal-card { padding: 1rem; }
+        .signal-row { display: flex; align-items: center; justify-content: space-between; margin-top: 0.6rem; }
+        .signal-row strong { color: #17372c; font-family: 'Syne', sans-serif; font-size: 1.25rem; }
+        .signal-row span { color: #697a71; font-size: 0.73rem; }
+        .signal-bar { height: 7px; margin-top: 0.75rem; background: #e6efe7; border-radius: 999px; overflow: hidden; }
+        .signal-bar i { display: block; width: {{ [store.trust_score or 0, 100]|min }}%; min-width: 5%; height: 100%; background: linear-gradient(90deg, #70b3ff, #c8fb45); border-radius: inherit; }
+
+        .spotlight-card { position: relative; min-height: 190px; background: #dce9e1; }
+        .spotlight-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        .spotlight-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(13,35,27,0.86), transparent 72%); }
+        .spotlight-copy { position: absolute; z-index: 1; left: 0.9rem; right: 0.9rem; bottom: 0.9rem; color: white; }
+        .spotlight-copy span { display: block; font-size: 0.67rem; opacity: 0.76; margin-bottom: 0.15rem; }
+        .spotlight-copy strong { display: block; font-size: 0.86rem; line-height: 1.22; }
+        .spotlight-empty { padding: 1rem; height: 100%; display: grid; place-items: center; text-align: center; color: #62766b; font-size: 0.8rem; }
+
+        .metrics-ribbon {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .metric-card { border-radius: 18px; padding: 0.9rem 1rem; min-width: 0; }
+        .metric-card .metric-icon { display: block; font-size: 0.95rem; margin-bottom: 0.42rem; }
+        .metric-card small { display: block; color: #71827a; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.065em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .metric-card strong { display: block; color: #17372c; font-family: 'Syne', sans-serif; font-size: clamp(1.1rem, 2vw, 1.5rem); letter-spacing: -0.045em; margin-top: 0.3rem; }
+
+        .insights-layout { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(230px, 0.65fr); gap: 1rem; margin-bottom: 1rem; }
+        .panel-card { border-radius: 24px; overflow: hidden; }
+        .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 1.15rem 1.2rem 0; }
+        .panel-head h2 { font-family: 'Syne', sans-serif; color: #17372c; font-size: 0.97rem; letter-spacing: -0.03em; }
+        .panel-note { color: #75857c; font-size: 0.7rem; }
+        .chart-wrap { padding: 0.5rem 1rem 1rem; }
+
+        .rating-panel { padding: 1.1rem; display: flex; flex-direction: column; }
+        .rating-panel .rail-label { margin-bottom: 1rem; }
+        .rating-value { font-family: 'Syne', sans-serif; color: #17372c; font-size: clamp(3rem, 6vw, 4.7rem); line-height: 0.86; letter-spacing: -0.08em; }
+        .rating-stars-new { color: #e7a527; font-size: 1rem; letter-spacing: 0.08em; margin: 0.75rem 0 0.4rem; }
+        .rating-panel p { color: #75857c; font-size: 0.75rem; }
+        .trust-score { margin-top: auto; padding-top: 1.15rem; }
+        .trust-score div { display: flex; justify-content: space-between; gap: 0.5rem; color: #5d7066; font-size: 0.73rem; }
+        .trust-score strong { color: #17372c; }
+
+        .products-panel { margin-bottom: 1rem; }
+        .products-panel .panel-head { padding-bottom: 0.85rem; }
+        .products-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; padding: 0 0.9rem 0.9rem; }
+        .product-card-new { min-width: 0; overflow: hidden; border: 1px solid #edf3ed; border-radius: 18px; background: #fbfdfb; transition: transform 0.18s ease, box-shadow 0.18s ease; }
+        .product-card-new:hover { transform: translateY(-3px); box-shadow: 0 10px 18px rgba(38,71,56,0.1); }
+        .product-card-media { display: block; position: relative; height: 148px; background: linear-gradient(135deg, #cde0d0, #b7d2dc); overflow: hidden; }
+        .product-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.25s ease; }
+        .product-card-new:hover .product-card-media img { transform: scale(1.045); }
+        .product-placeholder { display: grid; place-items: center; height: 100%; color: #315c48; font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; }
+        .product-category { position: absolute; left: 0.55rem; top: 0.55rem; padding: 0.23rem 0.46rem; border-radius: 999px; background: rgba(255,255,255,0.86); color: #315c48; font-size: 0.62rem; font-weight: 800; max-width: calc(100% - 1.1rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .product-card-body { padding: 0.75rem; }
+        .product-card-title { display: block; color: #17372c; text-decoration: none; font-size: 0.83rem; font-weight: 800; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .product-card-price { display: block; margin: 0.38rem 0 0.7rem; color: #47775d; font-family: 'Syne', sans-serif; font-size: 0.83rem; font-weight: 800; }
+        .product-card-metrics { display: flex; align-items: center; gap: 0.55rem; color: #71827a; font-size: 0.68rem; }
+        .product-card-metrics b { color: #1e563d; }
+
+        .monitoring-grid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 1rem; margin-bottom: 1rem; }
+        .monitoring-grid .panel-card { min-width: 0; }
+        .compact-table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.75rem; }
+        .compact-table th { text-align: left; padding: 0.68rem 0.9rem; background: #f3f8f3; color: #71827a; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.06em; }
+        .compact-table td { padding: 0.75rem 0.9rem; color: #466055; vertical-align: top; border-top: 1px solid #edf2ed; }
+        .report-reason { max-width: 260px; line-height: 1.42; }
+        .status-mini { display: inline-block; padding: 0.23rem 0.45rem; border-radius: 999px; font-size: 0.63rem; font-weight: 800; background: #e5f5e7; color: #2f704b; }
+        .status-mini.pending { background: #fff0cc; color: #8a620f; }
+
+        .reviews-panel .panel-head { padding-bottom: 0.7rem; }
+        .reviews-panel .reviews-list { padding: 0 0.9rem 0.9rem; gap: 0.6rem; }
+        .reviews-panel .review-card { padding: 0.7rem 0.75rem; background: #fbfdfb; border-color: #edf3ed; border-left-width: 2px; }
+        .reviews-panel .review-meta { margin-bottom: 0.35rem; }
+        .reviews-panel .review-text { font-size: 0.75rem; line-height: 1.48; }
+        .reviews-panel .empty { padding: 2.25rem 1rem; }
+
+        .sanctions-panel { margin-bottom: 0; }
+        .sanctions-panel .panel-head { padding-bottom: 0.75rem; }
+        .sanctions-panel .empty { padding: 1.7rem; }
+        .admin-shell footer { border: 0; margin: 0; padding: 1.2rem 0 0.15rem; color: #6d8176; }
+
+        @media (max-width: 1120px) {
+            .store-hero-grid { grid-template-columns: 1fr 252px; }
+            .products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .metrics-ribbon { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 850px) {
+            body { padding: 0; }
+            .admin-shell { border-radius: 0; min-height: 100vh; }
+            .store-hero-grid, .insights-layout, .monitoring-grid { grid-template-columns: 1fr; }
+            .store-rail { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; }
+            .store-rail .spotlight-card { grid-column: 1 / -1; min-height: 220px; }
+        }
+
+        @media (max-width: 640px) {
+            .top-nav .nav-inner { padding: 0.65rem 0.8rem; }
+            .top-nav .nav-links { top: 72px; left: 0.75rem; right: 0.75rem; border-radius: 16px; }
+            .overview-toolbar { align-items: flex-start; }
+            .section-pills { display: none; }
+            .store-hero-card { grid-template-columns: 1fr; }
+            .hero-media { min-height: 210px; order: -1; }
+            .hero-copy { padding: 1.2rem; }
+            .hero-title { font-size: clamp(2rem, 11vw, 3.2rem); }
+            .metrics-ribbon { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .metrics-ribbon .metric-card:last-child { grid-column: 1 / -1; }
+            .store-rail { grid-template-columns: 1fr; }
+            .store-rail .spotlight-card { grid-column: auto; }
+            .products-grid { grid-template-columns: 1fr; }
+            .product-card-media { height: 180px; }
+            .compact-table th:nth-child(1), .compact-table td:nth-child(1) { display: none; }
+        }
     </style>
 </head>
 <body>
+<div class="admin-shell">
 
 <!-- ── NAV ── -->
-<nav>
+<nav class="top-nav" aria-label="Admin navigation">
     <div class="nav-inner">
         <a class="nav-brand" href="/admin/dashboard">
             <div class="brand-icon">📊</div>
@@ -544,6 +952,252 @@
 <main>
 
     <a class="back-btn" href="/admin/stores">← Back to Stores</a>
+
+    <div class="overview-toolbar">
+        <span class="panel-note">Store monitoring / {{ store.store_id }}</span>
+        <div class="section-pills" aria-label="Page sections">
+            <a href="#insights">Insights</a>
+            <a href="#products">Products</a>
+            <a href="#monitoring">Monitoring</a>
+        </div>
+    </div>
+
+    <section class="store-hero-grid" aria-labelledby="store-overview-title">
+        <article class="store-hero-card">
+            <div class="hero-copy">
+                <span class="hero-kicker">● Store monitoring</span>
+                <h1 class="hero-title" id="store-overview-title">{{ store.name }}</h1>
+                <p class="hero-description">{{ store.description or 'A live SellKwic storefront. Review its performance, listings, customer feedback, and moderation history from one place.' }}</p>
+                <div class="hero-tags">
+                    <span class="hero-tag">{{ store.store_type or 'General store' }}</span>
+                    <span class="hero-tag">📍 {{ store.location or 'Location not provided' }}</span>
+                    <span class="hero-tag">{{ follower_count }} follower{{ '' if follower_count == 1 else 's' }}</span>
+                    {% if store.get('is_flagged') %}<span class="hero-tag" style="background:#fee2e2;color:#b91c1c;">Flagged for review</span>{% endif %}
+                </div>
+                <div class="hero-actions">
+                    <span class="status-badge {{ 'active' if store.is_active else 'inactive' }}">
+                        <span class="status-dot"></span>{{ 'Active' if store.is_active else 'Disabled' }}
+                    </span>
+                    <button class="toggle-btn {{ 'disable' if store.is_active else 'enable' }}" onclick="openModal()">
+                        {{ 'Disable store' if store.is_active else 'Enable store' }}
+                    </button>
+                </div>
+                <div class="owner-strip">
+                    {% if store_owner and store_owner.avatar %}
+                    <img src="{{ store_owner.avatar }}" alt="{{ store_owner.name or store_owner.username }}">
+                    {% else %}
+                    <span class="owner-initial">{{ (store_owner.username or '?')[0]|upper if store_owner else '?' }}</span>
+                    {% endif %}
+                    <span>Managed by <strong>{{ (store_owner.name or store_owner.username) if store_owner else 'an unavailable owner' }}</strong></span>
+                </div>
+            </div>
+            <div class="hero-media">
+                {% if store.banner %}
+                <img src="{{ store.banner }}" alt="{{ store.name }} storefront banner">
+                {% elif products and (products[0].listing.image_url or products[0].listing.image1 or products[0].listing.image2) %}
+                <img src="{{ products[0].listing.image_url or products[0].listing.image1 or products[0].listing.image2 }}" alt="Featured product from {{ store.name }}">
+                {% elif store.logo %}
+                <img src="{{ store.logo }}" alt="{{ store.name }} logo">
+                {% else %}
+                <div class="hero-media-fallback">{{ store.name[0]|upper }}</div>
+                {% endif %}
+                <div class="hero-stat-float">
+                    <b>{{ store_metrics.total_views|default(0)|format_number }}</b>
+                    <span>lifetime views</span>
+                </div>
+            </div>
+        </article>
+
+        <aside class="store-rail">
+            <section class="rail-card store-identity">
+                {% if store.logo %}
+                <img class="store-logo" src="{{ store.logo }}" alt="{{ store.name }} logo">
+                {% else %}
+                <span class="store-logo-fallback">{{ store.name[0]|upper }}</span>
+                {% endif %}
+                <div>
+                    <small>Store profile</small>
+                    <strong>{{ store.contact or 'Contact not provided' }}</strong>
+                </div>
+            </section>
+
+            <section class="rail-card signal-card">
+                <span class="rail-label">Store trust signal</span>
+                <div class="signal-row">
+                    <strong>{{ store.trust_score or 'N/A' }}</strong>
+                    <span>{{ store.rating_count or 0 }} rating{{ '' if store.rating_count == 1 else 's' }}</span>
+                </div>
+                <div class="signal-bar"><i></i></div>
+            </section>
+
+            <section class="rail-card spotlight-card">
+                {% if products %}
+                    {% set spotlight = products[0] %}
+                    {% set spotlight_image = spotlight.listing.image_url or spotlight.listing.image1 or spotlight.listing.image2 %}
+                    {% if spotlight_image %}<img src="{{ spotlight_image }}" alt="{{ spotlight.listing.title }}">{% endif %}
+                    <div class="spotlight-copy">
+                        <span>Most clicked listing</span>
+                        <strong>{{ spotlight.listing.title[:42] }}{% if spotlight.listing.title|length > 42 %}…{% endif %}</strong>
+                    </div>
+                {% else %}
+                    <div class="spotlight-empty">Add products to give this store a featured listing.</div>
+                {% endif %}
+            </section>
+        </aside>
+    </section>
+
+    <section class="metrics-ribbon" aria-label="Store performance summary">
+        <article class="metric-card">
+            <span class="metric-icon">◉</span><small>Store views</small>
+            <strong>{{ store_metrics.total_views|default(0)|format_number }}</strong>
+        </article>
+        <article class="metric-card">
+            <span class="metric-icon">↗</span><small>Store clicks</small>
+            <strong>{{ store_metrics.total_clicks|default(0)|format_number }}</strong>
+        </article>
+        <article class="metric-card">
+            <span class="metric-icon">▣</span><small>Impressions</small>
+            <strong>{{ product_metrics.total_impressions|default(0)|format_number }}</strong>
+        </article>
+        <article class="metric-card">
+            <span class="metric-icon">✦</span><small>Product clicks</small>
+            <strong>{{ product_metrics.total_clicks|default(0)|format_number }}</strong>
+        </article>
+        <article class="metric-card">
+            <span class="metric-icon">⚑</span><small>Reports</small>
+            <strong>{{ report_summary.report_count|default(0)|format_number }}</strong>
+        </article>
+    </section>
+
+    <section class="insights-layout" id="insights" aria-label="Store insights">
+        <article class="panel-card">
+            <div class="panel-head">
+                <h2>Daily performance</h2>
+                <span class="panel-note">Last 30 days</span>
+            </div>
+            <div class="chart-wrap"><canvas id="newStoreChart" height="190"></canvas></div>
+        </article>
+        <article class="panel-card rating-panel">
+            <span class="rail-label">Customer sentiment</span>
+            <div class="rating-value">{{ "%.1f"|format(avg_rating or 0) }}</div>
+            <div class="rating-stars-new">{% for i in range((avg_rating or 0)|round(0, 'floor')|int) %}★{% endfor %}{% if not avg_rating %}☆☆☆☆☆{% endif %}</div>
+            <p>{{ store.rating_count or 0 }} rating{{ '' if store.rating_count == 1 else 's' }} across the storefront.</p>
+            <div class="trust-score">
+                <div><span>Trust score</span><strong>{{ store.trust_score or 'Not available' }}</strong></div>
+                <div class="signal-bar"><i></i></div>
+            </div>
+        </article>
+    </section>
+
+    <section class="panel-card products-panel" id="products" aria-labelledby="products-title">
+        <div class="panel-head">
+            <h2 id="products-title">Products in this store</h2>
+            <span class="panel-note">{{ products|length }} listing{{ '' if products|length == 1 else 's' }} · ranked by clicks</span>
+        </div>
+        {% if products %}
+        <div class="products-grid">
+            {% for product in products %}
+            {% set product_image = product.listing.image_url or product.listing.image1 or product.listing.image2 or product.listing.image3 or product.listing.image4 %}
+            <article class="product-card-new">
+                <a class="product-card-media" href="/admin/product/{{ product.listing.listing_id }}" aria-label="View {{ product.listing.title }}">
+                    {% if product_image %}
+                    <img src="{{ product_image }}" alt="{{ product.listing.title }}">
+                    {% else %}
+                    <span class="product-placeholder">{{ product.listing.title[0]|upper }}</span>
+                    {% endif %}
+                    <span class="product-category">{{ product.listing.category or 'Uncategorised' }}</span>
+                </a>
+                <div class="product-card-body">
+                    <a class="product-card-title" href="/admin/product/{{ product.listing.listing_id }}">{{ product.listing.title }}</a>
+                    <span class="product-card-price">
+                        {% if product.listing.price is not none %}₦{{ "%.2f"|format(product.listing.price) }}{% else %}Contact for price{% endif %}
+                    </span>
+                    <div class="product-card-metrics">
+                        <span><b>{{ product.impressions|format_number }}</b> views</span>
+                        <span><b>{{ product.clicks|format_number }}</b> clicks</span>
+                        <span>{% if product.rating_avg %}★ {{ "%.1f"|format(product.rating_avg) }}{% else %}No rating{% endif %}</span>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty"><span class="empty-icon">□</span>No products found in this store.</div>
+        {% endif %}
+    </section>
+
+    <section class="monitoring-grid" id="monitoring" aria-label="Store monitoring">
+        <article class="panel-card">
+            <div class="panel-head"><h2>Store reports</h2><span class="panel-note">{{ report_summary.report_count|default(0) }} total</span></div>
+            {% if store_reports %}
+            <div class="table-wrap">
+                <table class="compact-table">
+                    <thead><tr><th>Date</th><th>Reporter</th><th>Reason</th><th>Status</th></tr></thead>
+                    <tbody>
+                    {% for report in store_reports[:6] %}
+                    <tr>
+                        <td>{{ report.created_at.strftime('%b %d, %Y') }}</td>
+                        <td>{{ report.username or 'Guest / anonymous' }}</td>
+                        <td><span class="report-reason">{{ report.reason }}</span></td>
+                        <td><span class="status-mini {{ 'pending' if report.status == 'pending' else '' }}">{{ report.status|upper }}</span></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty"><span class="empty-icon">⚑</span>No reports for this store.</div>
+            {% endif %}
+        </article>
+
+        <article class="panel-card reviews-panel">
+            <div class="panel-head"><h2>Customer reviews</h2><span class="panel-note">Latest feedback</span></div>
+            {% if store_ratings %}
+            <div class="reviews-list">
+                {% for rating in store_ratings[:4] %}
+                <div class="review-card">
+                    <div class="review-meta">
+                        <div class="review-left">
+                            <div class="review-avatar">{{ (rating.username or 'U')[0]|upper }}</div>
+                            <div>
+                                <div class="review-author">{{ rating.username or 'Anonymous user' }}</div>
+                                <div class="review-stars">{% for i in range(rating.rating|int) %}★{% endfor %}</div>
+                            </div>
+                        </div>
+                        <span class="review-date">{{ rating.created_at.strftime('%b %d') }}</span>
+                    </div>
+                    <p class="review-text">{{ rating.comment or 'No comment provided.' }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty"><span class="empty-icon">◌</span>No reviews yet for this store.</div>
+            {% endif %}
+        </article>
+    </section>
+
+    <section class="panel-card sanctions-panel" aria-labelledby="sanctions-title">
+        <div class="panel-head"><h2 id="sanctions-title">Sanction history</h2><span class="panel-note">Admin moderation record</span></div>
+        {% if sanctions %}
+        <div class="table-wrap">
+            <table class="compact-table">
+                <thead><tr><th>Date</th><th>Action</th><th>Reason</th><th>Admin</th></tr></thead>
+                <tbody>
+                    {% for s in sanctions %}
+                    <tr>
+                        <td>{{ s.created_at.strftime('%b %d, %Y · %H:%M') }}</td>
+                        <td><span class="status-mini {{ 'pending' if s.action == 'disable' else '' }}">{{ s.action|upper }}</span></td>
+                        <td><span class="report-reason">{{ s.reason or '—' }}</span></td>
+                        <td>{{ s.admin_name or 'Unknown' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty"><span class="empty-icon">✓</span>No sanction records for this store.</div>
+        {% endif %}
+    </section>
 
     <!-- Page Header -->
     <div class="page-header">
@@ -807,6 +1461,7 @@
 <footer>
     &copy; 2025 sellkwic Admin Panel &nbsp;·&nbsp; All rights reserved.
 </footer>
+</div>
 
 <script>
     // Mobile nav
@@ -822,7 +1477,7 @@
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
     // Chart
-    const ctx = document.getElementById('storeChart').getContext('2d');
+    const ctx = document.getElementById('newStoreChart').getContext('2d');
     new Chart(ctx, {
         type: 'line',
         data: {
