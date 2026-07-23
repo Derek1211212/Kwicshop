@@ -1380,6 +1380,41 @@ def _get_store_performance_metrics(cur, store_id, period='30'):
     }
 
 
+def _get_store_metric_trends(cur, store_id, days=30):
+    """Return a fixed daily history for the dashboard sparklines.
+
+    This deliberately does not share the date filter used by the headline
+    metrics, so changing the period selector never changes the chart shape.
+    """
+    start_date = date.today() - timedelta(days=days - 1)
+    cur.execute("""
+        SELECT
+            dt,
+            COALESCE(SUM(views), 0) AS views,
+            COALESCE(SUM(clicks), 0) AS clicks,
+            COALESCE(SUM(chats), 0) AS whatsapp_redirects
+        FROM store_metrics
+        WHERE store_id = %s AND dt BETWEEN %s AND CURDATE()
+        GROUP BY dt
+        ORDER BY dt
+    """, (store_id, start_date))
+
+    rows_by_date = {}
+    for row in cur.fetchall():
+        metric_date = row['dt']
+        if isinstance(metric_date, datetime):
+            metric_date = metric_date.date()
+        rows_by_date[metric_date] = row
+
+    trends = {'views': [], 'clicks': [], 'whatsapp_redirects': []}
+    for offset in range(days):
+        row = rows_by_date.get(start_date + timedelta(days=offset), {})
+        for metric in trends:
+            trends[metric].append(int(row.get(metric) or 0))
+
+    return trends
+
+
 @app.route('/store/<int:store_id>/performance-metrics')
 @login_required
 def store_performance_metrics(store_id):
@@ -1435,8 +1470,9 @@ def store_home(store_id):
     cur.execute("SELECT * FROM store_promos WHERE store_id = %s AND active = 1", (store_id,))
     promo = cur.fetchone() or {}
 
-    # 3. Metrics
+    # 3. Metrics and fixed 30-day history for the summary sparklines.
     metrics = _get_store_performance_metrics(cur, store_id, '30')
+    metric_trends = _get_store_metric_trends(cur, store_id)
 
     # 4. Top products
     cur.execute("""
@@ -1479,6 +1515,7 @@ def store_home(store_id):
                           store=store,
                           promo=promo,
                           metrics=metrics,
+                          metric_trends=metric_trends,
                           top_by_impressions=top_by_impressions,
                           top_by_clicks=top_by_clicks,
                           now=datetime.utcnow(),

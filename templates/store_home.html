@@ -396,6 +396,20 @@
         }
         .stat-change.positive { color: var(--primary); background: var(--primary-muted); }
         .stat-change.negative { color: #dc2626; background: #fee2e2; }
+        .stat-trend {
+            order: 4;
+            width: min(132px, 100%);
+            height: 27px;
+            margin-top: 6px;
+            color: var(--text-3);
+        }
+        .trend-chart { display: block; width: 100%; height: 100%; overflow: visible; }
+        .trend-chart .trend-area { fill: currentColor; opacity: 0.11; }
+        .trend-chart .trend-line { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+        .trend-chart .trend-end { fill: var(--surface); stroke: currentColor; stroke-width: 2; }
+        .stat-trend[data-direction="positive"] { color: var(--primary); }
+        .stat-trend[data-direction="negative"] { color: var(--danger); }
+        .stat-trend[data-direction="neutral"] .trend-line { stroke-dasharray: 3 3; opacity: 0.65; }
         .stat-cell.loading .stat-icon-wrap {
             animation: statPulse 0.75s ease infinite alternate;
         }
@@ -1076,6 +1090,7 @@
             .stat-label { font-size: 0.67rem; line-height: 1.2; }
             .stat-value { font-size: 1.35rem; }
             .stat-change { font-size: 0.68rem; padding: 2px 6px; }
+            .stat-trend { height: 23px; margin-top: 5px; }
             .period-toggle { width: 100%; margin-top: 0; }
             .period-btn { min-width: 0; padding: 7px 5px; font-size: 0.7rem; }
             .section-header { flex-direction: column; align-items: flex-start; }
@@ -1248,6 +1263,9 @@
                         <i class="fas fa-arrow-{{ 'up' if metrics.views.change >= 0 else 'down' }}"></i>
                         {{ metrics.views.change|abs }}%
                     </div>
+                    <div class="stat-trend" data-metric-trend-container="views">
+                        <svg class="trend-chart" data-metric-trend="views" viewBox="0 0 120 28" role="img" aria-label="Views trend over the last 30 days"></svg>
+                    </div>
                 </div>
             </div>
             <div class="stat-cell">
@@ -1259,6 +1277,9 @@
                         <i class="fas fa-arrow-{{ 'up' if metrics.clicks.change >= 0 else 'down' }}"></i>
                         {{ metrics.clicks.change|abs }}%
                     </div>
+                    <div class="stat-trend" data-metric-trend-container="clicks">
+                        <svg class="trend-chart" data-metric-trend="clicks" viewBox="0 0 120 28" role="img" aria-label="Clicks trend over the last 30 days"></svg>
+                    </div>
                 </div>
             </div>
             <div class="stat-cell">
@@ -1269,6 +1290,9 @@
                     <div class="stat-change {{ 'positive' if metrics.whatsapp_redirects.change >= 0 else 'negative' }}" data-metric-change="whatsapp_redirects">
                         <i class="fas fa-arrow-{{ 'up' if metrics.whatsapp_redirects.change >= 0 else 'down' }}"></i>
                         {{ metrics.whatsapp_redirects.change|abs }}%
+                    </div>
+                    <div class="stat-trend" data-metric-trend-container="whatsapp_redirects">
+                        <svg class="trend-chart" data-metric-trend="whatsapp_redirects" viewBox="0 0 120 28" role="img" aria-label="WhatsApp redirects trend over the last 30 days"></svg>
                     </div>
                 </div>
             </div>
@@ -1883,6 +1907,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const metricKeys = ['views', 'clicks', 'whatsapp_redirects'];
+    // These charts are intentionally rendered once from a fixed 30-day series.
+    // The performance period selector below only changes the headline totals.
+    const fixedMetricTrends = {{ metric_trends|tojson }};
     const performanceCache = {
         '30': {
             views: { current: {{ metrics.views.current|tojson }}, change: {{ metrics.views.change|tojson }} },
@@ -1891,6 +1918,52 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     const inflightPeriods = {};
+
+    function getTrendDirection(values) {
+        const midpoint = Math.floor(values.length / 2);
+        const firstHalf = values.slice(0, midpoint).reduce((sum, value) => sum + value, 0);
+        const secondHalf = values.slice(midpoint).reduce((sum, value) => sum + value, 0);
+        if (secondHalf > firstHalf) return 'positive';
+        if (secondHalf < firstHalf) return 'negative';
+        return 'neutral';
+    }
+
+    function renderTrendCharts() {
+        metricKeys.forEach(metric => {
+            const chart = document.querySelector(`[data-metric-trend="${metric}"]`);
+            const container = document.querySelector(`[data-metric-trend-container="${metric}"]`);
+            const values = Array.isArray(fixedMetricTrends?.[metric])
+                ? fixedMetricTrends[metric].map(value => Number(value) || 0)
+                : [];
+            if (!chart || !container || !values.length) return;
+
+            const width = 120;
+            const height = 28;
+            const padding = 2;
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+            const range = max - min;
+            const points = values.map((value, index) => {
+                const x = padding + ((width - padding * 2) * index / Math.max(values.length - 1, 1));
+                const y = range
+                    ? height - padding - ((value - min) / range) * (height - padding * 2)
+                    : height / 2;
+                return [x, y];
+            });
+            const line = points.map(([x, y], index) => `${index ? 'L' : 'M'} ${x.toFixed(2)} ${y.toFixed(2)}`).join(' ');
+            const [firstX] = points[0];
+            const [lastX, lastY] = points[points.length - 1];
+            const area = `${line} L ${lastX.toFixed(2)} ${(height - padding).toFixed(2)} L ${firstX.toFixed(2)} ${(height - padding).toFixed(2)} Z`;
+            const direction = getTrendDirection(values);
+            const label = `${metric.replace('_', ' ')} trend over the last 30 days: ${direction === 'positive' ? 'rising' : direction === 'negative' ? 'falling' : 'steady'}`;
+
+            container.dataset.direction = direction;
+            chart.setAttribute('aria-label', label);
+            chart.innerHTML = `<path class="trend-area" d="${area}"></path><path class="trend-line" d="${line}"></path><circle class="trend-end" cx="${lastX.toFixed(2)}" cy="${lastY.toFixed(2)}" r="2.3"></circle>`;
+        });
+    }
+
+    renderTrendCharts();
 
     function renderPerformanceMetrics(metrics) {
         metricKeys.forEach(metric => {
