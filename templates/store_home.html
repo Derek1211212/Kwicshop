@@ -213,6 +213,8 @@
         .mobile-menu-delete-form { margin: 0; }
         .mobile-menu-item.danger { color: var(--danger); }
         .mobile-menu-item.danger i { color: var(--danger); }
+        .mobile-menu-item.logout { color: var(--text-2); }
+        .mobile-menu-item.logout i { color: var(--text-2); }
 
         /* LAYOUT */
         .page-wrapper { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
@@ -346,6 +348,16 @@
         }
         .copy-pill:hover { background: var(--primary-dark); transform: translateY(-1px); }
 
+        .header-logout {
+            color: var(--text-2);
+            border-color: var(--border-2);
+            background: transparent;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+        }
+        .header-logout:hover { color: var(--danger); border-color: #fecaca; background: #fef2f2; }
+
         /* STATS STRIP */
         .stats-strip {
             display: grid;
@@ -381,23 +393,8 @@
             transform: translateY(1px);
             transition: opacity 0.12s ease, transform 0.12s ease;
         }
-        .stat-change {
-            order: 3;
-            font-size: 0.68rem;
-            font-weight: 700;
-            font-family: var(--font-display);
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            margin-top: 3px;
-            padding: 1px 6px;
-            border-radius: 100px;
-            background: var(--bg-2);
-        }
-        .stat-change.positive { color: var(--primary); background: var(--primary-muted); }
-        .stat-change.negative { color: #dc2626; background: #fee2e2; }
         .stat-trend {
-            order: 4;
+            order: 3;
             width: min(132px, 100%);
             height: 27px;
             margin-top: 6px;
@@ -922,6 +919,9 @@
         .modal-close { background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.28); font-size: 1.2rem; cursor: pointer; color: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
         .modal-close:hover { background: rgba(255,255,255,0.3); }
         .modal-body { padding: 1.75rem 2rem; }
+        .logout-confirm-modal .modal-content { max-width: 430px; }
+        .logout-confirm-message { color: var(--text-2); font-size: 0.92rem; line-height: 1.55; }
+        .logout-confirm-actions { display: flex; justify-content: flex-end; gap: 0.65rem; margin-top: 1.5rem; }
 
         .step-indicator { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 2rem; }
         .step { width: 38px; height: 38px; border-radius: 50%; background: var(--bg-3); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 800; color: var(--text-3); font-size: 0.9rem; transition: all 0.25s; flex-shrink: 0; }
@@ -1085,7 +1085,6 @@
             .stat-cell { padding: 1rem 0.45rem; min-height: 100px; }
             .stat-label { font-size: 0.67rem; line-height: 1.2; }
             .stat-value { font-size: 1.35rem; }
-            .stat-change { font-size: 0.68rem; padding: 2px 6px; }
             .stat-trend { height: 23px; margin-top: 5px; }
             .period-toggle { width: 100%; margin-top: 0; }
             .period-btn { min-width: 0; padding: 7px 5px; font-size: 0.7rem; }
@@ -1199,6 +1198,7 @@
             <button id="startTourBtn" class="btn-outline" style="background: none; border: 1px solid var(--border-2); padding: 8px 12px; border-radius: 8px; font-size: 0.8rem;">
                 <i class="fas fa-question-circle"></i> <span class="tour-btn-text">Quick Tour</span>
             </button>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline header-logout" data-logout-link><i class="fas fa-sign-out-alt"></i> <span class="tour-btn-text">Log out</span></a>
             <button class="mobile-menu-toggle" id="mobileMenuBtn" aria-label="Open menu" type="button"><i class="fas fa-bars"></i></button>
         </div>
     </div>
@@ -1218,6 +1218,7 @@
         <a href="/store/{{ store.slug }}/inventory" class="mobile-menu-item"><i class="fas fa-boxes"></i> Inventory</a>
         {% set store_url = store.store_link if store.store_link else '/store/' + store.slug %}
         <a href="{{ store_url }}" class="mobile-menu-item" target="_blank" rel="noopener"><i class="fas fa-store"></i> View Store</a>
+        <a href="{{ url_for('logout') }}" class="mobile-menu-item logout" data-logout-link><i class="fas fa-sign-out-alt"></i> Log out</a>
         <form method="POST" action="{{ url_for('delete_store', store_id=store.store_id) }}" class="mobile-menu-delete-form delete-store-form">
             <button type="submit" class="mobile-menu-item danger"><i class="fas fa-trash"></i> Delete Store</button>
         </form>
@@ -1255,10 +1256,6 @@
                 <div class="stat-info">
                     <div class="stat-label">Views</div>
                     <div class="stat-value" data-metric-value="views">{{ metrics.views.current|format_number }}</div>
-                    <div class="stat-change {{ 'positive' if metrics.views.change >= 0 else 'negative' }}" data-metric-change="views">
-                        <i class="fas fa-arrow-{{ 'up' if metrics.views.change >= 0 else 'down' }}"></i>
-                        {{ metrics.views.change|abs }}%
-                    </div>
                     <div class="stat-trend" data-metric-trend-container="views">
                         <svg class="trend-chart" data-metric-trend="views" viewBox="0 0 120 28" role="img" aria-label="Views trend over the last 30 days"></svg>
                     </div>
@@ -1269,10 +1266,6 @@
                 <div class="stat-info">
                     <div class="stat-label">Clicks</div>
                     <div class="stat-value" data-metric-value="clicks">{{ metrics.clicks.current|format_number }}</div>
-                    <div class="stat-change {{ 'positive' if metrics.clicks.change >= 0 else 'negative' }}" data-metric-change="clicks">
-                        <i class="fas fa-arrow-{{ 'up' if metrics.clicks.change >= 0 else 'down' }}"></i>
-                        {{ metrics.clicks.change|abs }}%
-                    </div>
                     <div class="stat-trend" data-metric-trend-container="clicks">
                         <svg class="trend-chart" data-metric-trend="clicks" viewBox="0 0 120 28" role="img" aria-label="Clicks trend over the last 30 days"></svg>
                     </div>
@@ -1283,10 +1276,6 @@
                 <div class="stat-info">
                     <div class="stat-label">WhatsApp Redirects</div>
                     <div class="stat-value" data-metric-value="whatsapp_redirects">{{ metrics.whatsapp_redirects.current|format_number }}</div>
-                    <div class="stat-change {{ 'positive' if metrics.whatsapp_redirects.change >= 0 else 'negative' }}" data-metric-change="whatsapp_redirects">
-                        <i class="fas fa-arrow-{{ 'up' if metrics.whatsapp_redirects.change >= 0 else 'down' }}"></i>
-                        {{ metrics.whatsapp_redirects.change|abs }}%
-                    </div>
                     <div class="stat-trend" data-metric-trend-container="whatsapp_redirects">
                         <svg class="trend-chart" data-metric-trend="whatsapp_redirects" viewBox="0 0 120 28" role="img" aria-label="WhatsApp redirects trend over the last 30 days"></svg>
                     </div>
@@ -1563,6 +1552,25 @@
 <!-- TOASTS -->
 <div class="toast" id="toast"></div>
 <div class="success-message" id="successMessage"><i class="fas fa-check-circle"></i><span id="successMessageText">Action completed successfully!</span></div>
+
+<div class="modal logout-confirm-modal" id="logoutConfirmModal" aria-hidden="true">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="logoutConfirmTitle" aria-describedby="logoutConfirmMessage">
+        <div class="modal-header">
+            <div>
+                <h2 id="logoutConfirmTitle">Log out?</h2>
+                <p>Confirm before leaving your dashboard.</p>
+            </div>
+            <button type="button" class="modal-close" data-close-logout aria-label="Cancel logout"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <p class="logout-confirm-message" id="logoutConfirmMessage">You are about to log out of your vendor dashboard. You can sign back in at any time.</p>
+            <div class="logout-confirm-actions">
+                <button type="button" class="btn btn-outline" data-close-logout>Cancel</button>
+                <a href="{{ url_for('logout') }}" class="btn btn-danger" id="confirmLogoutBtn"><i class="fas fa-sign-out-alt"></i> Log out</a>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="modal theme-preview-modal" id="themePreviewModal" style="--preview-primary:#4CAF50;--preview-dark:#2E7D32;--preview-muted:#dcfce7">
     <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="themePreviewTitle">
@@ -1880,6 +1888,37 @@ document.addEventListener('DOMContentLoaded', function() {
     if (mobileMenuOverlay) mobileMenuOverlay.addEventListener('click', closeMM);
     document.querySelectorAll('.mobile-menu-item').forEach(i => i.addEventListener('click', closeMM));
 
+    // --- Logout confirmation ---
+    const logoutModal = document.getElementById('logoutConfirmModal');
+    let logoutTrigger = null;
+    function closeLogoutConfirmation() {
+        if (!logoutModal) return;
+        logoutModal.classList.remove('show');
+        logoutModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        logoutTrigger?.focus();
+    }
+    document.querySelectorAll('[data-logout-link]').forEach(link => {
+        link.addEventListener('click', event => {
+            event.preventDefault();
+            if (!logoutModal) return;
+            logoutTrigger = event.currentTarget;
+            logoutModal.classList.add('show');
+            logoutModal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+            logoutModal.querySelector('[data-close-logout]')?.focus();
+        });
+    });
+    logoutModal?.querySelectorAll('[data-close-logout]').forEach(button => {
+        button.addEventListener('click', closeLogoutConfirmation);
+    });
+    logoutModal?.addEventListener('click', event => {
+        if (event.target === logoutModal) closeLogoutConfirmation();
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && logoutModal?.classList.contains('show')) closeLogoutConfirmation();
+    });
+
     // --- Copy store link ---
     document.querySelectorAll('[data-copy-link]').forEach(btn => {
         btn.addEventListener('click', async () => { try { await navigator.clipboard.writeText(btn.getAttribute('data-copy-link')); showToast('Store link copied!'); } catch(e) { showToast('Failed to copy link'); } });
@@ -1890,16 +1929,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (num >= 1000000) return `${(num / 1000000).toFixed(1).replace(/\.0$/, '')}M`;
         if (num >= 1000) return `${(num / 1000).toFixed(1).replace(/\.0$/, '')}K`;
         return String(num);
-    }
-
-    function updateMetricChange(metric, change) {
-        const el = document.querySelector(`[data-metric-change="${metric}"]`);
-        if (!el) return;
-        const value = Number(change || 0);
-        const isPositive = value >= 0;
-        el.classList.toggle('positive', isPositive);
-        el.classList.toggle('negative', !isPositive);
-        el.innerHTML = `<i class="fas fa-arrow-${isPositive ? 'up' : 'down'}"></i> ${Math.abs(value)}%`;
     }
 
     const metricKeys = ['views', 'clicks', 'whatsapp_redirects'];
@@ -1977,7 +2006,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 valueEl.classList.remove('updating');
                 valueEl.closest('.stat-cell')?.classList.remove('loading');
             }
-            updateMetricChange(metric, metricData.change);
         });
     }
 
