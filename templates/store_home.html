@@ -401,15 +401,11 @@
             width: min(132px, 100%);
             height: 27px;
             margin-top: 6px;
-            color: var(--text-3);
+            color: #45b99a;
         }
         .trend-chart { display: block; width: 100%; height: 100%; overflow: visible; }
-        .trend-chart .trend-area { fill: currentColor; opacity: 0.11; }
-        .trend-chart .trend-line { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-        .trend-chart .trend-end { fill: var(--surface); stroke: currentColor; stroke-width: 2; }
-        .stat-trend[data-direction="positive"] { color: var(--primary); }
-        .stat-trend[data-direction="negative"] { color: var(--danger); }
-        .stat-trend[data-direction="neutral"] .trend-line { stroke-dasharray: 3 3; opacity: 0.65; }
+        .trend-chart .trend-area { fill: currentColor; opacity: 0.05; }
+        .trend-chart .trend-line { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
         .stat-cell.loading .stat-icon-wrap {
             animation: statPulse 0.75s ease infinite alternate;
         }
@@ -1935,7 +1931,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const values = Array.isArray(fixedMetricTrends?.[metric])
                 ? fixedMetricTrends[metric].map(value => Number(value) || 0)
                 : [];
-            if (!chart || !container || !values.length) return;
+            if (!chart || !container) return;
+
+            const hasData = values.some(value => value > 0);
+            container.hidden = !hasData;
+            if (!hasData) {
+                chart.innerHTML = '';
+                return;
+            }
 
             const width = 120;
             const height = 28;
@@ -1952,14 +1955,14 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             const line = points.map(([x, y], index) => `${index ? 'L' : 'M'} ${x.toFixed(2)} ${y.toFixed(2)}`).join(' ');
             const [firstX] = points[0];
-            const [lastX, lastY] = points[points.length - 1];
+            const [lastX] = points[points.length - 1];
             const area = `${line} L ${lastX.toFixed(2)} ${(height - padding).toFixed(2)} L ${firstX.toFixed(2)} ${(height - padding).toFixed(2)} Z`;
             const direction = getTrendDirection(values);
             const label = `${metric.replace('_', ' ')} trend over the last 30 days: ${direction === 'positive' ? 'rising' : direction === 'negative' ? 'falling' : 'steady'}`;
 
             container.dataset.direction = direction;
             chart.setAttribute('aria-label', label);
-            chart.innerHTML = `<path class="trend-area" d="${area}"></path><path class="trend-line" d="${line}"></path><circle class="trend-end" cx="${lastX.toFixed(2)}" cy="${lastY.toFixed(2)}" r="2.3"></circle>`;
+            chart.innerHTML = `<path class="trend-area" d="${area}"></path><path class="trend-line" d="${line}"></path>`;
         });
     }
 
